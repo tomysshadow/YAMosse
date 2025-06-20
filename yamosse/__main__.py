@@ -1,0 +1,71 @@
+import sys
+from ast import literal_eval
+
+import yamosse.yamosse as yamosse
+import yamosse.root as yamosse_root
+import yamosse.worker as yamosse_worker
+
+
+def help_():
+  print(''.join(('Usage: python -m yamosse [-o key value ',
+    '-y output_file_name -ip import_preset_file_name -ep export_preset_file_name -rd]')))
+
+
+def main(argc, argv):
+  print(yamosse.title(), end='\n\n')
+  
+  MIN_ARGC = 1
+  
+  if argc < MIN_ARGC:
+    help_()
+    return 1
+  
+  args = argv[MIN_ARGC:]
+  args_len = len(args)
+  
+  kwargs = {}
+  options_preset = {}
+  argc2 = args_len - 1
+  argc3 = args_len - 2
+  
+  for a in range(args_len):
+    arg = args[a]
+    
+    if arg == '-h' or arg == '--help':
+      help_()
+      return 1
+    if arg == '-rd' or arg == '--restore_defaults':
+      kwargs['restore_defaults'] = True
+    if a < argc2:
+      if arg == '-y' or arg == '--yamscan':
+        a += 1
+        kwargs['output_file_name'] = args[a]
+      elif arg == '-ip' or arg == '--import-preset':
+        a += 1
+        kwargs['import_preset_file_name'] = args[a]
+      elif arg == '-ep' or arg == '--export-preset':
+        a += 1
+        kwargs['export_preset_file_name'] = args[a]
+      elif a < argc3:
+        if arg == '-o' or arg == '--options':
+          a += 1
+          key = args[a]
+          
+          a += 1
+          
+          try:
+            options_preset[key] = literal_eval(args[a])
+          except ValueError:
+            help_()
+            return 1
+  
+  if options_preset:
+    kwargs['options_preset'] = options_preset
+  
+  yamosse_worker.tfhub_cache()
+  
+  while yamosse.yamosse(**kwargs): pass
+  return 0
+
+
+sys.exit(main(len(sys.argv), sys.argv))
