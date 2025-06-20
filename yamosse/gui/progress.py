@@ -10,14 +10,7 @@ LOADING = 'loading'
 DONE = 'done'
 RESET = 'reset'
 
-types = {
-  NORMAL: None,
-  WARNING: None,
-  ERROR: None,
-  LOADING: None,
-  DONE: None,
-  RESET: None
-}
+types = dict.fromkeys((NORMAL, WARNING, ERROR, LOADING, DONE, RESET))
 
 if PyTaskbar:
   types = {
