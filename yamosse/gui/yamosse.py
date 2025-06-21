@@ -145,6 +145,59 @@ def make_presets(frame, import_, export):
   export_button['command'] = export
 
 
+def make_general(frame, variables, input_filetypes, class_names, import_preset, export_preset):
+  frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
+  frame.columnconfigure(0, weight=1) # one column layout
+  
+  input_labelframe = ttk.Labelframe(frame, text='Input',
+    padding=gui_std.PADDING_HNSEW)
+  
+  input_labelframe.grid(row=0, sticky=tk.NSEW)
+  
+  input_filedialog_buttons_frame = gui_std.make_filedialog(
+    input_labelframe,
+    variables['input_'],
+    asks=('directory', 'openfilenames'),
+    parent=frame.winfo_toplevel(),
+    filetypes=input_filetypes
+  )[2][0]
+  
+  input_recursive_checkbutton = ttk.Checkbutton(input_filedialog_buttons_frame,
+    text='Recursive', variable=variables['input_recursive'])
+  
+  input_recursive_checkbutton.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
+  input_recursive_checkbutton.lower() # fix tab order
+  
+  classes_labelframe = ttk.Labelframe(frame, text='Classes',
+    padding=gui_std.PADDING_HNSEW)
+  
+  classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  classes_listbox_buttons_frame = gui_std.make_listbox(classes_labelframe, class_names,
+    selectmode=tk.MULTIPLE)[2][0]
+  
+  # TODO command
+  classes_calibrate_button = ttk.Button(classes_listbox_buttons_frame, text='Calibrate...')
+  classes_calibrate_button.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
+  classes_calibrate_button.lower() # fix tab order
+  
+  row_frame = ttk.Frame(frame)
+  row_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  
+  row_frame.columnconfigure(0, weight=1) # make identification options frame horizontally resizable
+  
+  identification_options_labelframe = ttk.Labelframe(row_frame, text='Identification Options',
+    padding=gui_std.PADDING_HNSEW)
+  
+  identification_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  make_identification_options(identification_options_labelframe, variables)
+  
+  presets_labelframe = ttk.Labelframe(row_frame, text='Presets',
+    padding=gui_std.PADDING_HNSEW)
+  
+  presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui_std.PADX_HW)
+  make_presets(presets_labelframe, import_preset, export_preset)
+
+
 def make_combine(frame, variables):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
@@ -310,76 +363,11 @@ def _link_tips(text, tips):
     widget.bind('<Leave>', show)
 
 
-def make_options(frame, variables,
-  input_filetypes, weights_filetypes, class_names, tfhub_enabled,
-  import_preset, export_preset):
-  window = frame.winfo_toplevel()
+def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
+  frame.rowconfigure(3, weight=1) # make help frame vertically resizable
+  frame.columnconfigure(0, weight=1) # one column layout
   
-  frame.rowconfigure(0, weight=1) # make notebook vertically resizable
-  frame.columnconfigure(0, weight=1) # make notebook horizontally resizable
-  
-  notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
-  notebook.grid(row=0, column=0, sticky=tk.NSEW)
-  
-  general_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
-  
-  general_frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
-  general_frame.columnconfigure(0, weight=1) # one column layout
-  
-  input_labelframe = ttk.Labelframe(general_frame, text='Input',
-    padding=gui_std.PADDING_HNSEW)
-  
-  input_labelframe.grid(row=0, sticky=tk.NSEW)
-  
-  input_filedialog_buttons_frame = gui_std.make_filedialog(
-    input_labelframe,
-    variables['input_'],
-    asks=('directory', 'openfilenames'),
-    parent=window,
-    filetypes=input_filetypes
-  )[2][0]
-  
-  input_recursive_checkbutton = ttk.Checkbutton(input_filedialog_buttons_frame,
-    text='Recursive', variable=variables['input_recursive'])
-  
-  input_recursive_checkbutton.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
-  input_recursive_checkbutton.lower() # fix tab order
-  
-  classes_labelframe = ttk.Labelframe(general_frame, text='Classes',
-    padding=gui_std.PADDING_HNSEW)
-  
-  classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  classes_listbox_buttons_frame = gui_std.make_listbox(classes_labelframe, class_names,
-    selectmode=tk.MULTIPLE)[2][0]
-  
-  # TODO command
-  classes_calibrate_button = ttk.Button(classes_listbox_buttons_frame, text='Calibrate...')
-  classes_calibrate_button.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
-  classes_calibrate_button.lower() # fix tab order
-  
-  row_frame = ttk.Frame(general_frame)
-  row_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  
-  row_frame.columnconfigure(0, weight=1) # make identification options frame horizontally resizable
-  
-  identification_options_labelframe = ttk.Labelframe(row_frame, text='Identification Options',
-    padding=gui_std.PADDING_HNSEW)
-  
-  identification_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
-  make_identification_options(identification_options_labelframe, variables)
-  
-  presets_labelframe = ttk.Labelframe(row_frame, text='Presets',
-    padding=gui_std.PADDING_HNSEW)
-  
-  presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui_std.PADX_HW)
-  make_presets(presets_labelframe, import_preset, export_preset)
-  
-  advanced_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
-  
-  advanced_frame.rowconfigure(3, weight=1) # make help frame vertically resizable
-  advanced_frame.columnconfigure(0, weight=1) # one column layout
-  
-  row_frame = ttk.Frame(advanced_frame)
+  row_frame = ttk.Frame(frame)
   row_frame.grid(row=0, sticky=tk.NSEW)
   
   row_frame.columnconfigure((0, 1), weight=1,
@@ -398,7 +386,7 @@ def make_options(frame, variables,
   background_noise_volume_radiobuttons = make_background_noise_volume(
     background_noise_volume_labelframe, variables)
   
-  row_frame = ttk.Frame(advanced_frame)
+  row_frame = ttk.Frame(frame)
   row_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   
   row_frame.columnconfigure((0, 1), weight=1,
@@ -416,18 +404,14 @@ def make_options(frame, variables,
   worker_options_labelframe.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
   worker_options_widgets = make_worker_options(worker_options_labelframe, variables)
   
-  weights_labelframe = ttk.Labelframe(advanced_frame, text='Weights',
-    padding=gui_std.PADDING_HNSEW)
-  
+  weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui_std.PADDING_HNSEW)
   weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   gui_std.make_filedialog(weights_labelframe, variables['weights'],
-    parent=window, filetypes=weights_filetypes)
+    parent=frame.winfo_toplevel(), filetypes=weights_filetypes)
   
   if tfhub_enabled: gui_std.enable_widget(weights_labelframe, enabled=False)
   
-  tips_labelframe = ttk.Labelframe(advanced_frame, text='Tips',
-    padding=gui_std.PADDING_HNSEW)
-  
+  tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui_std.PADDING_HNSEW)
   tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   tips_text = gui_std.make_text(tips_labelframe,
     takefocus=False, undo=True, yscroll=False)[1][0]
@@ -454,6 +438,23 @@ def make_options(frame, variables,
     worker_options_widgets[1]: WORKER_OPTIONS_MAX_WORKERS_TIP,
     worker_options_widgets[2]: WORKER_OPTIONS_HIGH_PRIORITY_TIP
   })
+
+
+def make_options(frame, variables,
+  input_filetypes, weights_filetypes, class_names, tfhub_enabled,
+  import_preset, export_preset):
+  frame.rowconfigure(0, weight=1) # make notebook vertically resizable
+  frame.columnconfigure(0, weight=1) # make notebook horizontally resizable
+  
+  notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
+  notebook.grid(row=0, column=0, sticky=tk.NSEW)
+  
+  general_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
+  make_general(general_frame, variables, input_filetypes, class_names,
+    import_preset, export_preset)
+  
+  advanced_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
+  make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
@@ -466,7 +467,7 @@ def make_footer(frame, yamscan, restore_defaults):
   def help_():
     webbrowser.open(HELP_URL)
   
-  help_button = ttk.Button(frame, text='Help',
+  help_button = ttk.Button(frame, text='Help', width=6,
     image=gui.get_root_images()['Photo']['help.gif'], compound=tk.LEFT,
     command=help_)
   
