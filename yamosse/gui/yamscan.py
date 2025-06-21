@@ -5,11 +5,11 @@ from . import gui
 from . import std as gui_std
 from . import progress as gui_progress
 
-ASK_CANCEL_YAMSCAN_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
+ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
 
 # YAMScan Widgets
-def ask_cancel_yamscan(window, title, footer_yamscan_widgets):
+def ask_cancel(window, title, footer_yamscan_widgets):
   open_output_file_button, done_button = footer_yamscan_widgets
   
   # while this may feel like a bit of a hack, doing it this way ensures that
@@ -18,10 +18,10 @@ def ask_cancel_yamscan(window, title, footer_yamscan_widgets):
     return True
   
   return messagebox.askyesno(
-    parent=window, title=title, message=ASK_CANCEL_YAMSCAN_MESSAGE, default=messagebox.NO)
+    parent=window, title=title, message=ASK_CANCEL_MESSAGE, default=messagebox.NO)
 
 
-def make_footer_yamscan(frame, log_text, open_output_file, done):
+def make_footer(frame, log_text, open_output_file, done):
   COPIED_TO_CLIPBOARD_DELAY_MS = 3000
   
   frame.columnconfigure(1, weight=1) # make copied to clipboard label horizontally resizable
@@ -169,7 +169,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   footer_yamscan_widgets = None
   
   def done(window):
-    if not ask_cancel_yamscan(window, title, footer_yamscan_widgets): return
+    if not ask_cancel(window, title, footer_yamscan_widgets): return
     
     gui_std.configure_progressbar(
       progressbar_widgets, progressbar_variable, gui_progress.RESET)
@@ -180,7 +180,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   footer_yamscan_frame = ttk.Frame(frame)
   footer_yamscan_frame.grid(row=2, sticky=tk.EW, pady=gui_std.PADY_N)
   
-  footer_yamscan_widgets = make_footer_yamscan(
+  footer_yamscan_widgets = make_footer(
     footer_yamscan_frame,
     log_text,
     open_output_file,
