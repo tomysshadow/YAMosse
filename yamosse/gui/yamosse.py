@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import webbrowser
 
 from . import gui as gui
 from . import std as gui_std
@@ -58,6 +59,8 @@ WORKER_OPTIONS_MAX_WORKERS_TIP = ''.join(('Increasing the max number of workers 
 
 WORKER_OPTIONS_HIGH_PRIORITY_TIP = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
   'at the expense of other programs running slower.'))
+
+HELP_URL = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
 
 def make_header(frame, title):
@@ -323,13 +326,14 @@ def make_options(frame, variables,
   general_frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   general_frame.columnconfigure(0, weight=1) # one column layout
   
-  input_frame = ttk.Frame(general_frame)
-  input_frame.grid(row=0, sticky=tk.NSEW)
+  input_labelframe = ttk.Labelframe(general_frame, text='Input',
+    padding=gui_std.PADDING_HNSEW)
+  
+  input_labelframe.grid(row=0, sticky=tk.NSEW)
   
   input_filedialog_buttons_frame = gui_std.make_filedialog(
-    input_frame,
+    input_labelframe,
     variables['input_'],
-    name='Input',
     asks=('directory', 'openfilenames'),
     parent=window,
     filetypes=input_filetypes
@@ -341,9 +345,11 @@ def make_options(frame, variables,
   input_recursive_checkbutton.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
   input_recursive_checkbutton.lower() # fix tab order
   
-  classes_frame = ttk.Frame(general_frame)
-  classes_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  classes_listbox_buttons_frame = gui_std.make_listbox(classes_frame, class_names, name='Classes',
+  classes_labelframe = ttk.Labelframe(general_frame, text='Classes',
+    padding=gui_std.PADDING_HNSEW)
+  
+  classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  classes_listbox_buttons_frame = gui_std.make_listbox(classes_labelframe, class_names,
     selectmode=tk.MULTIPLE)[2][0]
   
   # TODO command
@@ -410,23 +416,27 @@ def make_options(frame, variables,
   worker_options_labelframe.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
   worker_options_widgets = make_worker_options(worker_options_labelframe, variables)
   
-  weights_frame = ttk.Frame(advanced_frame)
-  weights_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  gui_std.make_filedialog(weights_frame, variables['weights'], name='Weights',
+  weights_labelframe = ttk.Labelframe(advanced_frame, text='Weights',
+    padding=gui_std.PADDING_HNSEW)
+  
+  weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  gui_std.make_filedialog(weights_labelframe, variables['weights'],
     parent=window, filetypes=weights_filetypes)
   
-  if tfhub_enabled: gui_std.enable_widget(weights_frame, enabled=False)
+  if tfhub_enabled: gui_std.enable_widget(weights_labelframe, enabled=False)
   
-  tips_frame = ttk.Frame(advanced_frame)
-  tips_frame.grid(row=3, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  tips_text = gui_std.make_text(tips_frame, name='Tips',
+  tips_labelframe = ttk.Labelframe(advanced_frame, text='Tips',
+    padding=gui_std.PADDING_HNSEW)
+  
+  tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  tips_text = gui_std.make_text(tips_labelframe,
     takefocus=False, undo=True, yscroll=False)[1][0]
   
   gui_std.prevent_default_widget(tips_text) # no selection when double clicking
   gui_std.enable_widget(tips_text, enabled=False)
   
   _link_tips(tips_text, {
-    weights_frame: WEIGHTS_TIP,
+    weights_labelframe: WEIGHTS_TIP,
     
     combine_labelframe: COMBINE_TIP,
     combine_all_checkbutton: COMBINE_ALL_TIP,
@@ -451,15 +461,27 @@ def make_options(frame, variables,
 
 
 def make_footer(frame, yamscan, restore_defaults):
+  frame.columnconfigure(1, weight=1)
+  
+  def help_():
+    webbrowser.open(HELP_URL)
+  
+  help_button = ttk.Button(frame, text='Help',
+    image=gui.get_root_images()['Photo']['help.gif'], compound=tk.LEFT,
+    command=help_)
+  
+  help_button.grid(row=0, column=0, sticky=tk.W)
+  help_button.winfo_toplevel().bind('<F1>', lambda e: help_())
+  
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)
   
-  yamscan_button.grid(row=0, column=0)
+  yamscan_button.grid(row=0, column=2, sticky=tk.E)
   
   restore_defaults_button = ttk.Button(frame, text='Restore Defaults', underline=0,
     command=restore_defaults)
   
-  restore_defaults_button.grid(row=0, column=1, padx=gui_std.PADX_QW)
+  restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui_std.PADX_QW)
   
   for button in (
     yamscan_button, restore_defaults_button):
@@ -471,7 +493,7 @@ def make_yamosse(frame, title, options_variables,
   yamscan, import_preset, export_preset, restore_defaults):
   # resizing technically works but looks kind of jank, so just disable for now
   RESIZABLE = False
-  SIZE = (560, 520)
+  SIZE = (600, 560)
   
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
@@ -491,5 +513,5 @@ def make_yamosse(frame, title, options_variables,
     import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
-  footer_frame.grid(row=2, sticky=tk.E, pady=gui_std.PADY_N)
+  footer_frame.grid(row=2, sticky=tk.EW, pady=gui_std.PADY_N)
   make_footer(footer_frame, yamscan, restore_defaults)
