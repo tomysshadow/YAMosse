@@ -181,6 +181,15 @@ def link_radiobuttons(radiobuttons, variable):
   show()
 
 
+def make_labelframe(frame, padding=PADDING_HNSEW, **kwargs):
+  frame.rowconfigure(0, weight=1) # make labelframe vertically resizable
+  frame.columnconfigure(0, weight=1) # make labelframe horizontally resizable
+  
+  labelframe = ttk.Labelframe(frame, padding=padding, **kwargs)
+  labelframe.grid(sticky=tk.NSEW)
+  return labelframe
+
+
 def make_name(frame, name):
   if not name: return None
   

@@ -94,11 +94,7 @@ def make_spacer(frame):
 
 
 def make_output_options(frame, variables):
-  frame.rowconfigure(0, weight=1) # make labelframe vertically resizable
-  frame.columnconfigure(0, weight=1) # make labelframe horizontally resizable
-  
-  labelframe = ttk.Labelframe(frame, text='Output Options', padding=gui_std.PADDING_HNSEW)
-  labelframe.grid(sticky=tk.NSEW)
+  labelframe = gui_std.make_labelframe(frame, text='Output Options')
   
   labelframe.columnconfigure(0, weight=1) # one column layout
   
@@ -140,11 +136,7 @@ def make_output_options(frame, variables):
 
 
 def make_worker_options(frame, variables):
-  frame.rowconfigure(0, weight=1) # make labelframe vertically resizable
-  frame.columnconfigure(0, weight=1) # make labelframe horizontally resizable
-  
-  labelframe = ttk.Labelframe(frame, text='Worker Options', padding=gui_std.PADDING_HNSEW)
-  labelframe.grid(sticky=tk.NSEW)
+  labelframe = gui_std.make_labelframe(frame, text='Worker Options')
   
   labelframe.columnconfigure(0, weight=1) # one column layout
   
@@ -175,15 +167,17 @@ def make_worker_options(frame, variables):
 
 
 def make_combine(frame, variables):
-  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  labelframe = gui_std.make_labelframe(frame, text='Combine')
+  
+  labelframe.rowconfigure(0, weight=1) # make cell frame vertically centered
+  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
   # the frame passed in sticks to NSEW
   # so that the Help Text is shown for the entire cell
   # but we want to be vertically centered
   # (only stick to EW)
   # so we create this cell frame
-  cell_frame = ttk.Frame(frame)
+  cell_frame = ttk.Frame(labelframe)
   cell_frame.grid(sticky=tk.EW)
   
   cell_frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
@@ -206,10 +200,12 @@ def make_combine(frame, variables):
 
 
 def make_background_noise_volume(frame, variables):
-  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  labelframe = gui_std.make_labelframe(frame, text='Background Noise Volume')
   
-  cell_frame = ttk.Frame(frame)
+  labelframe.rowconfigure(0, weight=1) # make cell frame vertically centered
+  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  
+  cell_frame = ttk.Frame(labelframe)
   cell_frame.grid(sticky=tk.EW)
   
   cell_frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
@@ -275,11 +271,7 @@ def make_top_ranked(frame, variables):
 
 
 def make_identification_options(frame, variables):
-  frame.rowconfigure(0, weight=1) # make labelframe vertically resizable
-  frame.columnconfigure(0, weight=1) # make labelframe horizontally resizable
-  
-  labelframe = ttk.Labelframe(frame, text='Identification Options', padding=gui_std.PADDING_HNSEW)
-  labelframe.grid(sticky=tk.NSEW)
+  labelframe = gui_std.make_labelframe(frame, text='Identification Options')
   
   labelframe.rowconfigure(0, minsize=MINSIZE_ROW_RADIOBUTTONS) # make radiobuttons minimum size
   
@@ -416,19 +408,15 @@ def make_options(frame, variables,
   top_options_frame = ttk.Frame(right_options_frame)
   top_options_frame.grid(row=1, sticky=tk.NSEW)
   
-  top_options_frame.rowconfigure(0, minsize=MINSIZE_ROW_LABELS) # make top labels minimum size
   top_options_frame.columnconfigure((0, 1), weight=1,
     uniform='top_options_column') # make the columns uniform
   
-  top_labels = gui_std.make_widgets(top_options_frame, ttk.Label,
-    ('Combine', 'Background Noise Volume'), cell=0)
-  
   combine_frame = ttk.Frame(top_options_frame)
-  combine_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  combine_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
   combine_all_checkbutton = make_combine(combine_frame, variables)
   
   background_noise_volume_frame = ttk.Frame(top_options_frame)
-  background_noise_volume_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  background_noise_volume_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
   background_noise_volume_radiobuttons = make_background_noise_volume(
     background_noise_volume_frame, variables)
   
@@ -457,14 +445,10 @@ def make_options(frame, variables,
     classes_frame: CLASSES_TIP,
     classes_calibrate_button: CLASSES_CALIBRATE_TIP,
     
-    top_labels[0]: COMBINE_TIP,
     combine_frame: COMBINE_TIP,
-    
     combine_all_checkbutton: COMBINE_ALL_TIP,
     
-    top_labels[1]: BACKGROUND_NOISE_VOLUME_TIP,
     background_noise_volume_frame: BACKGROUND_NOISE_VOLUME_TIP,
-    
     background_noise_volume_radiobuttons[0]: BACKGROUND_NOISE_VOLUME_LOG_TIP,
     background_noise_volume_radiobuttons[1]: BACKGROUND_NOISE_VOLUME_LINEAR_TIP,
     
@@ -496,20 +480,20 @@ def make_footer(frame, yamscan, import_preset, export_preset, restore_defaults):
   
   yamscan_button.grid(row=0, column=0)
   
-  import_preset_button = ttk.Button(frame, text='Import Preset...', underline=0,
-    command=import_preset)
-  
-  import_preset_button.grid(row=0, column=1, padx=gui_std.PADX_QW)
-  
-  export_preset_button = ttk.Button(frame, text='Export Preset...', underline=0,
-    command=export_preset)
-  
-  export_preset_button.grid(row=0, column=2, padx=gui_std.PADX_QW)
-  
   restore_defaults_button = ttk.Button(frame, text='Restore Defaults', underline=0,
     command=restore_defaults)
   
-  restore_defaults_button.grid(row=0, column=3, padx=gui_std.PADX_QW)
+  restore_defaults_button.grid(row=0, column=1, padx=gui_std.PADX_QW)
+  
+  import_preset_button = ttk.Button(frame, text='Import...', underline=0,
+    command=import_preset)
+  
+  import_preset_button.grid(row=0, column=2, padx=gui_std.PADX_QW)
+  
+  export_preset_button = ttk.Button(frame, text='Export...', underline=0,
+    command=export_preset)
+  
+  export_preset_button.grid(row=0, column=3, padx=gui_std.PADX_QW)
   
   for button in (
     yamscan_button, import_preset_button, export_preset_button, restore_defaults_button):
