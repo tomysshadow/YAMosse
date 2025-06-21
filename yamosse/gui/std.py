@@ -90,7 +90,7 @@ def prevent_default_widget(widget):
 
 
 def make_widgets(frame, make_widget, names,
-  orient=tk.HORIZONTAL, cell=0, padding=PADDING, **kwargs):
+  orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING, **kwargs):
   ORIENTS = (tk.HORIZONTAL, tk.VERTICAL)
   
   assert orient in ORIENTS, 'orient must be in %r' % (ORIENTS,)
@@ -103,13 +103,11 @@ def make_widgets(frame, make_widget, names,
   x = 'row'
   y = 'column'
   pad = 'padx'
-  sticky = tk.NSEW # sticky to S so Help appears for entire row
   
   if orient == tk.VERTICAL:
     x = 'column'
     y = 'row'
     pad = 'pady'
-    sticky = (tk.N, tk.S, tk.W) # only sticky to W so Help only appears for the widgets themselves
   
   # float divide is used here in case padding is not even
   padding = padding / 2 if last != 0 else 0
@@ -181,12 +179,12 @@ def link_radiobuttons(radiobuttons, variable):
   show()
 
 
-def make_labelframe(frame, padding=PADDING_HNSEW, **kwargs):
+def make_labelframe(frame, sticky=tk.NSEW, padding=PADDING_HNSEW, **kwargs):
   frame.rowconfigure(0, weight=1) # make labelframe vertically resizable
   frame.columnconfigure(0, weight=1) # make labelframe horizontally resizable
   
   labelframe = ttk.Labelframe(frame, padding=padding, **kwargs)
-  labelframe.grid(sticky=tk.NSEW)
+  labelframe.grid(sticky=sticky)
   return labelframe
 
 

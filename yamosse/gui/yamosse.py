@@ -18,19 +18,8 @@ MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 
 ASK_RESTORE_DEFAULTS_MESSAGE = 'Are you sure you want to restore the defaults?'
 
-INPUT_TIP = ''.join(('The input sound folder or files. Supports any file format that libsndfile ',
-  'can read.'))
-
-INPUT_RECURSIVE_TIP = ''.join(('If checked and the input is a folder, sound files in subfolders ',
-  'will be scanned.'))
-
 WEIGHTS_TIP = ''.join(('The YAMNet Weights file. This option will be disabled if you are using ',
   'the Tensorflow Hub release of YAMNet.'))
-
-CLASSES_TIP = ''.join(('The classes of sound to identify. Any sounds that are not selected will ',
-  'be ignored.'))
-
-CLASSES_CALIBRATE_TIP = 'TODO'
 
 COMBINE_TIP = ''.join(('If a sound is less than this length in seconds, it will be combined into ',
   'one timestamp. Otherwise, the beginning and ending timestamp will be output with a dash ',
@@ -47,18 +36,6 @@ BACKGROUND_NOISE_VOLUME_LOG_TIP = ''.join(('Logarithmic volume scale (with a 60 
   'is the volume scale you should use in most cases.'))
 
 BACKGROUND_NOISE_VOLUME_LINEAR_TIP = 'Linear volume scale.'
-
-CONFIDENCE_SCORE_TIP = ''.join(('In the Confidence Score identification mode, a percentage for ',
-  'how certain the model is that it identified a particular sound is used.'))
-
-CONFIDENCE_SCORE_MIN_TIP = 'Output timestamps where the sounds are present.'
-CONFIDENCE_SCORE_MAX_TIP = 'Output timestamps where the sounds are not present.'
-
-TOP_RANKED_TIP = ''.join(('The Top Ranked identification mode outputs a transcript of the sounds ',
-  'that the model is the most confident in.'))
-
-TOP_RANKED_OUTPUT_TIMESTAMPS_TIP = ''.join(('Controls whether to output the timestamps of each ',
-  'sound or just list the sounds themselves.'))
 
 OUTPUT_OPTIONS_SORT_BY_TIP = ''.join(('Whether to sort results by the number of sounds ',
   'identified, or alphabetically by file name.'))
@@ -85,6 +62,147 @@ WORKER_OPTIONS_HIGH_PRIORITY_TIP = ''.join(('Mark YAMosse as High Priority to ma
 
 def make_header(frame, title):
   ttk.Label(frame, text=title, style='Title.TLabel').grid()
+
+
+def make_confidence_score(frame, variables):
+  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
+  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  
+  cell_frame = ttk.Frame(frame)
+  cell_frame.grid(sticky=tk.EW)
+  
+  cell_frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
+  
+  scale_frame = ttk.Frame(cell_frame)
+  scale_frame.grid(row=0, column=0, sticky=tk.EW)
+  gui_std.make_scale(scale_frame, variables['confidence_score'])
+  
+  radiobuttons_frame = ttk.Frame(cell_frame)
+  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
+  radiobuttons = gui_std.make_widgets(radiobuttons_frame, ttk.Radiobutton,
+    ('Min', 'Max'), orient=tk.VERTICAL, cell=0, padding=gui_std.PADDING_Q)
+  
+  gui_std.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
+    variables['confidence_score_minmax'])
+
+
+def make_top_ranked(frame, variables):
+  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
+  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  
+  cell_frame = ttk.Frame(frame)
+  cell_frame.grid(sticky=tk.EW)
+  
+  cell_frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
+  
+  spinbox_frame = ttk.Frame(cell_frame)
+  spinbox_frame.grid(row=0, sticky=tk.EW)
+  gui_std.make_spinbox(spinbox_frame, variables['top_ranked'],
+    from_=1, unit=gui_std.UNIT_CLASSES)
+  
+  ttk.Checkbutton(cell_frame,
+    variable=variables['top_ranked_output_timestamps'], text='Output Timestamps').grid(
+    row=1, sticky=tk.W, pady=gui_std.PADY_QN)
+
+
+def make_identification_options(frame, variables):
+  labelframe = gui_std.make_labelframe(frame, text='Identification Options')
+  
+  labelframe.rowconfigure(0, minsize=MINSIZE_ROW_RADIOBUTTONS) # make radiobuttons minimum size
+  
+  labelframe.columnconfigure((0, 1), weight=1,
+    uniform='identification_options_column') # make the columns uniform
+  
+  confidence_score_frame = ttk.Frame(labelframe)
+  confidence_score_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  make_confidence_score(confidence_score_frame, variables)
+  
+  top_ranked_frame = ttk.Frame(labelframe)
+  top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  make_top_ranked(top_ranked_frame, variables)
+  
+  radiobuttons = gui_std.make_widgets(labelframe, ttk.Radiobutton,
+    ('Confidence Score', 'Top Ranked'), sticky=tk.EW, cell=0)
+  
+  gui_std.link_radiobuttons(zip(radiobuttons, (confidence_score_frame, top_ranked_frame)),
+    variables['identification'])
+  
+  # fix tab order
+  confidence_score_frame.lift()
+  top_ranked_frame.lift()
+
+
+def make_presets(frame, import_, export):
+  labelframe = gui_std.make_labelframe(frame, text='Presets')
+  
+  labelframe.rowconfigure((0, 1), weight=1) # make cell frame vertically centered
+  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  
+  import_button, export_button = gui_std.make_widgets(
+    labelframe, ttk.Button, ('Import...', 'Export...'),
+    orient=tk.VERTICAL, padding=gui_std.PADDING_Q)
+  
+  import_button['command'] = import_
+  export_button['command'] = export
+
+
+def make_combine(frame, variables):
+  labelframe = gui_std.make_labelframe(frame, text='Combine')
+  
+  labelframe.rowconfigure(0, weight=1) # make cell frame vertically centered
+  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  
+  # the frame passed in sticks to NSEW
+  # so that the Help Text is shown for the entire cell
+  # but we want to be vertically centered
+  # (only stick to EW)
+  # so we create this cell frame
+  cell_frame = ttk.Frame(labelframe)
+  cell_frame.grid(sticky=tk.EW)
+  
+  cell_frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
+  
+  spinbox_frame = ttk.Frame(cell_frame)
+  spinbox_frame.grid(row=0, column=0, sticky=tk.EW)
+  gui_std.make_spinbox(spinbox_frame, variables['combine'],
+    from_=0, to=60, unit=gui_std.UNIT_SECONDS)
+  
+  combine_all_checkbutton = ttk.Checkbutton(
+    cell_frame,
+    variable=variables['combine_all'],
+    text='All',
+    command=lambda: gui_std.enable_widget(spinbox_frame,
+      enabled=not variables['combine_all'].get())
+  )
+  
+  combine_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
+  return combine_all_checkbutton
+
+
+def make_background_noise_volume(frame, variables):
+  labelframe = gui_std.make_labelframe(frame, text='Background Noise Volume')
+  
+  labelframe.rowconfigure(0, weight=1) # make cell frame vertically centered
+  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  
+  cell_frame = ttk.Frame(labelframe)
+  cell_frame.grid(sticky=tk.EW)
+  
+  cell_frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
+  
+  scale_frame = ttk.Frame(cell_frame)
+  scale_frame.grid(row=0, column=0, sticky=tk.EW)
+  gui_std.make_scale(scale_frame, variables['background_noise_volume'])
+  
+  radiobuttons_frame = ttk.Frame(cell_frame)
+  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
+  radiobuttons = gui_std.make_widgets(radiobuttons_frame, ttk.Radiobutton,
+    ('Log', 'Linear'), orient=tk.VERTICAL, cell=0, padding=gui_std.PADDING_Q)
+  
+  gui_std.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
+    variables['background_noise_volume_loglinear'])
+  
+  return radiobuttons
 
 
 def make_spacer(frame):
@@ -166,140 +284,6 @@ def make_worker_options(frame, variables):
   return memory_limit_frame, max_workers_frame, high_priority_checkbutton
 
 
-def make_combine(frame, variables):
-  labelframe = gui_std.make_labelframe(frame, text='Combine')
-  
-  labelframe.rowconfigure(0, weight=1) # make cell frame vertically centered
-  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
-  
-  # the frame passed in sticks to NSEW
-  # so that the Help Text is shown for the entire cell
-  # but we want to be vertically centered
-  # (only stick to EW)
-  # so we create this cell frame
-  cell_frame = ttk.Frame(labelframe)
-  cell_frame.grid(sticky=tk.EW)
-  
-  cell_frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
-  
-  spinbox_frame = ttk.Frame(cell_frame)
-  spinbox_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui_std.make_spinbox(spinbox_frame, variables['combine'],
-    from_=0, to=60, unit=gui_std.UNIT_SECONDS)
-  
-  combine_all_checkbutton = ttk.Checkbutton(
-    cell_frame,
-    variable=variables['combine_all'],
-    text='All',
-    command=lambda: gui_std.enable_widget(spinbox_frame,
-      enabled=not variables['combine_all'].get())
-  )
-  
-  combine_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
-  return combine_all_checkbutton
-
-
-def make_background_noise_volume(frame, variables):
-  labelframe = gui_std.make_labelframe(frame, text='Background Noise Volume')
-  
-  labelframe.rowconfigure(0, weight=1) # make cell frame vertically centered
-  labelframe.columnconfigure(0, weight=1) # make cell frame horizontally resizable
-  
-  cell_frame = ttk.Frame(labelframe)
-  cell_frame.grid(sticky=tk.EW)
-  
-  cell_frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
-  
-  scale_frame = ttk.Frame(cell_frame)
-  scale_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui_std.make_scale(scale_frame, variables['background_noise_volume'])
-  
-  radiobuttons_frame = ttk.Frame(cell_frame)
-  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
-  radiobuttons = gui_std.make_widgets(radiobuttons_frame, ttk.Radiobutton,
-    ('Log', 'Linear'), orient=tk.VERTICAL, cell=0, padding=gui_std.PADDING_Q)
-  
-  gui_std.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
-    variables['background_noise_volume_loglinear'])
-  
-  return radiobuttons
-
-
-def make_confidence_score(frame, variables):
-  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
-  
-  cell_frame = ttk.Frame(frame)
-  cell_frame.grid(sticky=tk.EW)
-  
-  cell_frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
-  
-  scale_frame = ttk.Frame(cell_frame)
-  scale_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui_std.make_scale(scale_frame, variables['confidence_score'])
-  
-  radiobuttons_frame = ttk.Frame(cell_frame)
-  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
-  radiobuttons = gui_std.make_widgets(radiobuttons_frame, ttk.Radiobutton,
-    ('Min', 'Max'), orient=tk.VERTICAL, cell=0, padding=gui_std.PADDING_Q)
-  
-  gui_std.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
-    variables['confidence_score_minmax'])
-  
-  return radiobuttons
-
-
-def make_top_ranked(frame, variables):
-  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
-  
-  cell_frame = ttk.Frame(frame)
-  cell_frame.grid(sticky=tk.EW)
-  
-  cell_frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
-  
-  spinbox_frame = ttk.Frame(cell_frame)
-  spinbox_frame.grid(row=0, sticky=tk.EW)
-  gui_std.make_spinbox(spinbox_frame, variables['top_ranked'],
-    from_=1, unit=gui_std.UNIT_CLASSES)
-  
-  output_timestamps_checkbutton = ttk.Checkbutton(cell_frame,
-    variable=variables['top_ranked_output_timestamps'], text='Output Timestamps')
-  
-  output_timestamps_checkbutton.grid(row=1, sticky=tk.W, pady=gui_std.PADY_QN)
-  return output_timestamps_checkbutton
-
-
-def make_identification_options(frame, variables):
-  labelframe = gui_std.make_labelframe(frame, text='Identification Options')
-  
-  labelframe.rowconfigure(0, minsize=MINSIZE_ROW_RADIOBUTTONS) # make radiobuttons minimum size
-  
-  labelframe.columnconfigure((0, 1), weight=1,
-    uniform='identification_options_column') # make the columns uniform
-  
-  confidence_score_frame = ttk.Frame(labelframe)
-  confidence_score_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
-  confidence_score_radiobuttons = make_confidence_score(confidence_score_frame, variables)
-  
-  top_ranked_frame = ttk.Frame(labelframe)
-  top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
-  output_timestamps_checkbutton = make_top_ranked(top_ranked_frame, variables)
-  
-  radiobuttons = gui_std.make_widgets(labelframe, ttk.Radiobutton,
-    ('Confidence Score', 'Top Ranked'), cell=0)
-  
-  gui_std.link_radiobuttons(zip(radiobuttons, (confidence_score_frame, top_ranked_frame)),
-    variables['identification'])
-  
-  # fix tab order
-  confidence_score_frame.lift()
-  top_ranked_frame.lift()
-  
-  return (confidence_score_frame, confidence_score_radiobuttons, top_ranked_frame,
-    output_timestamps_checkbutton, radiobuttons)
-
-
 def _link_tips(text, tips):
   stack = []
   
@@ -336,25 +320,27 @@ def _link_tips(text, tips):
 
 
 def make_options(frame, variables,
-  input_filetypes, weights_filetypes, class_names, tfhub_enabled):
+  input_filetypes, weights_filetypes, class_names, tfhub_enabled,
+  import_preset, export_preset):
   window = frame.winfo_toplevel()
   
-  frame.rowconfigure(0, weight=1) # make the options frames vertically resizable
-  frame.columnconfigure((0, 1), weight=1, uniform='options_column') # make the columns uniform
+  frame.rowconfigure(0, weight=1) # make notebook vertically resizable
+  frame.columnconfigure(0, weight=1) # make notebook horizontally resizable
   
-  left_options_frame = ttk.Frame(frame)
-  left_options_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
+  notebook.grid(row=0, column=0, sticky=tk.NSEW)
   
-  left_options_frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
-  left_options_frame.columnconfigure(0, weight=1) # one column layout
+  general_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
   
-  input_frame = ttk.Frame(left_options_frame)
+  general_frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
+  general_frame.columnconfigure(0, weight=1) # one column layout
+  
+  input_frame = ttk.Frame(general_frame)
   input_frame.grid(row=0, sticky=tk.NSEW)
-  input_variable = variables['input_']
   
   input_filedialog_buttons_frame = gui_std.make_filedialog(
     input_frame,
-    input_variable,
+    variables['input_'],
     name='Input',
     asks=('directory', 'openfilenames'),
     parent=window,
@@ -367,68 +353,71 @@ def make_options(frame, variables,
   input_recursive_checkbutton.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
   input_recursive_checkbutton.lower() # fix tab order
   
-  classes_frame = ttk.Frame(left_options_frame)
+  classes_frame = ttk.Frame(general_frame)
   classes_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   classes_listbox_buttons_frame = gui_std.make_listbox(classes_frame, class_names, name='Classes',
     selectmode=tk.MULTIPLE)[2][0]
   
-  # TODO
+  # TODO command
   classes_calibrate_button = ttk.Button(classes_listbox_buttons_frame, text='Calibrate...')
   classes_calibrate_button.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
   classes_calibrate_button.lower() # fix tab order
   
-  identification_options_frame = ttk.Frame(left_options_frame)
-  identification_options_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  identification_options_widgets = make_identification_options(
-    identification_options_frame, variables)
+  row_frame = ttk.Frame(general_frame)
+  row_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   
-  confidence_score_radiobuttons = identification_options_widgets[1]
-  identification_options_radiobuttons = identification_options_widgets[4]
+  row_frame.columnconfigure(0, weight=1) # make identification options frame horizontally resizable
   
-  right_options_frame = ttk.Frame(frame)
-  right_options_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  identification_options_frame = ttk.Frame(row_frame)
+  identification_options_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  make_identification_options(identification_options_frame, variables)
   
-  right_options_frame.rowconfigure(3, weight=1) # make help frame vertically resizable
-  right_options_frame.columnconfigure(0, weight=1) # one column layout
+  presets_frame = ttk.Frame(row_frame)
+  presets_frame.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui_std.PADX_HW)
+  make_presets(presets_frame, import_preset, export_preset)
   
-  weights_frame = ttk.Frame(right_options_frame)
-  weights_frame.grid(row=0, sticky=tk.NSEW)
-  weights_variable = variables['weights']
-  gui_std.make_filedialog(weights_frame, weights_variable, name='Weights',
-    parent=window, filetypes=weights_filetypes)
+  advanced_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
   
-  if tfhub_enabled: gui_std.enable_widget(weights_frame, enabled=False)
+  advanced_frame.rowconfigure(3, weight=1) # make help frame vertically resizable
+  advanced_frame.columnconfigure(0, weight=1) # one column layout
   
-  top_options_frame = ttk.Frame(right_options_frame)
-  top_options_frame.grid(row=1, sticky=tk.NSEW)
+  row_frame = ttk.Frame(advanced_frame)
+  row_frame.grid(row=0, sticky=tk.NSEW)
   
-  top_options_frame.columnconfigure((0, 1), weight=1,
-    uniform='right_options_column') # make the columns uniform
+  row_frame.columnconfigure((0, 1), weight=1,
+    uniform='advanced_column') # make the columns uniform
   
-  combine_frame = ttk.Frame(top_options_frame)
+  combine_frame = ttk.Frame(row_frame)
   combine_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
   combine_all_checkbutton = make_combine(combine_frame, variables)
   
-  background_noise_volume_frame = ttk.Frame(top_options_frame)
+  background_noise_volume_frame = ttk.Frame(row_frame)
   background_noise_volume_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
   background_noise_volume_radiobuttons = make_background_noise_volume(
     background_noise_volume_frame, variables)
   
-  bottom_options_frame = ttk.Frame(right_options_frame)
-  bottom_options_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  row_frame = ttk.Frame(advanced_frame)
+  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   
-  bottom_options_frame.columnconfigure((0, 1), weight=1,
-    uniform='right_options_column') # make the columns uniform
+  row_frame.columnconfigure((0, 1), weight=1,
+    uniform='advanced_column') # make the columns uniform
   
-  output_options_frame = ttk.Frame(bottom_options_frame)
+  output_options_frame = ttk.Frame(row_frame)
   output_options_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
   output_options_widgets = make_output_options(output_options_frame, variables)
   
-  worker_options_frame = ttk.Frame(bottom_options_frame)
+  worker_options_frame = ttk.Frame(row_frame)
   worker_options_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
   worker_options_widgets = make_worker_options(worker_options_frame, variables)
   
-  tips_frame = ttk.Frame(right_options_frame)
+  weights_frame = ttk.Frame(advanced_frame)
+  weights_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  gui_std.make_filedialog(weights_frame, variables['weights'], name='Weights',
+    parent=window, filetypes=weights_filetypes)
+  
+  if tfhub_enabled: gui_std.enable_widget(weights_frame, enabled=False)
+  
+  tips_frame = ttk.Frame(advanced_frame)
   tips_frame.grid(row=3, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   tips_text = gui_std.make_text(tips_frame, name='Tips',
     takefocus=False, undo=True, yscroll=False)[1][0]
@@ -437,13 +426,7 @@ def make_options(frame, variables,
   gui_std.enable_widget(tips_text, enabled=False)
   
   _link_tips(tips_text, {
-    input_frame: INPUT_TIP,
-    input_recursive_checkbutton: INPUT_RECURSIVE_TIP,
-    
     weights_frame: WEIGHTS_TIP,
-    
-    classes_frame: CLASSES_TIP,
-    classes_calibrate_button: CLASSES_CALIBRATE_TIP,
     
     combine_frame: COMBINE_TIP,
     combine_all_checkbutton: COMBINE_ALL_TIP,
@@ -451,17 +434,6 @@ def make_options(frame, variables,
     background_noise_volume_frame: BACKGROUND_NOISE_VOLUME_TIP,
     background_noise_volume_radiobuttons[0]: BACKGROUND_NOISE_VOLUME_LOG_TIP,
     background_noise_volume_radiobuttons[1]: BACKGROUND_NOISE_VOLUME_LINEAR_TIP,
-    
-    identification_options_radiobuttons[0]: CONFIDENCE_SCORE_TIP,
-    identification_options_widgets[0]: CONFIDENCE_SCORE_TIP,
-    
-    confidence_score_radiobuttons[0]: CONFIDENCE_SCORE_MIN_TIP,
-    confidence_score_radiobuttons[1]: CONFIDENCE_SCORE_MAX_TIP,
-    
-    identification_options_radiobuttons[1]: TOP_RANKED_TIP,
-    identification_options_widgets[2]: TOP_RANKED_TIP,
-    
-    identification_options_widgets[3]: TOP_RANKED_OUTPUT_TIMESTAMPS_TIP,
     
     output_options_widgets[0]: OUTPUT_OPTIONS_SORT_BY_TIP,
     output_options_widgets[1]: OUTPUT_OPTIONS_ITEM_DELIMITER_TIP,
@@ -472,9 +444,13 @@ def make_options(frame, variables,
     worker_options_widgets[1]: WORKER_OPTIONS_MAX_WORKERS_TIP,
     worker_options_widgets[2]: WORKER_OPTIONS_HIGH_PRIORITY_TIP
   })
+  
+  notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
+  notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
+  notebook.enable_traversal()
 
 
-def make_footer(frame, yamscan, import_preset, export_preset, restore_defaults):
+def make_footer(frame, yamscan, restore_defaults):
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)
   
@@ -485,18 +461,8 @@ def make_footer(frame, yamscan, import_preset, export_preset, restore_defaults):
   
   restore_defaults_button.grid(row=0, column=1, padx=gui_std.PADX_QW)
   
-  import_preset_button = ttk.Button(frame, text='Import...', underline=0,
-    command=import_preset)
-  
-  import_preset_button.grid(row=0, column=2, padx=gui_std.PADX_QW)
-  
-  export_preset_button = ttk.Button(frame, text='Export...', underline=0,
-    command=export_preset)
-  
-  export_preset_button.grid(row=0, column=3, padx=gui_std.PADX_QW)
-  
   for button in (
-    yamscan_button, import_preset_button, export_preset_button, restore_defaults_button):
+    yamscan_button, restore_defaults_button):
     gui_std.accelerate_button(button)
 
 
@@ -505,7 +471,7 @@ def make_yamosse(frame, title, options_variables,
   yamscan, import_preset, export_preset, restore_defaults):
   # resizing technically works but looks kind of jank, so just disable for now
   RESIZABLE = False
-  SIZE = (960, 480)
+  SIZE = (560, 520)
   
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
@@ -521,8 +487,9 @@ def make_yamosse(frame, title, options_variables,
   options_frame = ttk.Frame(frame)
   options_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_N)
   make_options(options_frame, options_variables,
-    input_filetypes, weights_filetypes, class_names, tfhub_enabled)
+    input_filetypes, weights_filetypes, class_names, tfhub_enabled,
+    import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=2, sticky=tk.E, pady=gui_std.PADY_N)
-  make_footer(footer_frame, yamscan, import_preset, export_preset, restore_defaults)
+  make_footer(footer_frame, yamscan, restore_defaults)
