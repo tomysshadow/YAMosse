@@ -491,7 +491,7 @@ def yamosse(**kwargs):
     _input = options.input_
     
     if not _input:
-      show_warning(gui.MESSAGE_INPUT_NONE)
+      show_warning(gui_yamosse.MESSAGE_INPUT_NONE)
       return
     
     if output_file_name:
