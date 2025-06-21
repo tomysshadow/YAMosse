@@ -71,6 +71,11 @@ def make_confidence_score(frame, variables):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
+  # the frame passed in sticks to NSEW
+  # so that the Help Text is shown for the entire cell
+  # but we want to be vertically centered
+  # (only stick to EW)
+  # so we create this cell frame
   cell_frame = ttk.Frame(frame)
   cell_frame.grid(sticky=tk.EW)
   
@@ -202,11 +207,6 @@ def make_combine(frame, variables):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
-  # the frame passed in sticks to NSEW
-  # so that the Help Text is shown for the entire cell
-  # but we want to be vertically centered
-  # (only stick to EW)
-  # so we create this cell frame
   cell_frame = ttk.Frame(frame)
   cell_frame.grid(sticky=tk.EW)
   
@@ -364,7 +364,7 @@ def _link_tips(text, tips):
 
 
 def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
-  frame.rowconfigure(3, weight=1) # make help frame vertically resizable
+  frame.rowconfigure(3, weight=1) # make tips frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
   row_frame = ttk.Frame(frame)
