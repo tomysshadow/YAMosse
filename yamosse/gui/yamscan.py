@@ -69,7 +69,7 @@ def make_footer(frame, log_text, open_output_file, done):
   gui.bind_buttons_window(done_button.winfo_toplevel(), cancel_button=done_button)
   
   for button in (open_output_file_button, done_button):
-    gui_std.accelerate_button(button)
+    gui_std.enable_traversal_button(button)
   
   return open_output_file_button, done_button
 
@@ -106,9 +106,9 @@ def show_yamscan(widgets, values=None):
       ok = done_value == 'OK'
       gui_std.enable_widget(open_output_file_button, enabled=ok)
       
-      gui_std.decelerate_button(done_button)
+      gui_std.disable_traversal_button(done_button)
       done_button['text'] = done_value
-      gui_std.accelerate_button(done_button)
+      gui_std.enable_traversal_button(done_button)
       
       gui.bind_buttons_window(
         window,

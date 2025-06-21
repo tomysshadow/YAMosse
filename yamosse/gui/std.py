@@ -133,30 +133,30 @@ def make_widgets(frame, make_widget, names,
   return widgets
 
 
-def _accelerator_sequence_button(button, underline):
+def _traversal_sequence_button(button, underline):
   assert underline >= 0, 'underline must be greater than or equal to zero'
   return '<Alt-%c>' % str(button['text'])[underline].lower()
 
 
-def accelerate_button(button):
+def enable_traversal_button(button):
   underline = int(button['underline'])
   
   if underline < 0:
     return
   
   button.winfo_toplevel().bind(
-    _accelerator_sequence_button(button, underline),
+    _traversal_sequence_button(button, underline),
     lambda e: button.focus_set()
   )
 
 
-def decelerate_button(button):
+def disable_traversal_button(button):
   underline = int(button['underline'])
   
   if underline < 0:
     return
   
-  button.winfo_toplevel().unbind(_accelerator_sequence_button(button, underline))
+  button.winfo_toplevel().unbind(_traversal_sequence_button(button, underline))
 
 
 def link_radiobuttons(radiobuttons, variable):
@@ -177,15 +177,6 @@ def link_radiobuttons(radiobuttons, variable):
     radiobuttons[r].configure(value=r, variable=variable, command=show)
   
   show()
-
-
-def make_labelframe(frame, sticky=tk.NSEW, padding=PADDING_HNSEW, **kwargs):
-  frame.rowconfigure(0, weight=1) # make labelframe vertically resizable
-  frame.columnconfigure(0, weight=1) # make labelframe horizontally resizable
-  
-  labelframe = ttk.Labelframe(frame, padding=padding, **kwargs)
-  labelframe.grid(sticky=sticky)
-  return labelframe
 
 
 def make_name(frame, name):
