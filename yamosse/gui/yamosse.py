@@ -343,7 +343,7 @@ def make_options(frame, variables,
   frame.columnconfigure((0, 1), weight=1, uniform='options_column') # make the columns uniform
   
   left_options_frame = ttk.Frame(frame)
-  left_options_frame.grid(row=0, column=0, sticky=tk.NSEW)
+  left_options_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
   
   left_options_frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   left_options_frame.columnconfigure(0, weight=1) # one column layout
@@ -377,22 +377,16 @@ def make_options(frame, variables,
   classes_calibrate_button.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
   classes_calibrate_button.lower() # fix tab order
   
-  bottom_options_frame = ttk.Frame(left_options_frame)
-  bottom_options_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  identification_options_frame = ttk.Frame(left_options_frame)
+  identification_options_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  identification_options_widgets = make_identification_options(
+    identification_options_frame, variables)
   
-  bottom_options_frame.columnconfigure((0, 1), weight=1,
-    uniform='bottom_options_column') # make the columns uniform
-  
-  output_options_frame = ttk.Frame(bottom_options_frame)
-  output_options_frame.grid(row=0, column=0, sticky=tk.NSEW)
-  output_options_widgets = make_output_options(output_options_frame, variables)
-  
-  worker_options_frame = ttk.Frame(bottom_options_frame)
-  worker_options_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_W)
-  worker_options_widgets = make_worker_options(worker_options_frame, variables)
+  confidence_score_radiobuttons = identification_options_widgets[1]
+  identification_options_radiobuttons = identification_options_widgets[4]
   
   right_options_frame = ttk.Frame(frame)
-  right_options_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_W)
+  right_options_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
   
   right_options_frame.rowconfigure(3, weight=1) # make help frame vertically resizable
   right_options_frame.columnconfigure(0, weight=1) # one column layout
@@ -409,7 +403,7 @@ def make_options(frame, variables,
   top_options_frame.grid(row=1, sticky=tk.NSEW)
   
   top_options_frame.columnconfigure((0, 1), weight=1,
-    uniform='top_options_column') # make the columns uniform
+    uniform='right_options_column') # make the columns uniform
   
   combine_frame = ttk.Frame(top_options_frame)
   combine_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
@@ -420,13 +414,19 @@ def make_options(frame, variables,
   background_noise_volume_radiobuttons = make_background_noise_volume(
     background_noise_volume_frame, variables)
   
-  identification_options_frame = ttk.Frame(right_options_frame)
-  identification_options_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  identification_options_widgets = make_identification_options(
-    identification_options_frame, variables)
+  bottom_options_frame = ttk.Frame(right_options_frame)
+  bottom_options_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
   
-  confidence_score_radiobuttons = identification_options_widgets[1]
-  identification_options_radiobuttons = identification_options_widgets[4]
+  bottom_options_frame.columnconfigure((0, 1), weight=1,
+    uniform='right_options_column') # make the columns uniform
+  
+  output_options_frame = ttk.Frame(bottom_options_frame)
+  output_options_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  output_options_widgets = make_output_options(output_options_frame, variables)
+  
+  worker_options_frame = ttk.Frame(bottom_options_frame)
+  worker_options_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  worker_options_widgets = make_worker_options(worker_options_frame, variables)
   
   tips_frame = ttk.Frame(right_options_frame)
   tips_frame.grid(row=3, sticky=tk.NSEW, pady=gui_std.PADY_QN)
