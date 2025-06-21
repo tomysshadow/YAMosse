@@ -175,7 +175,6 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
       progressbar_widgets, progressbar_variable, gui_progress.RESET)
     
     gui.release_modal_window(window)
-    window.destroy()
   
   footer_yamscan_frame = ttk.Frame(frame)
   footer_yamscan_frame.grid(row=2, sticky=tk.EW, pady=gui_std.PADY_N)

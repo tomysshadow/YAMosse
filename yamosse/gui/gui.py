@@ -50,7 +50,7 @@ def bind_buttons_window(window, ok_button=None, cancel_button=None):
     window.bind('<Escape>', lambda e: cancel_button.invoke())
 
 
-def release_modal_window(window):
+def release_modal_window(window, destroy=True):
   parent = window.master
   
   # this must be done before destroying the window
@@ -61,6 +61,7 @@ def release_modal_window(window):
   
   window.grab_release() # is not necessary on Windows, but is necessary on other OS's
   parent.focus_set()
+  if destroy: window.destroy()
 
 
 def set_modal_window(window, delete_window=release_modal_window):
