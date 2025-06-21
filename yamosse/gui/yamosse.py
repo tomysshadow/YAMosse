@@ -484,8 +484,7 @@ def make_footer(frame, yamscan, restore_defaults):
   
   restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui_std.PADX_QW)
   
-  for button in (
-    yamscan_button, restore_defaults_button):
+  for button in (yamscan_button, restore_defaults_button):
     gui_std.enable_traversal_button(button)
 
 
