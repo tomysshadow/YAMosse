@@ -447,7 +447,7 @@ def make_options(frame, variables,
   frame.columnconfigure(0, weight=1) # make notebook horizontally resizable
   
   notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
-  notebook.grid(row=0, column=0, sticky=tk.NSEW)
+  notebook.grid(sticky=tk.NSEW)
   
   general_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
   make_general(general_frame, variables, input_filetypes, class_names,
