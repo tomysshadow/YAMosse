@@ -50,7 +50,7 @@ def make_footer(frame, log_text, open_output_file, done):
   
   # this button does not have an accelerator because the user can copy the text
   # by using the Ctrl + A, Ctrl + C keycombo
-  copy_to_clipboard_button = ttk.Button(frame, text='Copy To Clipboard',
+  copy_to_clipboard_button = ttk.Button(frame, text='Copy to Clipboard',
     image=gui.get_root_images()['Photo']['copy.gif'], compound=tk.LEFT,
     command=copy_to_clipboard)
   
@@ -151,9 +151,9 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   progressbar_widgets = gui_std.make_progressbar(progressbar_frame, progressbar_variable,
     maximum=progressbar_maximum, state=gui_progress.LOADING, parent=parent, task=True)[1]
   
-  log_frame = ttk.Frame(frame)
-  log_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_N)
-  log_text = gui_std.make_text(log_frame, name='Log', takefocus=True)[1][0]
+  log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui_std.PADDING_HNSEW)
+  log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_N)
+  log_text = gui_std.make_text(log_labelframe, takefocus=True)[1][0]
   #gui_std.prevent_default_widget(log_text)
   gui_std.enable_widget(log_text, enabled=False)
   
