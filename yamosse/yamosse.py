@@ -493,6 +493,10 @@ def yamosse(**kwargs):
       show_warning(gui_yamosse.MESSAGE_INPUT_NONE)
       return
     
+    if not options.classes:
+      show_warning(gui_yamosse.MESSAGE_CLASSES_NONE)
+      return
+    
     if output_file_name:
       yamscan_thread(None, output_file_name, options, model_yamnet_class_names)
       return
@@ -615,3 +619,5 @@ def yamosse(**kwargs):
   gui.set_variables_to_object(options_variables, options)
   options.dump()
   return window.children
+
+# "All I need, is for someone to catch my smoke signal, and rescue me, from myself."

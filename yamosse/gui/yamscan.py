@@ -148,7 +148,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   progressbar_frame.grid(row=0, sticky=tk.EW)
   progressbar_variable = tk.IntVar()
   progressbar_widgets = gui.make_progressbar(progressbar_frame, variable=progressbar_variable,
-    maximum=progressbar_maximum, state=gui_progress.LOADING, parent=parent, task=True)[1]
+    maximum=progressbar_maximum, type_=gui_progress.LOADING, parent=parent, task=True)[1]
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
