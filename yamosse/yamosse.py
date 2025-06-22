@@ -16,7 +16,6 @@ import yamosse.options as yamosse_options
 import yamosse.worker as yamosse_worker
 
 from .gui import gui
-from .gui import std as gui_std
 from .gui import progress as gui_progress
 from .gui import yamscan as gui_yamscan
 from .gui import yamosse as gui_yamosse
@@ -464,7 +463,7 @@ def yamosse(**kwargs):
   
   def show_warning(message):
     if window:
-      gui_std.messagebox.showwarning(title=NAME, message=message)
+      gui.messagebox.showwarning(title=NAME, message=message)
       return
     
     print(message)
@@ -498,7 +497,7 @@ def yamosse(**kwargs):
       yamscan_thread(None, output_file_name, options, model_yamnet_class_names)
       return
     
-    output_file_name = gui_std.filedialog.asksaveasfilename(
+    output_file_name = gui.filedialog.asksaveasfilename(
       parent=window,
       filetypes=FILETYPES,
       initialdir=INITIALDIR,
@@ -531,7 +530,7 @@ def yamosse(**kwargs):
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
       
-      file_name = gui_std.filedialog.askopenfilename(parent=window, filetypes=PRESET_FILETYPES,
+      file_name = gui.filedialog.askopenfilename(parent=window, filetypes=PRESET_FILETYPES,
         initialdir=PRESET_INITIALDIR)
       
       if not file_name: return
@@ -555,7 +554,7 @@ def yamosse(**kwargs):
     
     gui.set_variables_to_object(options_variables, options)
     
-    file_name = gui_std.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
+    file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
       initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
     
     if not file_name: return
@@ -566,11 +565,11 @@ def yamosse(**kwargs):
     nonlocal options_variables
     
     if window:
-      if not gui_std.messagebox.askyesno(
+      if not gui.messagebox.askyesno(
         parent=window,
         title=NAME,
         message=gui_yamosse.ASK_RESTORE_DEFAULTS_MESSAGE,
-        default=gui_std.messagebox.NO
+        default=gui.messagebox.NO
       ): return
     
     options_variables = gui.get_variables_from_object(yamosse_options.Options())

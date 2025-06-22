@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from . import gui
-from . import std as gui_std
 from . import progress as gui_progress
 
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
@@ -34,7 +33,7 @@ def make_footer(frame, log_text, open_output_file, done):
     
     copied_to_clipboard_label.clipboard_clear()
     copied_to_clipboard_label.clipboard_append(log_text.get('1.0', tk.END))
-    copied_to_clipboard_label.grid(row=0, column=1, sticky=tk.W, padx=gui_std.PADX_QW)
+    copied_to_clipboard_label.grid(row=0, column=1, sticky=tk.W, padx=gui.PADX_QW)
     
     if copied_to_clipboard_after:
       copied_to_clipboard_label.after_cancel(copied_to_clipboard_after)
@@ -59,17 +58,17 @@ def make_footer(frame, log_text, open_output_file, done):
   open_output_file_button = ttk.Button(frame, text='Open Output File', underline=1,
     command=open_output_file)
   
-  open_output_file_button.grid(row=0, column=2, sticky=tk.E, padx=gui_std.PADX_QW)
-  gui_std.enable_widget(open_output_file_button, enabled=False)
+  open_output_file_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
+  gui.enable_widget(open_output_file_button, enabled=False)
   
   done_button = ttk.Button(frame, text='Cancel', underline=0,
     command=done, default=tk.ACTIVE)
   
-  done_button.grid(row=0, column=3, sticky=tk.E, padx=gui_std.PADX_QW)
+  done_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   gui.bind_buttons_window(done_button.winfo_toplevel(), cancel_button=done_button)
   
   for button in (open_output_file_button, done_button):
-    gui_std.enable_traversal_button(button)
+    gui.enable_traversal_button(button)
   
   return open_output_file_button, done_button
 
@@ -84,14 +83,14 @@ def show_yamscan(widgets, values=None):
     if not values: return
     
     if 'progressbar' in values:
-      gui_std.configure_progressbar(
+      gui.configure_progressbar(
         progressbar_widgets, progressbar_variable, values['progressbar'])
     
     if 'log' in values:
       log_text['state'] = tk.NORMAL
       
       try:
-        gui_std.delete_lines_text(log_text)
+        gui.delete_lines_text(log_text)
         log_text.insert(tk.END, '%s\n' % values['log'])
         log_text.see(tk.END)
       finally:
@@ -104,11 +103,11 @@ def show_yamscan(widgets, values=None):
       open_output_file_button, done_button = footer_yamscan_widgets
       
       ok = done_value == 'OK'
-      gui_std.enable_widget(open_output_file_button, enabled=ok)
+      gui.enable_widget(open_output_file_button, enabled=ok)
       
-      gui_std.disable_traversal_button(done_button)
+      gui.disable_traversal_button(done_button)
       done_button['text'] = done_value
-      gui_std.enable_traversal_button(done_button)
+      gui.enable_traversal_button(done_button)
       
       gui.bind_buttons_window(
         window,
@@ -148,14 +147,14 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   progressbar_frame = ttk.Frame(frame)
   progressbar_frame.grid(row=0, sticky=tk.EW)
   progressbar_variable = tk.IntVar()
-  progressbar_widgets = gui_std.make_progressbar(progressbar_frame, progressbar_variable,
+  progressbar_widgets = gui.make_progressbar(progressbar_frame, progressbar_variable,
     maximum=progressbar_maximum, state=gui_progress.LOADING, parent=parent, task=True)[1]
   
-  log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui_std.PADDING_HNSEW)
-  log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_N)
-  log_text = gui_std.make_text(log_labelframe, takefocus=True)[1][0]
-  #gui_std.prevent_default_widget(log_text)
-  gui_std.enable_widget(log_text, enabled=False)
+  log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
+  log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
+  log_text = gui.make_text(log_labelframe, takefocus=True)[1][0]
+  #gui.prevent_default_widget(log_text)
+  gui.enable_widget(log_text, enabled=False)
   
   def select_all_log_text(e):
     # in theory you'd think setting the focus would be enough on its own
@@ -171,13 +170,13 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   def done(window):
     if not ask_cancel(window, title, footer_yamscan_widgets): return
     
-    gui_std.configure_progressbar(
+    gui.configure_progressbar(
       progressbar_widgets, progressbar_variable, gui_progress.RESET)
     
     gui.release_modal_window(window)
   
   footer_yamscan_frame = ttk.Frame(frame)
-  footer_yamscan_frame.grid(row=2, sticky=tk.EW, pady=gui_std.PADY_N)
+  footer_yamscan_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   
   footer_yamscan_widgets = make_footer(
     footer_yamscan_frame,

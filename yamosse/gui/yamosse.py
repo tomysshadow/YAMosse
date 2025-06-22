@@ -3,7 +3,6 @@ from tkinter import ttk
 import webbrowser
 
 from . import gui as gui
-from . import std as gui_std
 
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
@@ -83,14 +82,14 @@ def make_confidence_score(frame, variables):
   
   scale_frame = ttk.Frame(cell_frame)
   scale_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui_std.make_scale(scale_frame, variables['confidence_score'])
+  gui.make_scale(scale_frame, variables['confidence_score'])
   
   radiobuttons_frame = ttk.Frame(cell_frame)
-  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
-  radiobuttons = gui_std.make_widgets(radiobuttons_frame, ttk.Radiobutton,
-    ('Min', 'Max'), orient=tk.VERTICAL, cell=0, padding=gui_std.PADDING_Q)
+  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
+  radiobuttons = gui.make_widgets(radiobuttons_frame, ttk.Radiobutton,
+    ('Min', 'Max'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
   
-  gui_std.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
+  gui.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
     variables['confidence_score_minmax'])
 
 
@@ -105,12 +104,12 @@ def make_top_ranked(frame, variables):
   
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, sticky=tk.EW)
-  gui_std.make_spinbox(spinbox_frame, variables['top_ranked'],
-    from_=1, unit=gui_std.UNIT_CLASSES)
+  gui.make_spinbox(spinbox_frame, variables['top_ranked'],
+    from_=1, unit=gui.UNIT_CLASSES)
   
   ttk.Checkbutton(cell_frame,
     variable=variables['top_ranked_output_timestamps'], text='Output Timestamps').grid(
-    row=1, sticky=tk.W, pady=gui_std.PADY_QN)
+    row=1, sticky=tk.W, pady=gui.PADY_QN)
 
 
 def make_identification_options(frame, variables):
@@ -120,17 +119,17 @@ def make_identification_options(frame, variables):
     uniform='identification_options_column') # make the columns uniform
   
   confidence_score_frame = ttk.Frame(frame)
-  confidence_score_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  confidence_score_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
   make_confidence_score(confidence_score_frame, variables)
   
   top_ranked_frame = ttk.Frame(frame)
-  top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui.PADX_HW)
   make_top_ranked(top_ranked_frame, variables)
   
-  radiobuttons = gui_std.make_widgets(frame, ttk.Radiobutton,
+  radiobuttons = gui.make_widgets(frame, ttk.Radiobutton,
     ('Confidence Score', 'Top Ranked'), sticky=tk.EW, cell=0)
   
-  gui_std.link_radiobuttons(zip(radiobuttons, (confidence_score_frame, top_ranked_frame)),
+  gui.link_radiobuttons(zip(radiobuttons, (confidence_score_frame, top_ranked_frame)),
     variables['identification'])
   
   # fix tab order
@@ -142,9 +141,9 @@ def make_presets(frame, import_, export):
   frame.rowconfigure((0, 1), weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
-  import_button, export_button = gui_std.make_widgets(
+  import_button, export_button = gui.make_widgets(
     frame, ttk.Button, ('Import...', 'Export...'),
-    orient=tk.VERTICAL, padding=gui_std.PADDING_Q)
+    orient=tk.VERTICAL, padding=gui.PADDING_Q)
   
   import_button['command'] = import_
   export_button['command'] = export
@@ -155,11 +154,11 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
   frame.columnconfigure(0, weight=1) # one column layout
   
   input_labelframe = ttk.Labelframe(frame, text='Input',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
   
-  input_filedialog_buttons_frame = gui_std.make_filedialog(
+  input_filedialog_buttons_frame = gui.make_filedialog(
     input_labelframe,
     variables['input_'],
     asks=('directory', 'openfilenames'),
@@ -170,36 +169,36 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
   input_recursive_checkbutton = ttk.Checkbutton(input_filedialog_buttons_frame,
     text='Recursive', variable=variables['input_recursive'])
   
-  input_recursive_checkbutton.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
+  input_recursive_checkbutton.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
   input_recursive_checkbutton.lower() # fix tab order
   
   classes_labelframe = ttk.Labelframe(frame, text='Classes',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  classes_listbox_buttons_frame = gui_std.make_listbox(classes_labelframe, class_names,
+  classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
+  classes_listbox_buttons_frame = gui.make_listbox(classes_labelframe, class_names,
     selectmode=tk.MULTIPLE)[2][0]
   
   # TODO command
   classes_calibrate_button = ttk.Button(classes_listbox_buttons_frame, text='Calibrate...')
-  classes_calibrate_button.grid(row=0, column=gui_std.BUTTONS_COLUMN_LEFT)
+  classes_calibrate_button.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
   classes_calibrate_button.lower() # fix tab order
   
   row_frame = ttk.Frame(frame)
-  row_frame.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  row_frame.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
   
   row_frame.columnconfigure(0, weight=1) # make identification options frame horizontally resizable
   
   identification_options_labelframe = ttk.Labelframe(row_frame, text='Identification Options',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  identification_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  identification_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
   make_identification_options(identification_options_labelframe, variables)
   
   presets_labelframe = ttk.Labelframe(row_frame, text='Presets',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui_std.PADX_HW)
+  presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_HW)
   make_presets(presets_labelframe, import_preset, export_preset)
 
 
@@ -214,18 +213,18 @@ def make_combine(frame, variables):
   
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui_std.make_spinbox(spinbox_frame, variables['combine'],
-    from_=0, to=60, unit=gui_std.UNIT_SECONDS)
+  gui.make_spinbox(spinbox_frame, variables['combine'],
+    from_=0, to=60, unit=gui.UNIT_SECONDS)
   
   combine_all_checkbutton = ttk.Checkbutton(
     cell_frame,
     variable=variables['combine_all'],
     text='All',
-    command=lambda: gui_std.enable_widget(spinbox_frame,
+    command=lambda: gui.enable_widget(spinbox_frame,
       enabled=not variables['combine_all'].get())
   )
   
-  combine_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
+  combine_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
   return combine_all_checkbutton
 
 
@@ -240,14 +239,14 @@ def make_background_noise_volume(frame, variables):
   
   scale_frame = ttk.Frame(cell_frame)
   scale_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui_std.make_scale(scale_frame, variables['background_noise_volume'])
+  gui.make_scale(scale_frame, variables['background_noise_volume'])
   
   radiobuttons_frame = ttk.Frame(cell_frame)
-  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui_std.PADX_QW)
-  radiobuttons = gui_std.make_widgets(radiobuttons_frame, ttk.Radiobutton,
-    ('Log', 'Linear'), orient=tk.VERTICAL, cell=0, padding=gui_std.PADDING_Q)
+  radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
+  radiobuttons = gui.make_widgets(radiobuttons_frame, ttk.Radiobutton,
+    ('Log', 'Linear'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
   
-  gui_std.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
+  gui.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
     variables['background_noise_volume_loglinear'])
   
   return radiobuttons
@@ -264,13 +263,13 @@ def make_output_options(frame, variables):
   
   sort_by_frame = ttk.Frame(frame)
   sort_by_frame.grid(row=0, sticky=tk.EW)
-  gui_std.make_combobox(sort_by_frame, variables['sort_by'], name='Sort By',
+  gui.make_combobox(sort_by_frame, variables['sort_by'], name='Sort By',
     values=('Number of Sounds', 'File Name'), state=('readonly',))
   
   item_delimiter_frame = ttk.Frame(frame)
-  item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui_std.PADY_QN)
+  item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
   item_delimiter_variable = variables['item_delimiter']
-  item_delimiter_entry = gui_std.make_entry(
+  item_delimiter_entry = gui.make_entry(
     item_delimiter_frame, item_delimiter_variable, name='Item Delimiter')[1]
   
   # item delimiter should be a space at minimum
@@ -283,13 +282,13 @@ def make_output_options(frame, variables):
   output_options_checkbutton = ttk.Checkbutton(frame,
     variable=variables['output_options'], text='Output Options')
   
-  output_options_checkbutton.grid(row=2, sticky=tk.W, pady=gui_std.PADY_QN)
+  output_options_checkbutton.grid(row=2, sticky=tk.W, pady=gui.PADY_QN)
   
   output_confidence_scores_checkbutton = ttk.Checkbutton(frame,
     variable=variables['output_confidence_scores'], text='Output Confidence Scores')
   
   # this is only sticky to W so Help only appears when mousing over the checkbutton itself
-  output_confidence_scores_checkbutton.grid(row=3, sticky=tk.W, pady=gui_std.PADY_QN)
+  output_confidence_scores_checkbutton.grid(row=3, sticky=tk.W, pady=gui.PADY_QN)
   
   frame_rows = frame.grid_size()[1]
   frame.rowconfigure(tuple(range(frame_rows)), weight=1,
@@ -304,21 +303,21 @@ def make_worker_options(frame, variables):
   
   memory_limit_frame = ttk.Frame(frame)
   memory_limit_frame.grid(row=0, sticky=tk.EW)
-  gui_std.make_spinbox(memory_limit_frame, variables['memory_limit'], name='Memory Limit',
+  gui.make_spinbox(memory_limit_frame, variables['memory_limit'], name='Memory Limit',
     from_=1, to=4096, unit='MB')
   
   max_workers_frame = ttk.Frame(frame)
-  max_workers_frame.grid(row=1, sticky=tk.EW, pady=gui_std.PADY_QN)
-  gui_std.make_spinbox(max_workers_frame, variables['max_workers'], name='Max Workers',
+  max_workers_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
+  gui.make_spinbox(max_workers_frame, variables['max_workers'], name='Max Workers',
     from_=1, to=512)
   
   high_priority_checkbutton = ttk.Checkbutton(frame,
     variable=variables['high_priority'], text='High Priority')
   
-  high_priority_checkbutton.grid(row=2, sticky=tk.W, pady=gui_std.PADY_QN)
+  high_priority_checkbutton.grid(row=2, sticky=tk.W, pady=gui.PADY_QN)
   
   spacer_frame = ttk.Frame(frame)
-  spacer_frame.grid(row=3, pady=gui_std.PADY_QN)
+  spacer_frame.grid(row=3, pady=gui.PADY_QN)
   make_spacer(spacer_frame)
   
   frame_rows = frame.grid_size()[1]
@@ -374,50 +373,50 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     uniform='advanced_column') # make the columns uniform
   
   combine_labelframe = ttk.Labelframe(row_frame, text='Combine',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  combine_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  combine_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
   combine_all_checkbutton = make_combine(combine_labelframe, variables)
   
   background_noise_volume_labelframe = ttk.Labelframe(row_frame, text='Background Noise Volume',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  background_noise_volume_labelframe.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  background_noise_volume_labelframe.grid(row=0, column=1, sticky=tk.NSEW, padx=gui.PADX_HW)
   background_noise_volume_radiobuttons = make_background_noise_volume(
     background_noise_volume_labelframe, variables)
   
   row_frame = ttk.Frame(frame)
-  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_QN)
+  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
   
   row_frame.columnconfigure((0, 1), weight=1,
     uniform='advanced_column') # make the columns uniform
   
   output_options_labelframe = ttk.Labelframe(row_frame, text='Output Options',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  output_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui_std.PADX_HE)
+  output_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
   output_options_widgets = make_output_options(output_options_labelframe, variables)
   
   worker_options_labelframe = ttk.Labelframe(row_frame, text='Worker Options',
-    padding=gui_std.PADDING_HNSEW)
+    padding=gui.PADDING_HNSEW)
   
-  worker_options_labelframe.grid(row=0, column=1, sticky=tk.NSEW, padx=gui_std.PADX_HW)
+  worker_options_labelframe.grid(row=0, column=1, sticky=tk.NSEW, padx=gui.PADX_HW)
   worker_options_widgets = make_worker_options(worker_options_labelframe, variables)
   
-  weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui_std.PADDING_HNSEW)
-  weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  gui_std.make_filedialog(weights_labelframe, variables['weights'],
+  weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui.PADDING_HNSEW)
+  weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
+  gui.make_filedialog(weights_labelframe, variables['weights'],
     parent=frame.winfo_toplevel(), filetypes=weights_filetypes)
   
-  if tfhub_enabled: gui_std.enable_widget(weights_labelframe, enabled=False)
+  if tfhub_enabled: gui.enable_widget(weights_labelframe, enabled=False)
   
-  tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui_std.PADDING_HNSEW)
-  tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui_std.PADY_QN)
-  tips_text = gui_std.make_text(tips_labelframe,
+  tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)
+  tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui.PADY_QN)
+  tips_text = gui.make_text(tips_labelframe,
     takefocus=False, undo=True, yscroll=False)[1][0]
   
-  gui_std.prevent_default_widget(tips_text) # no selection when double clicking
-  gui_std.enable_widget(tips_text, enabled=False)
+  gui.prevent_default_widget(tips_text) # no selection when double clicking
+  gui.enable_widget(tips_text, enabled=False)
   
   _link_tips(tips_text, {
     weights_labelframe: WEIGHTS_TIP,
@@ -449,11 +448,11 @@ def make_options(frame, variables,
   notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
   notebook.grid(sticky=tk.NSEW)
   
-  general_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
+  general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, relief=tk.RAISED)
   make_general(general_frame, variables, input_filetypes, class_names,
     import_preset, export_preset)
   
-  advanced_frame = ttk.Frame(notebook, padding=gui_std.PADDING_NSEW, relief=tk.RAISED)
+  advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, relief=tk.RAISED)
   make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
@@ -482,10 +481,10 @@ def make_footer(frame, yamscan, restore_defaults):
   restore_defaults_button = ttk.Button(frame, text='Restore Defaults', underline=0,
     command=restore_defaults)
   
-  restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui_std.PADX_QW)
+  restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   
   for button in (yamscan_button, restore_defaults_button):
-    gui_std.enable_traversal_button(button)
+    gui.enable_traversal_button(button)
 
 
 def make_yamosse(frame, title, options_variables,
@@ -507,11 +506,11 @@ def make_yamosse(frame, title, options_variables,
   make_header(header_frame, title)
   
   options_frame = ttk.Frame(frame)
-  options_frame.grid(row=1, sticky=tk.NSEW, pady=gui_std.PADY_N)
+  options_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   make_options(options_frame, options_variables,
     input_filetypes, weights_filetypes, class_names, tfhub_enabled,
     import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
-  footer_frame.grid(row=2, sticky=tk.EW, pady=gui_std.PADY_N)
+  footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   make_footer(footer_frame, yamscan, restore_defaults)
