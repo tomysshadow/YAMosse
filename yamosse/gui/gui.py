@@ -330,10 +330,13 @@ def _is_even(num):
   return not num & 1
 
 
-def make_listbox(frame, items, name='',
+def make_listbox(frame, name='', items=None,
   selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
   BG = 'Azure'
   BG2 = 'Azure2'
+  
+  if not items:
+    items = []
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -363,16 +366,20 @@ def make_listbox(frame, items, name='',
   if selectmode == tk.MULTIPLE:
     def select_all():
       listbox.selection_set(0, tk.END)
+      listbox.event_generate('<<ListboxSelect>>')
     
     def select_none():
       listbox.selection_clear(0, tk.END)
+      listbox.event_generate('<<ListboxSelect>>')
     
     def invert_selection():
-      for item in range(listbox.size()):
-        if listbox.selection_includes(item):
-          listbox.selection_clear(item)
+      for index in range(listbox.size()):
+        if listbox.selection_includes(index):
+          listbox.selection_clear(index)
         else:
-          listbox.selection_set(item)
+          listbox.selection_set(index)
+      
+      listbox.event_generate('<<ListboxSelect>>')
     
     buttons = [
       ttk.Button(

@@ -176,10 +176,42 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     padding=gui.PADDING_HNSEW)
   
   classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
-  classes_buttons_frame = gui.make_listbox(classes_labelframe, class_names,
-    selectmode=tk.MULTIPLE)[2][0]
+  classes_listbox_widgets = gui.make_listbox(classes_labelframe, items=class_names,
+    selectmode=tk.MULTIPLE)
+  
+  classes_listbox = classes_listbox_widgets[1][0]
+  
+  def show_classes_listbox(event_generate=True):
+    index = 0
+    size = classes_listbox.size()
+    classes_variable = variables['classes']
+    
+    def set_():
+      if index in classes_variable: return True
+      
+      classes_listbox.selection_clear(index)
+      return False
+    
+    for index in range(size):
+      if set_():
+        classes_listbox.selection_set(index)
+        classes_listbox.see(index)
+        break
+    
+    for index in range(index, size):
+      if set_():
+        classes_listbox.selection_set(index)
+    
+    if event_generate: listbox.event_generate('<<ListboxSelect>>')
+  
+  def select_classes_listbox(e):
+    variables['classes'] = list(e.widget.curselection())
+  
+  show_classes_listbox(event_generate=False)
+  classes_listbox.bind('<<ListboxSelect>>', select_classes_listbox)
   
   # TODO command
+  classes_buttons_frame = classes_listbox_widgets[2][0]
   classes_calibrate_button = ttk.Button(classes_buttons_frame, text='Calibrate...')
   classes_calibrate_button.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
   classes_calibrate_button.lower() # fix tab order
