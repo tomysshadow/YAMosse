@@ -8,7 +8,7 @@ MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
 MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
-MESSAGE_CLASSES_NONE = 'You must select at least one class.'
+MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
 
 MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would you like to ',
   'download the standard YAMNet weights now from Google Cloud Storage? If you click No, the ',
