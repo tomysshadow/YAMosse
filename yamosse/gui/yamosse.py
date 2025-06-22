@@ -151,6 +151,8 @@ def make_presets(frame, import_, export):
 
 
 def make_general(frame, variables, input_filetypes, class_names, import_preset, export_preset):
+  notebook = frame.master
+  
   frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -181,35 +183,50 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     selectmode=tk.MULTIPLE)
   
   classes_listbox = classes_listbox_widgets[1][0]
+  classes_listbox_select_binding = None
   
-  def show_classes_listbox(event_generate=True):
-    index = 0
-    size = classes_listbox.size()
-    classes_variable = variables['classes']
-    
-    def set_():
-      if index in classes_variable: return True
-      
-      classes_listbox.selection_clear(index)
-      return False
-    
-    for index in range(size):
-      if set_():
-        classes_listbox.selection_set(index)
-        classes_listbox.see(index)
-        break
-    
-    for index in range(index, size):
-      if set_():
-        classes_listbox.selection_set(index)
-    
-    if event_generate: listbox.event_generate('<<ListboxSelect>>')
-  
+  # load and save the classes variable to and from the listbox
   def select_classes_listbox(e):
     variables['classes'] = list(e.widget.curselection())
   
-  show_classes_listbox(event_generate=False)
-  classes_listbox.bind('<<ListboxSelect>>', select_classes_listbox)
+  def show_classes_listbox():
+    nonlocal classes_listbox_select_binding
+    
+    if classes_listbox_select_binding: return
+    
+    classes_variable = variables['classes']
+    
+    for index in range(classes_listbox.size()):
+      if index in classes_variable:
+        classes_listbox.selection_set(index)
+      else:
+        classes_listbox.selection_clear(index)
+    
+    curselection = classes_listbox.curselection()
+    
+    if curselection:
+      classes_listbox.see(curselection[0])
+    
+    classes_listbox_select_binding = classes_listbox.bind(
+      '<<ListboxSelect>>', select_classes_listbox)
+  
+  def hide_classes_listbox():
+    nonlocal classes_listbox_select_binding
+    
+    if not classes_listbox_select_binding: return
+    
+    classes_listbox.unbind('<<ListboxSelect>>', classes_listbox_select_binding)
+    classes_listbox_select_binding = None
+  
+  # changing tabs deselects everything in the listbox and fires a ListboxSelect event
+  # we want the items to stay selected so we unbind the event here
+  def tab_changed_notebook(e):
+    if e.widget.select() == str(frame):
+      show_classes_listbox()
+    else:
+      hide_classes_listbox()
+  
+  notebook.bind('<<NotebookTabChanged>>', tab_changed_notebook)
   
   # TODO command
   classes_buttons_frame = classes_listbox_widgets[2][0]
@@ -491,6 +508,7 @@ def make_options(frame, variables,
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
   notebook.enable_traversal()
+  notebook.event_generate('<<NotebookTabChanged>>') # so General tab knows it's initially active
 
 
 def make_footer(frame, yamscan, restore_defaults):
