@@ -194,11 +194,9 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     
     if classes_listbox_select_binding: return
     
-    classes_variable = variables['classes']
-    
     classes_listbox.selection_clear(0, tk.END)
     
-    for class_ in classes_variable:
+    for class_ in variables['classes']:
       classes_listbox.selection_set(class_)
     
     curselection = classes_listbox.curselection()
