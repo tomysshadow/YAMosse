@@ -242,29 +242,29 @@ def make_percent(frame):
   return label
 
 
-def make_entry(frame, textvariable, name='', **kwargs):
+def make_entry(frame, name='', **kwargs):
   frame.rowconfigure(0, weight=1) # make entry vertically centered
   frame.columnconfigure(1, weight=1) # make entry horizontally resizable
   
-  entry = ttk.Entry(frame, textvariable=textvariable, **kwargs)
+  entry = ttk.Entry(frame, **kwargs)
   entry.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
   return make_name(frame, name), entry
 
 
-def make_spinbox(frame, textvariable, name='', wrap=False, unit='', **kwargs):
+def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   frame.rowconfigure(0, weight=1) # make spinbox vertically centered
   frame.columnconfigure(1, weight=1) # make spinbox horizontally resizable
   
-  spinbox = ttk.Spinbox(frame, textvariable=textvariable, wrap=wrap, **kwargs)
+  spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
   spinbox.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 
 
-def make_combobox(frame, textvariable, name='', state=None, **kwargs):
+def make_combobox(frame, name='', state=None, **kwargs):
   frame.rowconfigure(0, weight=1) # make combobox vertically centered
   frame.columnconfigure(1, weight=1) # make combobox horizontally resizable
   
-  combobox = ttk.Combobox(frame, textvariable=textvariable, **kwargs)
+  combobox = ttk.Combobox(frame, **kwargs)
   combobox.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
   
   if state:
@@ -273,7 +273,9 @@ def make_combobox(frame, textvariable, name='', state=None, **kwargs):
   return make_name(frame, name), combobox
 
 
-def make_scale(frame, variable, name='', **kwargs):
+def make_scale(frame, name='', variable=None, **kwargs):
+  if not variable: variable = tk.IntVar()
+  
   frame.rowconfigure(0, weight=1) # make scale vertically centered
   frame.columnconfigure(1, weight=1) # make scale horizontally resizable
   
@@ -439,8 +441,10 @@ def progressbar():
     if taskbar: taskbar.set_progress_type(gui_progress.types[type_])
     return variable_set
   
-  def make(frame, variable, name='',
-    state=gui_progress.NORMAL, parent=None, task=False, **kwargs):
+  def make(frame, name='', variable=None,
+    type_=gui_progress.NORMAL, parent=None, task=False, **kwargs):
+    if not variable: variable = tk.IntVar()
+    
     frame.rowconfigure(0, weight=1) # make progressbar vertically centered
     frame.columnconfigure(1, weight=1) # make progressbar horizontally resizable
     
@@ -475,7 +479,7 @@ def progressbar():
     variable.trace('w', show)
     
     widgets = (progressbar, taskbar)
-    if not configure(widgets, variable, state): show()
+    if not configure(widgets, variable, type_): show()
     return make_name(frame, name), widgets, percent_label
   
   return configure, make
@@ -483,10 +487,12 @@ def progressbar():
 configure_progressbar, make_progressbar = progressbar()
 
 
-def make_filedialog(frame, textvariable, name='',
+def make_filedialog(frame, name='', textvariable=None,
   asks=None, parent=None, filetypes=None, **kwargs):
   ASKS_ALL = ('openfilename', 'openfilenames', 'savefilename', 'directory')
   ASKS_FILES = ('openfilename', 'openfilenames', 'savefilename')
+  
+  if not textvariable: textvariable = tk.StringVar()
   
   frame.rowconfigure(0, weight=1) # make entry vertically centered
   frame.columnconfigure(0, weight=1) # make entry horizontally resizable
@@ -502,7 +508,7 @@ def make_filedialog(frame, textvariable, name='',
   buttons_frame = ttk.Frame(name_frame)
   buttons_frame.grid(row=0, column=1, sticky=tk.E)
   
-  def set(data):
+  def set_(data):
     if not data:
       return
     
@@ -514,7 +520,7 @@ def make_filedialog(frame, textvariable, name='',
   def show(ask='openfilename'):
     filedialog_ask = getattr(filedialog, ''.join(('ask', ask)))
     
-    set(filedialog_ask(parent=parent, filetypes=filetypes
+    set_(filedialog_ask(parent=parent, filetypes=filetypes
       ) if filetypes and ask != 'directory' else filedialog_ask(parent=parent))
   
   if asks == None:
@@ -573,7 +579,7 @@ def make_filedialog(frame, textvariable, name='',
       return e.action
     
     def drop(e):
-      set(e.widget.tk.splitlist(e.data))
+      set_(e.widget.tk.splitlist(e.data))
       return e.action
     
     frame.drop_target_register(tkinterdnd2.DND_FILES)

@@ -7,7 +7,6 @@ from . import progress as gui_progress
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
 
-# YAMScan Widgets
 def ask_cancel(window, title, footer_yamscan_widgets):
   open_output_file_button, done_button = footer_yamscan_widgets
   
@@ -148,7 +147,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   progressbar_frame = ttk.Frame(frame)
   progressbar_frame.grid(row=0, sticky=tk.EW)
   progressbar_variable = tk.IntVar()
-  progressbar_widgets = gui.make_progressbar(progressbar_frame, progressbar_variable,
+  progressbar_widgets = gui.make_progressbar(progressbar_frame, variable=progressbar_variable,
     maximum=progressbar_maximum, state=gui_progress.LOADING, parent=parent, task=True)[1]
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)

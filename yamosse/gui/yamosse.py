@@ -82,7 +82,7 @@ def make_confidence_score(frame, variables):
   
   scale_frame = ttk.Frame(cell_frame)
   scale_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui.make_scale(scale_frame, variables['confidence_score'])
+  gui.make_scale(scale_frame, variable=variables['confidence_score'])
   
   radiobuttons_frame = ttk.Frame(cell_frame)
   radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
@@ -104,11 +104,11 @@ def make_top_ranked(frame, variables):
   
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, sticky=tk.EW)
-  gui.make_spinbox(spinbox_frame, variables['top_ranked'],
+  gui.make_spinbox(spinbox_frame, textvariable=variables['top_ranked'],
     from_=1, unit=gui.UNIT_CLASSES)
   
   ttk.Checkbutton(cell_frame,
-    variable=variables['top_ranked_output_timestamps'], text='Output Timestamps').grid(
+    text='Output Timestamps', variable=variables['top_ranked_output_timestamps']).grid(
     row=1, sticky=tk.W, pady=gui.PADY_QN)
 
 
@@ -158,15 +158,15 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
   
-  input_filedialog_buttons_frame = gui.make_filedialog(
+  input_buttons_frame = gui.make_filedialog(
     input_labelframe,
-    variables['input_'],
+    textvariable=variables['input_'],
     asks=('directory', 'openfilenames'),
     parent=frame.winfo_toplevel(),
     filetypes=input_filetypes
   )[2][0]
   
-  input_recursive_checkbutton = ttk.Checkbutton(input_filedialog_buttons_frame,
+  input_recursive_checkbutton = ttk.Checkbutton(input_buttons_frame,
     text='Recursive', variable=variables['input_recursive'])
   
   input_recursive_checkbutton.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
@@ -176,11 +176,11 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     padding=gui.PADDING_HNSEW)
   
   classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
-  classes_listbox_buttons_frame = gui.make_listbox(classes_labelframe, class_names,
+  classes_buttons_frame = gui.make_listbox(classes_labelframe, class_names,
     selectmode=tk.MULTIPLE)[2][0]
   
   # TODO command
-  classes_calibrate_button = ttk.Button(classes_listbox_buttons_frame, text='Calibrate...')
+  classes_calibrate_button = ttk.Button(classes_buttons_frame, text='Calibrate...')
   classes_calibrate_button.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
   classes_calibrate_button.lower() # fix tab order
   
@@ -213,13 +213,13 @@ def make_combine(frame, variables):
   
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui.make_spinbox(spinbox_frame, variables['combine'],
+  gui.make_spinbox(spinbox_frame, textvariable=variables['combine'],
     from_=0, to=60, unit=gui.UNIT_SECONDS)
   
   combine_all_checkbutton = ttk.Checkbutton(
     cell_frame,
-    variable=variables['combine_all'],
     text='All',
+    variable=variables['combine_all'],
     command=lambda: gui.enable_widget(spinbox_frame,
       enabled=not variables['combine_all'].get())
   )
@@ -239,7 +239,7 @@ def make_background_noise_volume(frame, variables):
   
   scale_frame = ttk.Frame(cell_frame)
   scale_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui.make_scale(scale_frame, variables['background_noise_volume'])
+  gui.make_scale(scale_frame, variable=variables['background_noise_volume'])
   
   radiobuttons_frame = ttk.Frame(cell_frame)
   radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
@@ -263,14 +263,14 @@ def make_output_options(frame, variables):
   
   sort_by_frame = ttk.Frame(frame)
   sort_by_frame.grid(row=0, sticky=tk.EW)
-  gui.make_combobox(sort_by_frame, variables['sort_by'], name='Sort By',
+  gui.make_combobox(sort_by_frame, name='Sort By', textvariable=variables['sort_by'],
     values=('Number of Sounds', 'File Name'), state=('readonly',))
   
   item_delimiter_frame = ttk.Frame(frame)
   item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
   item_delimiter_variable = variables['item_delimiter']
-  item_delimiter_entry = gui.make_entry(
-    item_delimiter_frame, item_delimiter_variable, name='Item Delimiter')[1]
+  item_delimiter_entry = gui.make_entry(item_delimiter_frame, name='Item Delimiter',
+    textvariable=item_delimiter_variable)[1]
   
   # item delimiter should be a space at minimum
   def focus_out_item_delimiter(e=None):
@@ -280,12 +280,12 @@ def make_output_options(frame, variables):
   focus_out_item_delimiter()
   
   output_options_checkbutton = ttk.Checkbutton(frame,
-    variable=variables['output_options'], text='Output Options')
+    text='Output Options', variable=variables['output_options'])
   
   output_options_checkbutton.grid(row=2, sticky=tk.W, pady=gui.PADY_QN)
   
   output_confidence_scores_checkbutton = ttk.Checkbutton(frame,
-    variable=variables['output_confidence_scores'], text='Output Confidence Scores')
+    text='Output Confidence Scores', variable=variables['output_confidence_scores'])
   
   # this is only sticky to W so Help only appears when mousing over the checkbutton itself
   output_confidence_scores_checkbutton.grid(row=3, sticky=tk.W, pady=gui.PADY_QN)
@@ -303,16 +303,16 @@ def make_worker_options(frame, variables):
   
   memory_limit_frame = ttk.Frame(frame)
   memory_limit_frame.grid(row=0, sticky=tk.EW)
-  gui.make_spinbox(memory_limit_frame, variables['memory_limit'], name='Memory Limit',
+  gui.make_spinbox(memory_limit_frame, name='Memory Limit', textvariable=variables['memory_limit'],
     from_=1, to=4096, unit='MB')
   
   max_workers_frame = ttk.Frame(frame)
   max_workers_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
-  gui.make_spinbox(max_workers_frame, variables['max_workers'], name='Max Workers',
+  gui.make_spinbox(max_workers_frame, name='Max Workers', textvariable=variables['max_workers'],
     from_=1, to=512)
   
   high_priority_checkbutton = ttk.Checkbutton(frame,
-    variable=variables['high_priority'], text='High Priority')
+    text='High Priority', variable=variables['high_priority'])
   
   high_priority_checkbutton.grid(row=2, sticky=tk.W, pady=gui.PADY_QN)
   
@@ -405,7 +405,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   
   weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui.PADDING_HNSEW)
   weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
-  gui.make_filedialog(weights_labelframe, variables['weights'],
+  gui.make_filedialog(weights_labelframe, textvariable=variables['weights'],
     parent=frame.winfo_toplevel(), filetypes=weights_filetypes)
   
   if tfhub_enabled: gui.enable_widget(weights_labelframe, enabled=False)
@@ -440,7 +440,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
 
 
 def make_options(frame, variables,
-  input_filetypes, weights_filetypes, class_names, tfhub_enabled,
+  input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset):
   frame.rowconfigure(0, weight=1) # make notebook vertically resizable
   frame.columnconfigure(0, weight=1) # make notebook horizontally resizable
@@ -489,7 +489,7 @@ def make_footer(frame, yamscan, restore_defaults):
 
 
 def make_yamosse(frame, title, options_variables,
-  input_filetypes, weights_filetypes, class_names, tfhub_enabled,
+  input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   yamscan, import_preset, export_preset, restore_defaults):
   # resizing technically works but looks kind of jank, so just disable for now
   RESIZABLE = False
@@ -509,7 +509,7 @@ def make_yamosse(frame, title, options_variables,
   options_frame = ttk.Frame(frame)
   options_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   make_options(options_frame, options_variables,
-    input_filetypes, weights_filetypes, class_names, tfhub_enabled,
+    input_filetypes, class_names, weights_filetypes, tfhub_enabled,
     import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
