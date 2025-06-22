@@ -467,7 +467,7 @@ def make_footer(frame, yamscan, restore_defaults):
   def help_():
     webbrowser.open(HELP_URL)
   
-  help_button = ttk.Button(frame, text='Help', width=6,
+  help_button = ttk.Button(frame, text='Help', width=5,
     image=gui.get_root_images()['Photo']['help.gif'], compound=tk.LEFT,
     command=help_)
   

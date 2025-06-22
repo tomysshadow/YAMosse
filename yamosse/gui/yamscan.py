@@ -50,7 +50,7 @@ def make_footer(frame, log_text, open_output_file, done):
   
   # this button does not have an accelerator because the user can copy the text
   # by using the Ctrl + A, Ctrl + C keycombo
-  copy_to_clipboard_button = ttk.Button(frame, text='Copy to Clipboard',
+  copy_to_clipboard_button = ttk.Button(frame, text='Copy to Clipboard', width=18,
     image=gui.get_root_images()['Photo']['copy.gif'], compound=tk.LEFT,
     command=copy_to_clipboard)
   
