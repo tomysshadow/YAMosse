@@ -172,6 +172,10 @@ def traversal_button():
 enable_traversal_button, disable_traversal_button = traversal_button()
 
 
+def widen_button(button, width=1):
+  button['width'] = len(str(button['text'])) + width
+
+
 def link_radiobuttons(radiobuttons, variable):
   radiobuttons = dict(radiobuttons)
   
