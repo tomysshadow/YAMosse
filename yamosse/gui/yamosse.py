@@ -60,7 +60,7 @@ WORKER_OPTIONS_MAX_WORKERS_TIP = ''.join(('Increasing the max number of workers 
 WORKER_OPTIONS_HIGH_PRIORITY_TIP = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
   'at the expense of other programs running slower.'))
 
-HELP_URL = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
+ONLINE_HELP_URL = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
 
 def make_header(frame, title):
@@ -480,7 +480,7 @@ def make_footer(frame, yamscan, restore_defaults):
   frame.columnconfigure(1, weight=1)
   
   def open_online_help_():
-    webbrowser.open(HELP_URL)
+    webbrowser.open(ONLINE_HELP_URL)
   
   open_online_help_button = ttk.Button(frame, text='Open Online Help',
     image=gui.get_root_images()['Photo']['help.gif'], compound=tk.LEFT,
