@@ -780,6 +780,8 @@ def get_variables_from_object(object_):
   for key, value in vars(object_).items():
     if isinstance(value, float):
       variable = tk.DoubleVar()
+    elif isinstance(value, bool):
+      variable = tk.BooleanVar()
     elif isinstance(value, int):
       variable = tk.IntVar()
     elif isinstance(value, str):
@@ -795,7 +797,7 @@ def get_variables_from_object(object_):
 
 
 def set_variables_to_object(variables, object_):
-  VARIABLE_TYPES = (tk.DoubleVar, tk.IntVar, tk.StringVar)
+  VARIABLE_TYPES = (tk.DoubleVar, tk.BooleanVar, tk.IntVar, tk.StringVar)
   
   for key, value in variables.items():
     if isinstance(value, VARIABLE_TYPES):
