@@ -67,6 +67,31 @@ def make_header(frame, title):
   ttk.Label(frame, text=title, style='Title.TLabel').grid()
 
 
+def make_classes(frame, variables, class_names):
+  listbox_widgets = gui.make_listbox(frame, items=class_names,
+    selectmode=tk.MULTIPLE, exportselection=False)
+  
+  listbox = listbox_widgets[1][0]
+  
+  # load and dump the classes variable to and from the listbox
+  for class_ in variables['classes']:
+    listbox.selection_set(class_)
+  
+  curselection = listbox.curselection()
+  if curselection: listbox.see(curselection[0])
+  
+  def select_listbox(e):
+    variables['classes'] = list(e.widget.curselection())
+  
+  listbox.bind('<<ListboxSelect>>', select_listbox)
+  
+  # TODO command
+  buttons_frame = listbox_widgets[2][0]
+  calibrate_button = ttk.Button(buttons_frame, text='Calibrate...')
+  calibrate_button.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
+  calibrate_button.lower() # fix tab order
+
+
 def make_confidence_score(frame, variables):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
@@ -179,57 +204,7 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     padding=gui.PADDING_HNSEW)
   
   classes_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
-  classes_listbox_widgets = gui.make_listbox(classes_labelframe, items=class_names,
-    selectmode=tk.MULTIPLE)
-  
-  classes_listbox = classes_listbox_widgets[1][0]
-  classes_listbox_select_binding = None
-  
-  # load and save the classes variable to and from the listbox
-  def select_classes_listbox(e):
-    variables['classes'] = list(e.widget.curselection())
-  
-  def show_classes_listbox():
-    nonlocal classes_listbox_select_binding
-    
-    if classes_listbox_select_binding: return
-    
-    classes_listbox.selection_clear(0, tk.END)
-    
-    for class_ in variables['classes']:
-      classes_listbox.selection_set(class_)
-    
-    curselection = classes_listbox.curselection()
-    
-    if curselection:
-      classes_listbox.see(curselection[0])
-    
-    classes_listbox_select_binding = classes_listbox.bind(
-      '<<ListboxSelect>>', select_classes_listbox)
-  
-  def hide_classes_listbox():
-    nonlocal classes_listbox_select_binding
-    
-    if not classes_listbox_select_binding: return
-    
-    classes_listbox.unbind('<<ListboxSelect>>', classes_listbox_select_binding)
-    classes_listbox_select_binding = None
-  
-  # changing tabs deselects everything in the listbox and fires a ListboxSelect event
-  # we want the items to stay selected so we unbind the event here
-  def tab_changed_notebook(e):
-    if e.widget.select() == str(frame):
-      show_classes_listbox()
-    else:
-      hide_classes_listbox()
-  
-  notebook.bind('<<NotebookTabChanged>>', tab_changed_notebook)
-  
-  # TODO command
-  classes_buttons_frame = classes_listbox_widgets[2][0]
-  classes_calibrate_button = ttk.Button(classes_buttons_frame, text='Calibrate...')
-  classes_calibrate_button.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
-  classes_calibrate_button.lower() # fix tab order
+  make_classes(classes_labelframe, variables, class_names)
   
   row_frame = ttk.Frame(frame)
   row_frame.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
@@ -486,15 +461,9 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   })
 
 
-def make_options(frame, variables,
+def make_options(notebook, variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset):
-  frame.rowconfigure(0, weight=1) # make notebook vertically resizable
-  frame.columnconfigure(0, weight=1) # make notebook horizontally resizable
-  
-  notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
-  notebook.grid(sticky=tk.NSEW)
-  
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, relief=tk.RAISED)
   make_general(general_frame, variables, input_filetypes, class_names,
     import_preset, export_preset)
@@ -505,22 +474,21 @@ def make_options(frame, variables,
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
   notebook.enable_traversal()
-  notebook.event_generate('<<NotebookTabChanged>>') # so General tab knows it's initially active
 
 
 def make_footer(frame, yamscan, restore_defaults):
   frame.columnconfigure(1, weight=1)
   
-  def help_():
+  def open_online_help_():
     webbrowser.open(HELP_URL)
   
-  help_button = ttk.Button(frame, text='Help',
+  open_online_help_button = ttk.Button(frame, text='Open Online Help',
     image=gui.get_root_images()['Photo']['help.gif'], compound=tk.LEFT,
-    command=help_)
+    command=open_online_help_)
   
-  help_button.grid(row=0, column=0, sticky=tk.W)
-  help_button.winfo_toplevel().bind('<F1>', lambda e: help_())
-  gui.widen_button(help_button)
+  open_online_help_button.grid(row=0, column=0, sticky=tk.W)
+  open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help_())
+  gui.widen_button(open_online_help_button)
   
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)
@@ -554,9 +522,9 @@ def make_yamosse(frame, title, options_variables,
   header_frame.grid(row=0, sticky=tk.EW)
   make_header(header_frame, title)
   
-  options_frame = ttk.Frame(frame)
-  options_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
-  make_options(options_frame, options_variables,
+  options_notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
+  options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
+  make_options(options_notebook, options_variables,
     input_filetypes, class_names, weights_filetypes, tfhub_enabled,
     import_preset, export_preset)
   
