@@ -228,7 +228,7 @@ def worker_class_timestamps(class_predictions, shutdown, combine):
         # the cast to float here is to convert a potential Tensorflow or Numpy dtype
         # into a Python native type, because we want to pickle this result into the main process
         # which does not have those modules loaded
-        timestamp_scores[(begin, end) if begin + combine < end else begin] = float(max(
+        timestamp_scores[(begin, end) if combine and begin + combine < end else begin] = float(max(
           scores[score_begin:score_end + 1]))
         
         score_begin = prediction_end
