@@ -14,6 +14,8 @@ MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would 
   'download the standard YAMNet weights now from Google Cloud Storage? If you click No, the ',
   'YAMScan will be cancelled.'))
 
+MESSAGE_WEIGHTS_FAILED = 'The weights file could not be opened.'
+
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
 MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 
@@ -65,6 +67,22 @@ ONLINE_HELP_URL = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
 def make_header(frame, title):
   ttk.Label(frame, text=title, style='Title.TLabel').grid()
+
+
+def make_input(frame, variables, filetypes):
+  buttons_frame = gui.make_filedialog(
+    frame,
+    textvariable=variables['input_'],
+    asks=('directory', 'openfilenames'),
+    parent=frame.winfo_toplevel(),
+    filetypes=filetypes
+  )[2][0]
+  
+  recursive_checkbutton = ttk.Checkbutton(buttons_frame,
+    text='Recursive', variable=variables['input_recursive'])
+  
+  recursive_checkbutton.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
+  recursive_checkbutton.lower() # fix tab order
 
 
 def make_classes(frame, variables, class_names):
@@ -185,20 +203,7 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     padding=gui.PADDING_HNSEW)
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
-  
-  input_buttons_frame = gui.make_filedialog(
-    input_labelframe,
-    textvariable=variables['input_'],
-    asks=('directory', 'openfilenames'),
-    parent=frame.winfo_toplevel(),
-    filetypes=input_filetypes
-  )[2][0]
-  
-  input_recursive_checkbutton = ttk.Checkbutton(input_buttons_frame,
-    text='Recursive', variable=variables['input_recursive'])
-  
-  input_recursive_checkbutton.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
-  input_recursive_checkbutton.lower() # fix tab order
+  make_input(input_labelframe, variables, input_filetypes)
   
   classes_labelframe = ttk.Labelframe(frame, text='Classes',
     padding=gui.PADDING_HNSEW)
