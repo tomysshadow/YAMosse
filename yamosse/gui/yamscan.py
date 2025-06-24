@@ -131,8 +131,6 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   RESIZABLE = True
   SIZE = (480, 360)
   
-  gui.threaded()
-  
   window = frame.master
   parent = window.master
   

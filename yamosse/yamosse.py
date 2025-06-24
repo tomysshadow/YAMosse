@@ -484,6 +484,7 @@ def yamosse(**kwargs):
     
     INITIALDIR = 'My YAMScans'
     
+    gui.threaded()
     gui.set_variables_to_object(options_variables, options)
     
     options.input_ = shlex.split(options.input_)
