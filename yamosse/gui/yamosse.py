@@ -4,8 +4,8 @@ import webbrowser
 
 from . import gui as gui
 
-MINSIZE_ROW_LABELS = 21
-MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
+UNIT_CLASSES = 'classes'
+UNIT_SECONDS = 'seconds'
 
 TIP_WEIGHTS = ''.join(('The YAMNet Weights file. This option will be disabled if you are using ',
   'the Tensorflow Hub release of YAMNet.'))
@@ -48,6 +48,8 @@ TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers 
 TIP_WORKER_OPTIONS_HIGH_PRIORITY = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
   'at the expense of other programs running slower.'))
 
+URL_ONLINE_HELP = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
+
 MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
 MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
 
@@ -61,8 +63,6 @@ MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this
 MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 
 MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
-
-URL_ONLINE_HELP = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
 
 def make_header(frame, title):
@@ -149,7 +149,7 @@ def make_top_ranked(frame, variables):
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, sticky=tk.EW)
   gui.make_spinbox(spinbox_frame, textvariable=variables['top_ranked'],
-    from_=1, unit=gui.UNIT_CLASSES)
+    from_=1, unit=UNIT_CLASSES)
   
   ttk.Checkbutton(cell_frame,
     text='Output Timestamps', variable=variables['top_ranked_output_timestamps']).grid(
@@ -157,7 +157,7 @@ def make_top_ranked(frame, variables):
 
 
 def make_identification_options(frame, variables):
-  frame.rowconfigure(0, minsize=MINSIZE_ROW_RADIOBUTTONS) # make radiobuttons minimum size
+  frame.rowconfigure(0, minsize=gui.MINSIZE_ROW_RADIOBUTTONS) # make radiobuttons minimum size
   
   frame.columnconfigure((0, 1), weight=1,
     uniform='identification_options_column') # make the columns uniform
@@ -239,7 +239,7 @@ def make_combine(frame, variables):
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, column=0, sticky=tk.EW)
   gui.make_spinbox(spinbox_frame, textvariable=variables['combine'],
-    from_=0, to=60, unit=gui.UNIT_SECONDS)
+    from_=0, to=60, unit=UNIT_SECONDS)
   
   combine_all_checkbutton = ttk.Checkbutton(
     cell_frame,
