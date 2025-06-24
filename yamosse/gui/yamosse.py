@@ -19,50 +19,50 @@ MESSAGE_WEIGHTS_FAILED = 'The weights file could not be opened.'
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
 MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 
-ASK_RESTORE_DEFAULTS_MESSAGE = 'Are you sure you want to restore the defaults?'
+MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 
-WEIGHTS_TIP = ''.join(('The YAMNet Weights file. This option will be disabled if you are using ',
+TIP_WEIGHTS = ''.join(('The YAMNet Weights file. This option will be disabled if you are using ',
   'the Tensorflow Hub release of YAMNet.'))
 
-COMBINE_TIP = ''.join(('If a sound is less than this length in seconds, it will be combined into ',
+TIP_COMBINE = ''.join(('If a sound is less than this length in seconds, it will be combined into ',
   'one timestamp. Otherwise, the beginning and ending timestamp will be output with a dash ',
   'inbetween. To always combine timestamps, set this to zero.'))
 
-COMBINE_ALL_TIP = ''.join(('If checked, timestamps are not used. Instead, one prediction is made ',
+TIP_COMBINE_ALL = ''.join(('If checked, timestamps are not used. Instead, one prediction is made ',
   'for the entire sound file.'))
 
-BACKGROUND_NOISE_VOLUME_TIP = ''.join(('The volume below which all sounds are ignored. Setting ',
+TIP_BACKGROUND_NOISE_VOLUME = ''.join(('The volume below which all sounds are ignored. Setting ',
   'this to at least 1% will make scans significantly faster during silent parts of the sound ',
   'file. Set this to 0% to scan everything.'))
 
-BACKGROUND_NOISE_VOLUME_LOG_TIP = ''.join(('Logarithmic volume scale (with a 60 dB range.) This ',
+TIP_BACKGROUND_NOISE_VOLUME_LOG = ''.join(('Logarithmic volume scale (with a 60 dB range.) This ',
   'is the volume scale you should use in most cases.'))
 
-BACKGROUND_NOISE_VOLUME_LINEAR_TIP = 'Linear volume scale.'
+TIP_BACKGROUND_NOISE_VOLUME_LINEAR = 'Linear volume scale.'
 
-OUTPUT_OPTIONS_SORT_BY_TIP = ''.join(('Whether to sort results by the number of sounds ',
+TIP_OUTPUT_OPTIONS_SORT_BY = ''.join(('Whether to sort results by the number of sounds ',
   'identified, or alphabetically by file name.'))
 
-OUTPUT_OPTIONS_ITEM_DELIMITER_TIP = ''.join(('Seperator inbetween each timestamp or class. ',
+TIP_OUTPUT_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each timestamp or class. ',
   'Escape characters are supported.'))
 
-OUTPUT_OPTIONS_OUTPUT_OPTIONS_TIP = 'Output the options that were used for the YAMScan.'
+TIP_OUTPUT_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
-OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE_TIP = ''.join(('Output the confidence score percentage ',
+TIP_OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE = ''.join(('Output the confidence score percentage ',
   'along with each timestamp, so you can see how certain the model is that it identified a sound ',
   'at that timestamp.'))
 
-WORKER_OPTIONS_MEMORY_LIMIT_TIP = ''.join(('The per-worker Tensorflow logical device memory ',
+TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The per-worker Tensorflow logical device memory ',
   'limit, in megabytes.'))
 
-WORKER_OPTIONS_MAX_WORKERS_TIP = ''.join(('Increasing the max number of workers may make scans ',
+TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers may make scans ',
   'faster, unless it is set too high - then you might run out of memory (workers cost memory, ',
   'though adjusting the memory limit will make them cost less.)'))
 
-WORKER_OPTIONS_HIGH_PRIORITY_TIP = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
+TIP_WORKER_OPTIONS_HIGH_PRIORITY = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
   'at the expense of other programs running slower.'))
 
-ONLINE_HELP_URL = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
+URL_ONLINE_HELP = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
 
 def make_header(frame, title):
@@ -194,8 +194,6 @@ def make_presets(frame, import_, export):
 
 
 def make_general(frame, variables, input_filetypes, class_names, import_preset, export_preset):
-  notebook = frame.master
-  
   frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -396,8 +394,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   row_frame = ttk.Frame(frame)
   row_frame.grid(row=0, sticky=tk.NSEW)
   
-  row_frame.columnconfigure((0, 1), weight=1,
-    uniform='advanced_column') # make the columns uniform
+  row_frame.columnconfigure((0, 1), weight=1, uniform='advanced_column') # make the columns uniform
   
   combine_labelframe = ttk.Labelframe(row_frame, text='Combine',
     padding=gui.PADDING_HNSEW)
@@ -415,8 +412,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   row_frame = ttk.Frame(frame)
   row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
   
-  row_frame.columnconfigure((0, 1), weight=1,
-    uniform='advanced_column') # make the columns uniform
+  row_frame.columnconfigure((0, 1), weight=1, uniform='advanced_column') # make the columns uniform
   
   output_options_labelframe = ttk.Labelframe(row_frame, text='Output Options',
     padding=gui.PADDING_HNSEW)
@@ -446,23 +442,23 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   gui.enable_widget(tips_text, enabled=False)
   
   _link_tips(tips_text, {
-    weights_labelframe: WEIGHTS_TIP,
+    weights_labelframe: TIP_WEIGHTS,
     
-    combine_labelframe: COMBINE_TIP,
-    combine_all_checkbutton: COMBINE_ALL_TIP,
+    combine_labelframe: TIP_COMBINE,
+    combine_all_checkbutton: TIP_COMBINE_ALL,
     
-    background_noise_volume_labelframe: BACKGROUND_NOISE_VOLUME_TIP,
-    background_noise_volume_radiobuttons[0]: BACKGROUND_NOISE_VOLUME_LOG_TIP,
-    background_noise_volume_radiobuttons[1]: BACKGROUND_NOISE_VOLUME_LINEAR_TIP,
+    background_noise_volume_labelframe: TIP_BACKGROUND_NOISE_VOLUME,
+    background_noise_volume_radiobuttons[0]: TIP_BACKGROUND_NOISE_VOLUME_LOG,
+    background_noise_volume_radiobuttons[1]: TIP_BACKGROUND_NOISE_VOLUME_LINEAR,
     
-    output_options_widgets[0]: OUTPUT_OPTIONS_SORT_BY_TIP,
-    output_options_widgets[1]: OUTPUT_OPTIONS_ITEM_DELIMITER_TIP,
-    output_options_widgets[2]: OUTPUT_OPTIONS_OUTPUT_OPTIONS_TIP,
-    output_options_widgets[3]: OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE_TIP,
+    output_options_widgets[0]: TIP_OUTPUT_OPTIONS_SORT_BY,
+    output_options_widgets[1]: TIP_OUTPUT_OPTIONS_ITEM_DELIMITER,
+    output_options_widgets[2]: TIP_OUTPUT_OPTIONS_OUTPUT_OPTIONS,
+    output_options_widgets[3]: TIP_OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE,
     
-    worker_options_widgets[0]: WORKER_OPTIONS_MEMORY_LIMIT_TIP,
-    worker_options_widgets[1]: WORKER_OPTIONS_MAX_WORKERS_TIP,
-    worker_options_widgets[2]: WORKER_OPTIONS_HIGH_PRIORITY_TIP
+    worker_options_widgets[0]: TIP_WORKER_OPTIONS_MEMORY_LIMIT,
+    worker_options_widgets[1]: TIP_WORKER_OPTIONS_MAX_WORKERS,
+    worker_options_widgets[2]: TIP_WORKER_OPTIONS_HIGH_PRIORITY
   })
 
 
@@ -485,7 +481,7 @@ def make_footer(frame, yamscan, restore_defaults):
   frame.columnconfigure(1, weight=1)
   
   def open_online_help_():
-    webbrowser.open(ONLINE_HELP_URL)
+    webbrowser.open(URL_ONLINE_HELP)
   
   open_online_help_button = ttk.Button(frame, text='Open Online Help',
     image=gui.get_root_images()['Photo']['help.gif'], compound=tk.LEFT,

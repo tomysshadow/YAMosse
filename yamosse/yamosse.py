@@ -572,7 +572,7 @@ def yamosse(**kwargs):
       if not gui.messagebox.askyesno(
         parent=window,
         title=NAME,
-        message=gui_yamosse.ASK_RESTORE_DEFAULTS_MESSAGE,
+        message=gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS,
         default=gui.messagebox.NO
       ): return
     
