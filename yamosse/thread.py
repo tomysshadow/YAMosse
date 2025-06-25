@@ -25,6 +25,36 @@ def latin1_unescape(value):
   return str(value).encode('latin1').decode('unicode_escape')
 
 
+def batches(seq, size):
+  return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+
+def dict_sorted(d, *args, **kwargs):
+  return dict(sorted(d.items(), *args, **kwargs))
+
+
+def key_getsize(file_name):
+  try:
+    return os.path.getsize(file_name)
+  except OSError: pass
+  
+  return 0
+
+
+def key_class(item):
+  return item[0]
+
+
+def key_number_of_sounds(item):
+  result = 0
+  
+  # the number of sounds, with uncombined timestamps at the end
+  for timestamps in item[1].values():
+    result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
+  
+  return result
+
+
 def hours_minutes(seconds):
   TO_HMS = 60
   
@@ -45,37 +75,6 @@ def connection_flush(connection):
       connection.recv()
   except EOFError:
     pass
-
-
-def batches(seq, size):
-  return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-
-
-def dict_sorted(d, *args, **kwargs):
-  return dict(sorted(d.items(), *args, **kwargs))
-
-
-def key_getsize(file_name):
-  try:
-    return os.path.getsize(file_name)
-  except OSError:
-    pass
-  
-  return 0
-
-
-def key_class(item):
-  return item[0]
-
-
-def key_number_of_sounds(item):
-  result = 0
-  
-  # the number of sounds, with uncombined timestamps at the end
-  for timestamps in item[1].values():
-    result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
-  
-  return result
 
 
 def real_relpath(path, start=os.curdir):
@@ -413,14 +412,12 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
         if not results_errors:
           return
         
-        results, errors = results_errors
-        
         if not show(widgets, values={
           'progressbar': gui_progress.DONE,
           'log': 'Finishing, please wait...\n'
         }): return
         
-        output(output_file, results, errors, options, model_yamnet_class_names)
+        output(output_file, *results_errors, options, model_yamnet_class_names)
     
     show(widgets, values={
       'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
