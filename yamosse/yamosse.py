@@ -1,8 +1,4 @@
 import os
-from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
-from http.server import BaseHTTPRequestHandler
-import shutil
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
 from threading import Lock
@@ -17,6 +13,7 @@ import soundfile as sf
 
 import yamosse.root as yamosse_root
 import yamosse.subsystem as yamosse_subsystem
+import yamosse.download as yamosse_download
 import yamosse.options as yamosse_options
 import yamosse.worker as yamosse_worker
 
@@ -174,11 +171,9 @@ def yamscan_show(widgets, values=None):
 
 
 def yamscan_download(widgets, options, weights):
-  file = None
-  
   if weights:
     try:
-      file = open(weights, 'rb')
+      return open(weights, 'rb')
     except FileNotFoundError:
       yamscan_show(widgets, values={
         'done': 'OK',
@@ -186,42 +181,25 @@ def yamscan_download(widgets, options, weights):
         'log': 'The weights file could not be opened.'
       })
     
-    return file
+    return None
   
   weights = options.weights
   assert weights, 'weights must not be empty'
   
   if not yamscan_show(widgets, values={
     'log': 'Downloading YAMNet Weights, please wait...'
-  }): return file
-  
-  file = open(weights, 'wb')
-  
-  values = {
-    'done': 'OK',
-    'progressbar': gui_progress.ERROR
-  }
+  }): return None
   
   try:
-    try:
-      with urlopen(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL) as response:
-        shutil.copyfileobj(response, file)
-    except:
-      file.close()
-      file = None
-      raise
-  except HTTPError as ex:
-    code = ex.code
-    
-    values['log'] = 'The server couldn\'t fulfill the request.\nError code: %d\n\n%r' % (code,
-      ': '.join(BaseHTTPRequestHandler.responses[code]))
-  except URLError as ex:
-    values['log'] = ''.join(('We failed to reach a server.\nReason: ', ex.reason))
+    return yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, weights, mode='wb')
+  except yamosse_download.DownloadError as ex:
+    yamscan_show(widgets, values={
+      'done': 'OK',
+      'progressbar': gui_progress.ERROR,
+      'log': ex.reason
+    })
   
-  if 'log' in values:
-    yamscan_show(widgets, values=values)
-  
-  return file
+  return None
 
 
 def yamscan_files(widgets, options, input_, model_yamnet_class_names):
