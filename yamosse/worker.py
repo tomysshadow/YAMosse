@@ -176,10 +176,9 @@ def initializer(worker, receiver, sender, shutdown, options,
     
     yamnet = yamnet_model.yamnet_frames_model(params)
     
-    if not options.weights:
-      raise NotImplementedError('TODO') # TODO: offer download
-    
-    yamnet.load_weights(options.weights)
+    weights = options.weights
+    assert weights, 'weights must not be empty'
+    yamnet.load_weights(weights)
   
   _options = options
   _yamnet = yamnet

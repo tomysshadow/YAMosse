@@ -1,4 +1,8 @@
 import os
+from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
+from http.server import BaseHTTPRequestHandler
+import shutil
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
 from threading import Thread, Lock
@@ -24,6 +28,8 @@ NAME = 'YAMosse'
 VERSION = '1.0.0'
 
 PROGRESSBAR_MAXIMUM = 100
+
+YAMNET_WEIGHTS_PATH = 'yamnet.h5'
 
 _title = ' '.join((NAME, VERSION))
 
@@ -396,12 +402,12 @@ def yamscan_report_thread_exception(widgets, exc, val, tb):
 
 def yamscan_thread(widgets, output_file_name, options, model_yamnet_class_names):
   try:
+    seconds = time()
+    
     # we open the output file well in advance of actually using it
     # this is because it would suck to do all the work and
     # then fail because the output file is locked or whatever
     with open(output_file_name, mode='w') as output_file:
-      seconds = time()
-      
       # should be done before calling initarg on the options
       if options.output_options:
         options.print(end='\n\n', file=output_file)
@@ -419,10 +425,10 @@ def yamscan_thread(widgets, output_file_name, options, model_yamnet_class_names)
       }): return
       
       yamscan_output(output_file, results, errors, options, model_yamnet_class_names)
-      
-      yamscan_show(widgets, values={
-        'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
-      })
+    
+    yamscan_show(widgets, values={
+      'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
+    })
   except:
     yamscan_report_thread_exception(widgets, *exc_info())
   finally:
