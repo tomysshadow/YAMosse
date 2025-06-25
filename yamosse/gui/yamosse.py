@@ -475,7 +475,6 @@ def make_footer(frame, yamscan, restore_defaults):
   
   open_online_help_button.grid(row=0, column=0, sticky=tk.W)
   open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help_())
-  gui.widen_button(open_online_help_button)
   
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)

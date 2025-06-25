@@ -53,7 +53,6 @@ def make_footer(frame, log_text, open_output_file, done):
     command=copy_to_clipboard)
   
   copy_to_clipboard_button.grid(row=0, column=0, sticky=tk.W)
-  gui.widen_button(copy_to_clipboard_button)
   
   open_output_file_button = ttk.Button(frame, text='Open Output File', underline=1,
     command=open_output_file)
