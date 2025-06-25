@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler
 import shutil
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
-from threading import Thread, Lock
+from threading import Lock
 from sys import exc_info
 import traceback
 import shlex
@@ -550,7 +550,6 @@ def yamosse(**kwargs):
     
     INITIALDIR = 'My YAMScans'
     
-    subsystem.threaded()
     subsystem.set_variables_to_object(options_variables, options)
     
     input_ = shlex.split(options.input_)
@@ -610,20 +609,15 @@ def yamosse(**kwargs):
       else:
         options.weights = os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH)
     
-    # TODO: move to subsystem
-    if window:
-      # start a thread so the GUI isn't blocked
-      Thread(target=yamscan_thread, args=(
-        widgets,
-        output_file_name,
-        options,
-        input_,
-        weights,
-        model_yamnet_class_names)
-      ).start()
-      return
-    
-    yamscan_thread(None, output_file_name, options, input_, weights, model_yamnet_class_names)
+    subsystem.start(
+      yamscan_thread,
+      widgets,
+      output_file_name,
+      options,
+      input_,
+      weights,
+      model_yamnet_class_names
+    )
     
   
   def import_preset(file_name=''):

@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
+from threading import Thread
 
 from .gui import gui
 
 def subsystem(window, title):
   class Subsystem(ABC):
+    @abstractmethod
+    def start(self, target, *args, **kwargs):
+      pass
+    
     @abstractmethod
     def show_warning(self, message, parent=None):
       pass
@@ -12,19 +17,12 @@ def subsystem(window, title):
     def ask_yes_no(self, message, default=None, parent=None):
       pass
     
-    @abstractmethod
     def get_variables_from_object(self, object_):
       return None
     
-    @abstractmethod
     def set_variables_to_object(self, variables, object_):
       pass
     
-    @abstractmethod
-    def threaded(self):
-      pass
-    
-    @abstractmethod
     def quit(self):
       pass
   
@@ -32,6 +30,12 @@ def subsystem(window, title):
     def __init__(self, window, title):
       self.window = window
       self.title = title
+    
+    def start(self, target, *args, **kwargs):
+      gui.threaded()
+      
+      # start a thread so the GUI isn't blocked
+      Thread(target=target, args=args, kwargs=kwargs).start()
     
     def show_warning(self, message, parent=None):
       gui.messagebox.showwarning(
@@ -58,13 +62,13 @@ def subsystem(window, title):
     def set_variables_to_object(self, variables, object_):
       gui.set_variables_to_object(variables, object_)
     
-    def threaded(self):
-      gui.threaded()
-    
     def quit(self):
       self.window.quit()
   
   class ConsoleSubsystem(Subsystem):
+    def start(self, target, *args, **kwargs):
+      target(*args, **kwargs)
+    
     def show_warning(self, message, parent=None):
       print(message)
     
