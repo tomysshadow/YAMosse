@@ -16,16 +16,6 @@ def subsystem(window, title):
     def quit(self):
       pass
   
-  class ConsoleSubsystem(Subsystem):
-    def ask_yes_no(self, message, default, parent=None):
-      return True
-    
-    def show_warning(self, message, parent=None):
-      print(message)
-    
-    def quit(self):
-      pass
-  
   class WindowSubsystem(Subsystem):
     def __init__(self, window, title):
       self.window = window
@@ -44,6 +34,16 @@ def subsystem(window, title):
     
     def quit(self):
       self.window.quit()
+  
+  class ConsoleSubsystem(Subsystem):
+    def ask_yes_no(self, message, default, parent=None):
+      return True
+    
+    def show_warning(self, message, parent=None):
+      print(message)
+    
+    def quit(self):
+      pass
   
   if window:
     return WindowSubsystem(window, title)
