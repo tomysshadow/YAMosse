@@ -48,10 +48,6 @@ MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 _title = ' '.join((NAME, VERSION))
 
 
-def list_ordered(unordered):
-  return list('%d. %s' % (index + 1, unordered[index]) for index in range(len(unordered)))
-
-
 def open_file(path):
   try:
     os.startfile(path)
@@ -68,6 +64,10 @@ def sf_input_filetypes():
   
   input_filetypes.append(('All Files', '*.*'))
   return input_filetypes
+
+
+def list_ordered(unordered):
+  return list('%d. %s' % (index + 1, unordered[index]) for index in range(len(unordered)))
 
 
 def title():
