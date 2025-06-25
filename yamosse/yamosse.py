@@ -171,7 +171,58 @@ def yamscan_show(widgets, values=None):
   return True
 
 
-def yamscan_files(widgets, options, model_yamnet_class_names):
+def yamscan_download(widgets, options, weights):
+  file = None
+  
+  if weights:
+    try:
+      file = open(weights, 'rb')
+    except FileNotFoundError:
+      yamscan_show(widgets, values={
+        'done': 'OK',
+        'progressbar': gui_progress.ERROR,
+        'log': 'The weights file could not be opened.'
+      })
+    
+    return file
+  
+  weights = options.weights
+  assert weights, 'weights must not be empty'
+  
+  if not yamscan_show(widgets, values={
+    'log': 'Downloading YAMNet Weights, please wait...'
+  }): return file
+  
+  file = open(weights, 'wb')
+  
+  values = {
+    'done': 'OK',
+    'progressbar': gui_progress.ERROR
+  }
+  
+  try:
+    try:
+      with urlopen(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL) as response:
+        shutil.copyfileobj(response, file)
+    except:
+      file.close()
+      file = None
+      raise
+  except HTTPError as ex:
+    code = ex.code
+    
+    values['log'] = 'The server couldn\'t fulfill the request.\nError code: %d\n\n%r' % (code,
+      ': '.join(BaseHTTPRequestHandler.responses[code]))
+  except URLError as ex:
+    values['log'] = ''.join(('We failed to reach a server.\nReason: ', ex.reason))
+  
+  if 'log' in values:
+    yamscan_show(widgets, values=values)
+  
+  return file
+
+
+def yamscan_files(widgets, options, input_, model_yamnet_class_names):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -182,6 +233,8 @@ def yamscan_files(widgets, options, model_yamnet_class_names):
   # may itself take a while, so we do it in batches and simultaneously submit the work
   BATCH_SIZE = 2 ** 10 # must be a power of two
   BATCH_MASK = BATCH_SIZE - 1
+  
+  options.initarg(input_, model_yamnet_class_names)
   
   results = {}
   errors = {}
@@ -198,7 +251,6 @@ def yamscan_files(widgets, options, model_yamnet_class_names):
   
   worker = Value('i', 0)
   shutdown = Event()
-  options.initarg(model_yamnet_class_names)
   
   # created immediately before with statement so that these will definitely get closed
   receiver, sender = Pipe(duplex=False)
@@ -400,9 +452,11 @@ def yamscan_report_thread_exception(widgets, exc, val, tb):
   })
 
 
-def yamscan_thread(widgets, output_file_name, options, model_yamnet_class_names):
+def yamscan_thread(widgets, output_file_name, options, input_, weights, model_yamnet_class_names):
   try:
     seconds = time()
+    
+    yamscan_download(widgets, options, weights)
     
     # we open the output file well in advance of actually using it
     # this is because it would suck to do all the work and
@@ -412,7 +466,7 @@ def yamscan_thread(widgets, output_file_name, options, model_yamnet_class_names)
       if options.output_options:
         options.print(end='\n\n', file=output_file)
       
-      files = yamscan_files(widgets, options, model_yamnet_class_names)
+      files = yamscan_files(widgets, options, input_, model_yamnet_class_names)
       
       if not files:
         return
@@ -467,16 +521,6 @@ def yamosse(**kwargs):
   options_variables = None
   model_yamnet_class_names = yamosse_worker.class_names()
   
-  def show_warning(message):
-    if window:
-      gui.messagebox.showwarning(title=NAME, message=message)
-      return
-    
-    print(message)
-  
-  def quit_window():
-    if window: window.quit()
-  
   def yamscan(output_file_name=''):
     nonlocal options
     nonlocal options_variables
@@ -493,10 +537,9 @@ def yamosse(**kwargs):
     gui.threaded()
     gui.set_variables_to_object(options_variables, options)
     
-    options.input_ = shlex.split(options.input_)
-    _input = options.input_
+    input_ = shlex.split(options.input_)
     
-    if not _input:
+    if not input_:
       show_warning(gui_yamosse.MESSAGE_INPUT_NONE)
       return
     
@@ -504,34 +547,56 @@ def yamosse(**kwargs):
       show_warning(gui_yamosse.MESSAGE_CLASSES_NONE)
       return
     
-    if output_file_name:
-      yamscan_thread(None, output_file_name, options, model_yamnet_class_names)
+    if not output_file_name:
+      assert window, 'output_file_name must not be empty if there is no window'
+      
+      output_file_name = gui.filedialog.asksaveasfilename(
+        parent=window,
+        filetypes=FILETYPES,
+        initialdir=INITIALDIR,
+        initialfile='%s.txt' % os.path.splitext(os.path.basename(input_[0]))[0]
+      )
+      
+      if not output_file_name: return
+      
+      child, widgets = gui.gui(
+        gui_yamscan.make_yamscan,
+        TITLE,
+        lambda: open_file(os.path.realpath(output_file_name)),
+        progressbar_maximum=PROGRESSBAR_MAXIMUM,
+        child=True
+      )
+    
+    weights = options.weights
+    
+    if not weights:
+      if not ask_yes_no(gui_yamosse.MESSAGE_WEIGHTS_NONE, gui.messagebox.NO, parent=child):
+        yamscan_show(widgets, values={
+          'done': 'OK',
+          'progressbar': gui_progress.ERROR,
+          'log': 'The YAMScan was cancelled because there is no weights file.'
+        })
+        return
+      
+      # TODO: how do we unset this if the download fails?
+      options_variables['weights'].set(
+        os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH))
+      
+      gui.set_variables_to_object(options_variables, options)
+    
+    if window:
+      # start a thread so the GUI isn't blocked
+      Thread(target=yamscan_thread, args=(
+        widgets,
+        output_file_name,
+        options,
+        input_,
+        weights,
+        model_yamnet_class_names)
+      ).start()
       return
     
-    output_file_name = gui.filedialog.asksaveasfilename(
-      parent=window,
-      filetypes=FILETYPES,
-      initialdir=INITIALDIR,
-      initialfile='%s.txt' % os.path.splitext(os.path.basename(_input[0]))[0]
-    )
-    
-    if not output_file_name: return
-    
-    widgets = gui.gui(
-      gui_yamscan.make_yamscan,
-      TITLE,
-      lambda: open_file(os.path.realpath(output_file_name)),
-      progressbar_maximum=PROGRESSBAR_MAXIMUM,
-      child=True
-    )[1]
-    
-    # start a thread so the GUI isn't blocked
-    Thread(target=yamscan_thread, args=(
-      widgets,
-      output_file_name,
-      options,
-      model_yamnet_class_names)
-    ).start()
+    yamscan_thread(None, output_file_name, options, input_, weights, model_yamnet_class_names)
     
   
   def import_preset(file_name=''):
@@ -575,13 +640,7 @@ def yamosse(**kwargs):
   def restore_defaults():
     nonlocal options_variables
     
-    if window:
-      if not gui.messagebox.askyesno(
-        parent=window,
-        title=NAME,
-        message=gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS,
-        default=gui.messagebox.NO
-      ): return
+    if not ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO): return
     
     options_variables = gui.get_variables_from_object(yamosse_options.Options())
     
@@ -620,6 +679,23 @@ def yamosse(**kwargs):
     export_preset,
     restore_defaults
   )[0]
+  
+  # these are defined down here so the default argument for parent works
+  def ask_yes_no(message, default, parent=window):
+    if parent:
+      return gui.messagebox.askyesno(parent=parent, title=NAME, message=message, default=default)
+    
+    return True
+  
+  def show_warning(message, parent=window):
+    if parent:
+      gui.messagebox.showwarning(parent=parent, title=NAME, message=message)
+      return
+    
+    print(message)
+  
+  def quit_window():
+    if window: window.quit()
   
   window.mainloop()
   

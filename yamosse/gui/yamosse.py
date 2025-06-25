@@ -57,8 +57,6 @@ MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would 
   'download the standard YAMNet weights now from Google Cloud Storage? If you click No, the ',
   'YAMScan will be cancelled.'))
 
-MESSAGE_WEIGHTS_FAILED = 'The weights file could not be opened.'
-
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
 MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 

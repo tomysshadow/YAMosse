@@ -182,8 +182,10 @@ class Options:
     with open(file_name, mode='w') as f:
       json.dump(vars(self), f, indent=True)
   
-  def initarg(self, model_yamnet_class_names):
+  def initarg(self, input_, model_yamnet_class_names):
     BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
+    
+    self.input_ = input_
     
     # must be copied to not interfere with variables
     calibration = self.calibration.copy()
