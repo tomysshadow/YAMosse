@@ -126,10 +126,11 @@ def input_file_names(input_, recursive=True):
 
 
 # TODO: move show to subsystem
+class ShowError(RuntimeError): pass
+
 def show(widgets, values=None):
-  if widgets: return gui_yamscan.show_yamscan(widgets, values=values)
+  if widgets and not gui_yamscan.show_yamscan(widgets, values=values): raise ShowError
   if values and 'log' in values: print(values['log'])
-  return True
 
 
 def download(widgets, options, weights):
@@ -142,10 +143,9 @@ def download(widgets, options, weights):
   weights = options.weights
   assert weights, 'weights must not be empty'
   
-  if not show(widgets, values={
+  show(widgets, values={
     'log': 'Downloading YAMNet Weights, please wait...'
-  }): return None
-  
+  })
   return yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, weights, mode='wb')
 
 
@@ -215,7 +215,7 @@ def files(widgets, options, input_, model_yamnet_class_names):
         nonlocal next_
         nonlocal batch
         
-        if not show(widgets, values=received): return False
+        show(widgets, values=received)
         
         # just copy it out first so we aren't holding the lock
         # during all the nonsense we have to do below
@@ -241,12 +241,10 @@ def files(widgets, options, input_, model_yamnet_class_names):
           progress = file_names_pos / file_names_len
           log = f'{log}{progress:.4%} complete ({file_names_pos}/{file_names_len}: "{file_name}")'
           
-          if not show(widgets, {
+          show(widgets, {
             'progressbar': progress * PROGRESSBAR_MAXIMUM,
             'log': log
-          }): return False
-        
-        return True
+          })
       
       clear_done = None
       
@@ -268,20 +266,20 @@ def files(widgets, options, input_, model_yamnet_class_names):
             if done: normal = True
         
         if normal:
-          if not show(widgets, values={
+          show(widgets, values={
             'progressbar': gui_progress.NORMAL
-          }): return False
+          })
           
           clear_done = clear_done_normal
-          return clear_done_normal(received)
+          clear_done_normal(received)
         
-        return show(widgets, values=received)
+        show(widgets, values=received)
       
       clear_done = clear_done_loading
       
-      if not show(widgets, values={
+      show(widgets, values={
         'log': 'Created Process Pool Executor\n'
-      }): return None
+      })
       
       for f in batches(file_names, BATCH_SIZE):
         for file_name in sorted(f, key=key_getsize, reverse=True):
@@ -293,7 +291,7 @@ def files(widgets, options, input_, model_yamnet_class_names):
           # wait for up to a second so we aren't busy waiting
           # note that this only logs a single message at a time
           # (so that new incoming logs won't have the side effect of keeping the window alive)
-          if not clear_done(receiver.recv() if receiver.poll(timeout=1) else None): return None
+          clear_done(receiver.recv() if receiver.poll(timeout=1) else None)
         
         next_ = -1
     finally:
@@ -370,14 +368,16 @@ def output(file, results, errors, options, model_yamnet_class_names):
 
 
 def report_thread_exception(widgets, exc, val, tb):
-  return show(widgets, values={
-    'progressbar': gui_progress.ERROR,
-    
-    'log': ':\n'.join((
-      'Exception in YAMScan thread',
-      ''.join(traceback.format_exception(exc, val, tb))
-    ))
-  })
+  try:
+    show(widgets, values={
+      'progressbar': gui_progress.ERROR,
+      
+      'log': ':\n'.join((
+        'Exception in YAMScan thread',
+        ''.join(traceback.format_exception(exc, val, tb))
+      ))
+    })
+  except ShowError: pass
 
 
 def thread(widgets, output_file_name, options, input_, weights, model_yamnet_class_names):
@@ -400,13 +400,10 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
         
         results_errors = files(widgets, options, input_, model_yamnet_class_names)
         
-        if not results_errors:
-          return
-        
-        if not show(widgets, values={
+        show(widgets, values={
           'progressbar': gui_progress.DONE,
           'log': 'Finishing, please wait...\n'
-        }): return
+        })
         
         output(output_file, *results_errors, options, model_yamnet_class_names)
     except yamosse_download.DownloadError as ex:
@@ -418,9 +415,11 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
     show(widgets, values={
       'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
     })
-  except:
-    report_thread_exception(widgets, *exc_info())
+  except ShowError: pass
+  except: report_thread_exception(widgets, *exc_info())
   finally:
-    show(widgets, values={
-      'done': 'OK'
-    })
+    try:
+      show(widgets, values={
+        'done': 'OK'
+      })
+    except ShowError: pass
