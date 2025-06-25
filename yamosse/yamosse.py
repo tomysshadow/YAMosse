@@ -538,10 +538,8 @@ def yamosse(**kwargs):
     
     INITIALDIR = 'My YAMScans'
     
-    # TODO: move to subsystem
-    if window:
-      gui.threaded()
-      gui.set_variables_to_object(options_variables, options)
+    subsystem.threaded()
+    subsystem.set_variables_to_object(options_variables, options)
     
     input_ = shlex.split(options.input_)
     
@@ -634,10 +632,7 @@ def yamosse(**kwargs):
       subsystem.show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_INVALID)
       return
     
-    # TODO: move to subsystem
-    if window:
-      options_variables = gui.get_variables_from_object(options)
-    
+    options_variables = subsystem.get_variables_from_object(options)
     subsystem.quit()
   
   def export_preset(file_name=''):
@@ -659,12 +654,10 @@ def yamosse(**kwargs):
   def restore_defaults():
     nonlocal options_variables
     
-    if not subsystem.ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO): return
+    if not subsystem.ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO):
+      return
     
-    # TODO: move to subsystem
-    if window:
-      options_variables = gui.get_variables_from_object(yamosse_options.Options())
-    
+    options_variables = subsystem.get_variables_from_object(yamosse_options.Options())
     subsystem.quit()
   
   if not kwargs:

@@ -13,6 +13,18 @@ def subsystem(window, title):
       pass
     
     @abstractmethod
+    def get_variables_from_object(self, object_):
+      return None
+    
+    @abstractmethod
+    def set_variables_to_object(self, variables, object_):
+      pass
+    
+    @abstractmethod
+    def threaded(self):
+      pass
+    
+    @abstractmethod
     def quit(self):
       pass
   
@@ -39,6 +51,15 @@ def subsystem(window, title):
         message=message
       )
       return
+    
+    def get_variables_from_object(self, object_):
+      return gui.get_variables_from_object(object_)
+    
+    def set_variables_to_object(self, variables, object_):
+      gui.set_variables_to_object(variables, object_)
+    
+    def threaded(self):
+      gui.threaded()
     
     def quit(self):
       self.window.quit()
@@ -84,9 +105,6 @@ def subsystem(window, title):
     
     def show_warning(self, message, parent=None):
       print(message)
-    
-    def quit(self):
-      pass
   
   if window:
     return WindowSubsystem(window, title)
