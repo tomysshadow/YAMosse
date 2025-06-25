@@ -16,6 +16,8 @@ from .gui import yamscan as gui_yamscan
 
 PROGRESSBAR_MAXIMUM = 100
 
+class ThreadExit(Exception): pass
+
 
 def ascii_replace(value):
   return str(value).encode('ascii', 'replace').decode()
@@ -126,11 +128,14 @@ def input_file_names(input_, recursive=True):
 
 
 # TODO: move show to subsystem
-class ShowError(RuntimeError): pass
-
+# do not include subsystem here to prevent circular reference
+# but have the object passed in to thread
 def show(widgets, values=None):
-  if widgets and not gui_yamscan.show_yamscan(widgets, values=values): raise ShowError
-  if values and 'log' in values: print(values['log'])
+  if widgets:
+    if not gui_yamscan.show_yamscan(widgets, values=values): raise ThreadExit
+    return
+  
+  if values and 'log' in values: print(ascii_replace(values['log']))
 
 
 def download(widgets, options, weights):
@@ -364,7 +369,7 @@ def output(file, results, errors, options, model_yamnet_class_names):
   # print errors
   for file_name, ex in errors.items():
     print_file_name()
-    print(ex, file=file)
+    print(ascii_replace(ex), file=file)
 
 
 def report_thread_exception(widgets, exc, val, tb):
@@ -377,7 +382,7 @@ def report_thread_exception(widgets, exc, val, tb):
         ''.join(traceback.format_exception(exc, val, tb))
       ))
     })
-  except ShowError: pass
+  except ThreadExit: pass
 
 
 def thread(widgets, output_file_name, options, input_, weights, model_yamnet_class_names):
@@ -415,11 +420,11 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
     show(widgets, values={
       'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
     })
-  except ShowError: pass
+  except ThreadExit: pass
   except: report_thread_exception(widgets, *exc_info())
   finally:
     try:
       show(widgets, values={
         'done': 'OK'
       })
-    except ShowError: pass
+    except ThreadExit: pass
