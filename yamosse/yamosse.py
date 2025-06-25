@@ -16,6 +16,7 @@ from time import time
 import soundfile as sf
 
 import yamosse.root as yamosse_root
+import yamosse.subsystem as yamosse_subsystem
 import yamosse.options as yamosse_options
 import yamosse.worker as yamosse_worker
 
@@ -509,6 +510,8 @@ def yamosse(**kwargs):
   PRESET_INITIALDIR = 'My Presets'
   PRESET_INITIALFILE = 'preset.json'
   
+  # TODO: subsystem should really be created out here
+  # a lot of the functionality of this module (like yamscan_show) should move there
   window = None
   
   try:
@@ -534,18 +537,22 @@ def yamosse(**kwargs):
     
     INITIALDIR = 'My YAMScans'
     
+    subsystem = yamosse_subsystem.subsystem(window, NAME)
+    
     gui.threaded()
     gui.set_variables_to_object(options_variables, options)
     
     input_ = shlex.split(options.input_)
     
     if not input_:
-      show_warning(gui_yamosse.MESSAGE_INPUT_NONE)
+      subsystem.show_warning(gui_yamosse.MESSAGE_INPUT_NONE)
       return
     
     if not options.classes:
-      show_warning(gui_yamosse.MESSAGE_CLASSES_NONE)
+      subsystem.show_warning(gui_yamosse.MESSAGE_CLASSES_NONE)
       return
+    
+    child = None
     
     if not output_file_name:
       assert window, 'output_file_name must not be empty if there is no window'
@@ -570,7 +577,8 @@ def yamosse(**kwargs):
     weights = options.weights
     
     if not weights:
-      if not ask_yes_no(gui_yamosse.MESSAGE_WEIGHTS_NONE, gui.messagebox.NO, parent=child):
+      if not subsystem.ask_yes_no(
+        gui_yamosse.MESSAGE_WEIGHTS_NONE, gui.messagebox.NO, parent=child):
         yamscan_show(widgets, values={
           'done': 'OK',
           'progressbar': gui_progress.ERROR,
@@ -611,18 +619,20 @@ def yamosse(**kwargs):
       
       if not file_name: return
     
+    subsystem = yamosse_subsystem.subsystem(window, NAME)
+    
     try:
       options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
-      show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_VERSION)
+      subsystem.show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_VERSION)
       return
     except (KeyError, TypeError):
-      show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_INVALID)
+      subsystem.show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_INVALID)
       return
     
     options_variables = gui.get_variables_from_object(options)
     
-    quit_window()
+    subsystem.quit()
   
   def export_preset():
     nonlocal options
@@ -640,11 +650,12 @@ def yamosse(**kwargs):
   def restore_defaults():
     nonlocal options_variables
     
-    if not ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO): return
+    subsystem = yamosse_subsystem.subsystem(window, NAME)
+    if not subsystem.ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO): return
     
     options_variables = gui.get_variables_from_object(yamosse_options.Options())
     
-    quit_window()
+    subsystem.quit()
   
   if 'restore_defaults' in kwargs:
     if kwargs['restore_defaults']: restore_defaults()
@@ -679,23 +690,6 @@ def yamosse(**kwargs):
     export_preset,
     restore_defaults
   )[0]
-  
-  # these are defined down here so the default argument for parent works
-  def ask_yes_no(message, default, parent=window):
-    if parent:
-      return gui.messagebox.askyesno(parent=parent, title=NAME, message=message, default=default)
-    
-    return True
-  
-  def show_warning(message, parent=window):
-    if parent:
-      gui.messagebox.showwarning(parent=parent, title=NAME, message=message)
-      return
-    
-    print(message)
-  
-  def quit_window():
-    if window: window.quit()
   
   window.mainloop()
   
