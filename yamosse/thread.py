@@ -137,12 +137,7 @@ def download(widgets, options, weights):
     try:
       return open(weights, 'rb')
     except FileNotFoundError:
-      show(widgets, values={
-        'progressbar': gui_progress.ERROR,
-        'log': 'The weights file could not be opened.'
-      })
-    
-    return None
+      raise yamosse_download.DownloadError('The weights file could not be opened.')
   
   weights = options.weights
   assert weights, 'weights must not be empty'
@@ -151,15 +146,7 @@ def download(widgets, options, weights):
     'log': 'Downloading YAMNet Weights, please wait...'
   }): return None
   
-  try:
-    return yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, weights, mode='wb')
-  except yamosse_download.DownloadError as ex:
-    show(widgets, values={
-      'progressbar': gui_progress.ERROR,
-      'log': ex.reason
-    })
-  
-  return None
+  return yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, weights, mode='wb')
 
 
 def files(widgets, options, input_, model_yamnet_class_names):
@@ -352,26 +339,27 @@ def output(file, results, errors, options, model_yamnet_class_names):
   for file_name, class_timestamps in results.items():
     print_file_name()
     
-    if class_timestamps:
-      class_timestamps = dict_sorted(class_timestamps, key=key_class)
-      
-      for class_, timestamp_scores in class_timestamps.items():
-        print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
-        
-        for timestamp, score in timestamp_scores.items():
-          try:
-            hms = ' - '.join(hours_minutes(t) for t in timestamp)
-          except TypeError:
-            hms = hours_minutes(timestamp)
-          
-          if confidence_scores:
-            hms = f'{hms} ({score:.0%})'
-          
-          timestamp_scores[timestamp] = hms
-        
-        print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
-    else:
+    if not class_timestamps:
       print(None, file=file)
+      continue
+    
+    class_timestamps = dict_sorted(class_timestamps, key=key_class)
+    
+    for class_, timestamp_scores in class_timestamps.items():
+      print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
+      
+      for timestamp, score in timestamp_scores.items():
+        try:
+          hms = ' - '.join(hours_minutes(t) for t in timestamp)
+        except TypeError:
+          hms = hours_minutes(timestamp)
+        
+        if confidence_scores:
+          hms = f'{hms} ({score:.0%})'
+        
+        timestamp_scores[timestamp] = hms
+      
+      print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
     
     print('', file=file)
   
@@ -396,13 +384,16 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
   try:
     seconds = time()
     
-    weights_file = download(widgets, options, weights)
-    
     # we open the output file well in advance of actually using it
     # this is because it would suck to do all the work and
     # then fail because the output file is locked or whatever
-    if weights_file:
-      with weights_file, open(output_file_name, mode='w') as output_file:
+    # we also hold open the weights file
+    # so it can't be deleted in the time between now and the workers using it
+    try:
+      with (
+        download(widgets, options, weights) as weights_file,
+        open(output_file_name, mode='w') as output_file
+      ):
         # should be done before calling initarg on the options
         if options.output_options:
           options.print(end='\n\n', file=output_file)
@@ -418,6 +409,11 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
         }): return
         
         output(output_file, *results_errors, options, model_yamnet_class_names)
+    except yamosse_download.DownloadError as ex:
+      show(widgets, values={
+        'progressbar': gui_progress.ERROR,
+        'log': ex.reason
+      })
     
     show(widgets, values={
       'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
