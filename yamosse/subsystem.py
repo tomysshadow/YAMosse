@@ -5,7 +5,7 @@ from .gui import gui
 def subsystem(window, title):
   class Subsystem(ABC):
     @abstractmethod
-    def ask_yes_no(self, message, default, parent=None):
+    def ask_yes_no(self, message, default=None, parent=None):
       pass
     
     @abstractmethod
@@ -21,23 +21,66 @@ def subsystem(window, title):
       self.window = window
       self.title = title
     
-    def ask_yes_no(self, message, default, parent=None):
-      return gui.messagebox.askyesno(parent=parent if parent else self.window, title=title, message=message, default=default)
+    def ask_yes_no(self, message, default=None, parent=None):
+      if not default is None:
+        default = gui.messagebox.YES if default else gui.messagebox.NO
       
-      return True
+      return gui.messagebox.askyesno(
+        parent=parent if parent else self.window,
+        title=title,
+        message=message,
+        default=default
+      )
     
     def show_warning(self, message, parent=None):
-      gui.messagebox.showwarning(parent=parent if parent else self.window, title=title, message=message)
+      gui.messagebox.showwarning(
+        parent=parent if parent else self.window,
+        title=title,
+        message=message
+      )
       return
-      
-      print(message)
     
     def quit(self):
       self.window.quit()
   
   class ConsoleSubsystem(Subsystem):
-    def ask_yes_no(self, message, default, parent=None):
-      return True
+    def ask_yes_no(self, message, default=None, parent=None):
+      YES = 'Y'
+      NO = 'N'
+      
+      yes = 'y'
+      no = 'n'
+      
+      default_has_value = not default is None
+      
+      if default_has_value:
+        if default:
+          yes = YES
+        else:
+          no = NO
+      
+      result = ''
+      
+      while not result:
+        prompt = ''
+        
+        if message:
+          prompt = '%s [%c/%c]\n' % (message, yes, no)
+          message = ''
+        else:
+          prompt = 'Please enter %c or %c.\n' % (yes, no)
+        
+        result = input(prompt).strip()
+        
+        if result:
+          result = result[0].upper()
+          
+          if result != YES and result != NO:
+            result = ''
+        elif default_has_value:
+          return YES if default else NO
+      
+      return result == YES
     
     def show_warning(self, message, parent=None):
       print(message)

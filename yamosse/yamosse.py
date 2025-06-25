@@ -164,8 +164,9 @@ def sf_input_filetypes():
   
   input_filetypes.append(('All Files', '*.*'))
   return input_filetypes
-     
-     
+
+
+# TODO: move to subsystem
 def yamscan_show(widgets, values=None):
   if widgets: return gui_yamscan.show_yamscan(widgets, values=values)
   if values and 'log' in values: print(values['log'])
@@ -510,9 +511,9 @@ def yamosse(**kwargs):
   PRESET_INITIALDIR = 'My Presets'
   PRESET_INITIALFILE = 'preset.json'
   
-  # TODO: subsystem should really be created out here
-  # a lot of the functionality of this module (like yamscan_show) should move there
+  # TODO: some functionality of this module (like yamscan_show) should move to subsystem
   window = None
+  subsystem = None
   
   try:
     # try and load the options file first
@@ -537,10 +538,10 @@ def yamosse(**kwargs):
     
     INITIALDIR = 'My YAMScans'
     
-    subsystem = yamosse_subsystem.subsystem(window, NAME)
-    
-    gui.threaded()
-    gui.set_variables_to_object(options_variables, options)
+    # TODO: move to subsystem
+    if window:
+      gui.threaded()
+      gui.set_variables_to_object(options_variables, options)
     
     input_ = shlex.split(options.input_)
     
@@ -553,6 +554,7 @@ def yamosse(**kwargs):
       return
     
     child = None
+    widgets = None
     
     if not output_file_name:
       assert window, 'output_file_name must not be empty if there is no window'
@@ -579,19 +581,23 @@ def yamosse(**kwargs):
     if not weights:
       if not subsystem.ask_yes_no(
         gui_yamosse.MESSAGE_WEIGHTS_NONE, gui.messagebox.NO, parent=child):
-        yamscan_show(widgets, values={
+        if widgets: yamscan_show(widgets, values={
           'done': 'OK',
           'progressbar': gui_progress.ERROR,
           'log': 'The YAMScan was cancelled because there is no weights file.'
         })
         return
       
-      # TODO: how do we unset this if the download fails?
-      options_variables['weights'].set(
-        os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH))
-      
-      gui.set_variables_to_object(options_variables, options)
+      # TODO: deduplicate this, move to thread, set this asyncronously
+      if window:
+        options_variables['weights'].set(
+          os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH))
+        
+        gui.set_variables_to_object(options_variables, options)
+      else:
+        options.weights = os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH)
     
+    # TODO: move to subsystem
     if window:
       # start a thread so the GUI isn't blocked
       Thread(target=yamscan_thread, args=(
@@ -619,8 +625,6 @@ def yamosse(**kwargs):
       
       if not file_name: return
     
-    subsystem = yamosse_subsystem.subsystem(window, NAME)
-    
     try:
       options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
@@ -630,66 +634,78 @@ def yamosse(**kwargs):
       subsystem.show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_INVALID)
       return
     
-    options_variables = gui.get_variables_from_object(options)
+    # TODO: move to subsystem
+    if window:
+      options_variables = gui.get_variables_from_object(options)
     
     subsystem.quit()
   
-  def export_preset():
+  def export_preset(file_name=''):
     nonlocal options
     nonlocal options_variables
     
-    gui.set_variables_to_object(options_variables, options)
-    
-    file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
-      initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
-    
-    if not file_name: return
+    if not file_name:
+      assert window, 'file_name must not be empty if there is no window'
+      
+      gui.set_variables_to_object(options_variables, options)
+      
+      file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
+        initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
+      
+      if not file_name: return
     
     options.export_preset(file_name)
   
   def restore_defaults():
     nonlocal options_variables
     
-    subsystem = yamosse_subsystem.subsystem(window, NAME)
     if not subsystem.ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO): return
     
-    options_variables = gui.get_variables_from_object(yamosse_options.Options())
+    # TODO: move to subsystem
+    if window:
+      options_variables = gui.get_variables_from_object(yamosse_options.Options())
     
     subsystem.quit()
   
-  if 'restore_defaults' in kwargs:
-    if kwargs['restore_defaults']: restore_defaults()
+  if not kwargs:
+    options_variables = gui.get_variables_from_object(options)
+    
+    window = gui.gui(
+      gui_yamosse.make_yamosse,
+      _title,
+      options_variables,
+      sf_input_filetypes(),
+      list_ordered(model_yamnet_class_names),
+      WEIGHTS_FILETYPES,
+      yamosse_worker.tfhub_enabled(),
+      yamscan,
+      import_preset,
+      export_preset,
+      restore_defaults
+    )[0]
   
-  if 'import_preset_file_name' in kwargs:
-    import_preset(kwargs['import_preset_file_name'])
+  subsystem = yamosse_subsystem.subsystem(window, NAME)
   
-  if 'options_preset' in kwargs:
-    options.preset(kwargs['options_preset'], strict=False)
+  if kwargs:
+    if 'restore_defaults' in kwargs:
+      if kwargs['restore_defaults']: restore_defaults()
+    
+    if 'import_preset_file_name' in kwargs:
+      import_preset(kwargs['import_preset_file_name'])
+    
+    if 'options_preset' in kwargs:
+      options.preset(kwargs['options_preset'], strict=False)
   
   options.print()
-  options_variables = gui.get_variables_from_object(options)
   
-  if 'export_preset_file_name' in kwargs:
-    export_preset(kwargs['export_preset_file_name'])
-  
-  if 'output_file_name' in kwargs:
-    yamscan(kwargs['output_file_name'])
-  
-  if kwargs: return None
-  
-  window = gui.gui(
-    gui_yamosse.make_yamosse,
-    _title,
-    options_variables,
-    sf_input_filetypes(),
-    list_ordered(model_yamnet_class_names),
-    WEIGHTS_FILETYPES,
-    yamosse_worker.tfhub_enabled(),
-    yamscan,
-    import_preset,
-    export_preset,
-    restore_defaults
-  )[0]
+  if kwargs:
+    if 'export_preset_file_name' in kwargs:
+      export_preset(kwargs['export_preset_file_name'])
+    
+    if 'output_file_name' in kwargs:
+      yamscan(kwargs['output_file_name'])
+    
+    return None
   
   window.mainloop()
   
