@@ -50,18 +50,6 @@ TIP_WORKER_OPTIONS_HIGH_PRIORITY = ''.join(('Mark YAMosse as High Priority to ma
 
 URL_ONLINE_HELP = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
-MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
-MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
-
-MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would you like to ',
-  'download the standard YAMNet weights now from Google Cloud Storage? If you click No, the ',
-  'YAMScan will be cancelled.'))
-
-MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
-MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
-
-MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
-
 
 def make_header(frame, title):
   ttk.Label(frame, text=title, style='Title.TLabel').grid()

@@ -5,11 +5,11 @@ from .gui import gui
 def subsystem(window, title):
   class Subsystem(ABC):
     @abstractmethod
-    def ask_yes_no(self, message, default=None, parent=None):
+    def show_warning(self, message, parent=None):
       pass
     
     @abstractmethod
-    def show_warning(self, message, parent=None):
+    def ask_yes_no(self, message, default=None, parent=None):
       pass
     
     @abstractmethod
@@ -33,6 +33,14 @@ def subsystem(window, title):
       self.window = window
       self.title = title
     
+    def show_warning(self, message, parent=None):
+      gui.messagebox.showwarning(
+        parent=parent if parent else self.window,
+        title=title,
+        message=message
+      )
+      return
+    
     def ask_yes_no(self, message, default=None, parent=None):
       if not default is None:
         default = gui.messagebox.YES if default else gui.messagebox.NO
@@ -43,14 +51,6 @@ def subsystem(window, title):
         message=message,
         default=default
       )
-    
-    def show_warning(self, message, parent=None):
-      gui.messagebox.showwarning(
-        parent=parent if parent else self.window,
-        title=title,
-        message=message
-      )
-      return
     
     def get_variables_from_object(self, object_):
       return gui.get_variables_from_object(object_)
@@ -65,6 +65,9 @@ def subsystem(window, title):
       self.window.quit()
   
   class ConsoleSubsystem(Subsystem):
+    def show_warning(self, message, parent=None):
+      print(message)
+    
     def ask_yes_no(self, message, default=None, parent=None):
       YES = 'Y'
       NO = 'N'
@@ -102,9 +105,6 @@ def subsystem(window, title):
           return YES if default else NO
       
       return result == YES
-    
-    def show_warning(self, message, parent=None):
-      print(message)
   
   if window:
     return WindowSubsystem(window, title)

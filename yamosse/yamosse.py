@@ -511,6 +511,18 @@ def yamosse(**kwargs):
   PRESET_INITIALDIR = 'My Presets'
   PRESET_INITIALFILE = 'preset.json'
   
+  MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
+  MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
+  
+  MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would you like to ',
+    'download the standard YAMNet weights now from Google Cloud Storage? If you click No, the ',
+    'YAMScan will be cancelled.'))
+  
+  MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
+  MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
+  
+  MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
+  
   # TODO: some functionality of this module (like yamscan_show) should move to subsystem
   window = None
   subsystem = None
@@ -544,11 +556,11 @@ def yamosse(**kwargs):
     input_ = shlex.split(options.input_)
     
     if not input_:
-      subsystem.show_warning(gui_yamosse.MESSAGE_INPUT_NONE)
+      subsystem.show_warning(MESSAGE_INPUT_NONE)
       return
     
     if not options.classes:
-      subsystem.show_warning(gui_yamosse.MESSAGE_CLASSES_NONE)
+      subsystem.show_warning(MESSAGE_CLASSES_NONE)
       return
     
     child = None
@@ -578,7 +590,10 @@ def yamosse(**kwargs):
     
     if not weights:
       if not subsystem.ask_yes_no(
-        gui_yamosse.MESSAGE_WEIGHTS_NONE, gui.messagebox.NO, parent=child):
+        MESSAGE_WEIGHTS_NONE,
+        default=False,
+        parent=child
+      ):
         if widgets: yamscan_show(widgets, values={
           'done': 'OK',
           'progressbar': gui_progress.ERROR,
@@ -626,10 +641,10 @@ def yamosse(**kwargs):
     try:
       options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
-      subsystem.show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_VERSION)
+      subsystem.show_warning(MESSAGE_IMPORT_PRESET_VERSION)
       return
     except (KeyError, TypeError):
-      subsystem.show_warning(gui_yamosse.MESSAGE_IMPORT_PRESET_INVALID)
+      subsystem.show_warning(MESSAGE_IMPORT_PRESET_INVALID)
       return
     
     options_variables = subsystem.get_variables_from_object(options)
@@ -654,7 +669,10 @@ def yamosse(**kwargs):
   def restore_defaults():
     nonlocal options_variables
     
-    if not subsystem.ask_yes_no(gui_yamosse.MESSAGE_ASK_RESTORE_DEFAULTS, gui.messagebox.NO):
+    if not subsystem.ask_yes_no(
+      MESSAGE_ASK_RESTORE_DEFAULTS,
+      default=False
+    ):
       return
     
     options_variables = subsystem.get_variables_from_object(yamosse_options.Options())
