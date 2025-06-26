@@ -58,7 +58,7 @@ def make_header(frame, title):
 def make_input(frame, variables, filetypes):
   buttons_frame = gui.make_filedialog(
     frame,
-    textvariable=variables['input_'],
+    textvariable=variables['input'],
     asks=('directory', 'openfilenames'),
     parent=frame.winfo_toplevel(),
     filetypes=filetypes

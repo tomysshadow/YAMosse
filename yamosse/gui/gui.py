@@ -195,7 +195,7 @@ def link_radiobuttons(radiobuttons, variable):
 def make_name(frame, name):
   if not name: return None
   
-  label = ttk.Label(frame, text=name)
+  label = ttk.Label(frame, text='%s ' % name)
   label.grid(row=0, column=0, sticky=tk.W)
   return label
 
@@ -224,8 +224,7 @@ def make_scrollbar(widget, xscroll=False, yscroll=True):
 def make_unit(frame, unit):
   if not unit: return None
   
-  unit = ' %s' % unit
-  label = ttk.Label(frame, text=unit)
+  label = ttk.Label(frame, text=' %s' % unit)
   label.grid(row=0, column=2, sticky=tk.E)
   return label
 
@@ -243,7 +242,7 @@ def make_entry(frame, name='', **kwargs):
   frame.columnconfigure(1, weight=1) # make entry horizontally resizable
   
   entry = ttk.Entry(frame, **kwargs)
-  entry.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
+  entry.grid(row=0, column=1, sticky=tk.EW)
   return make_name(frame, name), entry
 
 
@@ -252,7 +251,7 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   frame.columnconfigure(1, weight=1) # make spinbox horizontally resizable
   
   spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
-  spinbox.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
+  spinbox.grid(row=0, column=1, sticky=tk.EW)
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 
 
@@ -261,7 +260,7 @@ def make_combobox(frame, name='', state=None, **kwargs):
   frame.columnconfigure(1, weight=1) # make combobox horizontally resizable
   
   combobox = ttk.Combobox(frame, **kwargs)
-  combobox.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
+  combobox.grid(row=0, column=1, sticky=tk.EW)
   
   if state:
     combobox.state(state)
@@ -289,7 +288,7 @@ def make_scale(frame, name='', variable=None, **kwargs):
   scale = ttk.Scale(frame, variable=variable,
     from_=0, to=100, orient=tk.HORIZONTAL, command=show, **kwargs)
   
-  scale.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
+  scale.grid(row=0, column=1, sticky=tk.EW)
   show()
   return make_name(frame, name), scale, percent_label
 
@@ -456,7 +455,7 @@ def progressbar():
     progressbar = ttk.Progressbar(frame, variable=variable,
       mode='determinate', orient=tk.HORIZONTAL, **kwargs)
     
-    progressbar.grid(row=0, column=1, sticky=tk.EW, padx=PADX_QW)
+    progressbar.grid(row=0, column=1, sticky=tk.EW)
     
     taskbar = None
     

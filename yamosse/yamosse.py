@@ -103,7 +103,7 @@ def yamosse(**kwargs):
     
     subsystem.set_variables_to_object(options_variables, options)
     
-    input_ = shlex.split(options.input_)
+    input_ = shlex.split(options.input)
     
     if not input_:
       subsystem.show_warning(MESSAGE_INPUT_NONE)
@@ -250,7 +250,7 @@ def yamosse(**kwargs):
       import_preset(kwargs['import_preset_file_name'])
     
     if 'options_preset' in kwargs:
-      options.preset(kwargs['options_preset'], strict=False)
+      options.set(kwargs['options_preset'], strict=False)
   
   options.print()
   

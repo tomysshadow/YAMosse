@@ -13,7 +13,7 @@ _root_file_name = yamosse_root.root(FILE_NAME)
 class Options:
   version: int
   
-  input_: str|tuple
+  input: str|tuple
   input_recursive: bool
   weights: str
   
@@ -50,7 +50,7 @@ class Options:
     def __reduce__(self):
       return (VersionError, (self,))
   
-  def __init__(self, input_: str|tuple='', input_recursive: bool=False, weights: str='',
+  def __init__(self, input: str|tuple='', input_recursive: bool=False, weights: str='',
     classes: list|None=None, calibration: list|None=None,
     combine: int=3, combine_all: bool=False,
     background_noise_volume: int|float=1, background_noise_volume_loglinear: bool=False,
@@ -68,7 +68,7 @@ class Options:
     
     self.version = VERSION
     
-    self.input_ = input_
+    self.input = input
     self.input_recursive = input_recursive
     self.weights = weights
     
@@ -104,7 +104,7 @@ class Options:
     
     print_option('Current Date/Time', str(datetime.now()))
     print_option('Version', repr(self.version))
-    print_option('Input', repr(self.input_))
+    print_option('Input', repr(self.input))
     print_option('Input Recursive', repr(self.input_recursive))
     print_option('Weights', repr(self.weights))
     print_option('Classes', repr(self.classes))
@@ -156,22 +156,21 @@ class Options:
     with open(_root_file_name, mode='wb') as f:
       pickle.dump(self, f)
   
-  def preset(self, preset, strict=True):
+  def set(self, option, strict=True):
     for key, value in vars(self).items():
-      if strict or key in preset:
-        setattr(self, key, type(value)(preset[key]))
+      if strict or key in option:
+        setattr(self, key, type(value)(option[key]))
   
   @classmethod
   def import_preset(cls, file_name):
     with open(file_name, mode='r') as f:
       options = Options()
-      preset = json.load(f)
       
       # cast JSON types to Python types
       # presets are expected to have every option
       # this is intended to raise KeyError if a key in preset is missing
       # and likewise, a TypeError if the type couldn't be casted
-      options.preset(preset)
+      options.set(json.load(f))
       
       if options.version != VERSION:
         raise cls.VersionError
@@ -185,7 +184,7 @@ class Options:
   def initarg(self, input_, model_yamnet_class_names):
     BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
     
-    self.input_ = input_
+    self.input = input_
     
     # must be copied to not interfere with variables
     calibration = self.calibration.copy()

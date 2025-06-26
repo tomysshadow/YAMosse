@@ -174,7 +174,7 @@ def files(widgets, options, input_, model_yamnet_class_names):
   done = {}
   done_lock = Lock()
   
-  file_names = list(input_file_names(options.input_, recursive=options.input_recursive))
+  file_names = list(input_file_names(options.input, recursive=options.input_recursive))
   file_names_pos = 0
   file_names_len = len(file_names)
     
