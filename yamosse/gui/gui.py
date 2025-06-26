@@ -80,19 +80,26 @@ get_root_window = None
 get_root_images = None
 
 
-def enable_widget(widget, enabled=True):
-  widget_class = widget.winfo_class()
-  
-  if widget_class in ('Frame', 'Labelframe', 'TFrame', 'TLabelframe'):
-    for child_widget in widget.winfo_children():
-      enable_widget(child_widget, enabled)
+def enable_widget(widget, enabled=True, cursor=True):
+  try:
+    widget['state'] = tk.NORMAL if enabled else tk.DISABLED
     
-    return
+    # we also change the cursor here, still in the same try block
+    # this way, we'll only attempt to change the cursor
+    # if we were successfully able to change the state
+    if cursor:
+      if enabled:
+        try:
+          widget['cursor'] = widget.normalcursor
+          del widget.normalcursor
+        except AttributeError: pass
+      else:
+        widget.normalcursor = widget['cursor']
+        widget['cursor'] = ''
+  except tk.TclError: pass
   
-  if widget_class in ('Text', 'Entry', 'TEntry'):
-    widget['cursor'] = 'ibeam' if enabled else ''
-  
-  widget['state'] = tk.NORMAL if enabled else tk.DISABLED
+  for child_widget in widget.winfo_children():
+    enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
 def prevent_default_widget(widget):

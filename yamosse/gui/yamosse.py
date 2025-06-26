@@ -123,7 +123,7 @@ def make_confidence_score(frame, variables):
     variables['confidence_score_minmax'])
 
 
-def make_top_ranked(frame, variables):
+def make_top_ranked(frame, variables, class_names):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
@@ -135,14 +135,14 @@ def make_top_ranked(frame, variables):
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, sticky=tk.EW)
   gui.make_spinbox(spinbox_frame, textvariable=variables['top_ranked'],
-    from_=1, unit=UNIT_CLASSES)
+    from_=1, to=len(class_names), unit=UNIT_CLASSES)
   
   ttk.Checkbutton(cell_frame,
     text='Output Timestamps', variable=variables['top_ranked_output_timestamps']).grid(
     row=1, sticky=tk.W, pady=gui.PADY_QN)
 
 
-def make_identification_options(frame, variables):
+def make_identification_options(frame, variables, class_names):
   frame.rowconfigure(0, minsize=gui.MINSIZE_ROW_RADIOBUTTONS) # make radiobuttons minimum size
   
   frame.columnconfigure((0, 1), weight=1,
@@ -154,7 +154,7 @@ def make_identification_options(frame, variables):
   
   top_ranked_frame = ttk.Frame(frame)
   top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui.PADX_HW)
-  make_top_ranked(top_ranked_frame, variables)
+  make_top_ranked(top_ranked_frame, variables, class_names)
   
   radiobuttons = gui.make_widgets(frame, ttk.Radiobutton,
     ('Confidence Score', 'Top Ranked'), sticky=tk.EW, cell=0)
@@ -204,7 +204,7 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     padding=gui.PADDING_HNSEW)
   
   identification_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
-  make_identification_options(identification_options_labelframe, variables)
+  make_identification_options(identification_options_labelframe, variables, class_names)
   
   presets_labelframe = ttk.Labelframe(row_frame, text='Presets',
     padding=gui.PADDING_HNSEW)
