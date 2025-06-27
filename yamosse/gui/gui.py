@@ -65,10 +65,6 @@ PADY_QNS = PADDING_Q
 PADY_QN = (PADDING_Q, 0)
 PADY_QS = (0, PADDING_Q)
 
-BUTTONS_COLUMN_LEFT = 0
-BUTTONS_COLUMN_CENTER = 50
-BUTTONS_COLUMN_RIGHT = 100
-
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
@@ -359,10 +355,13 @@ def make_listbox(frame, name='', items=None,
   name_frame = ttk.Frame(frame)
   name_frame.grid(row=1, sticky=tk.EW, pady=PADY_QN)
   
-  name_frame.columnconfigure(0, weight=1) # make name label column horizontally resizable
+  name_frame.columnconfigure(1, weight=1) # make buttons frame column horizontally resizable
   
+  # note that this frame uses the pack geometry manager
+  # this is to make it possible for the caller
+  # to flexibly add more buttons to the left or right side
   buttons_frame = ttk.Frame(name_frame)
-  buttons_frame.grid(row=0, column=1, sticky=tk.E)
+  buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   buttons = []
   
   if selectmode == tk.MULTIPLE:
@@ -403,8 +402,8 @@ def make_listbox(frame, name='', items=None,
       )
     ]
     
-    for b in range(len(buttons)):
-      buttons[b].grid(row=0, column=BUTTONS_COLUMN_CENTER + b, padx=PADX_QW)
+    for b in reversed(range(len(buttons))):
+      buttons[b].pack(side=tk.RIGHT, padx=PADX_QW)
   
   return make_name(name_frame, name), (listbox, make_scrollbar(listbox, xscroll, yscroll)
     ), (buttons_frame, buttons)
@@ -512,10 +511,10 @@ def make_filedialog(frame, name='', textvariable=None,
   name_frame = ttk.Frame(frame)
   name_frame.grid(row=1, sticky=tk.EW, pady=PADY_QN)
   
-  name_frame.columnconfigure(0, weight=1) # make name label column horizontally resizable
+  name_frame.columnconfigure(1, weight=1) # make buttons frame column horizontally resizable
   
   buttons_frame = ttk.Frame(name_frame)
-  buttons_frame.grid(row=0, column=1, sticky=tk.E)
+  buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   
   def set_(data):
     if not data:
@@ -555,8 +554,11 @@ def make_filedialog(frame, name='', textvariable=None,
       command=lambda ask=ask: show(ask)
     )
     
-    button.grid(row=0, column=BUTTONS_COLUMN_CENTER + a, padx=PADX_QW)
     buttons.append(button)
+  
+  # must be done in a separate loop to button creation so tab order is correct
+  for b in reversed(range(len(buttons))):
+    buttons[b].pack(side=tk.RIGHT, padx=PADX_QW)
   
   # drag and drop
   if tkinterdnd2:

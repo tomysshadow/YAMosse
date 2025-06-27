@@ -67,7 +67,7 @@ def make_input(frame, variables, filetypes):
   recursive_checkbutton = ttk.Checkbutton(buttons_frame,
     text='Recursive', variable=variables['input_recursive'])
   
-  recursive_checkbutton.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
+  recursive_checkbutton.pack(side=tk.RIGHT)
   recursive_checkbutton.lower() # fix tab order
 
 
@@ -92,7 +92,7 @@ def make_classes(frame, variables, class_names):
   # TODO command
   buttons_frame = listbox_widgets[2][0]
   calibrate_button = ttk.Button(buttons_frame, text='Calibrate...')
-  calibrate_button.grid(row=0, column=gui.BUTTONS_COLUMN_LEFT)
+  calibrate_button.pack(side=tk.LEFT)
   calibrate_button.lower() # fix tab order
 
 
