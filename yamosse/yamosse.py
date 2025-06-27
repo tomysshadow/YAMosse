@@ -37,7 +37,7 @@ MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
 MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
 
 MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would you like to ',
-  'download the standard YAMNet weights now from Google Cloud Storage? If you click No, the ',
+  'download the standard YAMNet weights file now from Google Cloud Storage? If you click No, the ',
   'YAMScan will be cancelled.'))
 
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'

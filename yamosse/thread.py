@@ -110,37 +110,37 @@ def input_file_names(input_, recursive=True):
   return file_names
 
 
-def download_weights_unique(subsystem, options, url, path, min_=1, max_=1000):
+def download_weights_file_unique(subsystem, options, url, path, min_=1, max_=1000):
   weights = options.weights
   if weights: return open(weights, 'rb')
   
-  weights = os.path.join(os.path.realpath(os.curdir), path)
+  path = os.path.join(os.path.realpath(os.curdir), path)
   
   subsystem.show(values={
-    'log': 'Downloading weights, please wait...'
+    'log': 'Downloading weights file, please wait...'
   })
   
   def increment_file_name():
-    root, ext = os.path.splitext(weights)
+    root, ext = os.path.splitext(path)
     
-    return (weights if num == min_ else '%s (%d)%s' % (root, num, ext
+    return (path if num == min_ else '%s (%d)%s' % (root, num, ext
       ) for num in range(min_, max_))
   
-  for w in increment_file_name():
-    try: file = yamosse_download.download(url, w, mode='xb')
+  for p in increment_file_name():
+    try: file = yamosse_download.download(url, p, mode='xb')
     except FileExistsError: continue
     
     try:
-      assert w, 'w must not be empty'
-      options.weights = w
+      assert p, 'p must not be empty'
+      options.weights = p
       options.dump()
-      subsystem.set_variable_after_idle('weights', w)
+      subsystem.set_variable_after_idle('weights', p)
       return file
     except:
       file.close()
       raise
   
-  raise IOError('The weights file %r could not be created uniquely.' % weights)
+  raise IOError('The weights file %r could not be created uniquely.' % path)
 
 
 def files(subsystem, options, input_, model_yamnet_class_names):
@@ -379,7 +379,7 @@ def thread(subsystem, output_file_name, options, input_, model_yamnet_class_name
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
     with (
-      download_weights_unique(
+      download_weights_file_unique(
         subsystem,
         options,
         yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
