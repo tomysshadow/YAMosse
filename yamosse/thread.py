@@ -120,12 +120,11 @@ def increment_file_name(path):
     ) for number in range(MIN_NUMBER, MAX_NUMBER))
 
 
-def download_yamnet_weights(subsystem, options):
+def download_yamnet_weights_unique(subsystem, options):
   weights = options.weights
   if weights: return open(weights, 'rb')
   
   weights = os.path.join(os.path.realpath(os.curdir), yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH)
-  assert weights, 'weights must not be empty'
   
   subsystem.show(values={
     'log': 'Downloading YAMNet Weights, please wait...'
@@ -136,15 +135,16 @@ def download_yamnet_weights(subsystem, options):
     except FileExistsError: continue
     
     try:
+      assert w, 'w must not be empty'
       options.weights = w
       options.dump()
-      subsystem.set_variable_after_idle('weights', options.weights)
+      subsystem.set_variable_after_idle('weights', w)
       return file
     except:
       file.close()
       raise
   
-  raise IOError('The weights file %r could not be created.' % weights)
+  raise IOError('The weights file %r could not be created uniquely.' % weights)
 
 
 def files(subsystem, options, input_, model_yamnet_class_names):
