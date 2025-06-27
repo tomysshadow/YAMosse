@@ -21,8 +21,6 @@ except ImportError:
 NAME = 'YAMosse'
 VERSION = '1.0.0'
 
-YAMNET_WEIGHTS_PATH = 'yamnet.h5'
-
 WEIGHTS_FILETYPES = (
   ('HDF5', '*.h5'),
   ('All Files', '*.*')
@@ -139,9 +137,7 @@ def yamosse(**kwargs):
       subsystem.show_callback = gui_yamscan.show_yamscan
       subsystem.widgets = widgets
     
-    weights = options.weights
-    
-    if not weights:
+    if not options.weights:
       if not subsystem.ask_yes_no(
         MESSAGE_WEIGHTS_NONE,
         default=True,
@@ -153,8 +149,6 @@ def yamosse(**kwargs):
           'done': 'OK'
         })
         return
-      
-      options.weights = os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH)
     
     subsystem.start(
       yamosse_thread.thread,
@@ -162,7 +156,6 @@ def yamosse(**kwargs):
       output_file_name,
       options,
       input_,
-      weights,
       model_yamnet_class_names
     )
     

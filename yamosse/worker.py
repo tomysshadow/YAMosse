@@ -9,6 +9,7 @@ import yamosse.root as yamosse_root
 MODEL_YAMNET_DIR = os.path.join('models', 'research', 'audioset', 'yamnet')
 MODEL_YAMNET_CLASS_MAP_CSV = 'yamnet_class_map.csv'
 MODEL_YAMNET_WEIGHTS_URL = 'https://storage.googleapis.com/audioset/yamnet.h5'
+MODEL_YAMNET_WEIGHTS_PATH = 'yamnet.h5'
 
 TFHUB_YAMNET_MODEL_URL = 'https://www.kaggle.com/models/google/yamnet/TensorFlow2/yamnet/1'
 

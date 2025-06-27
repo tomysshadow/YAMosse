@@ -116,20 +116,42 @@ def input_file_names(input_, recursive=True):
   return file_names
 
 
-def download(subsystem, options, weights):
-  if weights:
-    try:
-      return open(weights, 'rb')
-    except FileNotFoundError:
-      raise yamosse_download.DownloadError('The weights file could not be opened.')
+def increment_file_name(path):
+  MIN_NUMBER = 1
+  MAX_NUMBER = 999
   
+  root, ext = os.path.splitext(path)
+  
+  return (path if number == MIN_NUMBER else '%s (%d)%s' % (root, number, ext
+    ) for number in range(MIN_NUMBER, MAX_NUMBER))
+
+
+def download_yamnet_weights(subsystem, options):
   weights = options.weights
+  if weights: return open(weights, 'rb')
+  
+  weights = os.path.join(os.path.realpath(os.curdir), yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH)
   assert weights, 'weights must not be empty'
   
   subsystem.show(values={
     'log': 'Downloading YAMNet Weights, please wait...'
   })
-  return yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, weights, mode='wb')
+  
+  for path in increment_file_name(weights):
+    try:
+      file = yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, path, mode='xb')
+    except FileExistsError: continue
+    
+    try:
+      options.weights = path
+      options.dump()
+      subsystem.set_variable_after_idle('weights', options.weights)
+      return file
+    except:
+      file.close()
+      raise
+  
+  raise IOError('The weights file could not be created.')
 
 
 def files(subsystem, options, input_, model_yamnet_class_names):
@@ -363,7 +385,7 @@ def report_thread_exception(subsystem, exc, val, tb):
   except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(subsystem, output_file_name, options, input_, weights, model_yamnet_class_names):
+def thread(subsystem, output_file_name, options, input_, model_yamnet_class_names):
   try:
     seconds = time()
     
@@ -372,30 +394,22 @@ def thread(subsystem, output_file_name, options, input_, weights, model_yamnet_c
     # then fail because the output file is locked or whatever
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
-    try:
-      with download(subsystem, options, weights) as weights_file:
-        if not weights:
-          options.dump()
-          subsystem.set_variable_after_idle('weights', options.weights)
-        
-        with open(output_file_name, mode='w') as output_file:
-          # should be done before calling initarg on the options
-          if options.output_options:
-            options.print(end='\n\n', file=output_file)
-          
-          results_errors = files(subsystem, options, input_, model_yamnet_class_names)
-          
-          subsystem.show(values={
-            'progressbar': yamosse_progress.DONE,
-            'log': 'Finishing, please wait...\n'
-          })
-          
-          output(output_file, *results_errors, options, model_yamnet_class_names)
-    except yamosse_download.DownloadError as ex:
+    with (
+      download_yamnet_weights(subsystem, options) as weights_file,
+      open(output_file_name, mode='w') as output_file
+    ):
+      # should be done before calling initarg on the options
+      if options.output_options:
+        options.print(end='\n\n', file=output_file)
+      
+      results_errors = files(subsystem, options, input_, model_yamnet_class_names)
+      
       subsystem.show(values={
-        'progressbar': yamosse_progress.ERROR,
-        'log': ex.reason
+        'progressbar': yamosse_progress.DONE,
+        'log': 'Finishing, please wait...\n'
       })
+      
+      output(output_file, *results_errors, options, model_yamnet_class_names)
     
     subsystem.show(values={
       'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
