@@ -320,27 +320,26 @@ def output(file, results, errors, options, model_yamnet_class_names):
   for file_name, class_timestamps in results.items():
     print_file_name()
     
-    if not class_timestamps:
+    if class_timestamps:
+      class_timestamps = dict_sorted(class_timestamps, key=key_class)
+      
+      for class_, timestamp_scores in class_timestamps.items():
+        print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
+        
+        for timestamp, score in timestamp_scores.items():
+          try:
+            hms = ' - '.join(hours_minutes(t) for t in timestamp)
+          except TypeError:
+            hms = hours_minutes(timestamp)
+          
+          if confidence_scores:
+            hms = f'{hms} ({score:.0%})'
+          
+          timestamp_scores[timestamp] = hms
+        
+        print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
+    else:
       print(None, file=file)
-      continue
-    
-    class_timestamps = dict_sorted(class_timestamps, key=key_class)
-    
-    for class_, timestamp_scores in class_timestamps.items():
-      print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
-      
-      for timestamp, score in timestamp_scores.items():
-        try:
-          hms = ' - '.join(hours_minutes(t) for t in timestamp)
-        except TypeError:
-          hms = hours_minutes(timestamp)
-        
-        if confidence_scores:
-          hms = f'{hms} ({score:.0%})'
-        
-        timestamp_scores[timestamp] = hms
-      
-      print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
     
     print('', file=file)
   
