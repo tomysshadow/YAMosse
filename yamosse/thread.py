@@ -114,11 +114,11 @@ def download_weights_file_unique(subsystem, options, url, path, min_=1, max_=100
   weights = options.weights
   if weights: return open(weights, 'rb')
   
-  path = os.path.join(os.path.realpath(os.curdir), path)
-  
   subsystem.show(values={
     'log': 'Downloading weights file, please wait...'
   })
+  
+  path = os.path.join(os.path.realpath(os.curdir), path)
   
   def increment_file_name():
     root, ext = os.path.splitext(path)
