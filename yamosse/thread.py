@@ -110,17 +110,7 @@ def input_file_names(input_, recursive=True):
   return file_names
 
 
-def increment_file_name(path):
-  MIN_NUMBER = 1
-  MAX_NUMBER = 1000
-  
-  root, ext = os.path.splitext(path)
-  
-  return (path if number == MIN_NUMBER else '%s (%d)%s' % (root, number, ext
-    ) for number in range(MIN_NUMBER, MAX_NUMBER))
-
-
-def download_weights_unique(subsystem, options, url, path):
+def download_weights_unique(subsystem, options, url, path, min_=1, max_=1000):
   weights = options.weights
   if weights: return open(weights, 'rb')
   
@@ -130,7 +120,13 @@ def download_weights_unique(subsystem, options, url, path):
     'log': 'Downloading weights, please wait...'
   })
   
-  for w in increment_file_name(weights):
+  def increment_file_name():
+    root, ext = os.path.splitext(weights)
+    
+    return (weights if num == min_ else '%s (%d)%s' % (root, num, ext
+      ) for num in range(min_, max_))
+  
+  for w in increment_file_name():
     try: file = yamosse_download.download(url, w, mode='xb')
     except FileExistsError: continue
     
