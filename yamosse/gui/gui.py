@@ -615,6 +615,19 @@ def _root_window():
 get_root_window = _root_window()
 
 
+def after_idle_window(window, callback):
+  try:
+    # for thread safety
+    # it's not safe to have a non-GUI thread interact directly with widgets
+    # so we queue this for when idle
+    window.after_idle(callback)
+  except tk.TclError:
+    if window.children: raise
+    return False
+  
+  return window.children
+
+
 def bind_buttons_window(window, ok_button=None, cancel_button=None):
   window.unbind(('<Return>', '<Escape>'))
   

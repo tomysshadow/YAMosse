@@ -372,22 +372,24 @@ def thread(subsystem, output_file_name, options, input_, weights, model_yamnet_c
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
     try:
-      with (
-        download(subsystem, options, weights) as weights_file,
-        open(output_file_name, mode='w') as output_file
-      ):
-        # should be done before calling initarg on the options
-        if options.output_options:
-          options.print(end='\n\n', file=output_file)
+      with download(subsystem, options, weights) as weights_file:
+        if not weights:
+          options.dump()
+          subsystem.set_variable_after_idle('weights', options.weights)
         
-        results_errors = files(subsystem, options, input_, model_yamnet_class_names)
-        
-        subsystem.show(values={
-          'progressbar': yamosse_progress.DONE,
-          'log': 'Finishing, please wait...\n'
-        })
-        
-        output(output_file, *results_errors, options, model_yamnet_class_names)
+        with open(output_file_name, mode='w') as output_file:
+          # should be done before calling initarg on the options
+          if options.output_options:
+            options.print(end='\n\n', file=output_file)
+          
+          results_errors = files(subsystem, options, input_, model_yamnet_class_names)
+          
+          subsystem.show(values={
+            'progressbar': yamosse_progress.DONE,
+            'log': 'Finishing, please wait...\n'
+          })
+          
+          output(output_file, *results_errors, options, model_yamnet_class_names)
     except yamosse_download.DownloadError as ex:
       subsystem.show(values={
         'progressbar': yamosse_progress.ERROR,

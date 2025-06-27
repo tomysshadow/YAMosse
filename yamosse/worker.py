@@ -135,9 +135,6 @@ def initializer(worker, receiver, sender, shutdown, options,
   
   yamnet = None
   
-  # TODO: if tfhub not enabled, and weights not set, ask to download here under worker lock
-  # don't continue if answer is no
-  # otherwise, should show download progress in window
   with worker.get_lock():
     if tfhub_enabled:
       if not worker.value:

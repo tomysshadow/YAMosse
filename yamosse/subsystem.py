@@ -17,7 +17,7 @@ def latin1_unescape(value):
   return str(value).encode('latin1').decode('unicode_escape')
 
 
-def subsystem(window, title):
+def subsystem(window, title, variables):
   class Subsystem(ABC):
     @abstractmethod
     def start(self, target, *args, **kwargs):
@@ -35,19 +35,23 @@ def subsystem(window, title):
     def ask_yes_no(self, message, default=None, parent=None):
       pass
     
-    def get_variables_from_object(self, object_):
+    def variables_from_object(self, object_):
       return None
     
-    def set_variables_to_object(self, variables, object_):
+    def variables_to_object(self, object_):
+      pass
+    
+    def set_variable_after_idle(self, key, value):
       pass
     
     def quit(self):
       pass
   
   class WindowSubsystem(Subsystem):
-    def __init__(self, window, title):
+    def __init__(self, window, title, variables):
       self.window = window
       self.title = title
+      self.variables = variables
     
     def start(self, target, *args, **kwargs):
       gui.threaded()
@@ -78,11 +82,18 @@ def subsystem(window, title):
         default=default
       )
     
-    def get_variables_from_object(self, object_):
-      return gui.get_variables_from_object(object_)
+    def variables_from_object(self, object_):
+      self.variables = gui.get_variables_from_object(object_)
     
-    def set_variables_to_object(self, variables, object_):
-      gui.set_variables_to_object(variables, object_)
+    def variables_to_object(self, object_):
+      gui.set_variables_to_object(self.variables, object_)
+    
+    def set_variable_after_idle(self, key, value):
+      def callback():
+        self.variables[key].set(value)
+      
+      if not gui.after_idle_window(self.window, callback):
+        raise SubsystemExit
     
     def quit(self):
       self.window.quit()
@@ -131,12 +142,11 @@ def subsystem(window, title):
           
           if result != YES and result != NO:
             result = ''
-        elif default_has_value:
-          return YES if default else NO
+        elif default_has_value: return default
       
       return result == YES
   
   if gui and window:
-    return WindowSubsystem(window, title)
+    return WindowSubsystem(window, title, variables)
   
   return ConsoleSubsystem()

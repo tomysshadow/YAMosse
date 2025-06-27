@@ -88,12 +88,10 @@ def yamosse(**kwargs):
     # if failed to load options file, reset to defaults
     options = yamosse_options.Options()
   
-  options_variables = None
   model_yamnet_class_names = yamosse_worker.class_names()
   
   def yamscan(output_file_name=''):
     nonlocal options
-    nonlocal options_variables
     
     TITLE = 'YAMScan'
     
@@ -104,7 +102,7 @@ def yamosse(**kwargs):
     
     INITIALDIR = 'My YAMScans'
     
-    subsystem.set_variables_to_object(options_variables, options)
+    subsystem.variables_to_object(options)
     
     input_ = shlex.split(options.input)
     
@@ -146,7 +144,7 @@ def yamosse(**kwargs):
     if not weights:
       if not subsystem.ask_yes_no(
         MESSAGE_WEIGHTS_NONE,
-        default=False,
+        default=True,
         parent=child
       ):
         subsystem.show(values={
@@ -156,14 +154,7 @@ def yamosse(**kwargs):
         })
         return
       
-      # TODO: deduplicate this, move to thread, set this asyncronously
-      if window:
-        options_variables['weights'].set(
-          os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH))
-        
-        gui.set_variables_to_object(options_variables, options)
-      else:
-        options.weights = os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH)
+      options.weights = os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH)
     
     subsystem.start(
       yamosse_thread.thread,
@@ -178,7 +169,6 @@ def yamosse(**kwargs):
   
   def import_preset(file_name=''):
     nonlocal options
-    nonlocal options_variables
     
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
@@ -197,17 +187,16 @@ def yamosse(**kwargs):
       subsystem.show_warning(MESSAGE_IMPORT_PRESET_INVALID)
       return
     
-    options_variables = subsystem.get_variables_from_object(options)
+    subsystem.variables_from_object(options)
     subsystem.quit()
   
   def export_preset(file_name=''):
     nonlocal options
-    nonlocal options_variables
     
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
       
-      gui.set_variables_to_object(options_variables, options)
+      gui.set_variables_to_object(options)
       
       file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
         initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
@@ -217,25 +206,25 @@ def yamosse(**kwargs):
     options.export_preset(file_name)
   
   def restore_defaults():
-    nonlocal options_variables
-    
     if not subsystem.ask_yes_no(
       MESSAGE_ASK_RESTORE_DEFAULTS,
       default=False
     ):
       return
     
-    options_variables = subsystem.get_variables_from_object(yamosse_options.Options())
+    subsystem.variables_from_object(yamosse_options.Options())
     subsystem.quit()
+  
+  variables = None
   
   if not kwargs:
     if gui:
-      options_variables = gui.get_variables_from_object(options)
+      variables = gui.get_variables_from_object(options)
       
       window = gui.gui(
         gui_yamosse.make_yamosse,
         _title,
-        options_variables,
+        variables,
         sf_input_filetypes(),
         list_ordered(model_yamnet_class_names),
         WEIGHTS_FILETYPES,
@@ -248,7 +237,7 @@ def yamosse(**kwargs):
     else:
       kwargs['output_file_name'] = input('Please enter the output file name:\n')
   
-  subsystem = yamosse_subsystem.subsystem(window, NAME)
+  subsystem = yamosse_subsystem.subsystem(window, NAME, variables)
   
   def call(function, *keywords):
     # only call function if all keyword arguments specified
@@ -284,7 +273,7 @@ def yamosse(**kwargs):
   
   window.mainloop()
   
-  gui.set_variables_to_object(options_variables, options)
+  subsystem.variables_to_object(options)
   options.dump()
   return window.children
 

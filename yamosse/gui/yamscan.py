@@ -82,11 +82,15 @@ def show_yamscan(widgets, values=None):
     if not window.children: return
     if not values: return
     
-    if 'progressbar' in values:
-      gui.configure_progressbar(
-        progressbar_widgets, progressbar_variable, values['progressbar'])
+    value = values.get('progressbar')
     
-    if 'log' in values:
+    if not value is None:
+      gui.configure_progressbar(
+        progressbar_widgets, progressbar_variable, value)
+    
+    value = values.get('log')
+    
+    if not value is None:
       log_text['state'] = tk.NORMAL
       
       try:
@@ -96,17 +100,18 @@ def show_yamscan(widgets, values=None):
       finally:
         log_text['state'] = tk.DISABLED
     
-    if 'done' in values:
-      done_value = values['done']
-      assert done_value in DONE_VALUES, 'done_value must be in %r' % (DONE_VALUES,)
+    value = values.get('done')
+    
+    if not value is None:
+      assert value in DONE_VALUES, 'value must be in %r' % (DONE_VALUES,)
       
       open_output_file_button, done_button = footer_yamscan_widgets
       
-      ok = done_value == 'OK'
+      ok = value == 'OK'
       gui.enable_widget(open_output_file_button, enabled=ok)
       
       gui.disable_traversal_button(done_button)
-      done_button['text'] = done_value
+      done_button['text'] = value
       gui.enable_traversal_button(done_button)
       
       gui.bind_buttons_window(
@@ -115,16 +120,7 @@ def show_yamscan(widgets, values=None):
         cancel_button=done_button if not ok else None
       )
   
-  try:
-    # for thread safety
-    # it's not safe to have a non-GUI thread interact directly with widgets
-    # so we queue this for when idle
-    window.after_idle(callback)
-  except:
-    if window.children: raise
-    return False
-  
-  return window.children
+  return gui.after_idle_window(window, callback)
 
 
 def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
