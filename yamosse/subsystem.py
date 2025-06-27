@@ -3,10 +3,25 @@ from threading import Thread
 
 from .gui import gui
 
+class SubsystemExit(Exception): pass
+
+
+def ascii_replace(value):
+  return str(value).encode('ascii', 'replace').decode()
+
+
+def latin1_unescape(value):
+  return str(value).encode('latin1').decode('unicode_escape')
+
+
 def subsystem(window, title):
   class Subsystem(ABC):
     @abstractmethod
     def start(self, target, *args, **kwargs):
+      pass
+    
+    @abstractmethod
+    def show(self, values=None):
       pass
     
     @abstractmethod
@@ -36,6 +51,10 @@ def subsystem(window, title):
       
       # start a thread so the GUI isn't blocked
       Thread(target=target, args=args, kwargs=kwargs).start()
+    
+    def show(self, values=None):
+      if not self.show_values_callback(self.widgets, values=values):
+        raise SubsystemExit
     
     def show_warning(self, message, parent=None):
       gui.messagebox.showwarning(
@@ -68,6 +87,10 @@ def subsystem(window, title):
   class ConsoleSubsystem(Subsystem):
     def start(self, target, *args, **kwargs):
       target(*args, **kwargs)
+    
+    def show(self, values=None):
+      if values and 'log' in values:
+        print(ascii_replace(values['log']))
     
     def show_warning(self, message, parent=None):
       print(message)

@@ -135,6 +135,9 @@ def yamosse(**kwargs):
         progressbar_maximum=yamosse_thread.PROGRESSBAR_MAXIMUM,
         child=True
       )
+      
+      subsystem.show_values_callback = gui_yamscan.show_yamscan
+      subsystem.widgets = widgets
     
     weights = options.weights
     
@@ -162,7 +165,7 @@ def yamosse(**kwargs):
     
     subsystem.start(
       yamosse_thread.thread,
-      widgets,
+      subsystem,
       output_file_name,
       options,
       input_,

@@ -8,6 +8,7 @@ from time import time
 
 import soundfile as sf
 
+import yamosse.subsystem as yamosse_subsystem
 import yamosse.download as yamosse_download
 import yamosse.worker as yamosse_worker
 
@@ -15,16 +16,6 @@ from .gui import progress as gui_progress
 from .gui import yamscan as gui_yamscan
 
 PROGRESSBAR_MAXIMUM = 100
-
-class ThreadExit(Exception): pass
-
-
-def ascii_replace(value):
-  return str(value).encode('ascii', 'replace').decode()
-
-
-def latin1_unescape(value):
-  return str(value).encode('latin1').decode('unicode_escape')
 
 
 def batches(seq, size):
@@ -127,18 +118,7 @@ def input_file_names(input_, recursive=True):
   return file_names
 
 
-# TODO: move show to subsystem
-# do not include subsystem here to prevent circular reference
-# but have the object passed in to thread
-def show(widgets, values=None):
-  if widgets:
-    if not gui_yamscan.show_yamscan(widgets, values=values): raise ThreadExit
-    return
-  
-  if values and 'log' in values: print(ascii_replace(values['log']))
-
-
-def download(widgets, options, weights):
+def download(subsystem, options, weights):
   if weights:
     try:
       return open(weights, 'rb')
@@ -148,13 +128,13 @@ def download(widgets, options, weights):
   weights = options.weights
   assert weights, 'weights must not be empty'
   
-  show(widgets, values={
+  subsystem.show(values={
     'log': 'Downloading YAMNet Weights, please wait...'
   })
   return yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, weights, mode='wb')
 
 
-def files(widgets, options, input_, model_yamnet_class_names):
+def files(subsystem, options, input_, model_yamnet_class_names):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -220,7 +200,7 @@ def files(widgets, options, input_, model_yamnet_class_names):
         nonlocal next_
         nonlocal batch
         
-        show(widgets, values=received)
+        subsystem.show(values=received)
         
         # just copy it out first so we aren't holding the lock
         # during all the nonsense we have to do below
@@ -246,7 +226,7 @@ def files(widgets, options, input_, model_yamnet_class_names):
           progress = file_names_pos / file_names_len
           log = f'{log}{progress:.4%} complete ({file_names_pos}/{file_names_len}: "{file_name}")'
           
-          show(widgets, {
+          subsystem.show(values={
             'progressbar': progress * PROGRESSBAR_MAXIMUM,
             'log': log
           })
@@ -271,18 +251,18 @@ def files(widgets, options, input_, model_yamnet_class_names):
             if done: normal = True
         
         if normal:
-          show(widgets, values={
+          subsystem.show(values={
             'progressbar': gui_progress.NORMAL
           })
           
           clear_done = clear_done_normal
           clear_done_normal(received)
         
-        show(widgets, values=received)
+        subsystem.show(values=received)
       
       clear_done = clear_done_loading
       
-      show(widgets, values={
+      subsystem.show(values={
         'log': 'Created Process Pool Executor\n'
       })
       
@@ -325,7 +305,7 @@ def files(widgets, options, input_, model_yamnet_class_names):
 def output(file, results, errors, options, model_yamnet_class_names):
   file_name = ''
   
-  item_delimiter = latin1_unescape(options.item_delimiter)
+  item_delimiter = yamosse_subsystem.latin1_unescape(options.item_delimiter)
   if not item_delimiter: item_delimiter = ' '
   
   confidence_scores = options.output_confidence_scores
@@ -333,7 +313,7 @@ def output(file, results, errors, options, model_yamnet_class_names):
   def print_file_name():
     # replace Unicode characters with ASCII when printing
     # to prevent crash when run in Command Prompt
-    print(ascii_replace(file_name), end='\n\t', file=file)
+    print(yamosse_subsystem.ascii_replace(file_name), end='\n\t', file=file)
   
   # sort from least to most timestamps
   results = dict_sorted(results, key=key_number_of_sounds)
@@ -369,12 +349,12 @@ def output(file, results, errors, options, model_yamnet_class_names):
   # print errors
   for file_name, ex in errors.items():
     print_file_name()
-    print(ascii_replace(ex), file=file)
+    print(yamosse_subsystem.ascii_replace(ex), file=file)
 
 
-def report_thread_exception(widgets, exc, val, tb):
+def report_thread_exception(subsystem, exc, val, tb):
   try:
-    show(widgets, values={
+    subsystem.show(values={
       'progressbar': gui_progress.ERROR,
       
       'log': ':\n'.join((
@@ -382,10 +362,10 @@ def report_thread_exception(widgets, exc, val, tb):
         ''.join(traceback.format_exception(exc, val, tb))
       ))
     })
-  except ThreadExit: pass
+  except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(widgets, output_file_name, options, input_, weights, model_yamnet_class_names):
+def thread(subsystem, output_file_name, options, input_, weights, model_yamnet_class_names):
   try:
     seconds = time()
     
@@ -396,35 +376,35 @@ def thread(widgets, output_file_name, options, input_, weights, model_yamnet_cla
     # so it can't be deleted in the time between now and the workers using it
     try:
       with (
-        download(widgets, options, weights) as weights_file,
+        download(subsystem, options, weights) as weights_file,
         open(output_file_name, mode='w') as output_file
       ):
         # should be done before calling initarg on the options
         if options.output_options:
           options.print(end='\n\n', file=output_file)
         
-        results_errors = files(widgets, options, input_, model_yamnet_class_names)
+        results_errors = files(subsystem, options, input_, model_yamnet_class_names)
         
-        show(widgets, values={
+        subsystem.show(values={
           'progressbar': gui_progress.DONE,
           'log': 'Finishing, please wait...\n'
         })
         
         output(output_file, *results_errors, options, model_yamnet_class_names)
     except yamosse_download.DownloadError as ex:
-      show(widgets, values={
+      subsystem.show(values={
         'progressbar': gui_progress.ERROR,
         'log': ex.reason
       })
     
-    show(widgets, values={
+    subsystem.show(values={
       'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
     })
-  except ThreadExit: pass
-  except: report_thread_exception(widgets, *exc_info())
+  except yamosse_subsystem.SubsystemExit: pass
+  except: report_thread_exception(subsystem, *exc_info())
   finally:
     try:
-      show(widgets, values={
+      subsystem.show(values={
         'done': 'OK'
       })
-    except ThreadExit: pass
+    except yamosse_subsystem.SubsystemExit: pass
