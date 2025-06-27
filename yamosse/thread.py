@@ -8,6 +8,7 @@ from time import time
 
 import soundfile as sf
 
+import yamosse.encoding as yamosse_encoding
 import yamosse.progress as yamosse_progress
 import yamosse.subsystem as yamosse_subsystem
 import yamosse.download as yamosse_download
@@ -16,7 +17,7 @@ import yamosse.worker as yamosse_worker
 PROGRESSBAR_MAXIMUM = 100
 
 
-def batches(seq, size):
+def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
@@ -274,7 +275,7 @@ def files(subsystem, options, input_, model_yamnet_class_names):
         'log': 'Created Process Pool Executor\n'
       })
       
-      for f in batches(file_names, BATCH_SIZE):
+      for f in batched(file_names, BATCH_SIZE):
         for file_name in sorted(f, key=key_getsize, reverse=True):
           process_pool_executor.submit(yamosse_worker.worker, file_name).add_done_callback(
             lambda future, file_name=file_name: insert_done(future, file_name))
@@ -313,7 +314,7 @@ def files(subsystem, options, input_, model_yamnet_class_names):
 def output(file, results, errors, options, model_yamnet_class_names):
   file_name = ''
   
-  item_delimiter = yamosse_subsystem.latin1_unescape(options.item_delimiter)
+  item_delimiter = yamosse_encoding.latin1_unescape(options.item_delimiter)
   if not item_delimiter: item_delimiter = ' '
   
   confidence_scores = options.output_confidence_scores
@@ -321,7 +322,7 @@ def output(file, results, errors, options, model_yamnet_class_names):
   def print_file_name():
     # replace Unicode characters with ASCII when printing
     # to prevent crash when run in Command Prompt
-    print(yamosse_subsystem.ascii_replace(file_name), end='\n\t', file=file)
+    print(yamosse_encoding.ascii_replace(file_name), end='\n\t', file=file)
   
   # sort from least to most timestamps
   results = dict_sorted(results, key=key_number_of_sounds)
@@ -353,7 +354,7 @@ def output(file, results, errors, options, model_yamnet_class_names):
   # print errors
   for file_name, ex in errors.items():
     print_file_name()
-    print(yamosse_subsystem.ascii_replace(ex), file=file)
+    print(yamosse_encoding.ascii_replace(ex), file=file)
 
 
 def report_thread_exception(subsystem, exc, val, tb):

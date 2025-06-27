@@ -1,18 +1,12 @@
 from abc import ABC, abstractmethod
 from threading import Thread
 
+import yamosse.encoding as yamosse_encoding
+
 try: from .gui import gui
 except ImportError: gui = None
 
 class SubsystemExit(Exception): pass
-
-
-def ascii_replace(value):
-  return str(value).encode('ascii', 'replace').decode()
-
-
-def latin1_unescape(value):
-  return str(value).encode('latin1').decode('unicode_escape')
 
 
 def subsystem(window, title, variables):
@@ -102,7 +96,7 @@ def subsystem(window, title, variables):
     
     def show(self, values=None):
       if values and 'log' in values:
-        print(ascii_replace(values['log']))
+        print(yamosse_encoding.ascii_replace(values['log']))
     
     def show_warning(self, message, parent=None):
       print(message)
