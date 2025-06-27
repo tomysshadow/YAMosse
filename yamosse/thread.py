@@ -120,18 +120,18 @@ def increment_file_name(path):
     ) for number in range(MIN_NUMBER, MAX_NUMBER))
 
 
-def download_yamnet_weights_unique(subsystem, options):
+def download_weights_unique(subsystem, options, url, path):
   weights = options.weights
   if weights: return open(weights, 'rb')
   
-  weights = os.path.join(os.path.realpath(os.curdir), yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH)
+  weights = os.path.join(os.path.realpath(os.curdir), path)
   
   subsystem.show(values={
-    'log': 'Downloading YAMNet Weights, please wait...'
+    'log': 'Downloading weights, please wait...'
   })
   
   for w in increment_file_name(weights):
-    try: file = yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, w, mode='xb')
+    try: file = yamosse_download.download(url, w, mode='xb')
     except FileExistsError: continue
     
     try:
@@ -383,7 +383,12 @@ def thread(subsystem, output_file_name, options, input_, model_yamnet_class_name
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
     with (
-      download_yamnet_weights_unique(subsystem, options) as weights_file,
+      download_weights_unique(
+        subsystem,
+        options,
+        yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
+        yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH
+      ) as weights_file,
       open(output_file_name, mode='w') as output_file
     ):
       # should be done before calling initarg on the options
