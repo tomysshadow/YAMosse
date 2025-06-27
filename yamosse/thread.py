@@ -126,15 +126,15 @@ def download_weights_file_unique(subsystem, options, url, path, min_=1, max_=100
     return (path if num == min_ else '%s (%d)%s' % (root, num, ext
       ) for num in range(min_, max_))
   
-  for p in increment_file_name():
-    try: file = yamosse_download.download(url, p, mode='xb')
+  for i in increment_file_name():
+    try: file = yamosse_download.download(url, i, mode='xb')
     except FileExistsError: continue
     
     try:
-      assert p, 'p must not be empty'
-      options.weights = p
+      assert i, 'i must not be empty'
+      options.weights = i
       options.dump()
-      subsystem.set_variable_after_idle('weights', p)
+      subsystem.set_variable_after_idle('weights', i)
       return file
     except:
       file.close()
