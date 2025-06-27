@@ -118,7 +118,7 @@ def input_file_names(input_, recursive=True):
 
 def increment_file_name(path):
   MIN_NUMBER = 1
-  MAX_NUMBER = 999
+  MAX_NUMBER = 1000
   
   root, ext = os.path.splitext(path)
   
@@ -137,13 +137,13 @@ def download_yamnet_weights(subsystem, options):
     'log': 'Downloading YAMNet Weights, please wait...'
   })
   
-  for path in increment_file_name(weights):
+  for w in increment_file_name(weights):
     try:
-      file = yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, path, mode='xb')
+      file = yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, w, mode='xb')
     except FileExistsError: continue
     
     try:
-      options.weights = path
+      options.weights = w
       options.dump()
       subsystem.set_variable_after_idle('weights', options.weights)
       return file
@@ -151,7 +151,7 @@ def download_yamnet_weights(subsystem, options):
       file.close()
       raise
   
-  raise IOError('The weights file could not be created.')
+  raise IOError('The weights file %r could not be created.' % weights)
 
 
 def files(subsystem, options, input_, model_yamnet_class_names):
