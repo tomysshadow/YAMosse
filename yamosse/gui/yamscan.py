@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from . import gui
-from . import progress as gui_progress
+
+import yamosse.progress as yamosse_progress
 
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
@@ -145,7 +146,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   progressbar_frame.grid(row=0, sticky=tk.EW)
   progressbar_variable = tk.IntVar()
   progressbar_widgets = gui.make_progressbar(progressbar_frame, variable=progressbar_variable,
-    maximum=progressbar_maximum, type_=gui_progress.LOADING, parent=parent, task=True)[1]
+    maximum=progressbar_maximum, type_=yamosse_progress.LOADING, parent=parent, task=True)[1]
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
@@ -168,7 +169,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
     if not ask_cancel(window, title, footer_yamscan_widgets): return
     
     gui.configure_progressbar(
-      progressbar_widgets, progressbar_variable, gui_progress.RESET)
+      progressbar_widgets, progressbar_variable, yamosse_progress.RESET)
     
     gui.release_modal_window(window)
   

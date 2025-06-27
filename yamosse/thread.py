@@ -8,12 +8,10 @@ from time import time
 
 import soundfile as sf
 
+import yamosse.progress as yamosse_progress
 import yamosse.subsystem as yamosse_subsystem
 import yamosse.download as yamosse_download
 import yamosse.worker as yamosse_worker
-
-from .gui import progress as gui_progress
-from .gui import yamscan as gui_yamscan
 
 PROGRESSBAR_MAXIMUM = 100
 
@@ -252,7 +250,7 @@ def files(subsystem, options, input_, model_yamnet_class_names):
         
         if normal:
           subsystem.show(values={
-            'progressbar': gui_progress.NORMAL
+            'progressbar': yamosse_progress.NORMAL
           })
           
           clear_done = clear_done_normal
@@ -355,7 +353,7 @@ def output(file, results, errors, options, model_yamnet_class_names):
 def report_thread_exception(subsystem, exc, val, tb):
   try:
     subsystem.show(values={
-      'progressbar': gui_progress.ERROR,
+      'progressbar': yamosse_progress.ERROR,
       
       'log': ':\n'.join((
         'Exception in YAMScan thread',
@@ -386,14 +384,14 @@ def thread(subsystem, output_file_name, options, input_, weights, model_yamnet_c
         results_errors = files(subsystem, options, input_, model_yamnet_class_names)
         
         subsystem.show(values={
-          'progressbar': gui_progress.DONE,
+          'progressbar': yamosse_progress.DONE,
           'log': 'Finishing, please wait...\n'
         })
         
         output(output_file, *results_errors, options, model_yamnet_class_names)
     except yamosse_download.DownloadError as ex:
       subsystem.show(values={
-        'progressbar': gui_progress.ERROR,
+        'progressbar': yamosse_progress.ERROR,
         'log': ex.reason
       })
     

@@ -5,15 +5,18 @@ import subprocess
 
 import soundfile as sf
 
+import yamosse.progress as yamosse_progress
 import yamosse.subsystem as yamosse_subsystem
 import yamosse.options as yamosse_options
 import yamosse.thread as yamosse_thread
 import yamosse.worker as yamosse_worker
 
-from .gui import gui
-from .gui import progress as gui_progress
-from .gui import yamscan as gui_yamscan
-from .gui import yamosse as gui_yamosse
+try:
+  from .gui import gui
+  from .gui import yamscan as gui_yamscan
+  from .gui import yamosse as gui_yamosse
+except ImportError:
+  gui = None
 
 NAME = 'YAMosse'
 VERSION = '1.0.0'
@@ -114,7 +117,6 @@ def yamosse(**kwargs):
       return
     
     child = None
-    widgets = None
     
     if not output_file_name:
       assert window, 'output_file_name must not be empty if there is no window'
@@ -136,7 +138,7 @@ def yamosse(**kwargs):
         child=True
       )
       
-      subsystem.show_values_callback = gui_yamscan.show_yamscan
+      subsystem.show_callback = gui_yamscan.show_yamscan
       subsystem.widgets = widgets
     
     weights = options.weights
@@ -147,14 +149,14 @@ def yamosse(**kwargs):
         default=False,
         parent=child
       ):
-        # TODO: deduplicate this, move to thread, set this asyncronously
-        if widgets: yamosse_thread.show(widgets, values={
-          'progressbar': gui_progress.ERROR,
+        subsystem.show(values={
+          'progressbar': yamosse_progress.ERROR,
           'log': 'The YAMScan was cancelled because there is no weights file.',
           'done': 'OK'
         })
         return
       
+      # TODO: deduplicate this, move to thread, set this asyncronously
       if window:
         options_variables['weights'].set(
           os.path.join(os.path.realpath(os.curdir), YAMNET_WEIGHTS_PATH))
@@ -227,43 +229,57 @@ def yamosse(**kwargs):
     subsystem.quit()
   
   if not kwargs:
-    options_variables = gui.get_variables_from_object(options)
-    
-    window = gui.gui(
-      gui_yamosse.make_yamosse,
-      _title,
-      options_variables,
-      sf_input_filetypes(),
-      list_ordered(model_yamnet_class_names),
-      WEIGHTS_FILETYPES,
-      yamosse_worker.tfhub_enabled(),
-      yamscan,
-      import_preset,
-      export_preset,
-      restore_defaults
-    )[0]
+    if gui:
+      options_variables = gui.get_variables_from_object(options)
+      
+      window = gui.gui(
+        gui_yamosse.make_yamosse,
+        _title,
+        options_variables,
+        sf_input_filetypes(),
+        list_ordered(model_yamnet_class_names),
+        WEIGHTS_FILETYPES,
+        yamosse_worker.tfhub_enabled(),
+        yamscan,
+        import_preset,
+        export_preset,
+        restore_defaults
+      )[0]
+    else:
+      kwargs['output_file_name'] = input('Please enter the output file name:\n')
   
   subsystem = yamosse_subsystem.subsystem(window, NAME)
   
+  def call(function, *keywords):
+    # only call function if all keyword arguments specified
+    args = []
+    
+    for keyword in keywords:
+      kwarg = kwargs.get(keyword)
+      if kwarg is None: return None
+      
+      args.append(kwarg)
+    
+    return function(*args)
+  
   if kwargs:
-    if 'restore_defaults' in kwargs:
-      if kwargs['restore_defaults']: restore_defaults()
+    call(
+      lambda restore_defaults_: restore_defaults() if restore_defaults_ else None,
+      'restore_defaults'
+    )
     
-    if 'import_preset_file_name' in kwargs:
-      import_preset(kwargs['import_preset_file_name'])
+    call(import_preset, 'import_preset_file_name')
     
-    if 'options_preset' in kwargs:
-      options.set(kwargs['options_preset'], strict=False)
+    call(
+      lambda options_set: options.set(options_set, strict=False),
+      'options_set'
+    )
   
   options.print()
   
   if kwargs:
-    if 'export_preset_file_name' in kwargs:
-      export_preset(kwargs['export_preset_file_name'])
-    
-    if 'output_file_name' in kwargs:
-      yamscan(kwargs['output_file_name'])
-    
+    call(export_preset, 'export_preset_file_name')
+    call(yamscan, 'output_file_name')
     return None
   
   window.mainloop()

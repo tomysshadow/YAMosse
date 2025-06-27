@@ -24,7 +24,7 @@ def main(argc, argv):
   args_len = len(args)
   
   kwargs = {}
-  options_preset = {}
+  options_set = {}
   argc2 = args_len - 1
   argc3 = args_len - 2
   
@@ -54,13 +54,13 @@ def main(argc, argv):
           a += 1
           
           try:
-            options_preset[key] = literal_eval(args[a])
+            options_set[key] = literal_eval(args[a])
           except ValueError:
             help_()
             return 1
   
-  if options_preset:
-    kwargs['options_preset'] = options_preset
+  if options_set:
+    kwargs['options_set'] = options_set
   
   yamosse_worker.tfhub_cache()
   

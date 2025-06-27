@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from threading import Thread
 
-from .gui import gui
+try:
+  from .gui import gui
+except ImportError:
+  gui = None
 
 class SubsystemExit(Exception): pass
 
@@ -53,7 +56,7 @@ def subsystem(window, title):
       Thread(target=target, args=args, kwargs=kwargs).start()
     
     def show(self, values=None):
-      if not self.show_values_callback(self.widgets, values=values):
+      if not self.show_callback(self.widgets, values=values):
         raise SubsystemExit
     
     def show_warning(self, message, parent=None):
@@ -133,7 +136,7 @@ def subsystem(window, title):
       
       return result == YES
   
-  if window:
+  if gui and window:
     return WindowSubsystem(window, title)
   
   return ConsoleSubsystem()

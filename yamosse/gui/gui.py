@@ -11,8 +11,7 @@ except ImportError:
   tkdnd = None
 
 import yamosse.root as yamosse_root
-
-from . import progress as gui_progress
+import yamosse.progress as yamosse_progress
 
 PADDING = 12
 PADDING_NSEW = PADDING
@@ -417,11 +416,11 @@ def progressbar():
     progressbar, taskbar = widgets
     variable_set = False
     
-    if not type_ in gui_progress.types.keys():
+    if not type_ in yamosse_progress.types.keys():
       variable.set(int(type_))
       return True
     
-    if type_ == gui_progress.LOADING:
+    if type_ == yamosse_progress.LOADING:
       if is_determinate(progressbar):
         progressbar['mode'] = 'indeterminate'
         variable.set(0) # must be done after setting mode to take effect
@@ -434,23 +433,23 @@ def progressbar():
         variable.set(0) # must be done after setting mode to take effect
         variable_set = True
       
-      if type_ == gui_progress.DONE:
+      if type_ == yamosse_progress.DONE:
         variable.set(int(progressbar['maximum']))
         
         if taskbar: taskbar.flash_done()
         return True
       
-      if type_ == gui_progress.RESET:
+      if type_ == yamosse_progress.RESET:
         variable.set(0)
         
         if taskbar: taskbar.reset()
         return True
     
-    if taskbar: taskbar.set_progress_type(gui_progress.types[type_])
+    if taskbar: taskbar.set_progress_type(yamosse_progress.types[type_])
     return variable_set
   
   def make(frame, name='', variable=None,
-    type_=gui_progress.NORMAL, parent=None, task=False, **kwargs):
+    type_=yamosse_progress.NORMAL, parent=None, task=False, **kwargs):
     if not variable: variable = tk.IntVar()
     
     frame.rowconfigure(0, weight=1) # make progressbar vertically centered
@@ -465,9 +464,9 @@ def progressbar():
     
     taskbar = None
     
-    if task and gui_progress.PyTaskbar:
+    if task and yamosse_progress.PyTaskbar:
       if not parent: parent = frame.winfo_toplevel()
-      taskbar = gui_progress.PyTaskbar.Progress(hwnd=gui_progress.hwnd(parent))
+      taskbar = yamosse_progress.PyTaskbar.Progress(hwnd=yamosse_progress.hwnd(parent))
     
     value = 0
     
