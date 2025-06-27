@@ -616,11 +616,10 @@ get_root_window = _root_window()
 
 
 def after_idle_window(window, callback):
-  try:
-    # for thread safety
-    # it's not safe to have a non-GUI thread interact directly with widgets
-    # so we queue this for when idle
-    window.after_idle(callback)
+  # for thread safety
+  # it's not safe to have a non-GUI thread interact directly with widgets
+  # so we queue this for when idle
+  try: window.after_idle(callback)
   except tk.TclError:
     if window.children: raise
     return False
@@ -647,8 +646,7 @@ def release_modal_window(window, destroy=True):
   
   # this must be done before destroying the window
   # otherwise the window behind this one will not take focus back
-  try:
-    parent.attributes('-disabled', False)
+  try: parent.attributes('-disabled', False)
   except tk.TclError: pass # not supported on this OS
   
   window.grab_release() # is not necessary on Windows, but is necessary on other OS's
@@ -661,8 +659,7 @@ def set_modal_window(window, delete_window=release_modal_window):
   window.protocol('WM_DELETE_WINDOW', lambda: delete_window(window))
   
   # make the window behind us play the "bell" sound if we try and interact with it
-  try:
-    window.master.attributes('-disabled', True)
+  try: window.master.attributes('-disabled', True)
   except tk.TclError: pass # not supported on this OS
   
   # turns on WM_TRANSIENT_FOR on Linux (X11) which modal dialogs are meant to have
@@ -672,14 +669,12 @@ def set_modal_window(window, delete_window=release_modal_window):
   
   # disable the minimize and maximize buttons
   # Windows
-  try:
-    window.attributes('-toolwindow', True)
+  try: window.attributes('-toolwindow', True)
   except tk.TclError: pass # not supported on this OS
   
   # Linux (X11)
   # see type list here: https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#id-1.6.7
-  try:
-    window.attributes('-type', 'dialog')
+  try: window.attributes('-type', 'dialog')
   except tk.TclError: pass # not supported on this OS
   
   # wait for window to be visible
@@ -766,12 +761,8 @@ def _root_images():
           return (name, scandir(entry.path, lambda image_entry: callback_image(
             image_entry, make_image)))
         
-        try:
-          return (name, make_image(file=entry.path))
-        except tk.TclError:
-          pass
-        
-        return None
+        try: return (name, make_image(file=entry.path))
+        except tk.TclError: return None
       
       def callback_images(entry):
         if not entry.is_dir(): return None

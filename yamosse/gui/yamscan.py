@@ -97,8 +97,7 @@ def show_yamscan(widgets, values=None):
         gui.delete_lines_text(log_text)
         log_text.insert(tk.END, '%s\n' % values['log'])
         log_text.see(tk.END)
-      finally:
-        log_text['state'] = tk.DISABLED
+      finally: log_text['state'] = tk.DISABLED
     
     value = values.get('done')
     

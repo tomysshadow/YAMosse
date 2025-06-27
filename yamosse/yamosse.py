@@ -15,8 +15,7 @@ try:
   from .gui import gui
   from .gui import yamscan as gui_yamscan
   from .gui import yamosse as gui_yamosse
-except ImportError:
-  gui = None
+except ImportError: gui = None
 
 NAME = 'YAMosse'
 VERSION = '1.0.0'
@@ -50,8 +49,7 @@ _title = ' '.join((NAME, VERSION))
 
 
 def open_file(path):
-  try:
-    os.startfile(path)
+  try: os.startfile(path)
   except NotImplementedError:
     subprocess.check_call(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
 
@@ -79,12 +77,10 @@ def yamosse(**kwargs):
   window = None
   subsystem = None
   
-  try:
-    # try and load the options file first
-    options = yamosse_options.Options.load()
-  except:
-    # if failed to load options file, reset to defaults
-    options = yamosse_options.Options()
+  # try and load the options file first
+  # if failed to load options file, reset to defaults
+  try: options = yamosse_options.Options.load()
+  except: options = yamosse_options.Options()
   
   model_yamnet_class_names = yamosse_worker.class_names()
   

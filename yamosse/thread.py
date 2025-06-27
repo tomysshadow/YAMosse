@@ -25,11 +25,8 @@ def dict_sorted(d, *args, **kwargs):
 
 
 def key_getsize(file_name):
-  try:
-    return os.path.getsize(file_name)
-  except OSError: pass
-  
-  return 0
+  try: return os.path.getsize(file_name)
+  except OSError: return 0
 
 
 def key_class(item):
@@ -62,10 +59,8 @@ def connection_flush(connection):
   # prevents BrokenPipeError exceptions in workers
   # (they expect that sent messages WILL be delivered, else cause an exception)
   try:
-    while True:
-      connection.recv()
-  except EOFError:
-    pass
+    while True: connection.recv()
+  except EOFError: pass
 
 
 def real_relpath(path, start=os.curdir):
@@ -77,8 +72,7 @@ def real_relpath(path, start=os.curdir):
   try:
     if os.path.commonpath((real_path, real_start)) != real_start:
       return real_path
-  except ValueError:
-    return real_path
+  except ValueError: return real_path
   
   return os.path.relpath(real_path, start=real_start)
 
@@ -138,8 +132,7 @@ def download_yamnet_weights(subsystem, options):
   })
   
   for w in increment_file_name(weights):
-    try:
-      file = yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, w, mode='xb')
+    try: file = yamosse_download.download(yamosse_worker.MODEL_YAMNET_WEIGHTS_URL, w, mode='xb')
     except FileExistsError: continue
     
     try:
@@ -229,10 +222,8 @@ def files(subsystem, options, input_, model_yamnet_class_names):
           done.clear()
         
         for future, file_name in done_copy.items():
-          try:
-            results[file_name] = future.result()
-          except sf.LibsndfileError as ex:
-            errors[file_name] = ex
+          try: results[file_name] = future.result()
+          except sf.LibsndfileError as ex: errors[file_name] = ex
           
           log = ''
           
@@ -350,13 +341,10 @@ def output(file, results, errors, options, model_yamnet_class_names):
         print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
         
         for timestamp, score in timestamp_scores.items():
-          try:
-            hms = ' - '.join(hours_minutes(t) for t in timestamp)
-          except TypeError:
-            hms = hours_minutes(timestamp)
+          try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
+          except TypeError: hms = hours_minutes(timestamp)
           
-          if confidence_scores:
-            hms = f'{hms} ({score:.0%})'
+          if confidence_scores: hms = f'{hms} ({score:.0%})'
           
           timestamp_scores[timestamp] = hms
         

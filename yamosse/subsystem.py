@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from threading import Thread
 
-try:
-  from .gui import gui
-except ImportError:
-  gui = None
+try: from .gui import gui
+except ImportError: gui = None
 
 class SubsystemExit(Exception): pass
 

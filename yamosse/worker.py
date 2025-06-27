@@ -90,8 +90,7 @@ def initializer(worker, receiver, sender, shutdown, options,
   # and causes startup to take significantly longer
   import sys
   
-  try:
-    import tf_keras
+  try: import tf_keras
   except ImportError:
     # for Windows, where we can't use tf_keras with GPU Acceleration
     from tensorflow import keras

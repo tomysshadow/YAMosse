@@ -53,8 +53,7 @@ def main(argc, argv):
           
           a += 1
           
-          try:
-            options_items[key] = literal_eval(args[a])
+          try: options_items[key] = literal_eval(args[a])
           except ValueError:
             help_()
             return 1
