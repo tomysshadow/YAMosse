@@ -156,10 +156,10 @@ class Options:
     with open(_root_file_name, mode='wb') as f:
       pickle.dump(self, f)
   
-  def set(self, option, strict=True):
+  def set(self, items, strict=True):
     for key, value in vars(self).items():
-      if strict or key in option:
-        setattr(self, key, type(value)(option[key]))
+      if strict or key in items:
+        setattr(self, key, type(value)(items[key]))
   
   @classmethod
   def import_preset(cls, file_name):

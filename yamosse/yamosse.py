@@ -271,8 +271,8 @@ def yamosse(**kwargs):
     call(import_preset, 'import_preset_file_name')
     
     call(
-      lambda options_set: options.set(options_set, strict=False),
-      'options_set'
+      lambda options_items: options.set(options_items, strict=False),
+      'options_items'
     )
   
   options.print()
