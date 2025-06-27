@@ -383,7 +383,7 @@ def thread(subsystem, output_file_name, options, input_, model_yamnet_class_name
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
     with (
-      download_yamnet_weights(subsystem, options) as weights_file,
+      download_yamnet_weights_unique(subsystem, options) as weights_file,
       open(output_file_name, mode='w') as output_file
     ):
       # should be done before calling initarg on the options
