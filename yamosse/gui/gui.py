@@ -695,6 +695,9 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
   
   if size:
     window.geometry('%dx%d+%d+%d' % (size + location) if location else '%dx%d' % size)
+    
+    if resizable:
+      window.minsize(*size)
   
   if iconphotos:
     if window == get_root_window():

@@ -494,7 +494,7 @@ def make_yamosse(frame, title, options_variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   yamscan, import_preset, export_preset, restore_defaults):
   # resizing technically works but looks kind of jank, so just disable for now
-  RESIZABLE = False
+  RESIZABLE = True
   SIZE = (600, 560)
   
   window = frame.master
