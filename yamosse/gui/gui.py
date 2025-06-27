@@ -402,8 +402,8 @@ def make_listbox(frame, name='', items=None,
       )
     ]
     
-    for b in reversed(range(len(buttons))):
-      buttons[b].pack(side=tk.RIGHT, padx=PADX_QW)
+    for button in reversed(buttons):
+      button.pack(side=tk.RIGHT, padx=PADX_QW)
   
   return make_name(name_frame, name), (listbox, make_scrollbar(listbox, xscroll, yscroll)
     ), (buttons_frame, buttons)
@@ -557,8 +557,8 @@ def make_filedialog(frame, name='', textvariable=None,
     buttons.append(button)
   
   # must be done in a separate loop to button creation so tab order is correct
-  for b in reversed(range(len(buttons))):
-    buttons[b].pack(side=tk.RIGHT, padx=PADX_QW)
+  for button in reversed(buttons):
+    button.pack(side=tk.RIGHT, padx=PADX_QW)
   
   # drag and drop
   if tkinterdnd2:
