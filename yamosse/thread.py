@@ -255,6 +255,7 @@ def files(subsystem, options, input_, model_yamnet_class_names):
           
           clear_done = clear_done_normal
           clear_done_normal(received)
+          return
         
         subsystem.show(values=received)
       
