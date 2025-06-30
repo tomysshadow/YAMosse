@@ -24,7 +24,7 @@ def print_section(name, file=None):
 def print_file(name, file=None):
   # replace Unicode characters with ASCII when printing
   # to prevent crash when run in Command Prompt
-  print(repr(yamosse_encoding.ascii_replace(name)), end='\n\t', file=file)
+  print(yamosse_encoding.ascii_replace(name), end='\n\t', file=file)
 
 
 def hours_minutes(seconds):
