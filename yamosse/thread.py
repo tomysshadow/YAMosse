@@ -17,6 +17,28 @@ import yamosse.worker as yamosse_worker
 PROGRESSBAR_MAXIMUM = 100
 
 
+def print_section(name, file=None):
+  print('# %s' % name, end='\n\n', file=file)
+
+
+def print_file(name, file=None):
+  # replace Unicode characters with ASCII when printing
+  # to prevent crash when run in Command Prompt
+  print(repr(yamosse_encoding.ascii_replace(name)), end='\n\t', file=file)
+
+
+def hours_minutes(seconds):
+  TO_HMS = 60
+  
+  m, s = divmod(int(seconds), TO_HMS)
+  h, m = divmod(m, TO_HMS)
+  
+  if h:
+    return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
+  
+  return f'{m:.0f}:{s:02.0f}'
+
+
 def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
@@ -42,18 +64,6 @@ def key_number_of_sounds(item):
     result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
   
   return result
-
-
-def hours_minutes(seconds):
-  TO_HMS = 60
-  
-  m, s = divmod(int(seconds), TO_HMS)
-  h, m = divmod(m, TO_HMS)
-  
-  if h:
-    return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
-  
-  return f'{m:.0f}:{s:02.0f}'
 
 
 def connection_flush(connection):
@@ -312,49 +322,48 @@ def files(subsystem, options, input_, model_yamnet_class_names):
 
 
 def output(file, results, errors, options, model_yamnet_class_names):
-  file_name = ''
-  
   item_delimiter = yamosse_encoding.latin1_unescape(options.item_delimiter)
   if not item_delimiter: item_delimiter = ' '
   
   confidence_scores = options.output_confidence_scores
   
-  def print_file_name():
-    # replace Unicode characters with ASCII when printing
-    # to prevent crash when run in Command Prompt
-    print(yamosse_encoding.ascii_replace(file_name), end='\n\t', file=file)
-  
   # sort from least to most timestamps
   results = dict_sorted(results, key=key_number_of_sounds)
   
   # print results
-  for file_name, class_timestamps in results.items():
-    print_file_name()
+  if results:
+    print_section('Results', file=file)
     
-    if class_timestamps:
-      class_timestamps = dict_sorted(class_timestamps, key=key_class)
+    for file_name, class_timestamps in results.items():
+      print_file(file_name, file=file)
       
-      for class_, timestamp_scores in class_timestamps.items():
-        print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
+      if class_timestamps:
+        class_timestamps = dict_sorted(class_timestamps, key=key_class)
         
-        for timestamp, score in timestamp_scores.items():
-          try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
-          except TypeError: hms = hours_minutes(timestamp)
+        for class_, timestamp_scores in class_timestamps.items():
+          print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
           
-          if confidence_scores: hms = f'{hms} ({score:.0%})'
+          for timestamp, score in timestamp_scores.items():
+            try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
+            except TypeError: hms = hours_minutes(timestamp)
+            
+            if confidence_scores: hms = f'{hms} ({score:.0%})'
+            
+            timestamp_scores[timestamp] = hms
           
-          timestamp_scores[timestamp] = hms
-        
-        print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
-    else:
-      print(None, file=file)
-    
-    print('', file=file)
+          print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
+      else:
+        print(None, file=file)
+      
+      print('', file=file)
   
   # print errors
-  for file_name, ex in errors.items():
-    print_file_name()
-    print(yamosse_encoding.ascii_replace(ex), file=file)
+  if errors:
+    print_section('Errors', file=file)
+    
+    for file_name, ex in errors.items():
+      print_file(file_name, file=file)
+      print(repr(yamosse_encoding.ascii_replace(ex)), file=file)
 
 
 def report_thread_exception(subsystem, exc, val, tb):
@@ -390,6 +399,7 @@ def thread(subsystem, output_file_name, options, input_, model_yamnet_class_name
     ):
       # should be done before calling initarg on the options
       if options.output_options:
+        print_section('Options', file=output_file)
         options.print(end='\n\n', file=output_file)
       
       results_errors = files(subsystem, options, input_, model_yamnet_class_names)
