@@ -7,8 +7,8 @@ from . import gui as gui
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
-TIP_WEIGHTS = ''.join(('The YAMNet Weights file. This option will be disabled if you are using ',
-  'the Tensorflow Hub release of YAMNet.'))
+TIP_WEIGHTS = ''.join(('The weights file for YAMNet. This option will be disabled if you are ',
+  'using the Tensorflow Hub release of YAMNet.'))
 
 TIP_COMBINE = ''.join(('If a sound is less than this length in seconds, it will be combined into ',
   'one timestamp. Otherwise, the beginning and ending timestamp will be output with a dash ',
