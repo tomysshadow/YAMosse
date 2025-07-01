@@ -4,66 +4,25 @@ from multiprocessing import Value, Pipe, Event
 from threading import Lock
 from sys import exc_info
 import traceback
-from time import time
 
 import soundfile as sf
 
-import yamosse.encoding as yamosse_encoding
 import yamosse.progress as yamosse_progress
 import yamosse.subsystem as yamosse_subsystem
+import yamosse.output as yamosse_output
 import yamosse.download as yamosse_download
 import yamosse.worker as yamosse_worker
 
 PROGRESSBAR_MAXIMUM = 100
 
 
-def print_section(name, file=None):
-  print('# %s' % name, end='\n\n', file=file)
-
-
-def print_file(name, file=None):
-  # replace Unicode characters with ASCII when printing
-  # to prevent crash when run in Command Prompt
-  print(yamosse_encoding.ascii_replace(name), end='\n\t', file=file)
-
-
-def hours_minutes(seconds):
-  TO_HMS = 60
-  
-  m, s = divmod(int(seconds), TO_HMS)
-  h, m = divmod(m, TO_HMS)
-  
-  if h:
-    return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
-  
-  return f'{m:.0f}:{s:02.0f}'
-
-
 def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-
-
-def dict_sorted(d, *args, **kwargs):
-  return dict(sorted(d.items(), *args, **kwargs))
 
 
 def key_getsize(file_name):
   try: return os.path.getsize(file_name)
   except OSError: return 0
-
-
-def key_class(item):
-  return item[0]
-
-
-def key_number_of_sounds(item):
-  result = 0
-  
-  # the number of sounds, with uncombined timestamps at the end
-  for timestamps in item[1].values():
-    result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
-  
-  return result
 
 
 def connection_flush(connection):
@@ -121,13 +80,15 @@ def input_file_names(input_, recursive=True):
   return file_names
 
 
-def download_weights_file_unique(subsystem, options, url, path, min_=1, max_=1000):
-  weights = options.weights
-  if weights: return open(weights, 'rb')
+def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, options=None):
+  if options:
+    weights = options.weights
+    if weights: return open(weights, 'rb')
   
-  subsystem.show(values={
-    'log': 'Downloading weights file, please wait...'
-  })
+  if subsystem:
+    subsystem.show(values={
+      'log': 'Downloading weights file, please wait...'
+    })
   
   path = os.path.join(os.path.realpath(os.curdir), path)
   
@@ -143,9 +104,12 @@ def download_weights_file_unique(subsystem, options, url, path, min_=1, max_=100
     
     try:
       assert i, 'i must not be empty'
-      options.weights = i
-      options.dump()
-      subsystem.set_variable_after_idle('weights', i)
+      
+      if options:
+        options.weights = i
+        options.dump()
+      
+      if subsystem: subsystem.set_variable_after_idle('weights', i)
       return file
     except:
       file.close()
@@ -154,7 +118,7 @@ def download_weights_file_unique(subsystem, options, url, path, min_=1, max_=100
   raise IOError('The weights file %r could not be created uniquely.' % path)
 
 
-def files(subsystem, options, input_, model_yamnet_class_names):
+def files(input_, model_yamnet_class_names, subsystem, options):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -321,51 +285,6 @@ def files(subsystem, options, input_, model_yamnet_class_names):
   return results, errors
 
 
-def output(file, results, errors, options, model_yamnet_class_names):
-  item_delimiter = yamosse_encoding.latin1_unescape(options.item_delimiter)
-  if not item_delimiter: item_delimiter = ' '
-  
-  confidence_scores = options.output_confidence_scores
-  
-  # sort from least to most timestamps
-  results = dict_sorted(results, key=key_number_of_sounds)
-  
-  # print results
-  if results:
-    print_section('Results', file=file)
-    
-    for file_name, class_timestamps in results.items():
-      print_file(file_name, file=file)
-      
-      if class_timestamps:
-        class_timestamps = dict_sorted(class_timestamps, key=key_class)
-        
-        for class_, timestamp_scores in class_timestamps.items():
-          print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
-          
-          for timestamp, score in timestamp_scores.items():
-            try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
-            except TypeError: hms = hours_minutes(timestamp)
-            
-            if confidence_scores: hms = f'{hms} ({score:.0%})'
-            
-            timestamp_scores[timestamp] = hms
-          
-          print(item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
-      else:
-        print(None, file=file)
-      
-      print('', file=file)
-  
-  # print errors
-  if errors:
-    print_section('Errors', file=file)
-    
-    for file_name, ex in errors.items():
-      print_file(file_name, file=file)
-      print(repr(yamosse_encoding.ascii_replace(ex)), file=file)
-
-
 def report_thread_exception(subsystem, exc, val, tb):
   try:
     subsystem.show(values={
@@ -379,10 +298,8 @@ def report_thread_exception(subsystem, exc, val, tb):
   except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(subsystem, output_file_name, options, input_, model_yamnet_class_names):
+def thread(output_file_name, input_, model_yamnet_class_names, subsystem, options):
   try:
-    seconds = time()
-    
     # we open the output file well in advance of actually using it
     # this is because it would suck to do all the work and
     # then fail because the output file is locked or whatever
@@ -390,30 +307,30 @@ def thread(subsystem, output_file_name, options, input_, model_yamnet_class_name
     # so it can't be deleted in the time between now and the workers using it
     with (
       download_weights_file_unique(
-        subsystem,
-        options,
         yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
-        yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH
+        yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
+        subsystem=subsystem,
+        options=options
       ) as weights_file,
-      open(output_file_name, mode='w') as output_file
+      
+      yamosse_output.output(
+        output_file_name,
+        model_yamnet_class_names,
+        subsystem=subsystem
+      ) as output
     ):
       # should be done before calling initarg on the options
-      if options.output_options:
-        print_section('Options', file=output_file)
-        options.print(end='\n\n', file=output_file)
+      if options.output_options: output.options(options)
       
-      results_errors = files(subsystem, options, input_, model_yamnet_class_names)
+      results, errors = files(input_, model_yamnet_class_names, subsystem, options)
       
       subsystem.show(values={
         'progressbar': yamosse_progress.DONE,
         'log': 'Finishing, please wait...\n'
       })
       
-      output(output_file, *results_errors, options, model_yamnet_class_names)
-    
-    subsystem.show(values={
-      'log': 'Elapsed Time: %s' % hours_minutes(time() - seconds)
-    })
+      output.results(results)
+      output.errors(errors)
   except yamosse_subsystem.SubsystemExit: pass
   except: report_thread_exception(subsystem, *exc_info())
   finally:

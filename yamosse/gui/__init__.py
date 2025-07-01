@@ -10,7 +10,7 @@ def _init():
     tk_report_callback_exception(tk, exc, val, tb)
     
     try:
-      with open('traceback.txt', mode='w') as file:
+      with open('traceback.txt', 'w') as file:
         traceback.print_exception(exc, val, tb, file=file)
     except OSError: pass
     

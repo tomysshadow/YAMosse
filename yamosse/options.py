@@ -144,7 +144,7 @@ class Options:
   
   @classmethod
   def load(cls):
-    with open(_root_file_name, mode='rb') as f:
+    with open(_root_file_name, 'rb') as f:
       options = pickle.load(f)
       
       if options.version != VERSION:
@@ -153,7 +153,7 @@ class Options:
       return options
   
   def dump(self):
-    with open(_root_file_name, mode='wb') as f:
+    with open(_root_file_name, 'wb') as f:
       pickle.dump(self, f)
   
   def set(self, items, strict=True):
@@ -163,7 +163,7 @@ class Options:
   
   @classmethod
   def import_preset(cls, file_name):
-    with open(file_name, mode='r') as f:
+    with open(file_name, 'r') as f:
       options = Options()
       
       # cast JSON types to Python types
@@ -178,7 +178,7 @@ class Options:
       return options
   
   def export_preset(self, file_name):
-    with open(file_name, mode='w') as f:
+    with open(file_name, 'w') as f:
       json.dump(vars(self), f, indent=True)
   
   def initarg(self, input_, model_yamnet_class_names):

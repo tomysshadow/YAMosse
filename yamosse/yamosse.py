@@ -148,11 +148,11 @@ def yamosse(**kwargs):
     
     subsystem.start(
       yamosse_thread.thread,
-      subsystem,
       output_file_name,
-      options,
       input_,
-      model_yamnet_class_names
+      model_yamnet_class_names,
+      subsystem,
+      options
     )
     
   
