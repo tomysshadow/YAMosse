@@ -8,10 +8,10 @@ import traceback
 import soundfile as sf
 
 import yamosse.progress as yamosse_progress
-import yamosse.subsystem as yamosse_subsystem
-import yamosse.output as yamosse_output
-import yamosse.download as yamosse_download
 import yamosse.worker as yamosse_worker
+import yamosse.download as yamosse_download
+import yamosse.output as yamosse_output
+import yamosse.subsystem as yamosse_subsystem
 
 PROGRESSBAR_MAXIMUM = 100
 
