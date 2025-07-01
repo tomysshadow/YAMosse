@@ -38,7 +38,7 @@ def key_class(item):
 
 
 def replace_lines(s):
-  return ' '.join(s.splitlines())
+  return '\0'.join(s.splitlines())
 
 
 def output(file_name, *args, **kwargs):
