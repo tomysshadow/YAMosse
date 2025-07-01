@@ -44,6 +44,9 @@ def subsystem(window, title, variables):
       self.window = window
       self.title = title
       self.variables = variables
+      
+      self.show_callback = None
+      self.widgets = None
     
     def start(self, target, *args, **kwargs):
       gui.threaded()

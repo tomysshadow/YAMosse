@@ -154,7 +154,6 @@ def yamosse(**kwargs):
       subsystem,
       options
     )
-    
   
   def import_preset(file_name=''):
     nonlocal options
