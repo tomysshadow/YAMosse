@@ -37,7 +37,7 @@ def key_class(item):
   return item[0]
 
 
-def output(file_name, model_yamnet_class_names, subsystem=None):
+def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, subsystem=None):
       if subsystem:
@@ -147,6 +147,6 @@ def output(file_name, model_yamnet_class_names, subsystem=None):
   
   # not yet implemented
   #if ext.casefold() == _ext_json:
-  #  return OutputJSON(file_name, model_yamnet_class_names, subsystem=subsystem)
+  #  return OutputJSON(file_name, *args, **kwargs)
   
-  return OutputText(file_name, model_yamnet_class_names, subsystem=subsystem)
+  return OutputText(file_name, *args, **kwargs)
