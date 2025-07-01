@@ -1,7 +1,7 @@
 from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from http.server import BaseHTTPRequestHandler
-import shutil
+from shutil import copyfileobj
 
 class DownloadError(URLError): pass
 
@@ -13,7 +13,7 @@ def download(url, path, mode='w+b'):
   try:
     try:
       with urlopen(url) as response:
-        shutil.copyfileobj(response, file)
+        copyfileobj(response, file)
     except HTTPError as ex:
       code = ex.code
       
