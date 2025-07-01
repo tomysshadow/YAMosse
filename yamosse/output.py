@@ -42,8 +42,10 @@ def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, subsystem=None):
       if subsystem: self.seconds = time()
-      
       self.subsystem = subsystem
+      
+      self._confidence_scores = False
+      
       self.model_yamnet_class_names = model_yamnet_class_names
       self.file = open(file_name, 'w')
     
@@ -76,6 +78,11 @@ def output(file_name, *args, **kwargs):
       pass
   
   class OutputText(Output):
+    def __init__(self, file_name, *args, **kwargs):
+      self._item_delimiter = ' '
+      
+      super().__init__(file_name, *args, **kwargs)
+    
     def options(self, value):
       file = self.file
       
@@ -85,7 +92,7 @@ def output(file_name, *args, **kwargs):
       item_delimiter = yamosse_encoding.ascii_backslashreplace(
         yamosse_encoding.latin1_unescape(value.item_delimiter))
       
-      self._item_delimiter = item_delimiter if item_delimiter else ' '
+      if item_delimiter: self._item_delimiter = item_delimiter
       
       super().options(value)
     
