@@ -1,5 +1,5 @@
-def ascii_replace(value):
-  return str(value).encode('ascii', 'replace').decode()
+def ascii_backslashreplace(value):
+  return str(value).encode('ascii', 'backslashreplace').decode()
 
 
 def latin1_unescape(value):

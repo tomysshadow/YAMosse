@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from time import time
 from os import path
+from shlex import quote
 
 import yamosse.encoding as yamosse_encoding
 
@@ -37,10 +38,6 @@ def key_class(item):
   return item[0]
 
 
-def replace_lines(s):
-  return '\0'.join(s.splitlines())
-
-
 def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, subsystem=None):
@@ -68,7 +65,7 @@ def output(file_name, *args, **kwargs):
     
     @abstractmethod
     def options(self, value):
-      self.confidence_scores = value.output_confidence_scores
+      self._confidence_scores = value.output_confidence_scores
     
     @abstractmethod
     def results(self, value):
@@ -85,10 +82,10 @@ def output(file_name, *args, **kwargs):
       self._print_section('Options')
       value.print(end='\n\n', file=file)
       
-      item_delimiter = yamosse_encoding.latin1_unescape(value.item_delimiter)
-      if not item_delimiter: item_delimiter = ' '
+      item_delimiter = yamosse_encoding.ascii_backslashreplace(
+        yamosse_encoding.latin1_unescape(value.item_delimiter))
       
-      self.item_delimiter = item_delimiter
+      self._item_delimiter = item_delimiter if item_delimiter else ' '
       
       super().options(value)
     
@@ -116,11 +113,11 @@ def output(file_name, *args, **kwargs):
               try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
               except TypeError: hms = hours_minutes(timestamp)
               
-              if self.confidence_scores: hms = f'{hms} ({score:.0%})'
+              if self._confidence_scores: hms = f'{hms} ({score:.0%})'
               
               timestamp_scores[timestamp] = hms
             
-            print(self.item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
+            print(self._item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
         else:
           print(None, file=file)
         
@@ -134,15 +131,11 @@ def output(file_name, *args, **kwargs):
       # print errors
       self._print_section('Errors')
       
-      # ascii_replace replaces Unicode characters with ASCII when printing
+      # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
-      # repr is called after though, in case ascii_replace somehow
-      # makes the value invalid when applied after repr
-      # repr inserting non-ASCII characters into the string would be unexpected
-      # so that should cause a crash if it happens
       for file_name, ex in value.items():
         self._print_file(file_name)
-        print(repr(yamosse_encoding.ascii_replace(ex)), file=file)
+        print(yamosse_encoding.ascii_backslashreplace(quote(ex)), file=file)
     
     def _print_section(self, name):
       # name should not contain lines
@@ -150,9 +143,7 @@ def output(file_name, *args, **kwargs):
       print('# %s' % name, end='\n\n', file=self.file)
     
     def _print_file(self, name):
-      # for machine readability purposes, name should not contain lines
-      # in this case we know the name comes from untrusted input so replace any lines
-      print(yamosse_encoding.ascii_replace(replace_lines(name)), end='\n\t', file=self.file)
+      print(yamosse_encoding.ascii_backslashreplace(quote(name)), end='\n\t', file=self.file)
   
   ext = path.splitext(file_name)[1]
   

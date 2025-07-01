@@ -1,9 +1,11 @@
 import os
+import shlex
 import pickle
 import json
 from datetime import datetime
 
 import yamosse.root as yamosse_root
+import yamosse.encoding as yamosse_encoding
 
 VERSION = 0
 FILE_NAME = 'options.pickle'
@@ -99,32 +101,38 @@ class Options:
     self.high_priority = high_priority
   
   def print(self, end='\n', file=None):
-    def print_option(name, value, end='\n'):
+    def joined(value):
+      return value == shlex.join(shlex.split(value))
+    
+    assert joined(self.input), 'input must be joined'
+    assert joined(self.weights), 'weights must be joined'
+    
+    def option(name, value, end='\n'):
       print(': '.join((name, value)), end=end, file=file)
     
-    print_option('Current Date/Time', str(datetime.now()))
-    print_option('Version', repr(self.version))
-    print_option('Input', repr(self.input))
-    print_option('Input Recursive', repr(self.input_recursive))
-    print_option('Weights', repr(self.weights))
-    print_option('Classes', repr(self.classes))
-    print_option('Calibration', repr(self.calibration))
-    print_option('Combine', str(self.combine), end=' seconds\n')
-    print_option('Combine All', repr(self.combine_all))
-    print_option('Background Noise Volume', str(self.background_noise_volume), end='%\n')
-    print_option('Background Noise Volume Log/Linear', repr(self.background_noise_volume_loglinear))
-    print_option('Identification', repr(self.identification))
-    print_option('Confidence Score', str(self.confidence_score), end='%\n')
-    print_option('Confidence Score Min/Max', repr(self.confidence_score_minmax))
-    print_option('Top Ranked', repr(self.top_ranked))
-    print_option('Top Ranked Output Timestamps', repr(self.top_ranked_output_timestamps))
-    print_option('Sort By', repr(self.sort_by))
-    print_option('Item Delimiter', repr(self.item_delimiter))
-    print_option('Output Options', repr(self.output_options))
-    print_option('Output Confidence Scores', repr(self.output_confidence_scores))
-    print_option('Memory Limit', str(self.memory_limit), end=' MB\n')
-    print_option('Max Workers', repr(self.max_workers))
-    print_option('High Priority', repr(self.high_priority))
+    option('Current Date/Time', yamosse_encoding.ascii_backslashreplace(datetime.now()))
+    option('Version', repr(self.version))
+    option('Input', yamosse_encoding.ascii_backslashreplace(self.input))
+    option('Input Recursive', repr(self.input_recursive))
+    option('Weights', yamosse_encoding.ascii_backslashreplace(self.weights))
+    option('Classes', repr(self.classes))
+    option('Calibration', repr(self.calibration))
+    option('Combine', str(self.combine), end=' seconds\n')
+    option('Combine All', repr(self.combine_all))
+    option('Background Noise Volume', str(self.background_noise_volume), end='%\n')
+    option('Background Noise Volume Log/Linear', repr(self.background_noise_volume_loglinear))
+    option('Identification', repr(self.identification))
+    option('Confidence Score', str(self.confidence_score), end='%\n')
+    option('Confidence Score Min/Max', repr(self.confidence_score_minmax))
+    option('Top Ranked', repr(self.top_ranked))
+    option('Top Ranked Output Timestamps', repr(self.top_ranked_output_timestamps))
+    option('Sort By', repr(self.sort_by))
+    option('Item Delimiter', yamosse_encoding.ascii_backslashreplace(repr(self.item_delimiter)))
+    option('Output Options', repr(self.output_options))
+    option('Output Confidence Scores', repr(self.output_confidence_scores))
+    option('Memory Limit', str(self.memory_limit), end=' MB\n')
+    option('Max Workers', repr(self.max_workers))
+    option('High Priority', repr(self.high_priority))
     
     print('', end=end, file=file)
   

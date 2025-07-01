@@ -99,7 +99,7 @@ def subsystem(window, title, variables):
     
     def show(self, values=None):
       if values and 'log' in values:
-        print(yamosse_encoding.ascii_replace(values['log']))
+        print(yamosse_encoding.ascii_backslashreplace(values['log']))
     
     def show_warning(self, message, parent=None):
       print(message)
