@@ -37,6 +37,10 @@ def key_class(item):
   return item[0]
 
 
+def replace_lines(s):
+  return ' '.join(s.splitlines())
+
+
 def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, subsystem=None):
@@ -79,7 +83,7 @@ def output(file_name, *args, **kwargs):
     def options(self, value):
       file = self.file
       
-      self.print_section('Options')
+      self._print_section('Options')
       value.print(end='\n\n', file=file)
       
       item_delimiter = yamosse_encoding.latin1_unescape(value.item_delimiter)
@@ -98,10 +102,10 @@ def output(file_name, *args, **kwargs):
       model_yamnet_class_names = self.model_yamnet_class_names
       
       # print results
-      self.print_section('Results')
+      self._print_section('Results')
       
       for file_name, class_timestamps in value.items():
-        self.print_file(file_name)
+        self._print_file(file_name)
         
         if class_timestamps:
           class_timestamps = dict_sorted(class_timestamps, key=key_class)
@@ -129,19 +133,27 @@ def output(file_name, *args, **kwargs):
       file = self.file
       
       # print errors
-      self.print_section('Errors')
+      self._print_section('Errors')
       
+      # ascii_replace replaces Unicode characters with ASCII when printing
+      # to prevent crash when run in Command Prompt
+      # repr is called after though, in case ascii_replace somehow
+      # makes the value invalid when applied after repr
+      # repr inserting non-ASCII characters into the string would be unexpected
+      # so that should cause a crash if it happens
       for file_name, ex in value.items():
-        self.print_file(file_name)
+        self._print_file(file_name)
         print(repr(yamosse_encoding.ascii_replace(ex)), file=file)
     
-    def print_section(self, name):
+    def _print_section(self, name):
+      # name should not contain lines
+      # this is an internal method so we trust the class not to pass in a name with lines here
       print('# %s' % name, end='\n\n', file=self.file)
     
-    def print_file(self, name):
-      # replace Unicode characters with ASCII when printing
-      # to prevent crash when run in Command Prompt
-      print(yamosse_encoding.ascii_replace(name), end='\n\t', file=self.file)
+    def _print_file(self, name):
+      # for machine readability purposes, name should not contain lines
+      # in this case we know the name comes from untrusted input so replace any lines
+      print(yamosse_encoding.ascii_replace(replace_lines(name)), end='\n\t', file=self.file)
   
   ext = path.splitext(file_name)[1]
   
