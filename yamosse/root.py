@@ -1,4 +1,4 @@
-import os.path as path
+from os import path
 
 def root(dir_):
   if path.isabs(dir_): return dir_
