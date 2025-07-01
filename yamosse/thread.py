@@ -320,7 +320,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
       ) as output
     ):
       # should be done before calling initarg on the options
-      if options.output_options: output.options(options)
+      output.options(options)
       
       results, errors = files(input_, model_yamnet_class_names, subsystem, options)
       

@@ -84,10 +84,9 @@ def output(file_name, *args, **kwargs):
       super().__init__(file_name, *args, **kwargs)
     
     def options(self, value):
-      file = self.file
-      
-      self._print_section('Options')
-      value.print(end='\n\n', file=file)
+      if options.output_options:
+        self._print_section('Options')
+        value.print(end='\n\n', file=self.file)
       
       item_delimiter = yamosse_encoding.ascii_backslashreplace(
         yamosse_encoding.latin1_unescape(value.item_delimiter))
