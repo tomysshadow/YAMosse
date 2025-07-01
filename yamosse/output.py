@@ -107,7 +107,7 @@ def output(file_name, *args, **kwargs):
           class_timestamps = dict_sorted(class_timestamps, key=key_class)
           
           for class_, timestamp_scores in class_timestamps.items():
-            print(model_yamnet_class_names[class_], end=':\n\t\t', file=file)
+            print('\t', model_yamnet_class_names[class_], end=':\n', file=file)
             
             for timestamp, score in timestamp_scores.items():
               try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
@@ -117,11 +117,14 @@ def output(file_name, *args, **kwargs):
               
               timestamp_scores[timestamp] = hms
             
-            print(self._item_delimiter.join(timestamp_scores.values()), end='\n\t', file=file)
+            print('\t\t', self._item_delimiter.join(timestamp_scores.values()),
+              end='\n', file=file)
         else:
-          print(None, file=file)
+          print('\t', None, file=file)
         
         print('', file=file)
+      
+      print('', file=file)
     
     def errors(self, value):
       if not value: return
@@ -135,7 +138,10 @@ def output(file_name, *args, **kwargs):
       # to prevent crash when run in Command Prompt
       for file_name, ex in value.items():
         self._print_file(file_name)
-        print(yamosse_encoding.ascii_backslashreplace(quote(ex)), file=file)
+        print('\t', yamosse_encoding.ascii_backslashreplace(quote(str(ex))), file=file)
+        print('', file=file)
+      
+      print('', file=file)
     
     def _print_section(self, name):
       # name should not contain lines
@@ -143,7 +149,7 @@ def output(file_name, *args, **kwargs):
       print('# %s' % name, end='\n\n', file=self.file)
     
     def _print_file(self, name):
-      print(yamosse_encoding.ascii_backslashreplace(quote(name)), end='\n\t', file=self.file)
+      print(yamosse_encoding.ascii_backslashreplace(quote(name)), end='\n', file=self.file)
   
   ext = path.splitext(file_name)[1]
   
