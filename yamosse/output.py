@@ -41,9 +41,9 @@ def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, subsystem=None):
       if subsystem:
-        self.subsystem = subsystem
         self.seconds = time()
       
+      self.subsystem = subsystem
       self.model_yamnet_class_names = model_yamnet_class_names
       self.file = open(file_name, 'w')
     
