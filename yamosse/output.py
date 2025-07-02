@@ -84,7 +84,7 @@ def output(file_name, *args, **kwargs):
       super().__init__(file_name, *args, **kwargs)
     
     def options(self, value):
-      if options.output_options:
+      if value.output_options:
         self._print_section('Options')
         value.print(end='\n\n', file=self.file)
       

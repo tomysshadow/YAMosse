@@ -41,6 +41,8 @@ def subsystem(window, title, variables):
   
   class WindowSubsystem(Subsystem):
     def __init__(self, window, title, variables):
+      assert gui, 'gui module must be loaded'
+      
       self.window = window
       self.title = title
       self.variables = variables
@@ -141,7 +143,7 @@ def subsystem(window, title, variables):
       
       return result == YES
   
-  if gui and window:
+  if window:
     return WindowSubsystem(window, title, variables)
   
   return ConsoleSubsystem()
