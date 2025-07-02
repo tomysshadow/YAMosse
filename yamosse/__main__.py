@@ -58,8 +58,7 @@ def main(argc, argv):
             help_()
             return 1
   
-  if options_items:
-    kwargs['options_items'] = options_items
+  if options_items: kwargs['options_items'] = options_items
   
   yamosse_worker.tfhub_cache()
   

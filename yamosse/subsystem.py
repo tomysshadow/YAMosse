@@ -57,8 +57,7 @@ def subsystem(window, title, variables):
       Thread(target=target, args=args, kwargs=kwargs).start()
     
     def show(self, values=None):
-      if not self.show_callback(self.widgets, values=values):
-        raise SubsystemExit
+      if not self.show_callback(self.widgets, values=values): raise SubsystemExit
     
     def show_warning(self, message, parent=None):
       gui.messagebox.showwarning(
@@ -89,8 +88,7 @@ def subsystem(window, title, variables):
       def callback():
         self.variables[key].set(value)
       
-      if not gui.after_idle_window(self.window, callback):
-        raise SubsystemExit
+      if not gui.after_idle_window(self.window, callback): raise SubsystemExit
     
     def quit(self):
       self.window.quit()
@@ -116,10 +114,8 @@ def subsystem(window, title, variables):
       default_has_value = not default is None
       
       if default_has_value:
-        if default:
-          yes = YES
-        else:
-          no = NO
+        if default: yes = YES
+        else: no = NO
       
       result = ''
       
@@ -143,7 +139,5 @@ def subsystem(window, title, variables):
       
       return result == YES
   
-  if window:
-    return WindowSubsystem(window, title, variables)
-  
+  if window: return WindowSubsystem(window, title, variables)
   return ConsoleSubsystem()

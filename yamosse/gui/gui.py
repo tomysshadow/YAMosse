@@ -152,9 +152,7 @@ def traversal_button():
   
   def enable(button):
     underline = int(button['underline'])
-    
-    if underline < 0:
-      return
+    if underline < 0: return
     
     button.winfo_toplevel().bind(
       sequence(button, underline),
@@ -163,9 +161,7 @@ def traversal_button():
   
   def disable(button):
     underline = int(button['underline'])
-    
-    if underline < 0:
-      return
+    if underline < 0: return
     
     button.winfo_toplevel().unbind(sequence(button, underline))
   
@@ -264,9 +260,7 @@ def make_combobox(frame, name='', state=None, **kwargs):
   combobox = ttk.Combobox(frame, **kwargs)
   combobox.grid(row=0, column=1, sticky=tk.EW)
   
-  if state:
-    combobox.state(state)
-  
+  if state: combobox.state(state)
   return make_name(frame, name), combobox
 
 
@@ -299,8 +293,7 @@ def delete_lines_text(text, max_lines=1000):
   lines = text.index(tk.END)
   lines = int(lines[:lines.index('.')]) - max_lines
   
-  if lines > 0:
-    text.delete('1.0', '%d.%s' % (lines, tk.END))
+  if lines > 0: text.delete('1.0', '%d.%s' % (lines, tk.END))
 
 
 def make_text(frame, name='', width=10, height=10,
@@ -332,8 +325,7 @@ def make_listbox(frame, name='', items=None,
   BG = 'Azure'
   BG2 = 'Azure2'
   
-  if not items:
-    items = []
+  if not items: items = []
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -374,10 +366,8 @@ def make_listbox(frame, name='', items=None,
     
     def invert_selection():
       for index in range(listbox.size()):
-        if listbox.selection_includes(index):
-          listbox.selection_clear(index)
-        else:
-          listbox.selection_set(index)
+        if listbox.selection_includes(index): listbox.selection_clear(index)
+        else: listbox.selection_set(index)
       
       listbox.event_generate('<<ListboxSelect>>')
     
@@ -516,11 +506,8 @@ def make_filedialog(frame, name='', textvariable=None,
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   
   def set_(data):
-    if not data:
-      return
-    
-    if isinstance(data, str):
-      data = (data,)
+    if not data: return
+    if isinstance(data, str): data = (data,)
     
     textvariable.set(shlex.join(data))
   
@@ -530,8 +517,7 @@ def make_filedialog(frame, name='', textvariable=None,
     set_(filedialog_ask(parent=parent, filetypes=filetypes
       ) if filetypes and ask != 'directory' else filedialog_ask(parent=parent))
   
-  if asks == None:
-    asks = ('openfilename',)
+  if asks == None: asks = ('openfilename',)
   
   buttons = []
   
@@ -563,12 +549,8 @@ def make_filedialog(frame, name='', textvariable=None,
   if tkinterdnd2:
     def drop_enter(e):
       data = e.widget.tk.splitlist(e.data)
-      
-      if not data:
-        return tkinterdnd2.REFUSE_DROP
-      
-      if isinstance(data, str):
-        data = (str(data),)
+      if not data: return tkinterdnd2.REFUSE_DROP
+      if isinstance(data, str): data = (str(data),)
       
       multiple = len(data) > 1
       

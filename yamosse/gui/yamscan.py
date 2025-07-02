@@ -13,8 +13,7 @@ def ask_cancel(window, title, footer_yamscan_widgets):
   
   # while this may feel like a bit of a hack, doing it this way ensures that
   # there is no possible desync between what the button says and whether the message box appears
-  if str(done_button['text']) == 'OK':
-    return True
+  if str(done_button['text']) == 'OK': return True
   
   return messagebox.askyesno(
     parent=window, title=title, message=ASK_CANCEL_MESSAGE, default=messagebox.NO)

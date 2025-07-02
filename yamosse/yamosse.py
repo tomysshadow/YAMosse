@@ -197,8 +197,7 @@ def yamosse(**kwargs):
     if not subsystem.ask_yes_no(
       MESSAGE_ASK_RESTORE_DEFAULTS,
       default=False
-    ):
-      return
+    ): return
     
     subsystem.variables_from_object(yamosse_options.Options())
     subsystem.quit()

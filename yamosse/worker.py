@@ -45,8 +45,7 @@ def tfhub_enabled():
 
 
 def tfhub_cache(dir_='tfhub_modules'):
-  if not _tfhub_enabled:
-    return None
+  if not _tfhub_enabled: return None
   
   # use our own cache
   # I don't like every program on the system all intermingling with

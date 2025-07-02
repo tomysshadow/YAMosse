@@ -162,5 +162,4 @@ def output(file_name, *args, **kwargs):
   # not yet implemented
   #if ext.casefold() == _ext_json:
   #  return OutputJSON(file_name, *args, **kwargs)
-  
   return OutputText(file_name, *args, **kwargs)

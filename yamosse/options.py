@@ -52,7 +52,9 @@ class Options:
     def __reduce__(self):
       return (VersionError, (self,))
   
-  def __init__(self, input: str|tuple='', input_recursive: bool=False, weights: str='',
+  def __init__(
+    self,
+    input: str|tuple='', input_recursive: bool=False, weights: str='',
     classes: list|None=None, calibration: list|None=None,
     combine: int=3, combine_all: bool=False,
     background_noise_volume: int|float=1, background_noise_volume_loglinear: bool=False,
@@ -61,12 +63,10 @@ class Options:
     top_ranked: int=5, top_ranked_output_timestamps: bool=True,
     sort_by: str='Number of Sounds', item_delimiter: str=', ',
     output_options: bool=True, output_confidence_scores: bool=False,
-    memory_limit: int=256, max_workers: int=4, high_priority: bool=True):
-    if classes == None:
-      classes = []
-    
-    if calibration == None:
-      calibration = []
+    memory_limit: int=256, max_workers: int=4, high_priority: bool=True
+  ):
+    if classes == None: classes = []
+    if calibration == None: calibration = []
     
     self.version = VERSION
     
@@ -155,9 +155,7 @@ class Options:
     with open(_root_file_name, 'rb') as f:
       options = pickle.load(f)
       
-      if options.version != VERSION:
-        raise cls.VersionError
-      
+      if options.version != VERSION: raise cls.VersionError
       return options
   
   def dump(self):
@@ -180,9 +178,7 @@ class Options:
       # and likewise, a TypeError if the type couldn't be casted
       options.set(json.load(f))
       
-      if options.version != VERSION:
-        raise cls.VersionError
-      
+      if options.version != VERSION: raise cls.VersionError
       return options
   
   def export_preset(self, file_name):
