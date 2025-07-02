@@ -279,16 +279,30 @@ def make_output_options(frame, variables):
   
   item_delimiter_frame = ttk.Frame(frame)
   item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
+  
   item_delimiter_variable = variables['item_delimiter']
-  item_delimiter_entry = gui.make_entry(item_delimiter_frame, name='Item Delimiter',
-    textvariable=item_delimiter_variable)[1]
   
-  # item delimiter should be a space at minimum
-  def focus_out_item_delimiter(e=None):
-    if not item_delimiter_variable.get(): item_delimiter_variable.set(' ')
+  def invalid_item_delimiter(W, v):
+    # item delimiter should be a space at minimum
+    item_delimiter_variable.set(' ')
+    
+    # editing a variable from within an invalidcommand normally resets validate to none
+    # this ensures it remains set to focusout
+    # see: https://www.tcl-lang.org/man/tcl8.5/TkCmd/entry.htm#M7
+    item_delimiter_frame.after_idle(
+      lambda: item_delimiter_frame.nametowidget(W).configure(validate=v)
+    )
   
-  item_delimiter_entry.bind('<FocusOut>', focus_out_item_delimiter)
-  focus_out_item_delimiter()
+  item_delimiter_entry = gui.make_entry(
+    item_delimiter_frame,
+    name='Item Delimiter',
+    textvariable=item_delimiter_variable,
+    invalidcommand=(item_delimiter_frame.register(invalid_item_delimiter), '%W', '%v'),
+    validatecommand=(item_delimiter_frame.register(lambda P: bool(P)), '%P'),
+    validate='focusout'
+  )[1]
+  
+  item_delimiter_entry.validate()
   
   output_options_checkbutton = ttk.Checkbutton(frame,
     text='Output Options', variable=variables['output_options'])
