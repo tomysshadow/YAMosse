@@ -29,19 +29,19 @@ TIP_BACKGROUND_NOISE_VOLUME_LOG = ''.join(('Logarithmic volume scale (with a 60 
 
 TIP_BACKGROUND_NOISE_VOLUME_LINEAR = 'Linear volume scale.'
 
-TIP_OUTPUT_OPTIONS_SORT_BY = ''.join(('Whether to sort results by the number of sounds ',
+TIP_OUTPUT_FILE_OPTIONS_SORT_BY = ''.join(('Whether to sort results by the number of sounds ',
   'identified, or alphabetically by file name.'))
 
-TIP_OUTPUT_OPTIONS_SORT_REVERSED = 'If checked, results will be sorted in reverse.'
+TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSED = 'If checked, results will be sorted in reverse.'
 
-TIP_OUTPUT_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each timestamp or class. ',
+TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each timestamp or class. ',
   'Escape characters are supported.'))
 
-TIP_OUTPUT_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
+TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
-TIP_OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE = ''.join(('Output the confidence score percentage ',
-  'along with each timestamp, so you can see how certain the model is that it identified a sound ',
-  'at that timestamp.'))
+TIP_OUTPUT_FILE_OPTIONS_OUTPUT_CONFIDENCE_SCORE = ''.join(('Output the confidence score ',
+  'percentage along with each timestamp, so you can see how certain the model is that it ',
+  'identified a sound at that timestamp.'))
 
 TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The per-worker Tensorflow logical device memory ',
   'limit, in megabytes.'))
@@ -296,7 +296,7 @@ def make_spacer(frame):
   ttk.Label(frame).grid()
 
 
-def make_output_options(frame, variables):
+def make_output_file_options(frame, variables):
   frame.columnconfigure(0, weight=1) # one column layout
   
   sort_frame = ttk.Frame(frame)
@@ -440,11 +440,11 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   
   row_frame.columnconfigure((0, 1), weight=1, uniform='advanced_column') # make the columns uniform
   
-  output_options_labelframe = ttk.Labelframe(row_frame, text='Output Options',
+  output_file_options_labelframe = ttk.Labelframe(row_frame, text='Output File Options',
     padding=gui.PADDING_HNSEW)
   
-  output_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
-  output_options_widgets = make_output_options(output_options_labelframe, variables)
+  output_file_options_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
+  output_file_options_widgets = make_output_file_options(output_file_options_labelframe, variables)
   
   worker_options_labelframe = ttk.Labelframe(row_frame, text='Worker Options',
     padding=gui.PADDING_HNSEW)
@@ -477,11 +477,11 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     background_noise_volume_radiobuttons[0]: TIP_BACKGROUND_NOISE_VOLUME_LOG,
     background_noise_volume_radiobuttons[1]: TIP_BACKGROUND_NOISE_VOLUME_LINEAR,
     
-    output_options_widgets[0]: TIP_OUTPUT_OPTIONS_SORT_BY,
-    output_options_widgets[1]: TIP_OUTPUT_OPTIONS_SORT_REVERSED,
-    output_options_widgets[2]: TIP_OUTPUT_OPTIONS_ITEM_DELIMITER,
-    output_options_widgets[3]: TIP_OUTPUT_OPTIONS_OUTPUT_OPTIONS,
-    output_options_widgets[4]: TIP_OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE,
+    output_file_options_widgets[0]: TIP_OUTPUT_FILE_OPTIONS_SORT_BY,
+    output_file_options_widgets[1]: TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSED,
+    output_file_options_widgets[2]: TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER,
+    output_file_options_widgets[3]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS,
+    output_file_options_widgets[4]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_CONFIDENCE_SCORE,
     
     worker_options_widgets[0]: TIP_WORKER_OPTIONS_MEMORY_LIMIT,
     worker_options_widgets[1]: TIP_WORKER_OPTIONS_MAX_WORKERS,
