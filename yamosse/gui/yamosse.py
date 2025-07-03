@@ -282,7 +282,7 @@ def make_sort(frame, variables):
   def show_sort_reversed():
     sort_reversed_checkbutton['text'] = ARROW_UP if sort_reversed_variable.get() else ARROW_DOWN
   
-  sort_reversed_checkbutton = ttk.Checkbutton(frame, text=ARROW_DOWN,
+  sort_reversed_checkbutton = ttk.Checkbutton(frame, text=ARROW_DOWN, width=1,
     variable=variables['sort_reversed'], command=show_sort_reversed)
   
   sort_reversed_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
