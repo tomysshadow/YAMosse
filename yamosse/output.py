@@ -5,6 +5,10 @@ from shlex import quote
 
 import yamosse.encoding as yamosse_encoding
 
+NUMBER_OF_SOUNDS = 'Number of Sounds'
+FILE_NAME = 'File Name'
+DEFAULT_ITEM_DELIMITER = ' '
+
 _ext_json = '.json'.casefold()
 
 
@@ -20,8 +24,10 @@ def hours_minutes(seconds):
   return f'{m:.0f}:{s:02.0f}'
 
 
-def dict_sorted(d, *args, **kwargs):
-  return dict(sorted(d.items(), *args, **kwargs))
+def dict_sorted(d, *args, reversed_=False, **kwargs):
+  d = sorted(d.items(), *args, **kwargs)
+  if reversed_: d = reversed(d)
+  return dict(d)
 
 
 def key_number_of_sounds(item):
@@ -34,6 +40,10 @@ def key_number_of_sounds(item):
   return result
 
 
+def key_file_name(item):
+  return item[0]
+
+
 def key_class(item):
   return item[0]
 
@@ -44,6 +54,9 @@ def output(file_name, *args, **kwargs):
       if subsystem: self.seconds = time()
       self.subsystem = subsystem
       
+      self._key_results = key_number_of_sounds
+      self._sort_reversed = False
+      self._item_delimiter = DEFAULT_ITEM_DELIMITER
       self._confidence_scores = False
       
       self.model_yamnet_class_names = model_yamnet_class_names
@@ -67,6 +80,19 @@ def output(file_name, *args, **kwargs):
     
     @abstractmethod
     def options(self, value):
+      sort_by = value.sort_by
+      
+      if sort_by == NUMBER_OF_SOUNDS:
+        self._key_results = key_number_of_sounds
+      elif sort_by == FILE_NAME:
+        self._key_results = key_file_name
+      
+      self._sort_reversed = value.sort_reversed
+      
+      item_delimiter = yamosse_encoding.ascii_backslashreplace(
+        yamosse_encoding.latin1_unescape(value.item_delimiter))
+      
+      self._item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
       self._confidence_scores = value.output_confidence_scores
     
     @abstractmethod
@@ -78,26 +104,16 @@ def output(file_name, *args, **kwargs):
       pass
   
   class OutputText(Output):
-    def __init__(self, file_name, *args, **kwargs):
-      self._item_delimiter = ' '
-      
-      super().__init__(file_name, *args, **kwargs)
-    
     def options(self, value):
       if value.output_options:
         self._print_section('Options')
         value.print(end='\n\n', file=self.file)
       
-      item_delimiter = yamosse_encoding.ascii_backslashreplace(
-        yamosse_encoding.latin1_unescape(value.item_delimiter))
-      
-      if item_delimiter: self._item_delimiter = item_delimiter
-      
       super().options(value)
     
     def results(self, value):
       # sort from least to most timestamps
-      value = dict_sorted(value, key=key_number_of_sounds)
+      value = dict_sorted(value, key=self._key_results, reversed_=self._sort_reversed)
       if not value: return
       
       file = self.file

@@ -7,6 +7,9 @@ from . import gui as gui
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
+ARROW_UP = '\u2191'
+ARROW_DOWN = '\u2193'
+
 TIP_WEIGHTS = ''.join(('The weights file for the YAMNet model. This option will be disabled if ',
   'you are using the Tensorflow Hub release of YAMNet.'))
 
@@ -28,6 +31,8 @@ TIP_BACKGROUND_NOISE_VOLUME_LINEAR = 'Linear volume scale.'
 
 TIP_OUTPUT_OPTIONS_SORT_BY = ''.join(('Whether to sort results by the number of sounds ',
   'identified, or alphabetically by file name.'))
+
+TIP_OUTPUT_OPTIONS_SORT_REVERSED = 'If checked, results will be sorted in reverse.'
 
 TIP_OUTPUT_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each timestamp or class. ',
   'Escape characters are supported.'))
@@ -263,6 +268,28 @@ def make_background_noise_volume(frame, variables):
   return radiobuttons
 
 
+def make_sort(frame, variables):
+  frame.columnconfigure(0, weight=1) # make sort by frame horizontally resizable
+  
+  sort_by_frame = ttk.Frame(frame)
+  sort_by_frame.grid(row=0, column=0, sticky=tk.EW)
+  gui.make_combobox(sort_by_frame, name='Sort By', textvariable=variables['sort_by'],
+    values=('Number of Sounds', 'File Name'), state=('readonly',))
+  
+  sort_reversed_checkbutton = None
+  sort_reversed_variable = variables['sort_reversed']
+  
+  def show_sort_reversed():
+    sort_reversed_checkbutton['text'] = ARROW_UP if sort_reversed_variable.get() else ARROW_DOWN
+  
+  sort_reversed_checkbutton = ttk.Checkbutton(frame, text=ARROW_DOWN,
+    variable=variables['sort_reversed'], command=show_sort_reversed)
+  
+  sort_reversed_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
+  show_sort_reversed()
+  return sort_by_frame, sort_reversed_checkbutton
+
+
 def make_spacer(frame):
   frame.rowconfigure(0, weight=1) # make label vertically centered
   
@@ -272,10 +299,9 @@ def make_spacer(frame):
 def make_output_options(frame, variables):
   frame.columnconfigure(0, weight=1) # one column layout
   
-  sort_by_frame = ttk.Frame(frame)
-  sort_by_frame.grid(row=0, sticky=tk.EW)
-  gui.make_combobox(sort_by_frame, name='Sort By', textvariable=variables['sort_by'],
-    values=('Number of Sounds', 'File Name'), state=('readonly',))
+  sort_frame = ttk.Frame(frame)
+  sort_frame.grid(row=0, sticky=tk.EW)
+  sort_by_frame, sort_reversed_checkbutton = make_sort(sort_frame, variables)
   
   item_delimiter_frame = ttk.Frame(frame)
   item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
@@ -319,8 +345,8 @@ def make_output_options(frame, variables):
   frame.rowconfigure(tuple(range(frame_rows)), weight=1,
     uniform='output_worker_options_row') # make the rows uniform
   
-  return (sort_by_frame, item_delimiter_frame, output_options_checkbutton,
-    output_confidence_scores_checkbutton)
+  return (sort_by_frame, sort_reversed_checkbutton, item_delimiter_frame,
+    output_options_checkbutton, output_confidence_scores_checkbutton)
 
 
 def make_worker_options(frame, variables):
@@ -452,9 +478,10 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     background_noise_volume_radiobuttons[1]: TIP_BACKGROUND_NOISE_VOLUME_LINEAR,
     
     output_options_widgets[0]: TIP_OUTPUT_OPTIONS_SORT_BY,
-    output_options_widgets[1]: TIP_OUTPUT_OPTIONS_ITEM_DELIMITER,
-    output_options_widgets[2]: TIP_OUTPUT_OPTIONS_OUTPUT_OPTIONS,
-    output_options_widgets[3]: TIP_OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE,
+    output_options_widgets[1]: TIP_OUTPUT_OPTIONS_SORT_REVERSED,
+    output_options_widgets[2]: TIP_OUTPUT_OPTIONS_ITEM_DELIMITER,
+    output_options_widgets[3]: TIP_OUTPUT_OPTIONS_OUTPUT_OPTIONS,
+    output_options_widgets[4]: TIP_OUTPUT_OPTIONS_OUTPUT_CONFIDENCE_SCORE,
     
     worker_options_widgets[0]: TIP_WORKER_OPTIONS_MEMORY_LIMIT,
     worker_options_widgets[1]: TIP_WORKER_OPTIONS_MAX_WORKERS,

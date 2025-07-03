@@ -37,6 +37,7 @@ class Options:
   top_ranked_output_timestamps: bool
   
   sort_by: str
+  sort_reversed: bool
   item_delimiter: str
   output_options: bool
   output_confidence_scores: bool
@@ -61,7 +62,7 @@ class Options:
     identification: int=0,
     confidence_score: int|float=20, confidence_score_minmax: bool=False,
     top_ranked: int=5, top_ranked_output_timestamps: bool=True,
-    sort_by: str='Number of Sounds', item_delimiter: str=', ',
+    sort_by: str='Number of Sounds', sort_reversed=False, item_delimiter: str=', ',
     output_options: bool=True, output_confidence_scores: bool=False,
     memory_limit: int=256, max_workers: int=4, high_priority: bool=True
   ):
@@ -92,6 +93,7 @@ class Options:
     self.top_ranked_output_timestamps = top_ranked_output_timestamps
     
     self.sort_by = sort_by
+    self.sort_reversed = sort_reversed
     self.item_delimiter = item_delimiter
     self.output_options = output_options
     self.output_confidence_scores = output_confidence_scores
@@ -127,6 +129,7 @@ class Options:
     option('Top Ranked', repr(self.top_ranked))
     option('Top Ranked Output Timestamps', repr(self.top_ranked_output_timestamps))
     option('Sort By', repr(self.sort_by))
+    option('Sort Reversed', repr(self.sort_reversed))
     option('Item Delimiter', yamosse_encoding.ascii_backslashreplace(repr(self.item_delimiter)))
     option('Output Options', repr(self.output_options))
     option('Output Confidence Scores', repr(self.output_confidence_scores))
