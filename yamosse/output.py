@@ -56,7 +56,7 @@ def output(file_name, *args, **kwargs):
       if subsystem: self.seconds = time()
       self.subsystem = subsystem
       
-      self._key_results = key_number_of_sounds
+      self._sort_by = key_number_of_sounds
       self._sort_reverse = False
       self._item_delimiter = DEFAULT_ITEM_DELIMITER
       self._confidence_scores = False
@@ -85,9 +85,9 @@ def output(file_name, *args, **kwargs):
       sort_by = options.sort_by
       
       if sort_by == NUMBER_OF_SOUNDS:
-        self._key_results = key_number_of_sounds
+        self._sort_by = key_number_of_sounds
       elif sort_by == FILE_NAME:
-        self._key_results = key_file_name
+        self._sort_by = key_file_name
       
       self._sort_reverse = options.sort_reverse
       
@@ -106,7 +106,7 @@ def output(file_name, *args, **kwargs):
       pass
     
     def _sort(self, results):
-      return dict_sorted(results, key=self._key_results, reverse=self._sort_reverse)
+      return dict_sorted(results, key=self._sort_by, reverse=self._sort_reverse)
   
   class OutputText(Output):
     def options(self, options):
