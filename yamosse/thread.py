@@ -200,7 +200,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           
           if next_ == -1:
             batch += 1
-            log = 'Batch #%d\n' % batch
+            log = '\nBatch #%d\n' % batch
           
           file_names_pos += 1
           next_ = file_names_pos & BATCH_MASK
@@ -246,13 +246,22 @@ def files(input_, model_yamnet_class_names, subsystem, options):
       clear_done = clear_done_loading
       
       subsystem.show(values={
-        'log': 'Created Process Pool Executor\n'
+        'log': 'Created Process Pool Executor'
       })
       
-      for f in batched(file_names, BATCH_SIZE):
-        for file_name in sorted(f, key=key_getsize, reverse=True):
+      file_names_batched = batched(file_names, BATCH_SIZE)
+      file_names_sorted = sorted(next(file_names_batched), key=key_getsize, reverse=True)
+      
+      while file_names_batched:
+        for file_name in file_names_sorted:
           process_pool_executor.submit(yamosse_worker.worker, file_name).add_done_callback(
             lambda future, file_name=file_name: insert_done(future, file_name))
+        
+        # while the workers are booting up, sort the next batch
+        # this allows both tasks to be done at once
+        # although any individual batch should not take longer than a few seconds to sort
+        try: file_names_sorted = sorted(next(file_names_batched), key=key_getsize, reverse=True)
+        except StopIteration: file_names_batched = None
         
         while next_ and file_names_pos < file_names_len:
           # show any values that we've gotten while waiting for the files to process
