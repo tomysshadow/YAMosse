@@ -11,8 +11,9 @@ class SubsystemExit(Exception): pass
 
 def subsystem(window, title, variables):
   class Subsystem(ABC):
+    @staticmethod
     @abstractmethod
-    def start(self, target, *args, **kwargs):
+    def start(target, *args, **kwargs):
       pass
     
     @abstractmethod
@@ -50,7 +51,8 @@ def subsystem(window, title, variables):
       self.show_callback = None
       self.widgets = None
     
-    def start(self, target, *args, **kwargs):
+    @staticmethod
+    def start(target, *args, **kwargs):
       gui.threaded()
       
       # start a thread so the GUI isn't blocked
@@ -94,17 +96,21 @@ def subsystem(window, title, variables):
       self.window.quit()
   
   class ConsoleSubsystem(Subsystem):
-    def start(self, target, *args, **kwargs):
+    @staticmethod
+    def start(target, *args, **kwargs):
       target(*args, **kwargs)
     
-    def show(self, values=None):
+    @staticmethod
+    def show(values=None):
       if values and 'log' in values:
         print(yamosse_encoding.ascii_backslashreplace(values['log']))
     
-    def show_warning(self, message, parent=None):
+    @staticmethod
+    def show_warning(message, parent=None):
       print(message)
     
-    def ask_yes_no(self, message, default=None, parent=None):
+    @staticmethod
+    def ask_yes_no(message, default=None, parent=None):
       YES = 'Y'
       NO = 'N'
       
