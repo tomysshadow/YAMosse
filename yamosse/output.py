@@ -24,10 +24,8 @@ def hours_minutes(seconds):
   return f'{m:.0f}:{s:02.0f}'
 
 
-def dict_sorted(d, *args, reversed_=False, **kwargs):
-  d = sorted(d.items(), *args, **kwargs)
-  if reversed_: d = reversed(d)
-  return dict(d)
+def dict_sorted(d, *args, **kwargs):
+  return dict(sorted(d.items(), *args, **kwargs))
 
 
 def key_number_of_sounds(item):
@@ -55,7 +53,7 @@ def output(file_name, *args, **kwargs):
       self.subsystem = subsystem
       
       self._key_results = key_number_of_sounds
-      self._sort_reversed = False
+      self._sort_reverse = False
       self._item_delimiter = DEFAULT_ITEM_DELIMITER
       self._confidence_scores = False
       
@@ -79,42 +77,45 @@ def output(file_name, *args, **kwargs):
         })
     
     @abstractmethod
-    def options(self, value):
-      sort_by = value.sort_by
+    def options(self, options):
+      sort_by = options.sort_by
       
       if sort_by == NUMBER_OF_SOUNDS:
         self._key_results = key_number_of_sounds
       elif sort_by == FILE_NAME:
         self._key_results = key_file_name
       
-      self._sort_reversed = value.sort_reversed
+      self._sort_reverse = options.sort_reverse
       
       item_delimiter = yamosse_encoding.ascii_backslashreplace(
-        yamosse_encoding.latin1_unescape(value.item_delimiter))
+        yamosse_encoding.latin1_unescape(options.item_delimiter))
       
       self._item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
-      self._confidence_scores = value.output_confidence_scores
+      self._confidence_scores = options.output_confidence_scores
     
     @abstractmethod
-    def results(self, value):
+    def results(self, results):
       pass
     
     @abstractmethod
-    def errors(self, value):
+    def errors(self, errors):
       pass
+    
+    def _sort(self, results):
+      return dict_sorted(results, key=self._key_results, reverse=self._sort_reverse)
   
   class OutputText(Output):
-    def options(self, value):
-      if value.output_options:
+    def options(self, options):
+      if options.output_options:
         self._print_section('Options')
-        value.print(end='\n\n', file=self.file)
+        options.print(end='\n\n', file=self.file)
       
-      super().options(value)
+      super().options(options)
     
-    def results(self, value):
+    def results(self, results):
       # sort from least to most timestamps
-      value = dict_sorted(value, key=self._key_results, reversed_=self._sort_reversed)
-      if not value: return
+      results = self._sort(results)
+      if not results: return
       
       file = self.file
       model_yamnet_class_names = self.model_yamnet_class_names
@@ -122,7 +123,7 @@ def output(file_name, *args, **kwargs):
       # print results
       self._print_section('Results')
       
-      for file_name, class_timestamps in value.items():
+      for file_name, class_timestamps in results.items():
         self._print_file(file_name)
         
         if class_timestamps:
@@ -148,8 +149,8 @@ def output(file_name, *args, **kwargs):
       
       print('', file=file)
     
-    def errors(self, value):
-      if not value: return
+    def errors(self, errors):
+      if not errors: return
       
       file = self.file
       
@@ -158,7 +159,7 @@ def output(file_name, *args, **kwargs):
       
       # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
-      for file_name, ex in value.items():
+      for file_name, ex in errors.items():
         self._print_file(file_name)
         print('\t', yamosse_encoding.ascii_backslashreplace(quote(str(ex))), file=file)
         print('', file=file)
