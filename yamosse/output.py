@@ -118,6 +118,7 @@ def output(file_name, *args, **kwargs):
       return True
     
     def results(self, results):
+      # sort from least to most timestamps
       if not results: return
       
       # print results
@@ -129,7 +130,7 @@ def output(file_name, *args, **kwargs):
       # when we are intended to combine all, the timestamp values are empty
       # otherwise, every value will be non-empty
       class_timestamps = dict_peek(results)
-      combine_all = not dict_peek(class_timestamps, True)
+      combine_all = not dict_peek(class_timestamps, None)
       results = self._sort(results)
       
       for file_name, class_timestamps in results.items():
