@@ -24,6 +24,10 @@ def hours_minutes(seconds):
   return f'{m:.0f}:{s:02.0f}'
 
 
+def dict_peek(d):
+  return next(iter(d.values()))
+
+
 def dict_sorted(d, *args, **kwargs):
   return dict(sorted(d.items(), *args, **kwargs))
 
@@ -123,6 +127,11 @@ def output(file_name, *args, **kwargs):
       # print results
       self._print_section('Results')
       
+      # when we are intended to combine all, the timestamp values are empty
+      # otherwise, every value will be non-empty
+      class_timestamps = dict_peek(results)
+      combine_all = not dict_peek(class_timestamps)
+      
       for file_name, class_timestamps in results.items():
         self._print_file(file_name)
         
@@ -131,9 +140,7 @@ def output(file_name, *args, **kwargs):
             print('\t', None, file=file)
             continue
           
-          # when we are intended to combine all, the values are empty
-          # otherwise, every value will be non-empty
-          if not next(iter(class_timestamps.values())):
+          if combine_all:
             print('\t', self._item_delimiter.join(
               model_yamnet_class_names[c] for c in class_timestamps.keys()), file=file)
             

@@ -232,12 +232,18 @@ def make_combine(frame, variables):
   gui.make_spinbox(spinbox_frame, textvariable=variables['combine'],
     from_=0, to=60, unit=UNIT_SECONDS)
   
+  combine_all_variable = variables['combine_all']
+  
+  def show_spinbox_frame():
+    gui.enable_widget(spinbox_frame, enabled=not combine_all_variable.get())
+  
+  show_spinbox_frame()
+  
   combine_all_checkbutton = ttk.Checkbutton(
     cell_frame,
     text='All',
-    variable=variables['combine_all'],
-    command=lambda: gui.enable_widget(spinbox_frame,
-      enabled=not variables['combine_all'].get())
+    variable=combine_all_variable,
+    command=show_spinbox_frame
   )
   
   combine_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
@@ -279,14 +285,14 @@ def make_sort(frame, variables):
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
   
-  def show_sort_reverse():
+  def show_sort_reverse_checkbutton():
     sort_reverse_checkbutton['text'] = ARROW_UP if sort_reverse_variable.get() else ARROW_DOWN
   
   sort_reverse_checkbutton = ttk.Checkbutton(frame, text=ARROW_DOWN, width=1,
-    variable=variables['sort_reverse'], command=show_sort_reverse)
+    variable=variables['sort_reverse'], command=show_sort_reverse_checkbutton)
   
   sort_reverse_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
-  show_sort_reverse()
+  show_sort_reverse_checkbutton()
   return sort_by_frame, sort_reverse_checkbutton
 
 
