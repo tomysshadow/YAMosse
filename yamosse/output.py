@@ -59,7 +59,7 @@ def output(file_name, *args, **kwargs):
       self._sort_by = key_number_of_sounds
       self._sort_reverse = False
       self._item_delimiter = DEFAULT_ITEM_DELIMITER
-      self._confidence_scores = False
+      self._output_confidence_scores = False
       
       self.model_yamnet_class_names = model_yamnet_class_names
       self.file = open(file_name, 'w')
@@ -95,7 +95,7 @@ def output(file_name, *args, **kwargs):
         yamosse_encoding.latin1_unescape(options.item_delimiter))
       
       self._item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
-      self._confidence_scores = options.output_confidence_scores
+      self._output_confidence_scores = options.output_confidence_scores
     
     @abstractmethod
     def results(self, results):
@@ -157,7 +157,7 @@ def output(file_name, *args, **kwargs):
               try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
               except TypeError: hms = hours_minutes(timestamp)
               
-              if self._confidence_scores: hms = f'{hms} ({score:.0%})'
+              if self._output_confidence_scores: hms = f'{hms} ({score:.0%})'
               
               timestamp_scores[timestamp] = hms
             
