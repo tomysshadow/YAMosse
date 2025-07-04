@@ -142,6 +142,8 @@ def output(file_name, *args, **kwargs):
           class_timestamps = dict_sorted(class_timestamps, key=key_class)
           
           for class_, timestamp_scores in class_timestamps.items():
+            assert timestamp_scores, 'timestamp_scores must not be empty'
+            
             print('\t', model_yamnet_class_names[class_], end=':\n', file=file)
             
             for timestamp, score in timestamp_scores.items():
