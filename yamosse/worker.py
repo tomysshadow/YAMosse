@@ -183,6 +183,7 @@ def initializer(worker, receiver, sender, shutdown, options,
 def worker_confidence_score(class_predictions, prediction, score, options):
   calibration = options.calibration
   confidence_score = options.confidence_score
+  combine_all = options.combine_all
   
   for class_ in options.classes:
     calibrated_score = score[class_] * calibration[class_]
@@ -190,8 +191,10 @@ def worker_confidence_score(class_predictions, prediction, score, options):
     if calibrated_score >= confidence_score:
       prediction_scores = class_predictions.setdefault(class_, {})
       
-      prediction_scores[prediction] = max(
-        prediction_scores.get(prediction, calibrated_score), calibrated_score)
+      # avoid unnecessary pickling of all the predictions/scores in the combine all case
+      if not combine_all:
+        prediction_scores[prediction] = max(
+          prediction_scores.get(prediction, calibrated_score), calibrated_score)
 
 
 def worker_class_timestamps(class_predictions, shutdown, combine):

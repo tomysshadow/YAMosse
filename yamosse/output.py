@@ -126,7 +126,19 @@ def output(file_name, *args, **kwargs):
       for file_name, class_timestamps in results.items():
         self._print_file(file_name)
         
-        if class_timestamps:
+        try:
+          if not class_timestamps:
+            print('\t', None, file=file)
+            continue
+          
+          # when we are intended to combine all, the values are empty
+          # otherwise, every value will be non-empty
+          if not next(iter(class_timestamps.values())):
+            print('\t', self._item_delimiter.join(
+              model_yamnet_class_names[c] for c in class_timestamps.keys()), file=file)
+            
+            continue
+          
           class_timestamps = dict_sorted(class_timestamps, key=key_class)
           
           for class_, timestamp_scores in class_timestamps.items():
@@ -140,12 +152,9 @@ def output(file_name, *args, **kwargs):
               
               timestamp_scores[timestamp] = hms
             
-            print('\t\t', self._item_delimiter.join(timestamp_scores.values()),
-              end='\n', file=file)
-        else:
-          print('\t', None, file=file)
-        
-        print('', file=file)
+            print('\t\t', self._item_delimiter.join(timestamp_scores.values()), file=file)
+        finally:
+          print('', file=file)
       
       print('', file=file)
     
@@ -172,7 +181,7 @@ def output(file_name, *args, **kwargs):
       print('# %s' % name, end='\n\n', file=self.file)
     
     def _print_file(self, name):
-      print(yamosse_encoding.ascii_backslashreplace(quote(name)), end='\n', file=self.file)
+      print(yamosse_encoding.ascii_backslashreplace(quote(name)), file=self.file)
   
   ext = path.splitext(file_name)[1]
   
