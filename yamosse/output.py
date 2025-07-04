@@ -24,8 +24,8 @@ def hours_minutes(seconds):
   return f'{m:.0f}:{s:02.0f}'
 
 
-def dict_peek(d):
-  return next(iter(d.values()))
+def dict_peek(d, *args, **kwargs):
+  return next(iter(d.values()), *args, **kwargs)
 
 
 def dict_sorted(d, *args, **kwargs):
@@ -96,6 +96,7 @@ def output(file_name, *args, **kwargs):
       
       self._item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
       self._output_confidence_scores = options.output_confidence_scores
+      return options.output_options
     
     @abstractmethod
     def results(self, results):
@@ -110,27 +111,27 @@ def output(file_name, *args, **kwargs):
   
   class OutputText(Output):
     def options(self, options):
-      if options.output_options:
-        self._print_section('Options')
-        options.print(end='\n\n', file=self.file)
+      if not super().options(options): return False
       
-      super().options(options)
+      self._print_section('Options')
+      options.print(end='\n\n', file=self.file)
+      return True
     
     def results(self, results):
       # sort from least to most timestamps
-      results = self._sort(results)
       if not results: return
-      
-      file = self.file
-      model_yamnet_class_names = self.model_yamnet_class_names
       
       # print results
       self._print_section('Results')
       
+      model_yamnet_class_names = self.model_yamnet_class_names
+      file = self.file
+      
       # when we are intended to combine all, the timestamp values are empty
       # otherwise, every value will be non-empty
       class_timestamps = dict_peek(results)
-      combine_all = not dict_peek(class_timestamps)
+      combine_all = not dict_peek(class_timestamps, None)
+      results = self._sort(results)
       
       for file_name, class_timestamps in results.items():
         self._print_file(file_name)
@@ -170,10 +171,10 @@ def output(file_name, *args, **kwargs):
     def errors(self, errors):
       if not errors: return
       
-      file = self.file
-      
       # print errors
       self._print_section('Errors')
+      
+      file = self.file
       
       # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
