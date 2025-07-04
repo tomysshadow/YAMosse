@@ -118,7 +118,6 @@ def output(file_name, *args, **kwargs):
       return True
     
     def results(self, results):
-      # sort from least to most timestamps
       if not results: return
       
       # print results
