@@ -688,6 +688,9 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
     if resizable:
       window.minsize(*size)
   
+  # should be done after setting new window geometry
+  window.show_sizegrip(resizable)
+  
   if iconphotos:
     if window == get_root_window():
       # in this case make this the default icon
@@ -701,8 +704,23 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
 
 
 def make_window(window, make_frame, *args, **kwargs):
-  window.rowconfigure(0, weight=1) # make frame vertically resizable
-  window.columnconfigure(0, weight=1) # make frame horizontally resizable
+  window.rowconfigure(1, weight=1) # make frame vertically resizable
+  window.columnconfigure(1, weight=1) # make frame horizontally resizable
+  
+  sizegrip = ttk.Sizegrip(window)
+  minsize = max(PADDING, sizegrip.winfo_reqwidth(), sizegrip.winfo_reqheight())
+  
+  window.rowconfigure((0, 2), minsize=minsize)
+  window.columnconfigure((0, 2), minsize=minsize)
+  
+  def show_sizegrip(resizable=True):
+    if resizable:
+      sizegrip.grid(row=2, column=2, sticky=tk.SE)
+    else:
+      sizegrip.grid_remove()
+  
+  window.show_sizegrip = show_sizegrip
+  show_sizegrip()
   
   style = ttk.Style(window)
   style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
@@ -710,7 +728,7 @@ def make_window(window, make_frame, *args, **kwargs):
   style.layout('Borderless.TNotebook', [])
   
   frame = ttk.Frame(window)
-  frame.grid(row=0, column=0, sticky=tk.NSEW, padx=PADX_EW, pady=PADY_NS)
+  frame.grid(row=1, column=1, sticky=tk.NSEW)
   return window, make_frame(frame, *args, **kwargs)
 
 
