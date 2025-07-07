@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 import yamosse.root as yamosse_root
-import yamosse.encoding as yamosse_encoding
+import yamosse.utils as yamosse_utils
 
 VERSION = 0
 FILE_NAME = 'options.pickle'
@@ -113,11 +113,11 @@ class Options:
     def option(name, value, end='\n'):
       print(': '.join((name, value)), end=end, file=file)
     
-    option('Current Date/Time', yamosse_encoding.ascii_backslashreplace(datetime.now()))
+    option('Current Date/Time', yamosse_utils.ascii_backslashreplace(datetime.now()))
     option('Version', repr(self.version))
-    option('Input', yamosse_encoding.ascii_backslashreplace(self.input))
+    option('Input', yamosse_utils.ascii_backslashreplace(self.input))
     option('Input Recursive', repr(self.input_recursive))
-    option('Weights', yamosse_encoding.ascii_backslashreplace(self.weights))
+    option('Weights', yamosse_utils.ascii_backslashreplace(self.weights))
     option('Classes', repr(self.classes))
     option('Calibration', repr(self.calibration))
     option('Combine', str(self.combine), end=' seconds\n')
@@ -131,7 +131,7 @@ class Options:
     option('Top Ranked Output Timestamps', repr(self.top_ranked_output_timestamps))
     option('Sort By', repr(self.sort_by))
     option('Sort Reverse', repr(self.sort_reverse))
-    option('Item Delimiter', yamosse_encoding.ascii_backslashreplace(repr(self.item_delimiter)))
+    option('Item Delimiter', yamosse_utils.ascii_backslashreplace(repr(self.item_delimiter)))
     option('Output Options', repr(self.output_options))
     option('Output Confidence Scores', repr(self.output_confidence_scores))
     option('Memory Limit', str(self.memory_limit), end=' MB\n')

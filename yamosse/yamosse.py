@@ -65,10 +65,6 @@ def sf_input_filetypes():
   return input_filetypes
 
 
-def list_ordered(unordered):
-  return list('%d. %s' % (index + 1, unordered[index]) for index in range(len(unordered)))
-
-
 def title():
   return _title
 
@@ -213,7 +209,7 @@ def yamosse(**kwargs):
         _title,
         variables,
         sf_input_filetypes(),
-        list_ordered(model_yamnet_class_names),
+        model_yamnet_class_names,
         WEIGHTS_FILETYPES,
         yamosse_worker.tfhub_enabled(),
         yamscan,

@@ -1,0 +1,4 @@
+#define Sort_down_small_width 8
+#define Sort_down_small_height 9
+static char Sort_down_small_bits[] = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x7E, 0x3C, 0x18, };

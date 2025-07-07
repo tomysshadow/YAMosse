@@ -3,7 +3,7 @@ from time import time
 from os import path
 from shlex import quote
 
-import yamosse.encoding as yamosse_encoding
+import yamosse.utils as yamosse_utils
 
 NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
@@ -22,14 +22,6 @@ def hours_minutes(seconds):
     return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
   
   return f'{m:.0f}:{s:02.0f}'
-
-
-def dict_peek(d, *args, **kwargs):
-  return next(iter(d.values()), *args, **kwargs)
-
-
-def dict_sorted(d, *args, **kwargs):
-  return dict(sorted(d.items(), *args, **kwargs))
 
 
 def key_number_of_sounds(item):
@@ -91,8 +83,8 @@ def output(file_name, *args, **kwargs):
       
       self._sort_reverse = options.sort_reverse
       
-      item_delimiter = yamosse_encoding.ascii_backslashreplace(
-        yamosse_encoding.latin1_unescape(options.item_delimiter))
+      item_delimiter = yamosse_utils.ascii_backslashreplace(
+        yamosse_utils.latin1_unescape(options.item_delimiter))
       
       self._item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
       self._output_confidence_scores = options.output_confidence_scores
@@ -107,7 +99,7 @@ def output(file_name, *args, **kwargs):
       pass
     
     def _sort(self, results):
-      return dict_sorted(results, key=self._sort_by, reverse=self._sort_reverse)
+      return yamosse_utils.dict_sorted(results, key=self._sort_by, reverse=self._sort_reverse)
   
   class OutputText(Output):
     def options(self, options):
@@ -128,8 +120,8 @@ def output(file_name, *args, **kwargs):
       
       # when we are intended to combine all, the timestamp values are empty
       # otherwise, every value will be non-empty
-      class_timestamps = dict_peek(results)
-      combine_all = not dict_peek(class_timestamps, None)
+      class_timestamps = yamosse_utils.dict_peek(results)
+      combine_all = not yamosse_utils.dict_peek(class_timestamps, None)
       results = self._sort(results)
       
       for file_name, class_timestamps in results.items():
@@ -146,7 +138,7 @@ def output(file_name, *args, **kwargs):
             
             continue
           
-          class_timestamps = dict_sorted(class_timestamps, key=key_class)
+          class_timestamps = yamosse_utils.dict_sorted(class_timestamps, key=key_class)
           
           for class_, timestamp_scores in class_timestamps.items():
             assert timestamp_scores, 'timestamp_scores must not be empty'
@@ -179,7 +171,7 @@ def output(file_name, *args, **kwargs):
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
         self._print_file(file_name)
-        print('\t', yamosse_encoding.ascii_backslashreplace(quote(str(ex))), file=file)
+        print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), file=file)
         print('', file=file)
       
       print('', file=file)
@@ -190,7 +182,7 @@ def output(file_name, *args, **kwargs):
       print('# %s' % name, end='\n\n', file=self.file)
     
     def _print_file(self, name):
-      print(yamosse_encoding.ascii_backslashreplace(quote(name)), file=self.file)
+      print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)
   
   ext = path.splitext(file_name)[1]
   

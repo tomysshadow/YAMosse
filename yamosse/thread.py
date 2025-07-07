@@ -7,6 +7,7 @@ import traceback
 
 import soundfile as sf
 
+import yamosse.utils as yamosse_utils
 import yamosse.progress as yamosse_progress
 import yamosse.worker as yamosse_worker
 import yamosse.download as yamosse_download
@@ -16,13 +17,13 @@ import yamosse.subsystem as yamosse_subsystem
 PROGRESSBAR_MAXIMUM = 100
 
 
-def batched(seq, size):
-  return (seq[pos:pos + size] for pos in range(0, len(seq), size))
-
-
 def key_getsize(file_name):
   try: return os.path.getsize(file_name)
   except OSError: return 0
+
+
+def file_names_sorted_next(file_names):
+  return sorted(next(file_names), key=key_getsize, reverse=True)
 
 
 def connection_flush(connection):
@@ -249,8 +250,8 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         'log': 'Created Process Pool Executor'
       })
       
-      file_names_batched = batched(file_names, BATCH_SIZE)
-      file_names_sorted = sorted(next(file_names_batched), key=key_getsize, reverse=True)
+      file_names_batched = yamosse_utils.batched(file_names, BATCH_SIZE)
+      file_names_sorted = file_names_sorted_next(file_names_batched)
       
       while file_names_batched:
         for file_name in file_names_sorted:
@@ -260,7 +261,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         # while the workers are booting up, sort the next batch
         # this allows both tasks to be done at once
         # although any individual batch should not take longer than a few seconds to sort
-        try: file_names_sorted = sorted(next(file_names_batched), key=key_getsize, reverse=True)
+        try: file_names_sorted = file_names_sorted_next(file_names_batched)
         except StopIteration: file_names_batched = None
         
         while next_ and file_names_pos < file_names_len:

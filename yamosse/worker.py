@@ -98,8 +98,25 @@ def identification_confidence_score(class_predictions, prediction, score, option
           prediction_scores.get(prediction, calibrated_score), calibrated_score)
 
 
-def identification_top_ranked(class_predictions, prediction, score, options):
-  return identification_confidence_score(class_predictions, prediction, score, options) # TODO
+def identification_top_ranked(prediction_scores, prediction, score, options):
+  raise NotImplementedError # TODO
+  
+  calibration = options.calibration
+  top_ranked = options.top_ranked
+  combine = options.combine
+  combine_all = options.combine_all
+  
+  # combine all should wait until the very end to combine
+  # output timestamps only controls whether timestamps are printed
+  score = np.multiply(score, calibration)
+  
+  if prediction % combine:
+    scores = dict_peek(prediction_scores)
+  else:
+    scores = prediction_scores.setdefault(prediction, score)
+    if scores is score: return
+  
+  np.concatenate((scores, score), out=scores)
 
 
 def tfhub_enabled():
@@ -254,6 +271,7 @@ def initializer(worker, receiver, sender, shutdown, options,
     options.identification = identification_confidence_score
   elif options.identification == IDENTIFICATION_TOP_RANKED:
     options.identification = identification_top_ranked
+    options.combine += 1
   
   _options = options
   _yamnet = yamnet

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from threading import Thread
 
-import yamosse.encoding as yamosse_encoding
+import yamosse.utils as yamosse_utils
 
 try: from .gui import gui
 except ImportError: gui = None
@@ -103,7 +103,7 @@ def subsystem(window, title, variables):
     @staticmethod
     def show(values=None):
       if values and 'log' in values:
-        print(yamosse_encoding.ascii_backslashreplace(values['log']))
+        print(yamosse_utils.ascii_backslashreplace(values['log']))
     
     @staticmethod
     def show_warning(message, parent=None):
