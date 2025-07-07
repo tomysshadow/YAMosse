@@ -18,9 +18,9 @@ MONO = 1
 _shutdown = None
 _options = None
 
-_patch_hop_seconds = 0.48
-_patch_window_seconds = 0.96
 _sample_rate = 16000.0
+_patch_window_seconds = 0.96
+_patch_hop_seconds = 0.48
 
 _yamnet = None
 
@@ -38,6 +38,68 @@ def class_names(class_map_csv=''):
     reader = csv.reader(csv_file)
     next(reader) # skip header
     return list(display_name for (_, _, display_name) in reader)
+
+
+def class_timestamps(class_predictions, shutdown, combine):
+  # create timestamps from predictions/scores
+  results = {}
+  
+  for class_, prediction_scores in class_predictions.items():
+    if _shutdown.is_set(): return None
+    
+    timestamp_scores = {}
+    
+    begin = 0
+    end = 0
+    
+    score_begin = 0
+    score_end = 0
+    
+    predictions = list(prediction_scores.keys())
+    predictions_len = len(predictions)
+    
+    scores = list(prediction_scores.values())
+    
+    for prediction_end in range(1, predictions_len + 1):
+      end = predictions[score_end] + 1
+      
+      if prediction_end == predictions_len or end < predictions[prediction_end]:
+        begin = predictions[score_begin]
+        
+        # the cast to float here is to convert a potential Tensorflow or Numpy dtype
+        # into a Python native type, because we want to pickle this result into the main process
+        # which does not have those modules loaded
+        timestamp_scores[(begin, end) if combine and begin + combine < end else begin] = float(max(
+          scores[score_begin:score_end + 1]))
+        
+        score_begin = prediction_end
+      
+      score_end = prediction_end
+    
+    results[class_] = timestamp_scores
+  
+  return results
+
+
+def identification_confidence_score(class_predictions, prediction, score, options):
+  calibration = options.calibration
+  confidence_score = options.confidence_score
+  combine_all = options.combine_all
+  
+  for class_ in options.classes:
+    calibrated_score = score[class_] * calibration[class_]
+    
+    if calibrated_score >= confidence_score:
+      prediction_scores = class_predictions.setdefault(class_, {})
+      
+      # avoid unnecessary pickling of all the predictions/scores in the combine all case
+      if not combine_all:
+        prediction_scores[prediction] = max(
+          prediction_scores.get(prediction, calibrated_score), calibrated_score)
+
+
+def identification_top_ranked(class_predictions, prediction, score, options):
+  return identification_confidence_score(class_predictions, prediction, score, options) # TODO
 
 
 def tfhub_enabled():
@@ -63,16 +125,16 @@ def initializer(worker, receiver, sender, shutdown, options,
   global _shutdown
   global _options
   
-  global _patch_hop_seconds
-  global _patch_window_seconds
   global _sample_rate
+  global _patch_window_seconds
+  global _patch_hop_seconds
   
   global _yamnet
   
   global _tfhub_enabled
   
-  CONFIDENCE_SCORE = 0
-  TOP_RANKED = 1
+  IDENTIFICATION_CONFIDENCE_SCORE = 0
+  IDENTIFICATION_TOP_RANKED = 1
   
   # for Linux, child process inherits receiver pipe from parent
   # so the receiver instance must be closed explicitly here
@@ -166,9 +228,21 @@ def initializer(worker, receiver, sender, shutdown, options,
       ) == model_yamnet_class_names, 'model_yamnet_class_names mismatch'
   else:
     params = yamnet_params.Params()
-    _patch_hop_seconds = params.patch_hop_seconds
-    _patch_window_seconds = params.patch_window_seconds
     _sample_rate = params.sample_rate
+    
+    patch_window_seconds = params.patch_window_seconds
+    
+    assert patch_window_seconds > 0.0, 'patch_window_seconds must be greater than zero'
+    assert patch_window_seconds <= 1.0, 'patch_window_seconds must be less than or equal to one'
+    
+    patch_hop_seconds = params.patch_hop_seconds
+    
+    assert patch_hop_seconds > 0.0, 'patch_hop_seconds must be greater than zero'
+    assert patch_hop_seconds <= patch_window_seconds, ''.join(('patch_hop_seconds must be less ',
+      'than or equal to patch_window_seconds'))
+    
+    _patch_window_seconds = patch_window_seconds
+    _patch_hop_seconds = patch_hop_seconds
     
     yamnet = yamnet_model.yamnet_frames_model(params)
     
@@ -176,75 +250,22 @@ def initializer(worker, receiver, sender, shutdown, options,
     assert weights, 'weights must not be empty'
     yamnet.load_weights(weights)
   
+  if options.identification == IDENTIFICATION_CONFIDENCE_SCORE:
+    options.identification = identification_confidence_score
+  elif options.identification == IDENTIFICATION_TOP_RANKED:
+    options.identification = identification_top_ranked
+  
   _options = options
   _yamnet = yamnet
-
-
-def worker_confidence_score(class_predictions, prediction, score, options):
-  calibration = options.calibration
-  confidence_score = options.confidence_score
-  combine_all = options.combine_all
-  
-  for class_ in options.classes:
-    calibrated_score = score[class_] * calibration[class_]
-    
-    if calibrated_score >= confidence_score:
-      prediction_scores = class_predictions.setdefault(class_, {})
-      
-      # avoid unnecessary pickling of all the predictions/scores in the combine all case
-      if not combine_all:
-        prediction_scores[prediction] = max(
-          prediction_scores.get(prediction, calibrated_score), calibrated_score)
-
-
-def worker_class_timestamps(class_predictions, shutdown, combine):
-  # create timestamps from predictions/scores
-  results = {}
-  
-  for class_, prediction_scores in class_predictions.items():
-    if _shutdown.is_set(): return None
-    
-    timestamp_scores = {}
-    
-    begin = 0
-    end = 0
-    
-    score_begin = 0
-    score_end = 0
-    
-    predictions = list(prediction_scores.keys())
-    predictions_len = len(predictions)
-    
-    scores = list(prediction_scores.values())
-    
-    for prediction_end in range(1, predictions_len + 1):
-      end = predictions[score_end] + 1
-      
-      if prediction_end == predictions_len or end < predictions[prediction_end]:
-        begin = predictions[score_begin]
-        
-        # the cast to float here is to convert a potential Tensorflow or Numpy dtype
-        # into a Python native type, because we want to pickle this result into the main process
-        # which does not have those modules loaded
-        timestamp_scores[(begin, end) if combine and begin + combine < end else begin] = float(max(
-          scores[score_begin:score_end + 1]))
-        
-        score_begin = prediction_end
-      
-      score_end = prediction_end
-    
-    results[class_] = timestamp_scores
-  
-  return results
 
 
 def worker(file_name):
   global _shutdown
   global _options
   
-  global _patch_hop_seconds
-  global _patch_window_seconds
   global _sample_rate
+  global _patch_window_seconds
+  global _patch_hop_seconds
   
   global _yamnet
   
@@ -265,10 +286,11 @@ def worker(file_name):
     options = _options
     combine = options.combine
     background_noise_volume = options.background_noise_volume
+    identification = options.identification
     
-    patch_hop_seconds = _patch_hop_seconds
-    patch_window_seconds = _patch_window_seconds
     sample_rate = _sample_rate
+    patch_window_seconds = _patch_window_seconds
+    patch_hop_seconds = _patch_hop_seconds
     
     yamnet = _yamnet
     
@@ -318,7 +340,7 @@ def worker(file_name):
       
       # Predict YAMNet classes.
       for score in yamnet(waveform)[0]:
-        worker_confidence_score(results, int(seconds), score, options)
+        identification(results, int(seconds), score, options)
         seconds += patch_hop_seconds
   
-  return worker_class_timestamps(results, shutdown, combine)
+  return class_timestamps(results, shutdown, combine)

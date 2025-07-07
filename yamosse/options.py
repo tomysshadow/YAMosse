@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import os
 import shlex
 import pickle
@@ -28,7 +29,7 @@ class Options:
   background_noise_volume: int|float
   background_noise_volume_loglinear: bool
   
-  identification: int
+  identification: int|Callable
   
   confidence_score: int|float
   confidence_score_minmax: bool
