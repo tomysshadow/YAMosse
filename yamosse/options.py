@@ -42,6 +42,7 @@ class Options:
     
     self.input = input
     self.input_recursive = input_recursive
+    
     self.weights = weights
     
     self.classes = classes
