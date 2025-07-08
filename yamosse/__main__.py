@@ -2,7 +2,6 @@ import sys
 from ast import literal_eval
 
 import yamosse.yamosse as yamosse
-import yamosse.root as yamosse_root
 import yamosse.worker as yamosse_worker
 
 
@@ -21,14 +20,14 @@ def main(argc, argv):
     return 1
   
   args = argv[MIN_ARGC:]
-  args_len = len(args)
+  argc = len(args)
   
   kwargs = {}
   options_items = {}
-  argc2 = args_len - 1
-  argc3 = args_len - 2
+  argc2 = argc - 1
+  argc3 = argc - 2
   
-  for a in range(args_len):
+  for a in range(argc):
     arg = args[a]
     
     if arg == '-h' or arg == '--help':
@@ -37,15 +36,15 @@ def main(argc, argv):
     if arg == '-rd' or arg == '--restore_defaults':
       kwargs['restore_defaults'] = True
     if a < argc2:
-      if arg == '-y' or arg == '--yamscan':
-        a += 1
-        kwargs['output_file_name'] = args[a]
-      elif arg == '-ip' or arg == '--import-preset':
+      if arg == '-ip' or arg == '--import-preset':
         a += 1
         kwargs['import_preset_file_name'] = args[a]
       elif arg == '-ep' or arg == '--export-preset':
         a += 1
         kwargs['export_preset_file_name'] = args[a]
+      elif arg == '-y' or arg == '--yamscan':
+        a += 1
+        kwargs['output_file_name'] = args[a]
       elif a < argc3:
         if arg == '-o' or arg == '--options':
           a += 1
