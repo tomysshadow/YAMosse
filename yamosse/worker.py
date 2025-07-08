@@ -299,6 +299,7 @@ def initializer(worker, receiver, sender, shutdown, options,
     
     weights = options.weights
     assert weights, 'weights must not be empty'
+    
     yamnet.load_weights(weights)
   
   # create a numpy array of this so it can be used with fancy indexing
@@ -311,13 +312,10 @@ def initializer(worker, receiver, sender, shutdown, options,
     np.ones(len(model_yamnet_class_names) - calibration.size)))
   
   # make background noise volume logarithmic if requested
-  background_noise_volume = options.background_noise_volume
+  background_noise_volume = options.background_noise_volume / 100.0
   
-  if not isinstance(background_noise_volume, float):
-    background_noise_volume /= 100.0
-    
-    if not options.background_noise_volume_loglinear:
-      background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
+  if not options.background_noise_volume_loglinear:
+    background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
   
   # identification options
   if options.identification == IDENTIFICATION_CONFIDENCE_SCORE:
@@ -330,16 +328,10 @@ def initializer(worker, receiver, sender, shutdown, options,
     
     _stack = np.stack
   
-  # cast confidence score from percentage to float
-  confidence_score = options.confidence_score
-  
-  if not isinstance(confidence_score, float):
-    confidence_score /= 100.0
-  
   options.classes = classes
   options.calibration = calibration
   options.background_noise_volume = background_noise_volume
-  options.confidence_score = confidence_score
+  options.confidence_score /= 100.0
   
   _options = options
   _yamnet = yamnet

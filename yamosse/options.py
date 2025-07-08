@@ -14,39 +14,6 @@ FILE_NAME = 'options.pickle'
 _root_file_name = yamosse_root.root(FILE_NAME)
 
 class Options:
-  version: int
-  
-  input: str|tuple
-  input_recursive: bool
-  weights: str
-  
-  classes: list
-  calibration: list
-  
-  combine: int
-  combine_all: bool
-  
-  background_noise_volume: int|float
-  background_noise_volume_loglinear: bool
-  
-  identification: int|Callable
-  
-  confidence_score: int|float
-  confidence_score_minmax: bool
-  
-  top_ranked: int
-  top_ranked_output_timestamps: bool
-  
-  sort_by: str
-  sort_reverse: bool
-  item_delimiter: str
-  output_options: bool
-  output_confidence_scores: bool
-  
-  memory_limit: int
-  max_workers: int
-  high_priority: bool
-  
   class VersionError(ValueError):
     def __init__(self):            
       super().__init__('version mismatch')
@@ -56,16 +23,17 @@ class Options:
   
   def __init__(
     self,
-    input: str|tuple='', input_recursive: bool=False, weights: str='',
-    classes: list|None=None, calibration: list|None=None,
-    combine: int=3, combine_all: bool=False,
-    background_noise_volume: int|float=1, background_noise_volume_loglinear: bool=False,
-    identification: int=0,
-    confidence_score: int|float=20, confidence_score_minmax: bool=False,
-    top_ranked: int=5, top_ranked_output_timestamps: bool=True,
-    sort_by: str='Number of Sounds', sort_reverse=False, item_delimiter: str=', ',
-    output_options: bool=True, output_confidence_scores: bool=False,
-    memory_limit: int=256, max_workers: int=4, high_priority: bool=True
+    input='', input_recursive=False,
+    weights='',
+    classes=None, calibration=None,
+    combine=3, combine_all=False,
+    background_noise_volume=1, background_noise_volume_loglinear=False,
+    identification=0,
+    confidence_score=20, confidence_score_minmax=False,
+    top_ranked=5, top_ranked_output_timestamps=True,
+    sort_by='Number of Sounds', sort_reverse=False, item_delimiter=', ',
+    output_options=True, output_confidence_scores=False,
+    memory_limit=256, max_workers=4, high_priority=True
   ):
     if classes == None: classes = []
     if calibration == None: calibration = []
