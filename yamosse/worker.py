@@ -196,6 +196,8 @@ def initializer(worker, receiver, sender, shutdown, options,
   _shutdown = shutdown
   if shutdown.is_set(): return
   
+  assert _tfhub_enabled == tfhub_enabled, 'tfhub_enabled mismatch'
+  
   # seperated out because loading the worker dependencies (mainly Tensorflow) in
   # the main process consumes a non-trivial amount of memory for no benefit
   # and causes startup to take significantly longer
@@ -210,8 +212,6 @@ def initializer(worker, receiver, sender, shutdown, options,
   import numpy as np
   import tensorflow as tf
   import psutil
-  
-  assert _tfhub_enabled == tfhub_enabled, 'tfhub_enabled mismatch'
   
   if options.high_priority:
     current_process = psutil.Process(os.getpid())
