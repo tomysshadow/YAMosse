@@ -131,15 +131,13 @@ def files(input_, model_yamnet_class_names, subsystem, options):
   BATCH_SIZE = 2 ** 10 # must be a power of two
   BATCH_MASK = BATCH_SIZE - 1
   
-  options.initarg(input_, model_yamnet_class_names)
-  
   results = {}
   errors = {}
   
   done = {}
   done_lock = Lock()
   
-  file_names = list(input_file_names(options.input, recursive=options.input_recursive))
+  file_names = list(input_file_names(input_, recursive=options.input_recursive))
   file_names_pos = 0
   file_names_len = len(file_names)
     
@@ -329,9 +327,6 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
         subsystem=subsystem
       ) as output
     ):
-      # should be done before calling initarg on the options
-      output.options(options)
-      
       results, errors = files(input_, model_yamnet_class_names, subsystem, options)
       
       subsystem.show(values={
@@ -339,6 +334,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
         'log': 'Finishing, please wait...\n'
       })
       
+      output.options(options)
       output.results(results)
       output.errors(errors)
   except yamosse_subsystem.SubsystemExit: pass

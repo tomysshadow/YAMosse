@@ -180,7 +180,7 @@ def yamosse(**kwargs):
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
       
-      gui.set_variables_to_object(options)
+      subsystem.variables_to_object(options)
       
       file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
         initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)

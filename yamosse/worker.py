@@ -5,6 +5,7 @@ import csv
 import soundfile as sf
 
 import yamosse.root as yamosse_root
+import yamosse.utils as yamosse_utils
 
 MODEL_YAMNET_DIR = os.path.join('models', 'research', 'audioset', 'yamnet')
 MODEL_YAMNET_CLASS_MAP_CSV = 'yamnet_class_map.csv'
@@ -17,6 +18,7 @@ MONO = 1
 
 _shutdown = None
 _options = None
+_stack = None
 
 _sample_rate = 16000.0
 _patch_window_seconds = 0.96
@@ -55,6 +57,7 @@ def class_timestamps(class_predictions, shutdown, combine):
     score_begin = 0
     score_end = 0
     
+    # TODO TODO does not support top ranked
     predictions = list(prediction_scores.keys())
     predictions_len = len(predictions)
     
@@ -81,7 +84,11 @@ def class_timestamps(class_predictions, shutdown, combine):
   return results
 
 
-def identification_confidence_score(class_predictions, prediction, score, options):
+def identification_confidence_score(class_predictions, options, prediction_score=None):
+  if not prediction_score: return
+  
+  prediction, score = prediction_score
+  
   calibration = options.calibration
   confidence_score = options.confidence_score
   combine_all = options.combine_all
@@ -98,25 +105,48 @@ def identification_confidence_score(class_predictions, prediction, score, option
           prediction_scores.get(prediction, calibrated_score), calibrated_score)
 
 
-def identification_top_ranked(prediction_scores, prediction, score, options):
-  raise NotImplementedError # TODO
+def identification_top_ranked(top_results, options, prediction_score=None):
+  global _stack
   
-  calibration = options.calibration
-  top_ranked = options.top_ranked
+  classes = options.classes
   combine = options.combine
-  combine_all = options.combine_all
+  combine_all = options.combine_all # TODO not implemented yet
   
-  # combine all should wait until the very end to combine
+  # TODO: combine all should wait until the very end to combine
   # output timestamps only controls whether timestamps are printed
-  score = np.multiply(score, calibration)
+  top = 0
+  scores = []
   
-  if prediction % combine:
-    scores = dict_peek(prediction_scores)
-  else:
-    scores = prediction_scores.setdefault(prediction, score)
-    if scores is score: return
+  if top_results:
+    top, scores = yamosse_utils.dict_peekitem(top_results)
   
-  np.concatenate((scores, score), out=scores)
+  score = None
+  default = score
+  
+  # if we have a new prediction/score
+  # round down predictions to nearest "combine" range
+  # we also only take the scores we specifically care about (saves memory)
+  # we will be able to get them back later by indexing into the classes array
+  if prediction_score:
+    prediction, score = prediction_score
+    
+    prediction = prediction // combine * combine
+    score = [score.take(classes) * options.calibration]
+    default = top_results.setdefault(prediction, score)
+  
+  # don't get top ranked classes or add to scores if scores is empty
+  if not scores: return
+  
+  # default will be equal to score if setdefault inserted a new dictionary item
+  # this indicates that scores contains a previous item
+  # that we are now ready to find the top scores in
+  # here, we use "fancy indexing" in order to get the list of top ranked classes
+  if default is score:
+    class_indices = _stack(scores).mean(axis=0).argsort()[::-1][:options.top_ranked]
+    top_results[top] = classes[class_indices].tolist()
+    return
+  
+  default += score
 
 
 def tfhub_enabled():
@@ -141,6 +171,7 @@ def initializer(worker, receiver, sender, shutdown, options,
   model_yamnet_class_names, tfhub_enabled):
   global _shutdown
   global _options
+  global _stack
   
   global _sample_rate
   global _patch_window_seconds
@@ -149,6 +180,8 @@ def initializer(worker, receiver, sender, shutdown, options,
   global _yamnet
   
   global _tfhub_enabled
+  
+  BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
   
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
@@ -174,6 +207,7 @@ def initializer(worker, receiver, sender, shutdown, options,
     from tensorflow import keras
     sys.modules['tf_keras'] = keras
   
+  import numpy as np
   import tensorflow as tf
   import psutil
   
@@ -267,11 +301,45 @@ def initializer(worker, receiver, sender, shutdown, options,
     assert weights, 'weights must not be empty'
     yamnet.load_weights(weights)
   
+  # create a numpy array of this so it can be used with fancy indexing
+  classes = np.array(options.classes)
+  
+  # cast calibration from percentages to floats and ensure it is long enough
+  calibration = np.divide(options.calibration, 100.0)
+  
+  calibration = np.concatenate((calibration,
+    np.ones(len(model_yamnet_class_names) - calibration.size)))
+  
+  # make background noise volume logarithmic if requested
+  background_noise_volume = options.background_noise_volume
+  
+  if not isinstance(background_noise_volume, float):
+    background_noise_volume /= 100.0
+    
+    if not options.background_noise_volume_loglinear:
+      background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
+  
+  # identification options
   if options.identification == IDENTIFICATION_CONFIDENCE_SCORE:
     options.identification = identification_confidence_score
   elif options.identification == IDENTIFICATION_TOP_RANKED:
-    options.identification = identification_top_ranked
+    calibration = np.take(calibration, classes)
+    
     options.combine += 1
+    options.identification = identification_top_ranked
+    
+    _stack = np.stack
+  
+  # cast confidence score from percentage to float
+  confidence_score = options.confidence_score
+  
+  if not isinstance(confidence_score, float):
+    confidence_score /= 100.0
+  
+  options.classes = classes
+  options.calibration = calibration
+  options.background_noise_volume = background_noise_volume
+  options.confidence_score = confidence_score
   
   _options = options
   _yamnet = yamnet
@@ -358,7 +426,13 @@ def worker(file_name):
       
       # Predict YAMNet classes.
       for score in yamnet(waveform)[0]:
-        identification(results, int(seconds), score, options)
+        identification(results, options, (int(seconds), np.array(score)))
         seconds += patch_hop_seconds
   
-  return class_timestamps(results, shutdown, combine)
+  identification(results, options)
+  
+  # TODO TODO: this try block shouldn't be here, it is just temporary
+  try: return class_timestamps(results, shutdown, combine)
+  except:
+    print(results)
+    raise

@@ -188,29 +188,3 @@ class Options:
   def export_preset(self, file_name):
     with open(file_name, 'w') as f:
       json.dump(vars(self), f, indent=True)
-  
-  def initarg(self, input_, model_yamnet_class_names):
-    BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
-    
-    self.input = input_
-    
-    # must be copied to not interfere with variables
-    calibration = self.calibration.copy()
-    calibration_len = len(calibration)
-    
-    for c in range(calibration_len):
-      calibration[c] /= 100.0
-    
-    for c in range(calibration_len, len(model_yamnet_class_names)):
-      calibration.insert(c, 1.0)
-    
-    self.calibration = calibration
-    
-    if not isinstance(self.background_noise_volume, float):
-      self.background_noise_volume /= 100.0
-      
-      if not self.background_noise_volume_loglinear:
-        self.background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
-    
-    if not isinstance(self.confidence_score, float):
-      self.confidence_score /= 100.0

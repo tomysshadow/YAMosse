@@ -6,8 +6,8 @@ def latin1_unescape(value):
   return str(value).encode('latin1').decode('unicode_escape')
 
 
-def dict_peek(d, *args, **kwargs):
-  return next(reversed(d.values()), *args, **kwargs)
+def dict_peekitem(d, *args, **kwargs):
+  return next(reversed(d.items()), *args, **kwargs)
 
 
 def dict_sorted(d, *args, **kwargs):

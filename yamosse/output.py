@@ -120,8 +120,8 @@ def output(file_name, *args, **kwargs):
       
       # when we are intended to combine all, the timestamp values are empty
       # otherwise, every value will be non-empty
-      class_timestamps = yamosse_utils.dict_peek(results)
-      combine_all = not yamosse_utils.dict_peek(class_timestamps, None)
+      class_timestamps = yamosse_utils.dict_peekitem(results)[1]
+      combine_all = not yamosse_utils.dict_peekitem(class_timestamps, None)[1]
       results = self._sort(results)
       
       for file_name, class_timestamps in results.items():
