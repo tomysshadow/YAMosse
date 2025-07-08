@@ -33,15 +33,15 @@ PRESET_FILETYPES = (
 PRESET_INITIALDIR = 'My Presets'
 PRESET_INITIALFILE = 'preset.json'
 
+MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
+MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
+
 MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
 MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
 
 MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would you like to ',
   'download the standard YAMNet weights file now from Google Cloud Storage? If you click No, the ',
   'YAMScan will be cancelled.'))
-
-MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
-MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 
 MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 
@@ -79,6 +79,44 @@ def yamosse(**kwargs):
   except: options = yamosse_options.Options()
   
   model_yamnet_class_names = yamosse_worker.class_names()
+  
+  def import_preset(file_name=''):
+    nonlocal options
+    
+    if not file_name:
+      assert window, 'file_name must not be empty if there is no window'
+      
+      file_name = gui.filedialog.askopenfilename(parent=window, filetypes=PRESET_FILETYPES,
+        initialdir=PRESET_INITIALDIR)
+      
+      if not file_name: return
+    
+    try:
+      options = yamosse_options.Options.import_preset(file_name)
+    except yamosse_options.Options.VersionError:
+      subsystem.show_warning(MESSAGE_IMPORT_PRESET_VERSION)
+      return
+    except (KeyError, TypeError):
+      subsystem.show_warning(MESSAGE_IMPORT_PRESET_INVALID)
+      return
+    
+    subsystem.variables_from_object(options)
+    subsystem.quit()
+  
+  def export_preset(file_name=''):
+    nonlocal options
+    
+    if not file_name:
+      assert window, 'file_name must not be empty if there is no window'
+      
+      subsystem.variables_to_object(options)
+      
+      file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
+        initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
+      
+      if not file_name: return
+    
+    options.export_preset(file_name)
   
   def yamscan(output_file_name=''):
     nonlocal options
@@ -151,44 +189,6 @@ def yamosse(**kwargs):
       options
     )
   
-  def import_preset(file_name=''):
-    nonlocal options
-    
-    if not file_name:
-      assert window, 'file_name must not be empty if there is no window'
-      
-      file_name = gui.filedialog.askopenfilename(parent=window, filetypes=PRESET_FILETYPES,
-        initialdir=PRESET_INITIALDIR)
-      
-      if not file_name: return
-    
-    try:
-      options = yamosse_options.Options.import_preset(file_name)
-    except yamosse_options.Options.VersionError:
-      subsystem.show_warning(MESSAGE_IMPORT_PRESET_VERSION)
-      return
-    except (KeyError, TypeError):
-      subsystem.show_warning(MESSAGE_IMPORT_PRESET_INVALID)
-      return
-    
-    subsystem.variables_from_object(options)
-    subsystem.quit()
-  
-  def export_preset(file_name=''):
-    nonlocal options
-    
-    if not file_name:
-      assert window, 'file_name must not be empty if there is no window'
-      
-      subsystem.variables_to_object(options)
-      
-      file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
-        initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
-      
-      if not file_name: return
-    
-    options.export_preset(file_name)
-  
   def restore_defaults():
     if not subsystem.ask_yes_no(
       MESSAGE_ASK_RESTORE_DEFAULTS,
@@ -212,9 +212,9 @@ def yamosse(**kwargs):
         model_yamnet_class_names,
         WEIGHTS_FILETYPES,
         yamosse_worker.tfhub_enabled(),
-        yamscan,
         import_preset,
         export_preset,
+        yamscan,
         restore_defaults
       )[0]
     else:

@@ -8,7 +8,7 @@ import yamosse.worker as yamosse_worker
 
 def help_():
   print('Usage: python -m yamosse [-o key value ',
-    '-y output_file_name -ip import_preset_file_name -ep export_preset_file_name -rd]')
+    '-ip import_preset_file_name -ep export_preset_file_name -y output_file_name -rd]')
 
 
 def main(argc, argv):
