@@ -47,7 +47,7 @@ def class_timestamps(class_predictions, shutdown, combine):
   results = {}
   
   for class_, prediction_scores in class_predictions.items():
-    if _shutdown.is_set(): return None
+    if shutdown.is_set(): return None
     
     timestamp_scores = {}
     
