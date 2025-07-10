@@ -4,6 +4,7 @@ from os import path
 from shlex import quote
 
 import yamosse.utils as yamosse_utils
+import yamosse.worker as yamosse_worker
 
 NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
@@ -44,7 +45,7 @@ def key_class(item):
 
 def output(file_name, *args, **kwargs):
   class Output(ABC):
-    def __init__(self, file_name, model_yamnet_class_names, subsystem=None):
+    def __init__(self, file_name, identification, model_yamnet_class_names, subsystem=None):
       if subsystem: self.seconds = time()
       self.subsystem = subsystem
       
@@ -53,7 +54,9 @@ def output(file_name, *args, **kwargs):
       self._item_delimiter = DEFAULT_ITEM_DELIMITER
       self._output_confidence_scores = False
       
+      self.identification = identification
       self.model_yamnet_class_names = model_yamnet_class_names
+      
       self.file = open(file_name, 'w')
     
     def __enter__(self):
@@ -115,11 +118,43 @@ def output(file_name, *args, **kwargs):
       # print results
       self._print_section('Results')
       
-      model_yamnet_class_names = self.model_yamnet_class_names
-      file = self.file
+      identification = self.identification
       
       # when we are intended to combine all, the timestamp values are empty
       # otherwise, every value will be non-empty
+      if identification == yamosse_worker.IDENTIFICATION_CONFIDENCE_SCORE:
+        identification = self._results_confidence_score
+      elif identification == yamosse_worker.IDENTIFICATION_TOP_RANKED:
+        identification = self._results_top_ranked
+      
+      identification(results, self.file, self.model_yamnet_class_names)
+    
+    def errors(self, errors):
+      if not errors: return
+      
+      # print errors
+      self._print_section('Errors')
+      
+      file = self.file
+      
+      # ascii_backslashreplace replaces Unicode characters with ASCII when printing
+      # to prevent crash when run in Command Prompt
+      for file_name, ex in errors.items():
+        self._print_file(file_name)
+        print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), file=file)
+        print('', file=file)
+      
+      print('', file=file)
+    
+    def _print_section(self, name):
+      # name should not contain lines
+      # this is an internal method so we trust the class not to pass in a name with lines here
+      print('# %s' % name, end='\n\n', file=self.file)
+    
+    def _print_file(self, name):
+      print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)
+    
+    def _results_confidence_score(self, results, file, model_yamnet_class_names):
       class_timestamps = yamosse_utils.dict_peekitem(results)[1]
       combine_all = not yamosse_utils.dict_peekitem(class_timestamps, None)[1]
       results = self._sort(results)
@@ -159,30 +194,8 @@ def output(file_name, *args, **kwargs):
       
       print('', file=file)
     
-    def errors(self, errors):
-      if not errors: return
-      
-      # print errors
-      self._print_section('Errors')
-      
-      file = self.file
-      
-      # ascii_backslashreplace replaces Unicode characters with ASCII when printing
-      # to prevent crash when run in Command Prompt
-      for file_name, ex in errors.items():
-        self._print_file(file_name)
-        print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), file=file)
-        print('', file=file)
-      
-      print('', file=file)
-    
-    def _print_section(self, name):
-      # name should not contain lines
-      # this is an internal method so we trust the class not to pass in a name with lines here
-      print('# %s' % name, end='\n\n', file=self.file)
-    
-    def _print_file(self, name):
-      print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)
+    def _results_top_ranked(self, results, file, model_yamnet_class_names):
+      raise NotImplementedError # TODO
   
   ext = path.splitext(file_name)[1]
   

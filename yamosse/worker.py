@@ -7,6 +7,9 @@ import soundfile as sf
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
 
+IDENTIFICATION_CONFIDENCE_SCORE = 0
+IDENTIFICATION_TOP_RANKED = 1
+
 MODEL_YAMNET_DIR = os.path.join('models', 'research', 'audioset', 'yamnet')
 MODEL_YAMNET_CLASS_MAP_CSV = 'yamnet_class_map.csv'
 MODEL_YAMNET_WEIGHTS_URL = 'https://storage.googleapis.com/audioset/yamnet.h5'
@@ -42,9 +45,33 @@ def class_names(class_map_csv=''):
     return list(display_name for (_, _, display_name) in reader)
 
 
-def class_timestamps(class_predictions, shutdown, combine):
+def scan_confidence_score(class_predictions, options, prediction_score=None):
+  if not prediction_score: return
+  
+  prediction, score = prediction_score
+  
+  calibration = options.calibration
+  confidence_score = options.confidence_score
+  combine_all = options.combine_all
+  
+  for class_ in options.classes:
+    calibrated_score = score[class_] * calibration[class_]
+    if calibrated_score < confidence_score: continue
+    
+    prediction_scores = class_predictions.setdefault(class_, {})
+    
+    # avoid unnecessary pickling of all the predictions/scores in the combine all case
+    if combine_all: continue
+    
+    prediction_scores[prediction] = max(
+      prediction_scores.get(prediction, calibrated_score), calibrated_score)
+
+
+def timestamps_confidence_score(class_predictions, options, shutdown):
   # create timestamps from predictions/scores
   results = {}
+  
+  combine = options.combine
   
   for class_, prediction_scores in class_predictions.items():
     if shutdown.is_set(): return None
@@ -57,7 +84,6 @@ def class_timestamps(class_predictions, shutdown, combine):
     score_begin = 0
     score_end = 0
     
-    # TODO TODO does not support top ranked
     predictions = list(prediction_scores.keys())
     predictions_len = len(predictions)
     
@@ -84,28 +110,7 @@ def class_timestamps(class_predictions, shutdown, combine):
   return results
 
 
-def identification_confidence_score(class_predictions, options, prediction_score=None):
-  if not prediction_score: return
-  
-  prediction, score = prediction_score
-  
-  calibration = options.calibration
-  confidence_score = options.confidence_score
-  combine_all = options.combine_all
-  
-  for class_ in options.classes:
-    calibrated_score = score[class_] * calibration[class_]
-    
-    if calibrated_score >= confidence_score:
-      prediction_scores = class_predictions.setdefault(class_, {})
-      
-      # avoid unnecessary pickling of all the predictions/scores in the combine all case
-      if not combine_all:
-        prediction_scores[prediction] = max(
-          prediction_scores.get(prediction, calibrated_score), calibrated_score)
-
-
-def identification_top_ranked(top_results, options, prediction_score=None):
+def scan_top_ranked(top_scores, options, prediction_score=None):
   global _stack
   
   classes = options.classes
@@ -117,8 +122,8 @@ def identification_top_ranked(top_results, options, prediction_score=None):
   top = 0
   scores = []
   
-  if top_results:
-    top, scores = yamosse_utils.dict_peekitem(top_results)
+  if top_scores:
+    top, scores = yamosse_utils.dict_peekitem(top_scores)
   
   score = None
   default = score
@@ -132,7 +137,7 @@ def identification_top_ranked(top_results, options, prediction_score=None):
     
     prediction = prediction // combine * combine
     score = [score.take(classes) * options.calibration]
-    default = top_results.setdefault(prediction, score)
+    default = top_scores.setdefault(prediction, score)
   
   # don't get top ranked classes or add to scores if scores is empty
   if not scores: return
@@ -142,11 +147,16 @@ def identification_top_ranked(top_results, options, prediction_score=None):
   # that we are now ready to find the top scores in
   # here, we use "fancy indexing" in order to get the list of top ranked classes
   if default is score:
-    class_indices = _stack(scores).mean(axis=0).argsort()[::-1][:options.top_ranked]
-    top_results[top] = classes[class_indices].tolist()
+    scores = _stack(scores).mean(axis=0)
+    class_indices = scores.argsort()[::-1][:options.top_ranked]
+    top_scores[top] = dict(zip(classes[class_indices].tolist(), scores[class_indices].tolist()))
     return
   
   default += score
+
+
+def timestamps_top_ranked(top_scores, options, shutdown):
+  return top_scores
 
 
 def tfhub_enabled():
@@ -182,9 +192,6 @@ def initializer(worker, receiver, sender, shutdown, options,
   global _tfhub_enabled
   
   BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
-  
-  IDENTIFICATION_CONFIDENCE_SCORE = 0
-  IDENTIFICATION_TOP_RANKED = 1
   
   # for Linux, child process inherits receiver pipe from parent
   # so the receiver instance must be closed explicitly here
@@ -319,13 +326,10 @@ def initializer(worker, receiver, sender, shutdown, options,
   
   # identification options
   if options.identification == IDENTIFICATION_CONFIDENCE_SCORE:
-    options.identification = identification_confidence_score
+    options.identification = (scan_confidence_score, timestamps_confidence_score)
   elif options.identification == IDENTIFICATION_TOP_RANKED:
     calibration = np.take(calibration, classes)
-    
-    options.combine += 1
-    options.identification = identification_top_ranked
-    
+    options.identification = (scan_top_ranked, timestamps_top_ranked)
     _stack = np.stack
   
   options.classes = classes
@@ -364,7 +368,7 @@ def worker(file_name):
     options = _options
     combine = options.combine
     background_noise_volume = options.background_noise_volume
-    identification = options.identification
+    scan_identification, timestamps_identification = options.identification
     
     sample_rate = _sample_rate
     patch_window_seconds = _patch_window_seconds
@@ -418,13 +422,9 @@ def worker(file_name):
       
       # Predict YAMNet classes.
       for score in yamnet(waveform)[0]:
-        identification(results, options, (int(seconds), np.array(score)))
+        scan_identification(results, options, (int(seconds), np.array(score)))
         seconds += patch_hop_seconds
+    
+    scan_identification(results, options)
   
-  identification(results, options)
-  
-  # TODO TODO: this try block shouldn't be here, it is just temporary
-  try: return class_timestamps(results, shutdown, combine)
-  except:
-    print(results)
-    raise
+  return timestamps_identification(results, options, shutdown)

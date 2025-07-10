@@ -323,6 +323,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
       
       yamosse_output.output(
         output_file_name,
+        options.identification,
         model_yamnet_class_names,
         subsystem=subsystem
       ) as output
