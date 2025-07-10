@@ -135,7 +135,12 @@ def scan_top_ranked(top_scores, options, prediction_score=None):
   if prediction_score:
     prediction, score = prediction_score
     
-    prediction = prediction // combine * combine
+    # when combine is zero, prediction should always be set to its initial value
+    if combine:
+      prediction = prediction // combine * combine
+    elif top_scores:
+      prediction = top
+    
     score = [score.take(classes) * options.calibration]
     default = top_scores.setdefault(prediction, score)
   
