@@ -7,6 +7,7 @@ from datetime import datetime
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
+import yamosse.identification as yamosse_identification
 
 VERSION = 0
 FILE_NAME = 'options.pickle'
@@ -157,3 +158,27 @@ class Options:
   def export_preset(self, file_name):
     with open(file_name, 'w') as f:
       json.dump(vars(self), f, indent=True)
+  
+  def worker(self, np, model_yamnet_class_names):
+    BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
+    
+    # cast calibration from percentages to floats and ensure it is long enough
+    calibration = np.divide(self.calibration, 100.0)
+    
+    calibration = np.concatenate((calibration,
+      np.ones(len(model_yamnet_class_names) - calibration.size)))
+    
+    # make background noise volume logarithmic if requested
+    background_noise_volume = self.background_noise_volume / 100.0
+    
+    if not self.background_noise_volume_loglinear:
+      background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
+    
+    # create a numpy array of this so it can be used with fancy indexing
+    self.classes = np.array(self.classes)
+    self.calibration = calibration
+    self.background_noise_volume = background_noise_volume
+    self.confidence_score /= 100.0
+    
+    # identification options
+    self.identification = yamosse_identification.identification(self.identification)(self, np)

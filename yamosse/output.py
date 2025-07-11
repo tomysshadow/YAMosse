@@ -4,25 +4,13 @@ from os import path
 from shlex import quote
 
 import yamosse.utils as yamosse_utils
-import yamosse.worker as yamosse_worker
+import yamosse.identification as yamosse_identification
 
 NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
 DEFAULT_ITEM_DELIMITER = ' '
 
 _ext_json = '.json'.casefold()
-
-
-def hours_minutes(seconds):
-  TO_HMS = 60
-  
-  m, s = divmod(int(seconds), TO_HMS)
-  h, m = divmod(m, TO_HMS)
-  
-  if h:
-    return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
-  
-  return f'{m:.0f}:{s:02.0f}'
 
 
 def key_number_of_sounds(item):
@@ -39,23 +27,19 @@ def key_file_name(item):
   return item[0]
 
 
-def key_class(item):
-  return item[0]
-
-
 def output(file_name, *args, **kwargs):
   class Output(ABC):
-    def __init__(self, file_name, identification, model_yamnet_class_names, subsystem=None):
+    def __init__(self, file_name, model_yamnet_class_names, identification, subsystem=None):
       if subsystem: self.seconds = time()
       self.subsystem = subsystem
       
-      self._sort_by = key_number_of_sounds
-      self._sort_reverse = False
-      self._item_delimiter = DEFAULT_ITEM_DELIMITER
-      self._output_confidence_scores = False
+      self.sort_by = key_number_of_sounds
+      self.sort_reverse = False
+      self.item_delimiter = DEFAULT_ITEM_DELIMITER
+      self.output_confidence_scores = False
       
-      self.identification = identification
       self.model_yamnet_class_names = model_yamnet_class_names
+      self.identification = yamosse_identification.identification(identification)
       
       self.file = open(file_name, 'w')
     
@@ -72,7 +56,7 @@ def output(file_name, *args, **kwargs):
       
       if subsystem:
         subsystem.show(values={
-          'log': 'Elapsed Time: %s' % hours_minutes(time() - self.seconds)
+          'log': 'Elapsed Time: %s' % self.hours_minutes(time() - self.seconds)
         })
     
     @abstractmethod
@@ -80,17 +64,17 @@ def output(file_name, *args, **kwargs):
       sort_by = options.sort_by
       
       if sort_by == NUMBER_OF_SOUNDS:
-        self._sort_by = key_number_of_sounds
+        self.sort_by = key_number_of_sounds
       elif sort_by == FILE_NAME:
-        self._sort_by = key_file_name
+        self.sort_by = key_file_name
       
       self._sort_reverse = options.sort_reverse
       
       item_delimiter = yamosse_utils.ascii_backslashreplace(
         yamosse_utils.latin1_unescape(options.item_delimiter))
       
-      self._item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
-      self._output_confidence_scores = options.output_confidence_scores
+      self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
+      self.output_confidence_scores = options.output_confidence_scores
       return options.output_options
     
     @abstractmethod
@@ -101,101 +85,68 @@ def output(file_name, *args, **kwargs):
     def errors(self, errors):
       pass
     
+    @staticmethod
+    def hours_minutes(seconds):
+      TO_HMS = 60
+      
+      m, s = divmod(int(seconds), TO_HMS)
+      h, m = divmod(m, TO_HMS)
+      
+      if h:
+        return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
+      
+      return f'{m:.0f}:{s:02.0f}'
+    
     def _sort(self, results):
-      return yamosse_utils.dict_sorted(results, key=self._sort_by, reverse=self._sort_reverse)
+      return yamosse_utils.dict_sorted(results, key=self.sort_by, reverse=self.sort_reverse)
   
   class OutputText(Output):
     def options(self, options):
       if not super().options(options): return False
       
-      self._print_section('Options')
-      options.print(end='\n\n', file=self.file)
+      file = self.file
+      
+      self.print_section('Options')
+      options.print(file=file)
+      
+      print('', file=file)
       return True
     
     def results(self, results):
       if not results: return
       
+      file = self.file
+      
       # print results
-      self._print_section('Results')
+      self.print_section('Results')
+      self.identification.print_results_to_output(self._sort(results), self)
       
-      identification = self.identification
-      
-      # when we are intended to combine all, the timestamp values are empty
-      # otherwise, every value will be non-empty
-      if identification == yamosse_worker.IDENTIFICATION_CONFIDENCE_SCORE:
-        identification = self._results_confidence_score
-      elif identification == yamosse_worker.IDENTIFICATION_TOP_RANKED:
-        identification = self._results_top_ranked
-      
-      identification(results, self.file, self.model_yamnet_class_names)
+      print('', file=file)
     
     def errors(self, errors):
       if not errors: return
       
-      # print errors
-      self._print_section('Errors')
-      
       file = self.file
+      
+      # print errors
+      self.print_section('Errors')
       
       # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
-        self._print_file(file_name)
+        self.print_file(file_name)
         print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), file=file)
         print('', file=file)
       
       print('', file=file)
     
-    def _print_section(self, name):
+    def print_section(self, name):
       # name should not contain lines
       # this is an internal method so we trust the class not to pass in a name with lines here
       print('# %s' % name, end='\n\n', file=self.file)
     
-    def _print_file(self, name):
+    def print_file(self, name):
       print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)
-    
-    def _results_confidence_score(self, results, file, model_yamnet_class_names):
-      class_timestamps = yamosse_utils.dict_peekitem(results)[1]
-      combine_all = not yamosse_utils.dict_peekitem(class_timestamps, None)[1]
-      results = self._sort(results)
-      
-      for file_name, class_timestamps in results.items():
-        self._print_file(file_name)
-        
-        try:
-          if not class_timestamps:
-            print('\t', None, file=file)
-            continue
-          
-          if combine_all:
-            print('\t', self._item_delimiter.join(
-              model_yamnet_class_names[c] for c in class_timestamps.keys()), file=file)
-            
-            continue
-          
-          class_timestamps = yamosse_utils.dict_sorted(class_timestamps, key=key_class)
-          
-          for class_, timestamp_scores in class_timestamps.items():
-            assert timestamp_scores, 'timestamp_scores must not be empty'
-            
-            print('\t', model_yamnet_class_names[class_], end=':\n', file=file)
-            
-            for timestamp, score in timestamp_scores.items():
-              try: hms = ' - '.join(hours_minutes(t) for t in timestamp)
-              except TypeError: hms = hours_minutes(timestamp)
-              
-              if self._output_confidence_scores: hms = f'{hms} ({score:.0%})'
-              
-              timestamp_scores[timestamp] = hms
-            
-            print('\t\t', self._item_delimiter.join(timestamp_scores.values()), file=file)
-        finally:
-          print('', file=file)
-      
-      print('', file=file)
-    
-    def _results_top_ranked(self, results, file, model_yamnet_class_names):
-      raise NotImplementedError # TODO
   
   ext = path.splitext(file_name)[1]
   

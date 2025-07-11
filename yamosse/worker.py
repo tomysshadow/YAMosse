@@ -7,9 +7,6 @@ import soundfile as sf
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
 
-IDENTIFICATION_CONFIDENCE_SCORE = 0
-IDENTIFICATION_TOP_RANKED = 1
-
 MODEL_YAMNET_DIR = os.path.join('models', 'research', 'audioset', 'yamnet')
 MODEL_YAMNET_CLASS_MAP_CSV = 'yamnet_class_map.csv'
 MODEL_YAMNET_WEIGHTS_URL = 'https://storage.googleapis.com/audioset/yamnet.h5'
@@ -45,125 +42,6 @@ def class_names(class_map_csv=''):
     return list(display_name for (_, _, display_name) in reader)
 
 
-def scan_confidence_score(class_predictions, options, prediction_score=None):
-  if not prediction_score: return
-  
-  prediction, score = prediction_score
-  
-  calibration = options.calibration
-  confidence_score = options.confidence_score
-  combine_all = options.combine_all
-  
-  for class_ in options.classes:
-    calibrated_score = score[class_] * calibration[class_]
-    if calibrated_score < confidence_score: continue
-    
-    prediction_scores = class_predictions.setdefault(class_, {})
-    
-    # avoid unnecessary pickling of all the predictions/scores in the combine all case
-    if combine_all: continue
-    
-    prediction_scores[prediction] = max(
-      prediction_scores.get(prediction, calibrated_score), calibrated_score)
-
-
-def timestamps_confidence_score(class_predictions, options, shutdown):
-  # create timestamps from predictions/scores
-  results = {}
-  
-  combine = options.combine
-  
-  for class_, prediction_scores in class_predictions.items():
-    if shutdown.is_set(): return None
-    
-    timestamp_scores = {}
-    
-    begin = 0
-    end = 0
-    
-    score_begin = 0
-    score_end = 0
-    
-    predictions = list(prediction_scores.keys())
-    predictions_len = len(predictions)
-    
-    scores = list(prediction_scores.values())
-    
-    for prediction_end in range(1, predictions_len + 1):
-      end = predictions[score_end] + 1
-      
-      if prediction_end == predictions_len or end < predictions[prediction_end]:
-        begin = predictions[score_begin]
-        
-        # the cast to float here is to convert a potential Tensorflow or Numpy dtype
-        # into a Python native type, because we want to pickle this result into the main process
-        # which does not have those modules loaded
-        timestamp_scores[(begin, end) if combine and begin + combine < end else begin] = float(max(
-          scores[score_begin:score_end + 1]))
-        
-        score_begin = prediction_end
-      
-      score_end = prediction_end
-    
-    results[class_] = timestamp_scores
-  
-  return results
-
-
-def scan_top_ranked(top_scores, options, prediction_score=None):
-  global _stack
-  
-  classes = options.classes
-  combine = options.combine
-  combine_all = options.combine_all # TODO not implemented yet
-  
-  # TODO: combine all should wait until the very end to combine
-  # output timestamps only controls whether timestamps are printed
-  top = 0
-  scores = []
-  
-  if top_scores:
-    top, scores = yamosse_utils.dict_peekitem(top_scores)
-  
-  score = None
-  default = score
-  
-  # if we have a new prediction/score
-  # round down predictions to nearest "combine" range
-  # we also only take the scores we specifically care about (saves memory)
-  # we will be able to get them back later by indexing into the classes array
-  if prediction_score:
-    prediction, score = prediction_score
-    
-    # when combine is zero, prediction should always be set to its initial value
-    if combine:
-      prediction = prediction // combine * combine
-    elif top_scores:
-      prediction = top
-    
-    score = [score.take(classes) * options.calibration]
-    default = top_scores.setdefault(prediction, score)
-  
-  # don't get top ranked classes or add to scores if scores is empty
-  if not scores: return
-  
-  # default will be equal to score if setdefault inserted a new dictionary item
-  # this indicates that scores contains a previous item
-  # that we are now ready to find the top scores in
-  # here, we use "fancy indexing" in order to get the list of top ranked classes
-  if default is score:
-    scores = _stack(scores).mean(axis=0)
-    class_indices = scores.argsort()[::-1][:options.top_ranked]
-    top_scores[top] = dict(zip(classes[class_indices].tolist(), scores[class_indices].tolist()))
-    return
-  
-  default += score
-
-
-def timestamps_top_ranked(top_scores, options, shutdown):
-  return top_scores
-
-
 def tfhub_enabled():
   return _tfhub_enabled
 
@@ -196,8 +74,6 @@ def initializer(worker, receiver, sender, shutdown, options,
   
   global _tfhub_enabled
   
-  BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
-  
   # for Linux, child process inherits receiver pipe from parent
   # so the receiver instance must be closed explicitly here
   # as for the sender... supposedly it would get garbage collected
@@ -224,6 +100,8 @@ def initializer(worker, receiver, sender, shutdown, options,
   import numpy as np
   import tensorflow as tf
   import psutil
+  
+  options.worker(np, model_yamnet_class_names)
   
   if options.high_priority:
     current_process = psutil.Process(os.getpid())
@@ -314,34 +192,6 @@ def initializer(worker, receiver, sender, shutdown, options,
     
     yamnet.load_weights(weights)
   
-  # create a numpy array of this so it can be used with fancy indexing
-  classes = np.array(options.classes)
-  
-  # cast calibration from percentages to floats and ensure it is long enough
-  calibration = np.divide(options.calibration, 100.0)
-  
-  calibration = np.concatenate((calibration,
-    np.ones(len(model_yamnet_class_names) - calibration.size)))
-  
-  # make background noise volume logarithmic if requested
-  background_noise_volume = options.background_noise_volume / 100.0
-  
-  if not options.background_noise_volume_loglinear:
-    background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
-  
-  # identification options
-  if options.identification == IDENTIFICATION_CONFIDENCE_SCORE:
-    options.identification = (scan_confidence_score, timestamps_confidence_score)
-  elif options.identification == IDENTIFICATION_TOP_RANKED:
-    calibration = np.take(calibration, classes)
-    options.identification = (scan_top_ranked, timestamps_top_ranked)
-    _stack = np.stack
-  
-  options.classes = classes
-  options.calibration = calibration
-  options.background_noise_volume = background_noise_volume
-  options.confidence_score /= 100.0
-  
   _options = options
   _yamnet = yamnet
 
@@ -367,13 +217,13 @@ def worker(file_name):
     import resampy
     
     # Decode the WAV file.
-    results = {}
+    identified = {}
     seconds = 0.0
     
     options = _options
+    identification = options.identification
     combine = options.combine
     background_noise_volume = options.background_noise_volume
-    scan_identification, timestamps_identification = options.identification
     
     sample_rate = _sample_rate
     patch_window_seconds = _patch_window_seconds
@@ -427,9 +277,9 @@ def worker(file_name):
       
       # Predict YAMNet classes.
       for score in yamnet(waveform)[0]:
-        scan_identification(results, options, (int(seconds), np.array(score)))
+        identification.predict(identified, (int(seconds), np.array(score)))
         seconds += patch_hop_seconds
     
-    scan_identification(results, options)
+    identification.predict(identified)
   
-  return timestamps_identification(results, options, shutdown)
+  return identification.timestamps(identified, shutdown)
