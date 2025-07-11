@@ -279,7 +279,5 @@ def worker(file_name):
       for score in yamnet(waveform)[0]:
         identification.predict(identified, (int(seconds), np.array(score)))
         seconds += patch_hop_seconds
-    
-    identification.predict(identified)
   
   return identification.timestamps(identified, shutdown)

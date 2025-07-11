@@ -196,6 +196,7 @@ def identification(option):
       default += score
     
     def timestamps(self, top_scores, shutdown):
+      self.predict(top_scores)
       return top_scores
     
     @classmethod
