@@ -670,11 +670,11 @@ def set_modal_window(window, delete_window=release_modal_window):
 
 
 def location_center_window(parent, size):
-  left, top = size
+  width, height = size
   
   return (
-    parent.winfo_x() + (parent.winfo_width() / 2) - (left / 2),
-    parent.winfo_y() + (parent.winfo_height() / 2) - (top / 2)
+    parent.winfo_x() + (parent.winfo_width() / 2) - (width / 2),
+    parent.winfo_y() + (parent.winfo_height() / 2) - (height / 2)
   )
 
 
