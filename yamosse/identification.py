@@ -139,6 +139,11 @@ def identification(option):
           print('', file=file)
   
   class IdentificationTopRanked(Identification):
+    def __init__(self, options, np):
+      super().__init__(options, np)
+      
+      self.calibration = np.take(options.calibration, options.classes)
+    
     def predict(self, top_scores, prediction_score=None):
       options = self.options
       classes = options.classes
@@ -169,7 +174,7 @@ def identification(option):
         elif top_scores:
           prediction = top
         
-        score = [score.take(classes) * options.calibration]
+        score = [score.take(classes) * self.calibration]
         default = top_scores.setdefault(prediction, score)
       
       # don't get top ranked classes or add to scores if scores is empty
