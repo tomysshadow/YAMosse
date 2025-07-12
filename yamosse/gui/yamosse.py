@@ -499,11 +499,11 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
 def make_options(notebook, variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset):
-  general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, relief=tk.RAISED)
+  general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, style='Borderless.TNotebook > .TFrame')
   make_general(general_frame, variables, input_filetypes, class_names,
     import_preset, export_preset)
   
-  advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, relief=tk.RAISED)
+  advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, style='Borderless.TNotebook > .TFrame')
   make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)

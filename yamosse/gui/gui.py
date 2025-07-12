@@ -725,7 +725,9 @@ def make_window(window, make_frame, *args, **kwargs):
   style = ttk.Style(window)
   style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
   style.configure('Title.TLabel', font=('Trebuchet MS', 18))
+  
   style.layout('Borderless.TNotebook', [])
+  style.configure('Borderless.TNotebook > .TFrame', relief=tk.RAISED)
   
   frame = ttk.Frame(window)
   frame.grid(row=1, column=1, sticky=tk.NSEW)
