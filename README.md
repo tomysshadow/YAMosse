@@ -6,8 +6,8 @@ Get timestamps for sound files by harnessing the power of pristine quality yams.
 
 Special thanks to nosamu for additional design advice.
 
-YAMosse uses the YAMNet model by Tensorflow.
+YAMosse uses the [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model by Tensorflow.
 
-Application Icons by www.aha-soft.com.
+Application Icons by [www.aha-soft.com.](https://www.aha-soft.com)
 
-Microphone icon from Noto Color Emoji by Google.
+Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) by Google.
