@@ -7,9 +7,6 @@ from . import gui as gui
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
-ARROW_UP = '\u2191'
-ARROW_DOWN = '\u2193'
-
 TIP_WEIGHTS = ''.join(('The weights file for the YAMNet model. This option will be disabled if ',
   'you are using the Tensorflow Hub release of YAMNet.'))
 
@@ -285,10 +282,14 @@ def make_sort(frame, variables):
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
   
-  def show_sort_reverse_checkbutton():
-    sort_reverse_checkbutton['text'] = ARROW_UP if sort_reverse_variable.get() else ARROW_DOWN
+  root_images = gui.get_root_images()
+  up = root_images['Photo']['up.gif']
+  down = root_images['Photo']['down.gif']
   
-  sort_reverse_checkbutton = ttk.Checkbutton(frame, text=ARROW_DOWN, width=1,
+  def show_sort_reverse_checkbutton():
+    sort_reverse_checkbutton['image'] = up if sort_reverse_variable.get() else down
+  
+  sort_reverse_checkbutton = ttk.Checkbutton(frame, width=1,
     variable=variables['sort_reverse'], command=show_sort_reverse_checkbutton)
   
   sort_reverse_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
