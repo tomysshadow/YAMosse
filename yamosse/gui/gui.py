@@ -550,7 +550,7 @@ def make_filedialog(frame, name='', textvariable=None,
     def drop_enter(e):
       data = e.widget.tk.splitlist(e.data)
       if not data: return tkinterdnd2.REFUSE_DROP
-      if isinstance(data, str): data = (str(data),)
+      if isinstance(data, str): data = (data,)
       
       multiple = len(data) > 1
       
