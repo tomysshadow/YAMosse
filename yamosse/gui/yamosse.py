@@ -4,6 +4,8 @@ import webbrowser
 
 from . import gui as gui
 
+import yamosse.output as yamosse_output
+
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
@@ -290,7 +292,7 @@ def make_sort(frame, variables):
     sort_reverse_checkbutton['image'] = up if sort_reverse_variable.get() else down
   
   sort_reverse_checkbutton = ttk.Checkbutton(frame, width=1,
-    variable=variables['sort_reverse'], command=show_sort_reverse_checkbutton)
+    variable=sort_reverse_variable, command=show_sort_reverse_checkbutton)
   
   sort_reverse_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
   show_sort_reverse_checkbutton()
@@ -317,7 +319,7 @@ def make_output_file_options(frame, variables):
   
   def invalid_item_delimiter(W, v):
     # item delimiter should be a space at minimum
-    item_delimiter_variable.set(' ')
+    item_delimiter_variable.set(yamosse_output.DEFAULT_ITEM_DELIMITER)
     
     # editing a variable from within an invalidcommand normally resets validate to none
     # this ensures it remains set to focusout
