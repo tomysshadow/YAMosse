@@ -121,7 +121,7 @@ def make_confidence_score(frame, variables):
   radiobuttons = gui.make_widgets(radiobuttons_frame, ttk.Radiobutton,
     ('Min', 'Max'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
   
-  gui.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
+  gui.link_radiobuttons(dict.fromkeys(radiobuttons),
     variables['confidence_score_minmax'])
 
 
@@ -265,7 +265,7 @@ def make_background_noise_volume(frame, variables):
   radiobuttons = gui.make_widgets(radiobuttons_frame, ttk.Radiobutton,
     ('Log', 'Linear'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
   
-  gui.link_radiobuttons(zip(radiobuttons, (None,) * len(radiobuttons)),
+  gui.link_radiobuttons(dict.fromkeys(radiobuttons),
     variables['background_noise_volume_loglinear'])
   
   return radiobuttons
