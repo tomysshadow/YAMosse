@@ -145,7 +145,7 @@ def make_widgets(frame, make_widget, names,
   return widgets
 
 
-def traversal_button():
+def _traversal_button():
   def sequence(button, underline):
     assert underline >= 0, 'underline must be greater than or equal to zero'
     return '<Alt-%c>' % str(button['text'])[underline].lower()
@@ -167,7 +167,7 @@ def traversal_button():
   
   return enable, disable
 
-enable_traversal_button, disable_traversal_button = traversal_button()
+enable_traversal_button, disable_traversal_button = _traversal_button()
 
 
 def link_radiobuttons(radiobuttons, variable):
@@ -398,7 +398,7 @@ def make_listbox(frame, name='', items=None,
     ), (buttons_frame, buttons)
 
 
-def progressbar():
+def _progressbar():
   def is_determinate(progressbar):
     return str(progressbar['mode']) == 'determinate'
   
@@ -481,7 +481,7 @@ def progressbar():
   
   return configure, make
 
-configure_progressbar, make_progressbar = progressbar()
+configure_progressbar, make_progressbar = _progressbar()
 
 
 def make_filedialog(frame, name='', textvariable=None,
