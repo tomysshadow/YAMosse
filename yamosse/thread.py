@@ -53,7 +53,7 @@ def input_file_names(input_, recursive=True):
   
   if not isinstance(input_, str):
     if len(input_) > 1: return set(input_)
-    input_ = input_[0]
+    input_, = input_
   
   path = real_relpath(input_)
   file_names = set()
