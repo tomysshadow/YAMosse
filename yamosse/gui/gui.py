@@ -355,7 +355,7 @@ def make_listbox(frame, name='', items=None,
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   buttons = []
   
-  if selectmode == tk.MULTIPLE:
+  if selectmode == tk.MULTIPLE or selectmode == tk.EXTENDED:
     def select_all():
       listbox.selection_set(0, tk.END)
       listbox.event_generate('<<ListboxSelect>>')
