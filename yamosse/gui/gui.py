@@ -126,7 +126,7 @@ def make_widgets(frame, make_widget, names,
   
   # first widget
   widget = make_widget(frame, text=names[0], **kwargs)
-  widget.grid({x: cell, y: 0, pad: (0, padding)}, sticky=sticky)
+  widget.grid(sticky=sticky, **{x: cell, y: 0, pad: (0, padding)})
   widgets.append(widget)
   
   # exit if the first widget is the last widget
@@ -135,12 +135,12 @@ def make_widgets(frame, make_widget, names,
   # middle widgets
   for middle in range(last - 1):
     widget = make_widget(frame, text=names[middle], **kwargs)
-    widget.grid({x: cell, y: middle, pad: padding}, sticky=sticky)
+    widget.grid(sticky=sticky, **{x: cell, y: middle, pad: padding})
     widgets.append(widget)
   
   # last widget
   widget = make_widget(frame, text=names[last], **kwargs)
-  widget.grid({x: cell, y: last, pad: (padding, 0)}, sticky=sticky)
+  widget.grid(sticky=sticky, **{x: cell, y: last, pad: (padding, 0)})
   widgets.append(widget)
   return widgets
 
