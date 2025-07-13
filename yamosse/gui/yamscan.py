@@ -101,7 +101,7 @@ def show_yamscan(widgets, values=None):
     value = values.get('done')
     
     if not value is None:
-      assert value in DONE_VALUES, 'value must be in %r' % (DONE_VALUES,)
+      if not value in DONE_VALUES: raise ValueError('value must be in %r' % (DONE_VALUES,))
       
       open_output_file_button, done_button = footer_yamscan_widgets
       

@@ -49,7 +49,7 @@ def real_relpath(path, start=os.curdir):
 
 
 def input_file_names(input_, recursive=True):
-  assert input_, 'input must not be empty'
+  if not input_: raise ValueError('input must not be empty')
   
   if not isinstance(input_, str):
     try: input_, = input_

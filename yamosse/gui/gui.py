@@ -105,7 +105,7 @@ def make_widgets(frame, make_widget, names,
   orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING, **kwargs):
   ORIENTS = (tk.HORIZONTAL, tk.VERTICAL)
   
-  assert orient in ORIENTS, 'orient must be in %r' % (ORIENTS,)
+  if not orient in ORIENTS: raise ValueError('orient must be in %r' % (ORIENTS,))
   
   widgets = []
   if not names: return widgets
@@ -524,7 +524,7 @@ def make_filedialog(frame, name='', textvariable=None,
   for a in range(len(asks)):
     ask = asks[a]
     
-    assert ask in ASKS_ALL, 'ask must be in %r' % (ASKS_ALL,)
+    if not ask in ASKS_ALL: raise ValueError('ask must be in %r' % (ASKS_ALL,))
     
     text = 'Browse...'
     
