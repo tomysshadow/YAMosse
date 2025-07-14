@@ -162,7 +162,7 @@ class Options:
   def worker(self, np, model_yamnet_class_names):
     BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
     
-    def single_shot(self, np, model_yamnet_class_names):
+    def single_shot(np, model_yamnet_class_names):
       raise RuntimeError('worker is single shot')
     
     self.worker = single_shot
