@@ -109,13 +109,12 @@ def yamosse(**kwargs):
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
       
-      subsystem.variables_to_object(options)
-      
       file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
         initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
       
       if not file_name: return
     
+    subsystem.variables_to_object(options)
     options.export_preset(file_name)
   
   def yamscan(output_file_name=''):
