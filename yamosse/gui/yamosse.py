@@ -516,15 +516,15 @@ def make_options(notebook, variables,
 def make_footer(frame, yamscan, restore_defaults):
   frame.columnconfigure(1, weight=1)
   
-  def open_online_help_():
+  def open_online_help():
     webbrowser.open(URL_ONLINE_HELP)
   
   open_online_help_button = ttk.Button(frame, text='Open Online Help',
     image=gui.get_root_images()['Photo']['help symbol.gif'], compound=tk.LEFT,
-    command=open_online_help_)
+    command=open_online_help)
   
   open_online_help_button.grid(row=0, column=0, sticky=tk.W)
-  open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help_())
+  open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help())
   
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)
