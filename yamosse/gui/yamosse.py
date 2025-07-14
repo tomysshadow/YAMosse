@@ -543,9 +543,8 @@ def make_footer(frame, yamscan, restore_defaults):
 def make_yamosse(frame, title, options_variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset, yamscan, restore_defaults):
-  # resizing technically works but looks kind of jank, so just disable for now
   RESIZABLE = True
-  SIZE = (600, 560)
+  SIZE = (600, 580)
   
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
