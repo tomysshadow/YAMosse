@@ -39,7 +39,7 @@ def class_names(class_map_csv=''):
   with open(class_map_csv) as csv_file:
     reader = csv.reader(csv_file)
     next(reader) # skip header
-    return list(display_name for (_, _, display_name) in reader)
+    return [display_name for (_, _, display_name) in reader]
 
 
 def tfhub_enabled():
