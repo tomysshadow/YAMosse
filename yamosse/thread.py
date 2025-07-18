@@ -126,6 +126,9 @@ def files(input_, model_yamnet_class_names, subsystem, options):
   # just waiting on one large file to finish in one worker
   # however, if many files were queued, finding the file size for all of them
   # may itself take a while, so we do it in batches and simultaneously submit the work
+  NEXT_SUBMITTING = -1
+  NEXT_SUBMITTED = -2
+  
   BATCH_SIZE = 2 ** 10 # must be a power of two
   BATCH_MASK = BATCH_SIZE - 1
   
@@ -139,7 +142,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
   file_names_pos = 0
   file_names_len = len(file_names)
   
-  next_ = -1
+  next_ = NEXT_SUBMITTING
   batch = 0
   
   worker = Value('i', 0)
@@ -186,8 +189,8 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         
         log = ''
         
-        if next_ == -1:
-          next_ = -2
+        if next_ == NEXT_SUBMITTING:
+          next_ = NEXT_SUBMITTED
           batch += 1
           
           log = '\nBatch #%d\n' % batch
@@ -273,7 +276,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           # (so that new incoming logs won't have the side effect of keeping the window alive)
           clear_done(receiver.recv() if receiver.poll(timeout=1) else None)
         
-        next_ = -1
+        next_ = NEXT_SUBMITTING
     finally:
       # process pool executor must be shut down first
       # so that no exception can prevent it from getting shut down
