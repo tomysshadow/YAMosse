@@ -276,16 +276,17 @@ def worker(file_name):
       
       previous_step = 0
       worker_step += current_worker_step
-      progress = 0.0
+      current_step = 0
       
       with step.get_lock():
         previous_step = step.value
         step.value += current_worker_step
-        progress = step.value / steps
+        current_step = step.value
       
-      if progress >= 1.0: return
+      current_progress = current_step / steps
+      if current_progress >= 1.0: return
       
-      progress = int(progress * PROGRESSBAR_MAXIMUM)
+      progress = int(current_progress * PROGRESSBAR_MAXIMUM)
       if progress <= int(previous_step / steps * PROGRESSBAR_MAXIMUM): return
       
       sender.send({
