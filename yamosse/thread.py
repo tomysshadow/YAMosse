@@ -184,6 +184,14 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         nonlocal next_
         nonlocal batch
         
+        log = ''
+        
+        if next_ == -1:
+          next_ = -2
+          batch += 1
+          
+          log = '\nBatch #%d\n' % batch
+        
         # just copy it out first so we aren't holding the lock
         # during all the nonsense we have to do below
         with done_lock:
@@ -194,20 +202,15 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           try: results[file_name] = future.result()
           except sf.LibsndfileError as ex: errors[file_name] = ex
           
-          log = ''
-          
-          if next_ == -1:
-            batch += 1
-            log = '\nBatch #%d\n' % batch
-          
           file_names_pos += 1
           next_ = file_names_pos & BATCH_MASK
           
-          progress = file_names_pos / file_names_len
-          log = f'{log}{progress:.4%} complete ({file_names_pos}/{file_names_len}: "{file_name}")'
-          
+          log = f'{log}File {file_names_pos}/{file_names_len}: "{file_name}")\n'
+        
+        log = log.rstrip()
+        
+        if log:
           subsystem.show(values={
-            'progressbar': progress * yamosse_worker.PROGRESSBAR_MAXIMUM,
             'log': log
           })
         

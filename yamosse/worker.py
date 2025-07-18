@@ -268,25 +268,29 @@ def worker(file_name):
     float32 = np.float32
     float32_int16_max = float32(int16_tf.max)
     
-    def step_progress(worker_steps=1.0):
+    def step_progress(current_worker_step=1.0):
       nonlocal worker_step
       
-      worker_steps = int(worker_steps * PROGRESSBAR_MAXIMUM) - worker_step
-      if worker_steps <= 0: return
+      current_worker_step = int(current_worker_step * PROGRESSBAR_MAXIMUM) - worker_step
+      if current_worker_step <= 0: return
       
+      worker_step += current_worker_step
+      progress_before = 0.0
       progress = 0.0
       
       with step.get_lock():
-        step.value += worker_steps
+        progress_before = step.value / steps
+        step.value += current_worker_step
         progress = step.value / steps
       
       if progress >= 1.0: return
+      progress = int(progress * PROGRESSBAR_MAXIMUM)
       
-      sender.send({
-        'progressbar': progress * PROGRESSBAR_MAXIMUM
-      })
-      
-      worker_step += worker_steps
+      if progress > int(progress_before * PROGRESSBAR_MAXIMUM):
+        sender.send({
+          'progressbar': progress,
+          'log': '%d%% complete' % progress
+        })
     
     # reading the entire sound file at once can cause an out of memory error
     # so instead we read it in blocks that match YAMNet's patch size
