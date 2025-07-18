@@ -537,7 +537,7 @@ def configure_widths_treeview(treeview, *args, **kwargs):
   measured_widths = measure_widths_treeview(treeview, *args, **kwargs)
   
   for cid, width in measured_widths.items():
-    treeview.column(cid, width=width, minwidth=width)
+    treeview.column(cid, width=width, minwidth=width, stretch=False)
 
 
 def make_treeview(frame, name='', columns=None, items=None, show=None,

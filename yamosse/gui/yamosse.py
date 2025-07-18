@@ -76,27 +76,16 @@ def make_input(frame, variables, filetypes):
 
 
 def make_classes(frame, variables, class_names):
-  COLUMNS = {
-    'number': {
-      'column': {'stretch': False},
-      'heading': {'text': '#'}
-    },
-    
-    'class_names': {
-      'heading': {'text': 'Class Names'}
-    }
-  }
-  
   treeview_widgets = gui.make_treeview(
     frame,
-    columns=COLUMNS,
+    columns=gui.heading_text_columns(('#', 'Class Names')),
     items=gui.values_items(zip(range(1, len(class_names) + 1), class_names)),
     show='headings',
     selectmode=tk.EXTENDED
   )
   
   treeview = treeview_widgets[1][0]
-  gui.configure_widths_treeview(treeview, {'number': 3})
+  gui.configure_widths_treeview(treeview, {0: 3})
   
   # load and dump the classes variable to and from the treeview
   classes_variable = variables['classes']
