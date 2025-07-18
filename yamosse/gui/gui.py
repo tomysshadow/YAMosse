@@ -71,6 +71,13 @@ PADY_QS = (0, PADDING_Q)
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
+VARIABLE_TYPES = {
+  bool: tk.BooleanVar,
+  int: tk.IntVar,
+  float: tk.DoubleVar,
+  str: tk.StringVar
+}
+
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
@@ -1074,14 +1081,10 @@ def get_variables_from_object(object_):
   variables = {}
   
   for key, value in vars(object_).items():
-    if isinstance(value, bool):
-      variable = tk.BooleanVar()
-    elif isinstance(value, int):
-      variable = tk.IntVar()
-    elif isinstance(value, float):
-      variable = tk.DoubleVar()
-    elif isinstance(value, str):
-      variable = tk.StringVar()
+    for object_type, variable_type in VARIABLE_TYPES.items():
+      if isinstance(value, object_type):
+        variable = variable_type()
+        break
     else:
       variables[key] = value
       continue
@@ -1093,10 +1096,8 @@ def get_variables_from_object(object_):
 
 
 def set_variables_to_object(variables, object_):
-  VARIABLE_TYPES = (tk.BooleanVar, tk.IntVar, tk.DoubleVar, tk.StringVar)
-  
   for key, value in variables.items():
-    if isinstance(value, VARIABLE_TYPES):
+    if isinstance(value, tuple(VARIABLE_TYPES.values())):
       setattr(object_, key, value.get())
       continue
     
