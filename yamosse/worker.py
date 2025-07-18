@@ -274,23 +274,24 @@ def worker(file_name):
       current_worker_step = int(current_worker_step * PROGRESSBAR_MAXIMUM) - worker_step
       if current_worker_step <= 0: return
       
+      previous_step = 0
       worker_step += current_worker_step
-      progress_before = 0.0
       progress = 0.0
       
       with step.get_lock():
-        progress_before = step.value / steps
+        previous_step = step.value
         step.value += current_worker_step
         progress = step.value / steps
       
       if progress >= 1.0: return
-      progress = int(progress * PROGRESSBAR_MAXIMUM)
       
-      if progress > int(progress_before * PROGRESSBAR_MAXIMUM):
-        sender.send({
-          'progressbar': progress,
-          'log': '%d%% complete' % progress
-        })
+      progress = int(progress * PROGRESSBAR_MAXIMUM)
+      if progress <= int(previous_step / steps * PROGRESSBAR_MAXIMUM): return
+      
+      sender.send({
+        'progressbar': progress,
+        'log': '%d%% complete' % progress
+      })
     
     # reading the entire sound file at once can cause an out of memory error
     # so instead we read it in blocks that match YAMNet's patch size
