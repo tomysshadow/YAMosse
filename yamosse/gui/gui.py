@@ -673,10 +673,10 @@ def heading_text_columns(c):
   return columns
 
 
-def values_items(c):
+def values_items(i):
   items = {}
   
-  for cid, values in yamosse_utils.dict_enumerate(c).items():
+  for cid, values in yamosse_utils.dict_enumerate(i).items():
     items[cid] = {'values': values}
   
   return items
