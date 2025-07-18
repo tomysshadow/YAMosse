@@ -93,7 +93,7 @@ def make_classes(frame, variables, class_names):
   if classes_variable: treeview.see(classes_variable[0])
   
   def select_treeview(e):
-    variables['classes'] = list(e.widget.selection())
+    variables['classes'] = [int(s) for s in e.widget.selection()]
   
   treeview.bind('<<TreeviewSelect>>', select_treeview)
   

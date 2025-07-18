@@ -283,8 +283,7 @@ def worker(file_name):
       if progress >= 1.0: return
       
       sender.send({
-        'progressbar': progress * PROGRESSBAR_MAXIMUM,
-        'log': f'{progress:.4%} complete'
+        'progressbar': progress * PROGRESSBAR_MAXIMUM
       })
       
       worker_step += worker_steps
