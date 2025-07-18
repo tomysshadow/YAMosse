@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from tkinter.font import Font
+from math import ceil
 import shlex
 import os
 
@@ -11,6 +13,7 @@ except ImportError:
   tkdnd = None
 
 import yamosse.root as yamosse_root
+import yamosse.utils as yamosse_utils
 import yamosse.progress as yamosse_progress
 
 PADDING = 12
@@ -64,6 +67,10 @@ PADY_QNS = PADDING_Q
 PADY_QN = (PADDING_Q, 0)
 PADY_QS = (0, PADDING_Q)
 
+# these default numbers come from the Tk Treeview documentation
+DEFAULT_TREEVIEW_INDENT = 20
+DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
+
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
@@ -73,6 +80,42 @@ IMAGES_DIR = 'images'
 
 get_root_window = None
 get_root_images = None
+
+
+def fpixels_widget(widget, lengths):
+  return [widget.winfo_fpixels(l) for l in lengths]
+
+
+def padding4_widget(widget, padding):
+  padding = yamosse_utils.try_split(padding)
+  if not padding: return [0.0, 0.0, 0.0, 0.0]
+  
+  # should raise TypeError is padding is just an integer
+  try:
+    # should raise ValueError if too many values to unpack
+    try:
+      left, top, right, bottom = padding
+      return fpixels_widget(widget, (left, top, right, bottom))
+    except ValueError: pass
+    
+    try:
+      left, vertical, right = padding
+      return fpixels_widget(widget, (left, vertical, right, vertical))
+    except ValueError: pass
+    
+    try:
+      horizontal, vertical = padding
+      return fpixels_widget(widget, (horizontal, vertical, horizontal, vertical))
+    except ValueError: pass
+    
+    padding, = padding
+  except TypeError: pass
+  return fpixels_widget(widget, (padding, padding, padding, padding))
+
+
+def padding2_widget(widget, padding):
+  left, top, right, bottom = padding4_widget(widget, padding)
+  return [left + right, top + bottom]
 
 
 def enable_widget(widget, enabled=True, cursor=True):
@@ -99,6 +142,33 @@ def enable_widget(widget, enabled=True, cursor=True):
 
 def prevent_default_widget(widget):
   widget.bindtags((str(widget),))
+
+
+def lookup_style_widget(widget, option, element='', state=None, **kwargs):
+  style = widget['style']
+  
+  if not style:
+    style = widget.winfo_class()
+  
+  if element:
+    style = '.'.join((style, element))
+  
+  try:
+    if not state:
+      state = widget.state()
+  except tk.TclError: pass
+  
+  return ttk.Style(widget).lookup(style, option, state=state, **kwargs)
+
+
+def measure_text_width_widget(widget, width, font):
+  # cast font descriptors to font objects
+  if not isinstance(font, Font):
+    font = Font(font=font)
+  
+  # find average width using '0' character like Tk does
+  # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
+  return width * font.measure('0', displayof=widget)
 
 
 def make_widgets(frame, make_widget, names,
@@ -316,16 +386,163 @@ def make_text(frame, name='', width=10, height=10,
   return make_name(frame, name), (text, make_scrollbar(text, xscroll, yscroll))
 
 
-def _is_even(num):
-  return not num & 1
-
-
-def make_listbox(frame, name='', items=None,
-  selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
-  BG = 'Azure'
-  BG2 = 'Azure2'
+def _minwidth_treeview():
+  default = -1
   
-  if not items: items = []
+  def get(minwidth=-1):
+    nonlocal default
+    
+    if minwidth != -1:
+      return minwidth
+    
+    if default == -1:
+      default = ttk.Treeview().column('#0', 'minwidth')
+    
+    return default
+  
+  return get
+
+get_minwidth_treeview = _minwidth_treeview()
+
+
+def indents_treeview(treeview, item=None):
+  if item is None: return 0
+  
+  def parent():
+    nonlocal item
+    
+    # must check for empty string specifically (zero should fall through)
+    item = str(treeview.parent(item))
+    return item != ''
+  
+  indents = 0
+  while parent(): indents += 1
+  return indents
+
+
+def measure_widths_treeview(treeview, widths, item=None):
+  # get the per-treeview indent, padding and font
+  indent = lookup_style_widget(treeview, 'indent')
+  try: indent = treeview.winfo_fpixels(indent)
+  except tk.TclError: indent = DEFAULT_TREEVIEW_INDENT
+  
+  padding_width = padding2_widget(treeview, DEFAULT_TREEVIEW_CELL_PADDING)[0]
+  
+  font = lookup_style_widget(treeview, 'font')
+  assert font, 'font must not be empty'
+  
+  fonts = {font}
+  
+  # get the per-heading font, but only if the heading is shown
+  show = yamosse_utils.try_split(treeview['show'])
+  
+  try:
+    show = [str(s) for s in show]
+    
+    if 'headings' in show:
+      font = lookup_style_widget(treeview, 'font', element='Heading')
+      if font: fonts.add(font)
+  except TypeError: pass
+  
+  # get the per-tag padding and fonts
+  tags = {}
+  
+  for child in treeview.get_children(item=item):
+    child_tags = yamosse_utils.try_split(treeview.item(child, 'tags'))
+    
+    for child_tag in child_tags:
+      # first check if we've already done this tag before
+      # although it doesn't take very long to query a tag's configuration, it is still
+      # worth checking if we've done it yet, as it is likely there are many many columns
+      # but only a few tags they are collectively using
+      tags_len = len(tags)
+      if tags.setdefault(child_tag, tags_len) != tags_len: continue
+      
+      # after confirming we have not done the tag yet, query the tag's configuration
+      # ideally, this would only get the "active" tag
+      # but there isn't any way to tell what is the top tag in the stacking order
+      # even in the worst case scenario of a conflict though, the column will always be wide enough
+      try:
+        padding_width = max(padding_width,
+          padding2_widget(treeview, treeview.tag_configure(child_tag, 'padding'))[0])
+      except tk.TclError: pass # not supported in this version
+      
+      try:
+        font = treeview.tag_configure(child_tag, 'font')
+        if font: fonts.add(font)
+      except tk.TclError: pass # not supported in this version
+  
+  # get the per-element (item/cell) padding
+  item_padding_width = padding2_widget(treeview,
+    lookup_style_widget(treeview, 'padding', element='Item'))[0]
+  
+  cell_padding_width = padding2_widget(treeview,
+    lookup_style_widget(treeview, 'padding', element='Cell'))[0]
+  
+  # measure the widths
+  measured_widths = {}
+  
+  for cid, width in widths.items():
+    minwidth = -1
+    
+    # the width can be a sequence like (width, minwidth) which we unpack here
+    # if the sequence is too short, just get the width and use default minwidth
+    # otherwise the width is specified as an integer, not a sequence
+    try: width, minwidth = width
+    except ValueError: width, = width
+    except TypeError: pass
+    
+    # we can't just get the minwidth of the current column to use here
+    # otherwise, if the minwidth was set to the result of this function
+    # then it would stack if this function were called multiple times
+    # so here we get the real default
+    # this is done after the try block above, because minwidth can be
+    # manually specified as -1, explicitly meaning to use the default
+    minwidth = get_minwidth_treeview(minwidth)
+    
+    # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
+    # so here we do the same
+    # for column #0, we need to worry about indents
+    # on top of that, we include the minwidth in the space width
+    # this is because the indicator has a dynamic width which we can't directly get
+    # but it is probably okay to assume it is safely contained in the minwidth
+    # (otherwise, it'd get cut off when the column is at its minwidth)
+    # so the space width (including the minwidth) is added on top of the text width
+    # for all other columns (not #0,) minimum text width is the minwidth, but excluding
+    # the part of it filled by space width
+    # this ensures the column won't be smaller than the minwidth (but may be equal to it)
+    # if the space width fills the entire minwidth, this is undesirable for the measured result
+    # so in that case, the text width is, in effect, initially zero
+    space_width = padding_width
+    text_width = 0
+    
+    if cid == '#0':
+      space_width += item_padding_width + minwidth + (
+        indent * indents_treeview(treeview, item=item))
+    else:
+      space_width += cell_padding_width
+      text_width = max(text_width, minwidth - space_width)
+    
+    # get the text width for the font that would take up the most space in the column
+    for font in fonts:
+      text_width = max(text_width, measure_text_width_widget(treeview, width, font))
+    
+    # must use ceil here because these widths may be floats; Tk doesn't want a float for the width
+    measured_widths[cid] = ceil(space_width + text_width)
+  
+  return measured_widths
+
+
+def configure_widths_treeview(treeview, *args, **kwargs):
+  measured_widths = measure_widths_treeview(treeview, *args, **kwargs)
+  
+  for cid, width in measured_widths.items():
+    treeview.column(cid, width=width, minwidth=width)
+
+
+def make_treeview(frame, name='', columns=None, items=None, show='tree headings',
+  selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
+  columns = yamosse_utils.dict_enumerate(columns) if columns else {}
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -333,15 +550,38 @@ def make_listbox(frame, name='', items=None,
   scrollbar_frame = ttk.Frame(frame)
   scrollbar_frame.grid(row=0, sticky=tk.NSEW)
   
-  scrollbar_frame.rowconfigure(0, weight=1) # make listbox vertically resizable
-  scrollbar_frame.columnconfigure(0, weight=1) # make listbox horizontally resizable
+  scrollbar_frame.rowconfigure(0, weight=1) # make treeview vertically resizable
+  scrollbar_frame.columnconfigure(0, weight=1) # make treeview horizontally resizable
   
-  listbox = tk.Listbox(scrollbar_frame, selectmode=selectmode, bg=BG, **kwargs)
-  listbox.grid(row=0, column=0, sticky=tk.NSEW)
+  treeview = ttk.Treeview(scrollbar_frame,
+    columns=tuple(columns.keys()), selectmode=selectmode, show=show, **kwargs)
   
-  for item in range(len(items)):
-    listbox.insert(tk.END, items[item])
-    listbox.itemconfig(item, bg=BG if _is_even(item) else BG2)
+  treeview.grid(row=0, column=0, sticky=tk.NSEW)
+  
+  for cid, options in columns.items():
+    column = options.get('column')
+    if column: treeview.column(cid, **column)
+    
+    heading = options.get('heading')
+    
+    # left align the heading by default
+    if heading: heading.setdefault('anchor', tk.W)
+    else: heading = {'anchor', tk.W}
+    
+    treeview.heading(cid, **heading)
+  
+  def insert(items, parent=''):
+    if items is None: return
+    
+    # items may be a dictionary with custom child IDs
+    # or a sequence, where the IDs are auto generated
+    for child, insertion in yamosse_utils.dict_enumerate(items).items():
+      children = insertion.pop('children', None)
+      
+      treeview.insert(parent, tk.END, child, **insertion)
+      insert(children, parent=child)
+  
+  insert(items)
   
   name_frame = ttk.Frame(frame)
   name_frame.grid(row=1, sticky=tk.EW, pady=PADY_QN)
@@ -355,23 +595,56 @@ def make_listbox(frame, name='', items=None,
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   buttons = []
   
-  if selectmode == tk.MULTIPLE or selectmode == tk.EXTENDED:
+  show = yamosse_utils.try_split(show)
+  tree = True
+  
+  try:
+    show = [str(s) for s in show]
+    tree = 'tree' in show
+  except TypeError: pass
+  
+  def get_items(item=None):
+    items = treeview.get_children(item=item)
+    
+    for item in items:
+      items += get_items(item=item)
+    
+    return items
+  
+  if tree:
+    def expand_all():
+      for item in get_items():
+        treeview.item(item, open=True)
+    
+    def collapse_all():
+      for item in get_items():
+        treeview.item(item, open=False)
+    
+    buttons += [
+      ttk.Button(
+        buttons_frame,
+        text='Expand All',
+        command=expand_all
+      ),
+        
+      ttk.Button(
+        buttons_frame,
+        text='Collapse All',
+        command=collapse_all
+      )
+    ]
+  
+  if selectmode == tk.EXTENDED:
     def select_all():
-      listbox.selection_set(0, tk.END)
-      listbox.event_generate('<<ListboxSelect>>')
+      treeview.selection_set(get_items())
     
     def select_none():
-      listbox.selection_clear(0, tk.END)
-      listbox.event_generate('<<ListboxSelect>>')
+      treeview.selection_set(())
     
     def invert_selection():
-      for index in range(listbox.size()):
-        if listbox.selection_includes(index): listbox.selection_clear(index)
-        else: listbox.selection_set(index)
-      
-      listbox.event_generate('<<ListboxSelect>>')
+      treeview.selection_toggle(get_items())
     
-    buttons = [
+    buttons += [
       ttk.Button(
         buttons_frame,
         text='Select All',
@@ -390,12 +663,30 @@ def make_listbox(frame, name='', items=None,
         command=invert_selection
       )
     ]
-    
-    for button in reversed(buttons):
-      button.pack(side=tk.RIGHT, padx=PADX_QW)
   
-  return make_name(name_frame, name), (listbox, make_scrollbar(listbox, xscroll, yscroll)
+  for button in reversed(buttons):
+    button.pack(side=tk.RIGHT, padx=PADX_QW)
+  
+  return make_name(name_frame, name), (treeview, make_scrollbar(treeview, xscroll, yscroll)
     ), (buttons_frame, buttons)
+
+
+def heading_text_columns(c):
+  columns = {}
+  
+  for cid, heading_text in yamosse_utils.dict_enumerate(c).items():
+    columns[cid] = {'heading': {'text': heading_text}}
+  
+  return columns
+
+
+def values_items(c):
+  items = {}
+  
+  for cid, values in yamosse_utils.dict_enumerate(c).items():
+    items[cid] = {'values': values}
+  
+  return items
 
 
 def _progressbar():

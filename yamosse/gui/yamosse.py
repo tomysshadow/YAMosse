@@ -76,25 +76,40 @@ def make_input(frame, variables, filetypes):
 
 
 def make_classes(frame, variables, class_names):
-  listbox_widgets = gui.make_listbox(frame, items=class_names,
-    selectmode=tk.MULTIPLE, exportselection=False)
+  columns = {
+    'number': {
+      'column': {'stretch': False},
+      'heading': {'text': '#'}
+    },
+    
+    'class_names': {
+      'heading': {'text': 'Class Names'}
+    }
+  }
   
-  listbox = listbox_widgets[1][0]
+  treeview_widgets = gui.make_treeview(
+    frame,
+    columns=columns,
+    items=gui.values_items(zip(range(1, len(class_names) + 1), class_names)),
+    selectmode=tk.EXTENDED,
+    show='headings'
+  )
   
-  # load and dump the classes variable to and from the listbox
-  for class_ in variables['classes']:
-    listbox.selection_set(class_)
+  treeview = treeview_widgets[1][0]
+  gui.configure_widths_treeview(treeview, {'number': 3})
   
-  curselection = listbox.curselection()
-  if curselection: listbox.see(curselection[0])
+  # load and dump the classes variable to and from the treeview
+  classes_variable = variables['classes']
+  treeview.selection_set(classes_variable)
+  if classes_variable: treeview.see(classes_variable[0])
   
-  def select_listbox(e):
-    variables['classes'] = list(e.widget.curselection())
+  def select_treeview(e):
+    variables['classes'] = list(e.widget.selection())
   
-  listbox.bind('<<ListboxSelect>>', select_listbox)
+  treeview.bind('<<TreeviewSelect>>', select_treeview)
   
   # TODO command
-  buttons_frame = listbox_widgets[2][0]
+  buttons_frame = treeview_widgets[2][0]
   calibrate_button = ttk.Button(buttons_frame, text='Calibrate...')
   calibrate_button.pack(side=tk.LEFT)
   calibrate_button.lower() # fix tab order

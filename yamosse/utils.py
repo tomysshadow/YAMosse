@@ -14,5 +14,15 @@ def dict_sorted(d, *args, **kwargs):
   return dict(sorted(d.items(), *args, **kwargs))
 
 
+def dict_enumerate(d):
+  if isinstance(d, dict): return d
+  return dict(enumerate(d))
+
+
 def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+
+def try_split(value, *args, **kwargs):
+  try: return value.split(*args, **kwargs)
+  except: return value
