@@ -159,7 +159,7 @@ def yamosse(**kwargs):
         gui_yamscan.make_yamscan,
         TITLE,
         lambda: open_file(os.path.realpath(output_file_name)),
-        progressbar_maximum=yamosse_thread.PROGRESSBAR_MAXIMUM,
+        progressbar_maximum=yamosse_worker.PROGRESSBAR_MAXIMUM,
         child=True
       )
       

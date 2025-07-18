@@ -14,8 +14,6 @@ import yamosse.download as yamosse_download
 import yamosse.output as yamosse_output
 import yamosse.subsystem as yamosse_subsystem
 
-PROGRESSBAR_MAXIMUM = 100
-
 
 def key_getsize(file_name):
   try: return os.path.getsize(file_name)
@@ -140,11 +138,14 @@ def files(input_, model_yamnet_class_names, subsystem, options):
   file_names = list(input_file_names(input_, recursive=options.input_recursive))
   file_names_pos = 0
   file_names_len = len(file_names)
-    
+  
   next_ = -1
   batch = 0
   
   worker = Value('i', 0)
+  step = Value('i', 0)
+  steps = file_names_len * yamosse_worker.PROGRESSBAR_MAXIMUM
+  
   shutdown = Event()
   
   # created immediately before with statement so that these will definitely get closed
@@ -154,7 +155,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
     process_pool_executor = ProcessPoolExecutor(
       max_workers=options.max_workers,
       initializer=yamosse_worker.initializer,
-      initargs=(worker, receiver, sender, shutdown, options,
+      initargs=(worker, step, steps, receiver, sender, shutdown, options,
         model_yamnet_class_names, yamosse_worker.tfhub_enabled())
     )
     
@@ -183,8 +184,6 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         nonlocal next_
         nonlocal batch
         
-        subsystem.show(values=received)
-        
         # just copy it out first so we aren't holding the lock
         # during all the nonsense we have to do below
         with done_lock:
@@ -208,9 +207,11 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           log = f'{log}{progress:.4%} complete ({file_names_pos}/{file_names_len}: "{file_name}")'
           
           subsystem.show(values={
-            'progressbar': progress * PROGRESSBAR_MAXIMUM,
+            'progressbar': progress * yamosse_worker.PROGRESSBAR_MAXIMUM,
             'log': log
           })
+        
+        subsystem.show(values=received)
       
       clear_done = None
       

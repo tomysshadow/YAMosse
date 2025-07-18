@@ -7,6 +7,8 @@ import soundfile as sf
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
 
+PROGRESSBAR_MAXIMUM = 100
+
 MODEL_YAMNET_DIR = os.path.join('models', 'research', 'audioset', 'yamnet')
 MODEL_YAMNET_CLASS_MAP_CSV = 'yamnet_class_map.csv'
 MODEL_YAMNET_WEIGHTS_URL = 'https://storage.googleapis.com/audioset/yamnet.h5'
@@ -16,6 +18,9 @@ TFHUB_YAMNET_MODEL_URL = 'https://www.kaggle.com/models/google/yamnet/TensorFlow
 
 MONO = 1
 
+_step = None
+_steps = None
+_sender = None
 _shutdown = None
 _options = None
 _stack = None
@@ -31,6 +36,8 @@ _tfhub_enabled = not os.path.isdir(_root_model_yamnet_dir)
 
 
 def class_names(class_map_csv=''):
+  global _root_model_yamnet_dir
+  
   if not class_map_csv:
     class_map_csv = yamosse_root.root(MODEL_YAMNET_CLASS_MAP_CSV
       ) if _tfhub_enabled else os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
@@ -60,8 +67,11 @@ def tfhub_cache(dir_='tfhub_modules'):
   return root_tfhub_cache_dir
 
 
-def initializer(worker, receiver, sender, shutdown, options,
+def initializer(worker, step, steps, receiver, sender, shutdown, options,
   model_yamnet_class_names, tfhub_enabled):
+  global _step
+  global _steps
+  global _sender
   global _shutdown
   global _options
   global _stack
@@ -72,6 +82,7 @@ def initializer(worker, receiver, sender, shutdown, options,
   
   global _yamnet
   
+  global _root_model_yamnet_dir
   global _tfhub_enabled
   
   # for Linux, child process inherits receiver pipe from parent
@@ -192,11 +203,17 @@ def initializer(worker, receiver, sender, shutdown, options,
     
     yamnet.load_weights(weights)
   
+  _step = step
+  _steps = steps
+  _sender = sender
   _options = options
   _yamnet = yamnet
 
 
 def worker(file_name):
+  global _step
+  global _steps
+  global _sender
   global _shutdown
   global _options
   
@@ -219,6 +236,11 @@ def worker(file_name):
     # Decode the WAV file.
     identified = {}
     seconds = 0.0
+    worker_step = 0
+    
+    step = _step
+    steps = _steps
+    sender = _sender
     
     options = _options
     identification = options.identification
@@ -236,6 +258,7 @@ def worker(file_name):
     # this should truncate to int, don't round the number
     # otherwise YAMNet may get confused and think it's two patches when it's meant to be one
     sr = f.samplerate
+    seconds_worker_steps = f.frames / sr
     overlap = int(sr * patch_hop_seconds)
     blocksize = int(sr * patch_window_seconds) + overlap
     
@@ -245,6 +268,27 @@ def worker(file_name):
     float32 = np.float32
     float32_int16_max = float32(int16_tf.max)
     
+    def step_progress(worker_steps=1.0):
+      nonlocal worker_step
+      
+      worker_steps = int(worker_steps * PROGRESSBAR_MAXIMUM) - worker_step
+      if worker_steps <= 0: return
+      
+      progress = 0.0
+      
+      with step.get_lock():
+        step.value += worker_steps
+        progress = step.value / steps
+      
+      if progress >= 1.0: return
+      
+      sender.send({
+        'progressbar': progress * PROGRESSBAR_MAXIMUM,
+        'log': f'{progress:.4%} complete'
+      })
+      
+      worker_step += worker_steps
+    
     # reading the entire sound file at once can cause an out of memory error
     # so instead we read it in blocks that match YAMNet's patch size
     # we request int16 so the sound is normalized
@@ -253,6 +297,8 @@ def worker(file_name):
     for waveform in f.blocks(overlap=overlap, blocksize=blocksize, dtype=int16):
       # should I check this every loop? Would a variable to keep track actually save time...?
       if shutdown.is_set(): return None
+      
+      step_progress(seconds / seconds_worker_steps)
       
       assert waveform.dtype == int16, 'Bad sample type: %r' % waveform.dtype
       
@@ -279,5 +325,7 @@ def worker(file_name):
       for score in yamnet(waveform)[0]:
         identification.predict(identified, (int(seconds), np.array(score)))
         seconds += patch_hop_seconds
+    
+    step_progress()
   
   return identification.timestamps(identified, shutdown)
