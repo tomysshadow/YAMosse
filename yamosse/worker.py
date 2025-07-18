@@ -21,9 +21,9 @@ MONO = 1
 _step = None
 _steps = None
 _sender = None
+
 _shutdown = None
 _options = None
-_stack = None
 
 _sample_rate = 16000.0
 _patch_window_seconds = 0.96
@@ -36,10 +36,6 @@ _tfhub_enabled = not os.path.isdir(_root_model_yamnet_dir)
 
 
 def step_progress(worker_step, current_worker_step=1.0):
-  global _step
-  global _steps
-  global _sender
-  
   current_worker_step = int(current_worker_step * PROGRESSBAR_MAXIMUM) - worker_step
   if current_worker_step <= 0: return worker_step
   
@@ -67,8 +63,6 @@ def step_progress(worker_step, current_worker_step=1.0):
 
 
 def class_names(class_map_csv=''):
-  global _root_model_yamnet_dir
-  
   if not class_map_csv:
     class_map_csv = yamosse_root.root(MODEL_YAMNET_CLASS_MAP_CSV
       ) if _tfhub_enabled else os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
@@ -103,18 +97,15 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   global _step
   global _steps
   global _sender
+  
   global _shutdown
   global _options
-  global _stack
   
   global _sample_rate
   global _patch_window_seconds
   global _patch_hop_seconds
   
   global _yamnet
-  
-  global _root_model_yamnet_dir
-  global _tfhub_enabled
   
   # for Linux, child process inherits receiver pipe from parent
   # so the receiver instance must be closed explicitly here
@@ -237,20 +228,12 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   _step = step
   _steps = steps
   _sender = sender
+  
   _options = options
   _yamnet = yamnet
 
 
 def worker(file_name):
-  global _shutdown
-  global _options
-  
-  global _sample_rate
-  global _patch_window_seconds
-  global _patch_hop_seconds
-  
-  global _yamnet
-  
   shutdown = _shutdown
   if shutdown.is_set(): return None
   
