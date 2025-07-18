@@ -540,9 +540,10 @@ def configure_widths_treeview(treeview, *args, **kwargs):
     treeview.column(cid, width=width, minwidth=width)
 
 
-def make_treeview(frame, name='', columns=None, items=None, show='tree headings',
+def make_treeview(frame, name='', columns=None, items=None, show=None,
   selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
   columns = yamosse_utils.dict_enumerate(columns) if columns else {}
+  show = ('tree', 'headings') if show is None else [str(s) for s in yamosse_utils.try_split(show)]
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -595,14 +596,6 @@ def make_treeview(frame, name='', columns=None, items=None, show='tree headings'
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   buttons = []
   
-  show = yamosse_utils.try_split(show)
-  tree = True
-  
-  try:
-    show = [str(s) for s in show]
-    tree = 'tree' in show
-  except TypeError: pass
-  
   def get_items(item=None):
     items = treeview.get_children(item=item)
     
@@ -611,7 +604,7 @@ def make_treeview(frame, name='', columns=None, items=None, show='tree headings'
     
     return items
   
-  if tree:
+  if 'tree' in show:
     def expand_all():
       for item in get_items():
         treeview.item(item, open=True)
