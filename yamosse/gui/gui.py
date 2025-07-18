@@ -67,9 +67,16 @@ PADY_QNS = PADDING_Q
 PADY_QN = (PADDING_Q, 0)
 PADY_QS = (0, PADDING_Q)
 
+MINSIZE_ROW_LABELS = 21
+MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
+
 # these default numbers come from the Tk Treeview documentation
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
+
+WINDOWS_ICONPHOTO_BUGFIX = True
+
+IMAGES_DIR = 'images'
 
 VARIABLE_TYPES = {
   bool: tk.BooleanVar,
@@ -77,13 +84,6 @@ VARIABLE_TYPES = {
   float: tk.DoubleVar,
   str: tk.StringVar
 }
-
-MINSIZE_ROW_LABELS = 21
-MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
-
-WINDOWS_ICONPHOTO_BUGFIX = True
-
-IMAGES_DIR = 'images'
 
 get_root_window = None
 get_root_images = None
