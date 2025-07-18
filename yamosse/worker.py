@@ -5,7 +5,6 @@ import csv
 import soundfile as sf
 
 import yamosse.root as yamosse_root
-import yamosse.utils as yamosse_utils
 
 PROGRESSBAR_MAXIMUM = 100
 
