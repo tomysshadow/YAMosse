@@ -284,8 +284,6 @@ def worker(file_name):
         current_step = step.value
       
       current_progress = current_step / steps
-      if current_progress >= 1.0: return
-      
       progress = int(current_progress * PROGRESSBAR_MAXIMUM)
       if progress <= int(previous_step / steps * PROGRESSBAR_MAXIMUM): return
       
