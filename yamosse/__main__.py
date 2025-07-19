@@ -1,7 +1,7 @@
 import sys
 from ast import literal_eval
 
-import yamosse.yamosse as yamosse
+import yamosse
 import yamosse.worker as yamosse_worker
 
 

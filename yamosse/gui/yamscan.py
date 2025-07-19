@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from . import gui
+from .. import gui
 
 import yamosse.progress as yamosse_progress
 

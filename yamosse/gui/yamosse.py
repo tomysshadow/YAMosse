@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import webbrowser
 
-from . import gui as gui
+from .. import gui
 
 import yamosse.output as yamosse_output
 

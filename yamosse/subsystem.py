@@ -3,7 +3,7 @@ from threading import Thread
 
 import yamosse.utils as yamosse_utils
 
-try: from .gui import gui
+try: from . import gui
 except ImportError: gui = None
 
 class SubsystemExit(Exception): pass
