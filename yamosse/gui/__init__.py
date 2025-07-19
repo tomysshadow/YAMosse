@@ -145,7 +145,7 @@ def enable_widget(widget, enabled=True, cursor=True):
         widget['cursor'] = ''
   except tk.TclError: pass
   
-  for child_widget in widget.winfo_children():
+  for child_widget in widget.children.values():
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
@@ -377,7 +377,7 @@ def delete_lines_text(text, max_lines=1000):
 
 def make_text(frame, name='', width=10, height=10,
   autoseparators=False, wrap=tk.WORD, font=None, xscroll=False, yscroll=True, **kwargs):
-  FONT = ('Courier', '10')
+  FONT = ('Courier', 10)
   
   frame.rowconfigure(1, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -1121,7 +1121,7 @@ def gui(make_frame, *args, child=False, **kwargs):
   )
 
 
-def _init():
+def _init_report_callback_exception():
   reported = False
   reported_lock = Lock()
   
@@ -1146,5 +1146,4 @@ def _init():
   
   tk.Tk.report_callback_exception = report_callback_exception
 
-
-_init()
+_init_report_callback_exception()
