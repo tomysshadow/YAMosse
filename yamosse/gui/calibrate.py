@@ -38,7 +38,7 @@ def make_footer(frame, window):
 
 def make_calibrate(frame, class_names):
   RESIZABLE = True
-  SIZE = (450, 500)
+  SIZE = (480, 500)
   
   window = frame.master
   parent = window.master
