@@ -55,7 +55,7 @@ def make_calibrate(frame, class_names):
   classes_text = gui.make_text(classes_frame, font=('TkDefaultFont', 24))[1][0]
   gui.embed_text(classes_text)
   
-  for class_name in class_names:
+  for c in range(len(class_names)):
     scale_frame = ttk.Frame(classes_text)
     
     scale_frame.columnconfigure(0, weight=2,
@@ -64,7 +64,9 @@ def make_calibrate(frame, class_names):
     scale_frame.columnconfigure(1, weight=1,
       uniform='class_column') # make class columns uniform
     
-    scale = gui.make_scale(scale_frame, name=class_name, to=200)[1]
+    scale = gui.make_scale(scale_frame, name='%d. %s' % (c + 1, class_names[c]),
+      to=200)[1]
+    
     scale.set(100) # TODO: from options
     gui.embed_insert(classes_text, scale_frame)
   
