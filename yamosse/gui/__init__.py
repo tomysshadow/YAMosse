@@ -91,6 +91,37 @@ get_root_window = None
 get_root_images = None
 
 
+def _init_report_callback_exception():
+  reported = False
+  reported_lock = Lock()
+  
+  tk_report_callback_exception = tk.Tk.report_callback_exception
+  
+  def report_callback_exception(tk, exc, val, tb):
+    nonlocal reported
+    nonlocal reported_lock
+    
+    tk_report_callback_exception(tk, exc, val, tb)
+    
+    with reported_lock:
+      if reported: return
+      reported = True
+    
+    try:
+      with open('traceback.txt', 'w') as file:
+        traceback.print_exception(exc, val, tb, file=file)
+    except OSError: pass
+    
+    messagebox.showerror(title='Exception in Tkinter callback',
+      message=''.join(traceback.format_exception(exc, val, tb)))
+    
+    raise val
+  
+  tk.Tk.report_callback_exception = report_callback_exception
+
+_init_report_callback_exception()
+
+
 def fpixels_widget(widget, lengths):
   return [widget.winfo_fpixels(l) for l in lengths]
 
@@ -1293,34 +1324,3 @@ def gui(make_frame, *args, child=False, **kwargs):
     *args,
     **kwargs
   )
-
-
-def _init_report_callback_exception():
-  reported = False
-  reported_lock = Lock()
-  
-  tk_report_callback_exception = tk.Tk.report_callback_exception
-  
-  def report_callback_exception(tk, exc, val, tb):
-    nonlocal reported
-    nonlocal reported_lock
-    
-    tk_report_callback_exception(tk, exc, val, tb)
-    
-    with reported_lock:
-      if reported: return
-      reported = True
-    
-    try:
-      with open('traceback.txt', 'w') as file:
-        traceback.print_exception(exc, val, tb, file=file)
-    except OSError: pass
-    
-    messagebox.showerror(title='Exception in Tkinter callback',
-      message=''.join(traceback.format_exception(exc, val, tb)))
-    
-    raise val
-  
-  tk.Tk.report_callback_exception = report_callback_exception
-
-_init_report_callback_exception()
