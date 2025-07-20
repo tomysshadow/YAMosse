@@ -63,11 +63,8 @@ def make_calibrate(frame, class_names):
     
     scale.set(100) # TODO: from options
     
-    scale_frame.columnconfigure(0, weight=2,
-      uniform='class_column') # make class columns uniform
-    
-    scale_frame.columnconfigure(1, weight=1,
-      uniform='class_column') # make class columns uniform
+    scale_frame.columnconfigure(0, weight=2, uniform='class_column')
+    scale_frame.columnconfigure(1, weight=1, uniform='class_column')
     
     gui.embed_insert(classes_text, scale_frame)
   
