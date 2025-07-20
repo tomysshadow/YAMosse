@@ -777,7 +777,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   # to flexibly add more buttons to the left or right side
   buttons_frame = ttk.Frame(name_frame)
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
-  buttons = []
+  buttons = ()
   
   def get_items(item=None):
     items = treeview.get_children(item=item)
@@ -796,7 +796,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
       for item in get_items():
         treeview.item(item, open=False)
     
-    buttons += [
+    buttons += (
       ttk.Button(
         buttons_frame,
         text='Expand All',
@@ -808,7 +808,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
         text='Collapse All',
         command=collapse_all
       )
-    ]
+    )
   
   if selectmode == tk.EXTENDED:
     def select_all():
@@ -820,7 +820,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     def invert_selection():
       treeview.selection_toggle(get_items())
     
-    buttons += [
+    buttons += (
       ttk.Button(
         buttons_frame,
         text='Select All',
@@ -838,7 +838,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
         text='Invert Selection',
         command=invert_selection
       )
-    ]
+    )
   
   for button in reversed(buttons):
     button.pack(side=tk.RIGHT, padx=PADX_QW)
