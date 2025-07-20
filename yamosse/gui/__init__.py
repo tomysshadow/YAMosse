@@ -153,6 +153,10 @@ def prevent_default_widget(widget):
   widget.bindtags((str(widget),))
 
 
+def stop_propagation_widget(widget):
+  widget.bindtags((str(widget), widget.winfo_class()))
+
+
 def lookup_style_widget(widget, option, element='', state=None, **kwargs):
   style = widget['style']
   
@@ -343,7 +347,8 @@ def make_combobox(frame, name='', state=None, **kwargs):
   return make_name(frame, name), combobox
 
 
-def make_scale(frame, name='', variable=None, **kwargs):
+def make_scale(frame, name='', variable=None,
+  from_=0, to=100, **kwargs):
   if not variable: variable = tk.IntVar()
   
   frame.rowconfigure(0, weight=1) # make scale vertically centered
@@ -361,7 +366,7 @@ def make_scale(frame, name='', variable=None, **kwargs):
     percent_label['text'] = text
   
   scale = ttk.Scale(frame, variable=variable,
-    from_=0, to=100, orient=tk.HORIZONTAL, command=show, **kwargs)
+    from_=from_, to=to, orient=tk.HORIZONTAL, command=show, **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
   show()
@@ -393,6 +398,147 @@ def make_text(frame, name='', width=10, height=10,
   
   text.grid(row=0, column=0, sticky=tk.NSEW)
   return make_name(frame, name), (text, make_scrollbar(text, xscroll, yscroll))
+
+
+def _embed():
+  def insert(text, widget, line=-1):
+    # width for the widget needs to be set explicitly, not by its geometry manager
+    widget.pack_propagate(False)
+    widget.grid_propagate(False)
+    
+    text['state'] = tk.NORMAL
+    
+    try:
+      # use the insertion cursor so that it moves from the linestart to the lineend
+      text.mark_set(tk.INSERT, tk.END if line == -1 else '%d.0' % line)
+      
+      # if there is anything before us on the line, insert a newline
+      if text.compare(tk.INSERT, '>', '%s linestart' % tk.INSERT):
+        text.insert(tk.INSERT, '\n')
+      
+      # actual magic happens here
+      text.window_create(tk.INSERT, window=widget, stretch=True)
+      
+      # if there is anything after us on the line, insert a newline
+      if text.compare(tk.INSERT, '<', '%s lineend' % tk.INSERT):
+        text.insert(tk.INSERT, '\n')
+    finally:
+      text['state'] = tk.DISABLED
+  
+  stack = []
+  
+  def view(e):
+    view = None
+    keysym = e.keysym
+    
+    if keysym == 'Left': view = ['scroll', -1, 'units', 'x']
+    elif keysym == 'Right': view = ['scroll', 1, 'units', 'x']
+    elif keysym == 'Up': view = ['scroll', -1, 'units', 'y']
+    elif keysym == 'Down': view = ['scroll', 1, 'units', 'y']
+    else: return
+    
+    getattr(e.widget, ''.join((view.pop(), 'view')))(*view)
+    return 'break'
+  
+  # set the width of the child to fill the available space
+  def configure(e):
+    widget = e.widget
+    
+    for child in widget.winfo_children():
+      inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
+      child['width'] = e.width - (inset * 2)
+  
+  def enter(e):
+    widget = e.widget
+    
+    if stack and stack[-1] == widget: return
+    stack.append(widget)
+  
+  def leave(e):
+    stack.pop()
+  
+  callbacks = {}
+  
+  def scroll_callback(name, delta=None):
+    if not stack: return
+    text = stack[-1]
+    
+    # event_generate is picky about delta being an integer if it is defined
+    kwargs = {} if delta is None else {'delta': int(delta)}
+    
+    # focus the text so the event goes to it
+    # then "forward" the event to the text
+    # finally, set the focus back to the widget it was on
+    focus = text.focus_get()
+    text.focus_set()
+    
+    try:
+      text.event_generate(name, **kwargs)
+    finally: focus.focus_set()
+  
+  scroll_callback_names = (
+    '<Up>',
+    '<Down>',
+    '<Left>',
+    '<Right>',
+    
+    '<Prior>',
+    '<Next>',
+    '<Control-Prior>',
+    '<Control-Next>',
+    
+    '<Button-4>',
+    '<Button-5>',
+    '<Shift-Button-4>',
+    '<Shift-Button-5>'
+  )
+  
+  for name in scroll_callback_names:
+    callbacks[name] = lambda e, name=name: scroll_callback(name)
+  
+  scroll_callback_delta_names = ('<MouseWheel>', '<Shift-MouseWheel>')
+  
+  for name in scroll_callback_delta_names:
+    callbacks[name] = lambda e, name=name: scroll_callback(name, delta=e.delta)
+  
+  def text(text):
+    try:
+      if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
+    except AttributeError: pass
+    
+    text.embed_text = True
+    
+    text.configure(state=tk.DISABLED, cursor='', takefocus=True,
+      bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
+    
+    # prevent infinite recursion having the same events get sent back to the window
+    stop_propagation_widget(text)
+    
+    # make scrolling with the arrow keys instant
+    # TODO: investigate Control-b, Control-f, Control-p, Control-n
+    for name in ('<Up>', '<Down>', '<Left>', '<Right>'):
+      text.bind(name, view)
+    
+    text.bind('<Configure>', configure)
+    
+    text.bind('<Enter>', enter)
+    text.bind('<Leave>', leave)
+    
+    # make this window aware of the embed_text
+    window = text.winfo_toplevel()
+    
+    try:
+      if window.embed_text: return
+    except AttributeError: pass
+    
+    window.embed_text = True
+    
+    for name, callback in callbacks.items():
+      window.bind(name, callback)
+  
+  return insert, text
+
+embed_insert, embed_text = _embed()
 
 
 def _minwidth_treeview():
@@ -895,7 +1041,7 @@ def after_idle_window(window, callback):
   # it's not safe to have a non-GUI thread interact directly with widgets
   # so we queue this for when idle
   try: window.after_idle(callback)
-  except tk.TclError:
+  except (tk.TclError, RuntimeError):
     if window.children: raise
     return False
   
@@ -1128,6 +1274,8 @@ def _init_report_callback_exception():
   tk_report_callback_exception = tk.Tk.report_callback_exception
   
   def report_callback_exception(tk, exc, val, tb):
+    nonlocal reported
+    
     tk_report_callback_exception(tk, exc, val, tb)
     
     with reported_lock:

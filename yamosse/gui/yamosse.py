@@ -3,6 +3,7 @@ from tkinter import ttk
 import webbrowser
 
 from .. import gui
+from . import calibrate as gui_calibrate
 
 import yamosse.output as yamosse_output
 
@@ -97,9 +98,19 @@ def make_classes(frame, variables, class_names):
   
   treeview.bind('<<TreeviewSelect>>', select_treeview)
   
-  # TODO command
   buttons_frame = treeview_widgets[2][0]
-  calibrate_button = ttk.Button(buttons_frame, text='Calibrate...')
+  
+  calibrate_button = ttk.Button(
+    buttons_frame,
+    text='Calibrate...',
+    
+    command=lambda: gui.gui(
+      gui_calibrate.make_calibrate,
+      class_names,
+      child=True
+    )
+  )
+  
   calibrate_button.pack(side=tk.LEFT)
   calibrate_button.lower() # fix tab order
 

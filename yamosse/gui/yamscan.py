@@ -8,8 +8,8 @@ import yamosse.progress as yamosse_progress
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
 
-def ask_cancel(window, title, footer_yamscan_widgets):
-  open_output_file_button, done_button = footer_yamscan_widgets
+def ask_cancel(window, title, footer_widgets):
+  open_output_file_button, done_button = footer_widgets
   
   # while this may feel like a bit of a hack, doing it this way ensures that
   # there is no possible desync between what the button says and whether the message box appears
@@ -75,7 +75,7 @@ def make_footer(frame, log_text, open_output_file, done):
 def show_yamscan(widgets, values=None):
   DONE_VALUES = ('OK', 'Cancel')
   
-  window, progressbar_widgets, progressbar_variable, log_text, footer_yamscan_widgets = widgets
+  window, progressbar_widgets, progressbar_variable, log_text, footer_widgets = widgets
   
   def callback():
     if not window.children: return
@@ -103,7 +103,7 @@ def show_yamscan(widgets, values=None):
     if not value is None:
       if not value in DONE_VALUES: raise ValueError('value must be in %r' % (DONE_VALUES,))
       
-      open_output_file_button, done_button = footer_yamscan_widgets
+      open_output_file_button, done_button = footer_widgets
       
       ok = value == 'OK'
       gui.enable_widget(open_output_file_button, enabled=ok)
@@ -157,25 +157,25 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   # auto focus the log text when user hits Ctrl + A so they can select and copy the contents
   log_text.winfo_toplevel().bind('<Control-a>', select_all_log_text)
   
-  footer_yamscan_widgets = None
+  footer_widgets = None
   
   def done(window):
-    if not ask_cancel(window, title, footer_yamscan_widgets): return
+    if not ask_cancel(window, title, footer_widgets): return
     
     gui.configure_progressbar(
       progressbar_widgets, progressbar_variable, yamosse_progress.RESET)
     
     gui.release_modal_window(window)
   
-  footer_yamscan_frame = ttk.Frame(frame)
-  footer_yamscan_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
+  footer_frame = ttk.Frame(frame)
+  footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   
-  footer_yamscan_widgets = make_footer(
-    footer_yamscan_frame,
+  footer_widgets = make_footer(
+    footer_frame,
     log_text,
     open_output_file,
     lambda: done(window)
   )
   
   gui.set_modal_window(window, done)
-  return window, progressbar_widgets, progressbar_variable, log_text, footer_yamscan_widgets
+  return window, progressbar_widgets, progressbar_variable, log_text, footer_widgets
