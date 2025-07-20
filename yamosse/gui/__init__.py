@@ -504,12 +504,17 @@ def _embed():
     # focus the text so the event goes to it
     # then "forward" the event to the text
     # finally, set the focus back to the widget it was on
+    # this does not seem to require takefocus to be true?
+    # TODO: there's a phantom bug here where sometimes
+    # we get "invalid command name" when using text, even though
+    # the window still exists and it shouldn't have been destroyed?
     focus = text.focus_get()
     text.focus_set()
     
     try:
       text.event_generate(name, **kwargs)
-    finally: focus.focus_set()
+    finally:
+      focus.focus_set()
   
   scroll_callback_names = (
     '<Up>',
@@ -549,10 +554,10 @@ def _embed():
     try:
       # we don't use enable_widget here as we don't actually want that
       # (it would disable any child widgets within the text)
-      # the text should be able to take focus for scrolling events
+      # it should not take focus until an event is fired (it hoards the focus otherwise)
       # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
       # (put a border around the surrounding frame instead)
-      text.configure(cursor='', takefocus=True,
+      text.configure(takefocus=False, cursor='',
         bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
       
       # prevent infinite recursion having the same events get sent back to the window
