@@ -516,23 +516,33 @@ def _embed():
     text['state'] = tk.NORMAL
     
     try:
+      # we don't use enable_widget here as we don't actually want that
+      # (it would disable any child widgets within the text)
+      # the text should be able to take focus for scrolling events
+      # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
+      # (put a border around the surrounding frame instead)
+      text.configure(cursor='', takefocus=True,
+        bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
+      
+      # prevent infinite recursion having the same events get sent back to the window
+      stop_propagation_widget(text)
+      
+      # make scrolling with the arrow keys instant
+      # TODO: investigate Control-b, Control-f, Control-p, Control-n
+      for name in ('<Up>', '<Down>', '<Left>', '<Right>'):
+        text.bind(name, view)
+      
+      text.bind('<Configure>', configure)
+      
+      text.bind('<Enter>', enter)
+      text.bind('<Leave>', leave)
+      
+      # delete anything that might've been typed in before the text was passed to us
+      # then create the placeholder frame
+      text.delete('1.0', tk.END)
       text.window_create(tk.END, window=text.embed_text, stretch=True)
     finally:
-      text.configure(state=tk.DISABLED, cursor='', takefocus=True,
-        bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
-    
-    # prevent infinite recursion having the same events get sent back to the window
-    stop_propagation_widget(text)
-    
-    # make scrolling with the arrow keys instant
-    # TODO: investigate Control-b, Control-f, Control-p, Control-n
-    for name in ('<Up>', '<Down>', '<Left>', '<Right>'):
-      text.bind(name, view)
-    
-    text.bind('<Configure>', configure)
-    
-    text.bind('<Enter>', enter)
-    text.bind('<Leave>', leave)
+      text['state'] = tk.DISABLED
     
     # make this window aware of the embed_text
     window = text.winfo_toplevel()
