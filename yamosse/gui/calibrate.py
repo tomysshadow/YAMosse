@@ -58,16 +58,17 @@ def make_calibrate(frame, class_names):
   for c in range(len(class_names)):
     scale_frame = ttk.Frame(classes_text)
     
+    scale = gui.make_scale(scale_frame, name='%d. %s' % (c + 1, class_names[c]),
+      to=200)[1]
+    
+    scale.set(100) # TODO: from options
+    
     scale_frame.columnconfigure(0, weight=2,
       uniform='class_column') # make class columns uniform
     
     scale_frame.columnconfigure(1, weight=1,
       uniform='class_column') # make class columns uniform
     
-    scale = gui.make_scale(scale_frame, name='%d. %s' % (c + 1, class_names[c]),
-      to=200)[1]
-    
-    scale.set(100) # TODO: from options
     gui.embed_insert(classes_text, scale_frame)
   
   footer_frame = ttk.Frame(frame)
