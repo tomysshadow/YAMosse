@@ -444,10 +444,10 @@ def _embed():
     getattr(e.widget, ''.join((view.pop(), 'view')))(*view)
     return 'break'
   
-  # set the width of the child to fill the available space
   def configure(e):
     widget = e.widget
     
+    # set the width of the children to fill the available space
     for child in widget.winfo_children():
       inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
       child['width'] = e.width - (inset * 2)
