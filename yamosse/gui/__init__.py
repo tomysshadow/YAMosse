@@ -409,6 +409,10 @@ def _embed():
     text['state'] = tk.NORMAL
     
     try:
+      # if the placeholder exists, then delete it
+      try: text.delete(text.embed_text)
+      except tk.TclError: pass
+      
       # use the insertion cursor so that it moves from the linestart to the lineend
       text.mark_set(tk.INSERT, tk.END if line == -1 else '%d.0' % line)
       
@@ -506,10 +510,16 @@ def _embed():
       if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
     except AttributeError: pass
     
-    text.embed_text = True
+    # doubles as a placeholder to prevent text selection
+    text.embed_text = ttk.Frame(text)
     
-    text.configure(state=tk.DISABLED, cursor='', takefocus=True,
-      bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
+    text['state'] = tk.NORMAL
+    
+    try:
+      text.window_create(tk.END, window=text.embed_text, stretch=True)
+    finally:
+      text.configure(state=tk.DISABLED, cursor='', takefocus=True,
+        bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
     
     # prevent infinite recursion having the same events get sent back to the window
     stop_propagation_widget(text)
@@ -527,14 +537,22 @@ def _embed():
     # make this window aware of the embed_text
     window = text.winfo_toplevel()
     
+    # if this gets raised it means a previous call to this function
+    # failed to bind to the window (i.e. an exception occured during binding)
     try:
-      if window.embed_text: return
+      if window.embed_text: raise RuntimeError('embed_text failed to bind to window')
     except AttributeError: pass
     
     window.embed_text = True
     
     for name, callback in callbacks.items():
       window.bind(name, callback)
+    
+    # set to False so any future calls to this function will
+    # know that the binding was fully successful (no exceptions occured during binding)
+    # it's necessary to track this state here since it'd be
+    # a bit silly if this function was single shot per-window
+    window.embed_text = False
   
   return insert, text
 
