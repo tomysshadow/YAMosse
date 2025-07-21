@@ -133,20 +133,17 @@ def padding4_widget(widget, padding):
   # should raise TypeError is padding is just an integer
   try:
     # should raise ValueError if too many values to unpack
-    try:
-      left, top, right, bottom = padding
-      return fpixels_widget(widget, (left, top, right, bottom))
+    try: left, top, right, bottom = padding
     except ValueError: pass
+    else: return fpixels_widget(widget, (left, top, right, bottom))
     
-    try:
-      left, vertical, right = padding
-      return fpixels_widget(widget, (left, vertical, right, vertical))
+    try: left, vertical, right = padding
     except ValueError: pass
+    else: return fpixels_widget(widget, (left, vertical, right, vertical))
     
-    try:
-      horizontal, vertical = padding
-      return fpixels_widget(widget, (horizontal, vertical, horizontal, vertical))
+    try: horizontal, vertical = padding
     except ValueError: pass
+    else: return fpixels_widget(widget, (horizontal, vertical, horizontal, vertical))
     
     padding, = padding
   except TypeError: pass
@@ -159,10 +156,10 @@ def padding2_widget(widget, padding):
 
 
 def enable_widget(widget, enabled=True, cursor=True):
-  try:
-    widget['state'] = tk.NORMAL if enabled else tk.DISABLED
-    
-    # we also change the cursor here, still in the same try block
+  try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
+  except tk.TclError: pass
+  else:
+    # we do this in the try-else block
     # this way, we'll only attempt to change the cursor
     # if we were successfully able to change the state
     if cursor:
@@ -174,7 +171,6 @@ def enable_widget(widget, enabled=True, cursor=True):
       else:
         widget.normalcursor = widget['cursor']
         widget['cursor'] = ''
-  except tk.TclError: pass
   
   for child_widget in widget.winfo_children():
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
@@ -671,14 +667,14 @@ def measure_widths_treeview(treeview, widths, item=None):
   show = yamosse_utils.try_split(treeview['show'])
   show_headings = True
   
-  try:
-    show = [str(s) for s in show]
+  try: show = [str(s) for s in show]
+  except TypeError: pass
+  else:
     show_headings = 'headings' in show
     
     if show_headings:
       font = lookup_style_widget(treeview, 'font', element='Heading')
       if font: fonts.add(font)
-  except TypeError: pass
   
   def width_image(name):
     return int(treeview.tk.call('image', 'width', name)) if name else 0
@@ -704,19 +700,25 @@ def measure_widths_treeview(treeview, widths, item=None):
       # but there isn't any way to tell what is the top tag in the stacking order
       # even in the worst case scenario of a conflict though, the column will always be wide enough
       try:
-        padding_width = max(padding_width,
-          padding2_widget(treeview, treeview.tag_configure(child_tag, 'padding'))[0])
-      except tk.TclError: pass # not supported in this version
+        padding = treeview.tag_configure(child_tag, 'padding')
+      except tk.TclError:
+        pass # not supported in this version
+      else:
+        padding_width = max(padding_width, padding2_widget(treeview, padding)[0])
       
       try:
         font = treeview.tag_configure(child_tag, 'font')
+      except tk.TclError:
+        pass # not supported in this version
+      else:
         if font: fonts.add(font)
-      except tk.TclError: pass # not supported in this version
       
       try:
-        item_image_width = max(item_image_width,
-          width_image(treeview.tag_configure(child_tag, 'image')))
-      except tk.TclError: pass # not supported in this version
+        image = treeview.tag_configure(child_tag, 'image')
+      except tk.TclError:
+        pass # not supported in this version
+      else:
+        item_image_width = max(item_image_width, width_image(image))
     
     # get the per-item image
     item_image_width = max(item_image_width,
