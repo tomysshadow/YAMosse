@@ -1281,6 +1281,7 @@ def _root_images():
   def get():
     nonlocal root_images
     
+    # this prevents Tkinter from popping an empty window if we haven't created the root window yet
     get_root_window()
     
     if not root_images:
@@ -1325,6 +1326,7 @@ get_root_images = _root_images()
 
 
 def get_variables_from_object(object_):
+  # this prevents Tkinter from popping an empty window if we haven't created the root window yet
   get_root_window()
   
   variable = None
