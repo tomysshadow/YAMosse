@@ -180,12 +180,13 @@ def enable_widget(widget, enabled=True, cursor=True):
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
-def prevent_default_widget(widget):
-  widget.bindtags((str(widget),))
-
-
-def stop_propagation_widget(widget):
-  widget.bindtags((str(widget), widget.winfo_class()))
+def prevent_default_widget(widget, class_=False, window=False, all_=False):
+  bindtags = [widget]
+  if class_: bindtags.append(widget.winfo_class())
+  if window: bindtags.append(widget.winfo_toplevel())
+  if all_: bindtags.append('all')
+  
+  widget.bindtags(bindtags)
 
 
 def lookup_style_widget(widget, option, element='', state=None, **kwargs):
@@ -461,6 +462,14 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
   
+  def configure(e):
+    widget = e.widget
+    
+    # set the width of the children to fill the available space
+    for child in widget.winfo_children():
+      inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
+      child['width'] = e.width - (inset * 2)
+  
   def view(e):
     view = None
     keysym = e.keysym
@@ -473,14 +482,6 @@ def _embed():
     
     getattr(e.widget, ''.join((view.pop(), 'view')))(*view)
     return 'break'
-  
-  def configure(e):
-    widget = e.widget
-    
-    # set the width of the children to fill the available space
-    for child in widget.winfo_children():
-      inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
-      child['width'] = e.width - (inset * 2)
   
   stack = None
   
@@ -577,14 +578,14 @@ def _embed():
         bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
       
       # prevent infinite recursion having the same events get sent back to all
-      stop_propagation_widget(text)
+      prevent_default_widget(text, class_=True, window=True)
+      
+      text.bind('<Configure>', configure)
       
       # make scrolling with the arrow keys instant
       # TODO: investigate Control-b, Control-f, Control-p, Control-n
       for name in ('<Up>', '<Down>', '<Left>', '<Right>'):
         text.bind(name, view)
-      
-      text.bind('<Configure>', configure)
       
       text.bind('<Enter>', enter)
       text.bind('<Leave>', leave)
