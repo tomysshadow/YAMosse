@@ -66,7 +66,7 @@ def make_calibrate(frame, variables, class_names):
     scale = gui.make_scale(scale_frame, name='%d. %s' % (c + 1, class_names[c]),
       to=200)[1]
     
-    scale.set(calibration_variable[c])
+    scale.set(int(calibration_variable[c]))
     scales.append(scale)
     
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')
