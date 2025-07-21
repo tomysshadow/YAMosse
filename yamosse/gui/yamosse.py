@@ -86,7 +86,6 @@ def make_classes(frame, variables, class_names):
   )
   
   treeview = treeview_widgets[1][0]
-  gui.configure_widths_treeview(treeview, {0: 3})
   
   # load and dump the classes variable to and from the treeview
   classes_variable = variables['classes']
@@ -97,6 +96,7 @@ def make_classes(frame, variables, class_names):
     variables['classes'] = [int(s) for s in e.widget.selection()]
   
   treeview.bind('<<TreeviewSelect>>', select_treeview)
+  gui.configure_widths_treeview(treeview, {0: 3})
   
   buttons_frame = treeview_widgets[2][0]
   
