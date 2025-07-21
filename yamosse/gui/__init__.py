@@ -669,16 +669,23 @@ def measure_widths_treeview(treeview, widths, item=None):
   
   # get the per-heading font, but only if the heading is shown
   show = yamosse_utils.try_split(treeview['show'])
+  show_headings = True
   
   try:
     show = [str(s) for s in show]
+    show_headings = 'headings' in show
     
-    if 'headings' in show:
+    if show_headings:
       font = lookup_style_widget(treeview, 'font', element='Heading')
       if font: fonts.add(font)
   except TypeError: pass
   
-  # get the per-tag padding and fonts
+  def width_image(name):
+    return int(treeview.tk.call('image', 'width', name)) if name else 0
+  
+  item_image_width = 0
+  
+  # get the per-tag padding, fonts, and images
   tags = {}
   
   for child in treeview.get_children(item=item):
@@ -705,12 +712,21 @@ def measure_widths_treeview(treeview, widths, item=None):
         font = treeview.tag_configure(child_tag, 'font')
         if font: fonts.add(font)
       except tk.TclError: pass # not supported in this version
+      
+      try:
+        item_image_width = max(item_image_width,
+          width_image(treeview.tag_configure(child_tag, 'image')))
+      except tk.TclError: pass # not supported in this version
+    
+    # get the per-item image
+    item_image_width = max(item_image_width,
+      width_image(treeview.item(child, 'image')))
   
-  # get the per-element (item/cell) padding
-  item_padding_width = padding2_widget(treeview,
+  # get the per-element (item/cell) space
+  item_space_width = item_image_width + padding2_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Item'))[0]
   
-  cell_padding_width = padding2_widget(treeview,
+  cell_space_width = padding2_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Cell'))[0]
   
   # measure the widths
@@ -734,7 +750,7 @@ def measure_widths_treeview(treeview, widths, item=None):
     # manually specified as -1, explicitly meaning to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
-    # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
+    # the element (item/cell) space is added on top of the treeview/tag padding by Tk
     # so here we do the same
     # for column #0, we need to worry about indents
     # on top of that, we include the minwidth in the space width
@@ -748,13 +764,19 @@ def measure_widths_treeview(treeview, widths, item=None):
     # if the space width fills the entire minwidth, this is undesirable for the measured result
     # so in that case, the text width is, in effect, initially zero
     space_width = padding_width
+    
+    # get the per-heading image, but only if the heading is shown
+    # this must be done first before we set the text width
+    if show_headings:
+      space_width += width_image(treeview.heading(cid, 'image'))
+    
     text_width = 0
     
     if cid == '#0':
-      space_width += item_padding_width + minwidth + (
+      space_width += item_space_width + minwidth + (
         indent * indents_treeview(treeview, item=item))
     else:
-      space_width += cell_padding_width
+      space_width += cell_space_width
       text_width = max(text_width, minwidth - space_width)
     
     # get the text width for the font that would take up the most space in the column
