@@ -176,7 +176,7 @@ def enable_widget(widget, enabled=True, cursor=True):
         widget['cursor'] = ''
   except tk.TclError: pass
   
-  for child_widget in widget.children.values():
+  for child_widget in widget.winfo_children():
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
@@ -432,7 +432,7 @@ def make_text(frame, name='', width=10, height=10,
 
 
 def _embed():
-  def insert(text, widget, line=-1):
+  def insert(text, widget, line=0):
     # width for the widget needs to be set explicitly, not by its geometry manager
     widget.pack_propagate(False)
     widget.grid_propagate(False)
@@ -445,7 +445,8 @@ def _embed():
       except tk.TclError: pass
       
       # use the insertion cursor so that it moves from the linestart to the lineend
-      text.mark_set(tk.INSERT, tk.END if line == -1 else '%d.0' % line)
+      text.mark_set(tk.INSERT,
+        '%d.0' % line if line > 0 else '%s - %d lines' % (tk.END, -line))
       
       # if there is anything before us on the line, insert a newline
       if text.compare(tk.INSERT, '>', '%s linestart' % tk.INSERT):
@@ -459,8 +460,6 @@ def _embed():
         text.insert(tk.INSERT, '\n')
     finally:
       text['state'] = tk.DISABLED
-  
-  stack = []
   
   def view(e):
     view = None
@@ -483,6 +482,8 @@ def _embed():
       inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
       child['width'] = e.width - (inset * 2)
   
+  stack = None
+  
   def enter(e):
     widget = e.widget
     
@@ -490,58 +491,73 @@ def _embed():
     stack.append(widget)
   
   def leave(e):
+    if not stack: return
     stack.pop()
   
-  callbacks = {}
+  def peek():
+    while stack:
+      text = stack[-1]
+      
+      # text might have been destroyed or ungridded in the time since it was put on the stack
+      # so here we give it a "vibe check"
+      try:
+        if text.winfo_ismapped(): return text
+      except tk.TclError: pass
+      
+      # throw out dead text
+      stack.pop()
+    
+    return None
   
-  def scroll_callback(name, delta=None):
-    if not stack: return
-    text = stack[-1]
+  scrolling = False
+  
+  def scroll(name, delta=None):
+    nonlocal scrolling
     
-    # event_generate is picky about delta being an integer if it is defined
-    kwargs = {} if delta is None else {'delta': int(delta)}
-    
-    # focus the text so the event goes to it
-    # then "forward" the event to the text
-    # finally, set the focus back to the widget it was on
-    # this does not seem to require takefocus to be true?
-    # TODO: there's a phantom bug here where sometimes
-    # we get "invalid command name" when using text, even though
-    # the window still exists and it shouldn't have been destroyed?
-    focus = text.focus_get()
-    text.focus_set()
+    # safeguard against reentrancy
+    # this check is important because
+    # focus_set is not guaranteed to set the focus
+    # (if the application window isn't focused)
+    if scrolling: return
+    scrolling = True
     
     try:
-      text.event_generate(name, **kwargs)
+      text = peek()
+      if not text: return
+      
+      # event_generate is picky about delta being an integer if it is defined
+      kwargs = {} if delta is None else {'delta': int(delta)}
+      
+      # focus the text so the event goes to it
+      # then "forward" the event to the text
+      # finally, set the focus back to the widget it was on
+      # this does not seem to require takefocus to be true?
+      widget = text.focus_get()
+      text.focus_set()
+      
+      try:
+        text.event_generate(name, **kwargs)
+      finally:
+        widget.focus_set()
     finally:
-      focus.focus_set()
+      scrolling = False
   
-  scroll_callback_names = (
-    '<Up>',
-    '<Down>',
-    '<Left>',
-    '<Right>',
-    
-    '<Prior>',
-    '<Next>',
-    '<Control-Prior>',
-    '<Control-Next>',
-    
-    '<Button-4>',
-    '<Button-5>',
-    '<Shift-Button-4>',
-    '<Shift-Button-5>'
-  )
+  bind_all_funcs = {}
   
-  for name in scroll_callback_names:
-    callbacks[name] = lambda e, name=name: scroll_callback(name)
+  for name in (
+    '<Up>', '<Down>', '<Left>', '<Right>',
+    '<Prior>', '<Next>', '<Control-Prior>', '<Control-Next>',
+    '<Button-4>', '<Button-5>', '<Shift-Button-4>', '<Shift-Button-5>'
+  ):
+    bind_all_funcs[name] = lambda e, name=name: scroll(name)
   
-  scroll_callback_delta_names = ('<MouseWheel>', '<Shift-MouseWheel>')
-  
-  for name in scroll_callback_delta_names:
-    callbacks[name] = lambda e, name=name: scroll_callback(name, delta=e.delta)
+  for name in ('<MouseWheel>', '<Shift-MouseWheel>'):
+    bind_all_funcs[name] = lambda e, name=name: scroll(name, delta=e.delta)
   
   def text(text):
+    nonlocal stack
+    nonlocal bind_all_funcs
+    
     try:
       if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
     except AttributeError: pass
@@ -560,7 +576,7 @@ def _embed():
       text.configure(takefocus=False, cursor='',
         bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
       
-      # prevent infinite recursion having the same events get sent back to the window
+      # prevent infinite recursion having the same events get sent back to all
       stop_propagation_widget(text)
       
       # make scrolling with the arrow keys instant
@@ -580,25 +596,23 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    # make this window aware of the embed_text
-    window = text.winfo_toplevel()
-    
     # if this gets raised it means a previous call to this function
     # failed to bind to the window (i.e. an exception occured during binding)
-    try:
-      if window.embed_text: raise RuntimeError('embed_text failed to bind to window')
-    except AttributeError: pass
+    # which is an invalid state that should never occur
+    if not stack is None:
+      if bind_all_funcs: raise RuntimeError('embed_text failed to bind all')
+      else: return
     
-    window.embed_text = True
+    stack = []
     
-    for name, callback in callbacks.items():
-      window.bind(name, callback)
+    for name, func in bind_all_funcs.items():
+      text.bind_all(name, func)
     
-    # set to False so any future calls to this function will
+    # set to None so any future calls to this function will
     # know that the binding was fully successful (no exceptions occured during binding)
     # it's necessary to track this state here since it'd be
-    # a bit silly if this function was single shot per-window
-    window.embed_text = False
+    # a bit silly if this function was single shot per-application
+    bind_all_funcs = None
   
   return insert, text
 
