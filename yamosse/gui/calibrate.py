@@ -78,7 +78,7 @@ def make_calibrate(frame, variables, class_names):
   footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)
   
   def ok():
-    variables['calibration'] = [s.get() for s in scales]
+    variables['calibration'] = [int(s.get()) for s in scales]
     gui.release_modal_window(window)
   
   make_footer(
