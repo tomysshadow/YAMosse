@@ -474,10 +474,10 @@ def _embed():
     view = None
     keysym = e.keysym
     
-    if keysym == 'Left': view = ['scroll', -1, 'units', 'x']
-    elif keysym == 'Right': view = ['scroll', 1, 'units', 'x']
-    elif keysym == 'Up': view = ['scroll', -1, 'units', 'y']
-    elif keysym == 'Down': view = ['scroll', 1, 'units', 'y']
+    if keysym == 'Left': view = [tk.SCROLL, -1, tk.UNITS, tk.X]
+    elif keysym == 'Right': view = [tk.SCROLL, 1, tk.UNITS, tk.X]
+    elif keysym == 'Up': view = [tk.SCROLL, -1, tk.UNITS, tk.Y]
+    elif keysym == 'Down': view = [tk.SCROLL, 1, tk.UNITS, tk.Y]
     else: return
     
     getattr(e.widget, ''.join((view.pop(), 'view')))(*view)
@@ -800,8 +800,8 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     heading = options.get('heading')
     
     # left align the heading by default
-    if heading: heading.setdefault('anchor', tk.W)
-    else: heading = {'anchor', tk.W}
+    if not heading: heading = {}
+    heading.setdefault(tk.ANCHOR, tk.W)
     
     treeview.heading(cid, **heading)
   
