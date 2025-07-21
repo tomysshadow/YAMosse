@@ -184,7 +184,7 @@ def prevent_default_widget(widget, class_=False, window=False, all_=False):
   bindtags = [widget]
   if class_: bindtags.append(widget.winfo_class())
   if window: bindtags.append(widget.winfo_toplevel())
-  if all_: bindtags.append('all')
+  if all_: bindtags.append(tk.ALL)
   
   widget.bindtags(bindtags)
 
