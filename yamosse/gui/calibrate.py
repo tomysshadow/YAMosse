@@ -12,12 +12,12 @@ def make_footer(frame, ok, cancel):
   root_images = gui.get_root_images()
   
   # TODO: undoable commands
-  undo_button = ttk.Button(frame, text='Undo', width=5,
+  undo_button = ttk.Button(frame, text='Undo', width=6,
     image=root_images['Photo']['undo.gif'], compound=tk.LEFT)
   
   undo_button.grid(row=0, column=0, sticky=tk.W)
   
-  redo_button = ttk.Button(frame, text='Redo', width=5,
+  redo_button = ttk.Button(frame, text='Redo', width=6,
     image=root_images['Photo']['redo.gif'], compound=tk.LEFT)
   
   redo_button.grid(row=0, column=1, sticky=tk.W, padx=gui.PADX_QW)
