@@ -464,8 +464,8 @@ def _embed():
       child['width'] = e.width - (inset * 2)
   
   def view(e):
-    view = None
     keysym = e.keysym
+    view = None
     
     if keysym == 'Left': view = [tk.SCROLL, -1, tk.UNITS, tk.X]
     elif keysym == 'Right': view = [tk.SCROLL, 1, tk.UNITS, tk.X]
