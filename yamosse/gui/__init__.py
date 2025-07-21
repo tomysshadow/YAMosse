@@ -87,9 +87,6 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
-get_root_window = None
-get_root_images = None
-
 
 def _init_report_callback_exception():
   reported = False
