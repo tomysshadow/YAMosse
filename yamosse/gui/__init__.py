@@ -818,6 +818,8 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   treeview.grid(row=0, column=0, sticky=tk.NSEW)
   
   for cid, options in columns.items():
+    # we don't set a default value for get
+    # (it's valid for column/heading to be explicitly set to None, so pointless anyway)
     column = options.get('column')
     if column: treeview.column(cid, **column)
     
