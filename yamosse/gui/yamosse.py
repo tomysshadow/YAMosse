@@ -106,6 +106,7 @@ def make_classes(frame, variables, class_names):
     
     command=lambda: gui.gui(
       gui_calibrate.make_calibrate,
+      variables,
       class_names,
       child=True
     )

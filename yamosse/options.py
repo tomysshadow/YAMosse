@@ -159,10 +159,10 @@ class Options:
     with open(file_name, 'w') as f:
       json.dump(vars(self), f, indent=True)
   
-  def worker(self, np, model_yamnet_class_names):
+  def worker(self, np, class_names):
     BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
     
-    def single_shot(np, model_yamnet_class_names):
+    def single_shot(np, class_names):
       raise RuntimeError('worker is single shot')
     
     self.worker = single_shot
@@ -171,7 +171,7 @@ class Options:
     calibration = np.divide(self.calibration, 100.0)
     
     calibration = np.concatenate((calibration,
-      np.ones(len(model_yamnet_class_names) - calibration.size)))
+      np.ones(len(class_names) - calibration.size)))
     
     # make background noise volume logarithmic if requested
     background_noise_volume = self.background_noise_volume / 100.0

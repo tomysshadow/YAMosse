@@ -36,7 +36,7 @@ def make_footer(frame, window):
     gui.enable_traversal_button(button)
 
 
-def make_calibrate(frame, class_names):
+def make_calibrate(frame, variables, class_names):
   RESIZABLE = True
   SIZE = (480, 500)
   
@@ -55,13 +55,17 @@ def make_calibrate(frame, class_names):
   classes_text = gui.make_text(classes_frame, font=('TkDefaultFont', 24))[1][0]
   gui.embed_text(classes_text)
   
+  # put in 100% as defaults if the calibration is empty/too short
+  calibration_variable = variables['calibration']
+  calibration_variable += [100] * (len(class_names) - len(calibration_variable))
+  
   for c in range(len(class_names)):
     scale_frame = ttk.Frame(classes_text)
     
     scale = gui.make_scale(scale_frame, name='%d. %s' % (c + 1, class_names[c]),
       to=200)[1]
     
-    scale.set(100) # TODO: from options
+    scale.set(calibration_variable[c])
     
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')
     scale_frame.columnconfigure(1, weight=1, uniform='class_column')
