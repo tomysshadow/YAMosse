@@ -1053,10 +1053,9 @@ def make_filedialog(frame, name='', textvariable=None,
     textvariable.set(shlex.join(data))
   
   def show(ask='openfilename'):
-    filedialog_ask = getattr(filedialog, ''.join(('ask', ask)))
+    kwargs = {'filetypes': filetypes} if filetypes and ask != 'directory' else {}
     
-    set_(filedialog_ask(parent=parent, filetypes=filetypes
-      ) if filetypes and ask != 'directory' else filedialog_ask(parent=parent))
+    set_(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
   
   if asks == None: asks = ('openfilename',)
   
