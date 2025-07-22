@@ -72,6 +72,8 @@ PADY_QS = (0, PADDING_Q)
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
+DEFAULT_MINWIDTH = -1
+
 # these default numbers come from the Tk Treeview documentation
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
@@ -649,15 +651,15 @@ embed_insert, embed_text = _embed()
 
 
 def _minwidth_treeview():
-  default = -1
+  default = DEFAULT_MINWIDTH
   
-  def get(minwidth=-1):
+  def get(minwidth=DEFAULT_MINWIDTH):
     nonlocal default
     
-    if minwidth != -1:
+    if minwidth != DEFAULT_MINWIDTH:
       return minwidth
     
-    if default == -1:
+    if default == DEFAULT_MINWIDTH:
       default = ttk.Treeview().column('#0', 'minwidth')
     
     return default
@@ -767,7 +769,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   measured_widths = {}
   
   for cid, width in widths.items():
-    minwidth = -1
+    minwidth = DEFAULT_MINWIDTH
     
     # the width can be a sequence like (width, minwidth) which we unpack here
     # if the sequence is too short, just get the width and use default minwidth
@@ -784,13 +786,13 @@ def measure_widths_treeview(treeview, widths, item=None):
     # then it would stack if this function were called multiple times
     # so here we get the real default
     # this is done after the try block above, because minwidth can be
-    # manually specified as -1, explicitly meaning to use the default
+    # manually specified as DEFAULT_MINWIDTH, explicitly meaning to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
     # get the per-heading image, but only if the heading is shown
     heading_image_width = width_image(treeview.heading(cid, 'image')) if show_headings else 0
     
-    # the element (item/cell) space is added on top of the treeview/tag padding by Tk
+    # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
     # so here we do the same
     # for column #0, we need to worry about indents
     # on top of that, we include the minwidth in the space width
