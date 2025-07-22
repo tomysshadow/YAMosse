@@ -485,18 +485,17 @@ def _embed():
   def peek(M):
     # if some other widget has already handled this event
     # then don't do anything
-    if int(M): return ''
-    
-    while stack:
-      text = stack[-1]
-      
-      # we're just giving the text widget a "vibe check" here to test it's still alive
-      try: text.winfo_toplevel()
-      except tk.TclError: pass
-      else: return text
-      
-      # throw out dead text
-      stack.pop()
+    if not int(M):
+      while stack:
+        text = stack[-1]
+        
+        # we're just giving the text widget a "vibe check" here to test it's still alive
+        try: text.winfo_toplevel()
+        except tk.TclError: pass
+        else: return text
+        
+        # throw out dead text
+        stack.pop()
     
     return ''
   
