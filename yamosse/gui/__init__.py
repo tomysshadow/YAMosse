@@ -508,7 +508,8 @@ def _embed():
     except AttributeError: pass
     
     # doubles as a placeholder to prevent text selection
-    text.embed_text = ttk.Frame(text)
+    embed_text = ttk.Frame(text)
+    text.embed_text = embed_text
     
     text['state'] = tk.NORMAL
     
@@ -519,7 +520,7 @@ def _embed():
       # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
       # (put a border around the surrounding frame instead)
       text.configure(takefocus=False, cursor='',
-        bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
+        bg=lookup_style_widget(embed_text, 'background'), borderwidth=0)
       
       text.bind('<Configure>', configure)
       
@@ -529,7 +530,7 @@ def _embed():
       # delete anything that might've been typed in before the text was passed to us
       # then create the placeholder frame
       text.delete('1.0', tk.END)
-      text.window_create(tk.END, window=text.embed_text, stretch=True)
+      text.window_create(tk.END, window=embed_text, stretch=True)
     finally:
       text['state'] = tk.DISABLED
     
