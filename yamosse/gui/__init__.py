@@ -628,6 +628,11 @@ def _embed():
     
     text.__del__ = destroy
     
+    # this first loop is just necessary because
+    # we want to make the arrow keys scroll instantly
+    # default behaviour is to move the text marker, which
+    # will eventually scroll, but only when it hits the bottom of the screen
+    # this is the only instance where we want to forego the Text class defaults
     for name in VIEWS.keys():
       try: names.remove(name)
       except ValueError: pass
