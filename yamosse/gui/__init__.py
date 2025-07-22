@@ -502,8 +502,6 @@ def _embed():
     return ''
   
   def text(text):
-    nonlocal stack
-    
     try:
       if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
     except AttributeError: pass
