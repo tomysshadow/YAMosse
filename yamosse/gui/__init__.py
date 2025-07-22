@@ -559,6 +559,44 @@ def _embed():
     bindings = {}
     
     def bind(script):
+      # here is the problem this tries to solve
+      # usually, events are only sent to the
+      # specific widgets that have focus, or that the mouse is over, depending on the event
+      # so if you are over a frame, label, etc. the text just won't get mouse wheel events
+      # similarly for arrow keys, page up/page down, etc.
+      # because the text does not have focus, it doesn't get them
+      # but I want it to scroll as long as the mouse is over it, and any of these things happen
+      # and I don't want to just redefine those bindings myself, they're all platform specific
+      # bindtags don't solve this problem, all of these default behaviours are part of
+      # the Text class, but if we bind the children to the Text class, nothing happens because
+      # the Text class default bindings need the Text widget to be the recipient of the event
+      # (i.e., the value of e.widget in the event handler is wrong)
+      # so we want to "forward" or "retrigger" the event, from an arbitrary widget
+      # to the Text widget, so we get that sweet default behaviour for all those keys
+      # so we bind to window, which always gets these events
+      # thanks to the default bindtags of the child widgets
+      # (and we DON'T use bind_all - we only want events if the window's focused anyway)
+      # but what then?
+      # event_generate isn't sufficient because we can't just give it the Event object from Tkinter
+      # (i.e. the one with e.widget, e.num, e.keysym, e.delta etc.)
+      # all the values on the Event object undergo subtle transformations
+      # when it enters Python from Tk, so it's a lossy process and we can't go back the other way
+      # and either way, it still has the problem of sending the event to the wrong place
+      # because of focus not being set correctly
+      # and trying to restore focus back to a state it was in previously is a fool's errand
+      # to do this properly, we can't go Tk > Python, this needs to happen entirely Tk side
+      # that way text substitutions remain intact, the default bindings get their original values
+      # and we can replace the widget that actually got the event with the Text widget we want
+      # since %W is just a text substitution normally anyway, so find and replace
+      # and that way, the Text widget can get these events, even without focus!
+      # it even properly handles cases where the event was already swallowed by another widget
+      # i.e. you press arrow keys on a Scale, so the text doesn't scroll, in that case...
+      # and, you can still use Tab to traverse the interface too!
+      # the only weirdness is the text widget default bindings will usually focus the text widget
+      # even if takefocus is False (unlike most other widgets,) so we need to specifically
+      # disable the focus command, temporarily, by aliasing it, and then restore it back after
+      # and that way, clicking random places in the window
+      # won't ever give the text focus, it is completely impossible for it to steal away the focus
       bindings[name] = window.bind(name,
         
         f'''set {W} [{W} %M]
@@ -577,8 +615,7 @@ def _embed():
     except AttributeError: text_destroy = lambda: None
     
     def destroy():
-      try:
-        text_destroy()
+      try: text_destroy()
       finally:
         # try to clean up the window bindings
         # but since this could happen at any old time
