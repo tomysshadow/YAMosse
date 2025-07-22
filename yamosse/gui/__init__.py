@@ -507,8 +507,8 @@ def _embed():
     except AttributeError: pass
     
     # doubles as a placeholder to prevent text selection
-    embed_text = ttk.Frame(text)
-    text.embed_text = embed_text
+    text.embed_text = ttk.Frame(text)
+    embed_text = text.embed_text
     
     text['state'] = tk.NORMAL
     
