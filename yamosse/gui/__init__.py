@@ -490,7 +490,7 @@ def _embed():
     while stack:
       text = stack[-1]
       
-      # we're just giving the text widget a "vibe check" here to check it's still alive
+      # we're just giving the text widget a "vibe check" here to test it's still alive
       try: text.winfo_toplevel()
       except tk.TclError: pass
       else: return text
@@ -539,12 +539,11 @@ def _embed():
       return text.tk.call('interp', 'invokehidden', '', 'focus', *args)
     
     def view(widget, name):
-      view, args = VIEWS[name]
-      
       # need to use nametowidget because we want the text from the top of the stack
       # (not necessarily the same one in our scope here)
+      view, args = VIEWS[name]
+      
       getattr(text.nametowidget(widget), ''.join((view, 'view')))(*args)
-      return 'break'
     
     window = text.winfo_toplevel()
     W = window.register(peek)
