@@ -426,6 +426,13 @@ def make_text(frame, name='', width=10, height=10,
 
 
 def _embed():
+  VIEWS = {
+    '<<PrevChar>>': (tk.X, (tk.SCROLL, -1, tk.UNITS)),
+    '<<NextChar>>': (tk.X, (tk.SCROLL, 1, tk.UNITS)),
+    '<<PrevLine>>': (tk.Y, (tk.SCROLL, -1, tk.UNITS)),
+    '<<NextLine>>': (tk.Y, (tk.SCROLL, 1, tk.UNITS))
+  }
+  
   def insert(text, widget, line=0):
     # width for the widget needs to be set explicitly, not by its geometry manager
     widget.pack_propagate(False)
@@ -463,20 +470,7 @@ def _embed():
       inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
       child['width'] = e.width - (inset * 2)
   
-  def view(e):
-    keysym = e.keysym
-    view = None
-    
-    if keysym == 'Left': view = [tk.SCROLL, -1, tk.UNITS, tk.X]
-    elif keysym == 'Right': view = [tk.SCROLL, 1, tk.UNITS, tk.X]
-    elif keysym == 'Up': view = [tk.SCROLL, -1, tk.UNITS, tk.Y]
-    elif keysym == 'Down': view = [tk.SCROLL, 1, tk.UNITS, tk.Y]
-    else: return
-    
-    getattr(e.widget, ''.join((view.pop(), 'view')))(*view)
-    return 'break'
-  
-  stack = None
+  stack = []
   
   def enter(e):
     widget = e.widget
@@ -488,69 +482,26 @@ def _embed():
     if not stack: return
     stack.pop()
   
-  def peek():
+  def peek(M):
+    # if some other widget has already handled this event
+    # then don't do anything
+    if int(M): return ''
+    
     while stack:
       text = stack[-1]
       
-      # text might have been destroyed or ungridded in the time since it was put on the stack
-      # so here we give it a "vibe check"
-      try:
-        if text.winfo_ismapped(): return text
+      # we're just giving the text widget a "vibe check" here to check it's still alive
+      try: text.winfo_toplevel()
       except tk.TclError: pass
+      else: return text
       
       # throw out dead text
       stack.pop()
     
-    return None
-  
-  scrolling = False
-  
-  def scroll(name, delta=None):
-    nonlocal scrolling
-    
-    # safeguard against reentrancy
-    # this check is important because
-    # focus_set is not guaranteed to set the focus
-    # (if the application window isn't focused)
-    if scrolling: return
-    scrolling = True
-    
-    try:
-      text = peek()
-      if not text: return
-      
-      # event_generate is picky about delta being an integer if it is defined
-      kwargs = {} if delta is None else {'delta': int(delta)}
-      
-      # focus the text so the event goes to it
-      # then "forward" the event to the text
-      # finally, set the focus back to the widget it was on
-      # this does not seem to require takefocus to be true?
-      widget = text.focus_get()
-      text.focus_set()
-      
-      try:
-        text.event_generate(name, **kwargs)
-      finally:
-        widget.focus_set()
-    finally:
-      scrolling = False
-  
-  bind_all_funcs = {}
-  
-  for name in (
-    '<Up>', '<Down>', '<Left>', '<Right>',
-    '<Prior>', '<Next>', '<Control-Prior>', '<Control-Next>',
-    '<Button-4>', '<Button-5>', '<Shift-Button-4>', '<Shift-Button-5>'
-  ):
-    bind_all_funcs[name] = lambda e, name=name: scroll(name)
-  
-  for name in ('<MouseWheel>', '<Shift-MouseWheel>'):
-    bind_all_funcs[name] = lambda e, name=name: scroll(name, delta=e.delta)
+    return ''
   
   def text(text):
     nonlocal stack
-    nonlocal bind_all_funcs
     
     try:
       if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
@@ -570,15 +521,7 @@ def _embed():
       text.configure(takefocus=False, cursor='',
         bg=ttk.Style(text).lookup('TFrame', 'background'), borderwidth=0)
       
-      # prevent infinite recursion having the same events get sent back to all
-      prevent_default_widget(text, class_=True, window=True)
-      
       text.bind('<Configure>', configure)
-      
-      # make scrolling with the arrow keys instant
-      # TODO: investigate Control-b, Control-f, Control-p, Control-n
-      for name in ('<Up>', '<Down>', '<Left>', '<Right>'):
-        text.bind(name, view)
       
       text.bind('<Enter>', enter)
       text.bind('<Leave>', leave)
@@ -590,23 +533,72 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    # if this gets raised it means a previous call to this function
-    # failed to bind to the window (i.e. an exception occured during binding)
-    # which is an invalid state that should never occur
-    if not stack is None:
-      if bind_all_funcs: raise RuntimeError('embed_text failed to bind all')
-      else: return
+    def focus(*args):
+      # allow getting focus, prevent setting focus
+      if len(args) == 1: return ''
+      return text.tk.call('interp', 'invokehidden', '', 'focus', *args)
     
-    stack = []
+    def view(widget, name):
+      view, args = VIEWS[name]
+      
+      # need to use nametowidget because we want the text from the top of the stack
+      # (not necessarily the same one in our scope here)
+      getattr(text.nametowidget(widget), ''.join((view, 'view')))(*args)
+      return 'break'
     
-    for name, func in bind_all_funcs.items():
-      text.bind_all(name, func)
+    window = text.winfo_toplevel()
+    W = window.register(peek)
+    focus_cbname = window.register(focus)
+    view_cbname = window.register(view)
     
-    # set to None so any future calls to this function will
-    # know that the binding was fully successful (no exceptions occured during binding)
-    # it's necessary to track this state here since it'd be
-    # a bit silly if this function was single shot per-application
-    bind_all_funcs = None
+    class_ = text.winfo_class()
+    
+    names = list(text.tk.call('bind', class_))
+    name = ''
+    
+    bindings = {}
+    
+    def bind(script):
+      bindings[name] = window.bind(name,
+        
+        f'''set {W} [{W} %M]
+        if {{${W} == ""}} {{ continue }}
+        
+        interp hide {{}} focus
+        interp alias {{}} focus {{}} {focus_cbname}
+        catch {{{script.replace("%W", f"${W}")}}} result options
+        
+        interp alias {{}} focus {{}}
+        interp expose {{}} focus
+        return -options $options $result'''
+      )
+    
+    try: text_destroy = text.__del__
+    except AttributeError: text_destroy = lambda: None
+    
+    def destroy():
+      try:
+        text_destroy()
+      finally:
+        # try to clean up the window bindings
+        # but since this could happen at any old time
+        # (who knows when we might decide to garbage collect this object?)
+        # make sure to handle the case where window is already dead
+        try:
+          for name, binding in bindings.items():
+            window.unbind(name, binding)
+        except tk.TclError: pass
+    
+    text.__del__ = destroy
+    
+    for name in VIEWS.keys():
+      try: names.remove(name)
+      except ValueError: pass
+      
+      bind(f'{view_cbname} %W {name}')
+    
+    for name in names:
+      bind(text.tk.call('bind', class_, name))
   
   return insert, text
 
