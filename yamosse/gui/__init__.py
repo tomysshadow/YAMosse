@@ -776,6 +776,9 @@ def measure_widths_treeview(treeview, widths, item=None):
     except ValueError: width, = width
     except TypeError: pass
     
+    # a width of None means don't do this column
+    if width is None: continue
+    
     # we can't just get the minwidth of the current column to use here
     # otherwise, if the minwidth was set to the result of this function
     # then it would stack if this function were called multiple times
