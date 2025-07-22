@@ -535,19 +535,23 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
+    window = text.winfo_toplevel()
+    
+    # text is not used in the inner scope of these functions
+    # in the hope of preventing a circular reference
+    # (where text can't del because it's kept alive in these scopes...)
     def focus(*args):
       # allow getting focus, prevent setting focus
       if len(args) == 1: return ''
-      return text.tk.call('interp', 'invokehidden', '', 'focus', *args)
+      return window.tk.call('interp', 'invokehidden', '', 'focus', *args)
     
     def view(widget, name):
       # need to use nametowidget because we want the text from the top of the stack
       # (not necessarily the same one in our scope here)
       view, args = VIEWS[name]
       
-      getattr(text.nametowidget(widget), ''.join((view, 'view')))(*args)
+      getattr(window.nametowidget(widget), ''.join((view, 'view')))(*args)
     
-    window = text.winfo_toplevel()
     W = window.register(peek)
     focus_cbname = window.register(focus)
     view_cbname = window.register(view)
