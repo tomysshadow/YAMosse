@@ -756,11 +756,11 @@ def measure_widths_treeview(treeview, widths, item=None):
     item_image_width = max(item_image_width,
       width_image(treeview.item(child, 'image')))
   
-  # get the per-element (item/cell) space
-  item_space_width = item_image_width + padding2_widget(treeview,
+  # get the per-element (item/cell) padding
+  item_padding_width = padding2_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Item'))[0]
   
-  cell_space_width = padding2_widget(treeview,
+  cell_padding_width = padding2_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Cell'))[0]
   
   # measure the widths
@@ -787,6 +787,9 @@ def measure_widths_treeview(treeview, widths, item=None):
     # manually specified as -1, explicitly meaning to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
+    # get the per-heading image, but only if the heading is shown
+    heading_image_width = width_image(treeview.heading(cid, 'image')) if show_headings else 0
+    
     # the element (item/cell) space is added on top of the treeview/tag padding by Tk
     # so here we do the same
     # for column #0, we need to worry about indents
@@ -801,19 +804,13 @@ def measure_widths_treeview(treeview, widths, item=None):
     # if the space width fills the entire minwidth, this is undesirable for the measured result
     # so in that case, the text width is, in effect, initially zero
     space_width = padding_width
-    
-    # get the per-heading image, but only if the heading is shown
-    # this must be done first before we set the text width
-    if show_headings:
-      space_width += width_image(treeview.heading(cid, 'image'))
-    
     text_width = 0
     
     if cid == '#0':
-      space_width += item_space_width + minwidth + (
+      space_width += item_padding_width + max(item_image_width, heading_image_width) + minwidth + (
         indent * indents_treeview(treeview, item=item))
     else:
-      space_width += cell_space_width
+      space_width += cell_padding_width + heading_image_width
       text_width = max(text_width, minwidth - space_width)
     
     # get the text width for the font that would take up the most space in the column
