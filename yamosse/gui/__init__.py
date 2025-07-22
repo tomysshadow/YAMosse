@@ -561,9 +561,9 @@ def _embed():
       # here is the problem this tries to solve
       # usually, events are only sent to the
       # specific widgets that have focus, or that the mouse is over, depending on the event
-      # so if you are over a frame, label, etc. the text just won't get mouse wheel events
-      # similarly for arrow keys, page up/page down, etc.
-      # because the text does not have focus, it doesn't get them
+      # so if you are over a Frame, Label, etc. the Text just won't get <MouseWheel> events
+      # similarly for Arrow Keys, Page Up/Page Down, etc.
+      # because the Text widget does not have focus, it doesn't get them
       # but I want it to scroll as long as the mouse is over it, and any of these things happen
       # and I don't want to just redefine those bindings myself, they're all platform specific
       # bindtags don't solve this problem, all of these default behaviours are part of
@@ -584,8 +584,10 @@ def _embed():
       # because of focus not being set correctly
       # and trying to restore focus back to a state it was in previously is a fool's errand
       # to do this properly, we can't go Tk > Python, this needs to happen entirely Tk side
-      # that way text substitutions remain intact, the default bindings get their original values
-      # and we can replace the widget that actually got the event with the Text widget we want
+      # that way text substitutions (like %b, %N, %D...) remain intact
+      # the default bindings get their original values, as they are expecting
+      # and we can replace the widget that actually got the event (the window we bound to)
+      # with the Text widget we want
       # since %W is just a text substitution normally anyway, so find and replace
       # and that way, the Text widget can get these events, even without focus!
       # it even properly handles cases where the event was already swallowed by another widget
