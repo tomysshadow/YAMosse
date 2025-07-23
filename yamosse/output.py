@@ -135,7 +135,7 @@ def output(file_name, *args, **kwargs):
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
         self.print_file(file_name)
-        print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), file=file)
+        print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), sep='', file=file)
         print('', file=file)
       
       print('', file=file)
@@ -143,7 +143,7 @@ def output(file_name, *args, **kwargs):
     def print_section(self, name):
       # name should not contain lines
       # this is an internal method so we trust the class not to pass in a name with lines here
-      print('# %s' % name, end='\n\n', file=self.file)
+      print('#', name, end='\n\n', file=self.file)
     
     def print_file(self, name):
       print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)

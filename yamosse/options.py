@@ -81,7 +81,7 @@ class Options:
     assert joined(self.weights), 'weights must be joined'
     
     def option(name, value, end='\n'):
-      print(': '.join((name, value)), end=end, file=file)
+      print(name, ': ', value, end=end, sep='', file=file)
     
     option('Current Date/Time', yamosse_utils.ascii_backslashreplace(datetime.now()))
     option('Version', repr(self.version))

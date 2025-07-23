@@ -110,12 +110,12 @@ def identification(option):
         
         try:
           if not class_timestamps:
-            print('\t', None, file=file)
+            print('\t', None, sep='', file=file)
             continue
           
           if combine_all:
             print('\t', item_delimiter.join(
-              model_yamnet_class_names[c] for c in class_timestamps.keys()), file=file)
+              model_yamnet_class_names[c] for c in class_timestamps.keys()), sep='', file=file)
             
             continue
           
@@ -124,7 +124,7 @@ def identification(option):
           for class_, timestamp_scores in class_timestamps.items():
             assert timestamp_scores, 'timestamp_scores must not be empty'
             
-            print('\t', model_yamnet_class_names[class_], end=':\n', file=file)
+            print('\t', model_yamnet_class_names[class_], end=':\n', sep='', file=file)
             
             for timestamp, score in timestamp_scores.items():
               try: hms = ' - '.join(output.hours_minutes(t) for t in timestamp)
@@ -134,7 +134,7 @@ def identification(option):
               
               timestamp_scores[timestamp] = hms
             
-            print('\t\t', item_delimiter.join(timestamp_scores.values()), file=file)
+            print('\t\t', item_delimiter.join(timestamp_scores.values()), sep='', file=file)
         finally:
           print('', file=file)
   
@@ -201,8 +201,22 @@ def identification(option):
     
     @classmethod
     def print_results_to_output(cls, results, output):
-      print(results, file=output.file)
-      raise NotImplementedError # TODO
+      file = output.file
+      model_yamnet_class_names = output.model_yamnet_class_names
+      item_delimiter = output.item_delimiter
+      output_confidence_scores = output.output_confidence_scores
+      
+      for file_name, top_scores in results.items():
+        output.print_file(file_name)
+        
+        for timestamp, class_scores in top_scores.items():
+          for class_, score in class_scores.items():
+            class_scores[class_] = f'{model_yamnet_class_names[class_]} ({score:.0%})'
+          
+          print('\t', output.hours_minutes(timestamp), ': ',
+            item_delimiter.join(class_scores.values()), sep='', file=file)
+        
+        print('', file=file)
   
   if option == IDENTIFICATION_CONFIDENCE_SCORE:
     return IdentificationConfidenceScore
