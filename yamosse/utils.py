@@ -24,9 +24,9 @@ def dict_sorted(d, *args, **kwargs):
   return dict(sorted(d.items(), *args, **kwargs))
 
 
-def dict_enumerate(d):
+def dict_enumerate(d, *args, **kwargs):
   if isinstance(d, dict): return d
-  return dict(enumerate(d))
+  return dict(enumerate(d, *args, **kwargs))
 
 
 def batched(seq, size):
