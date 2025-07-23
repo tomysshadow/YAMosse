@@ -9,17 +9,17 @@ TITLE = 'Calibrate'
 def make_footer(frame, ok, cancel):
   frame.columnconfigure(2, weight=1)
   
-  root_images = gui.get_root_images()
+  photo = gui.get_root_images()['Photo']
   
   # TODO: undoable commands
   # TODO: Undo/Redo text should not be set here
   undo_button = ttk.Button(frame, text='Undo', width=6,
-    image=root_images['Photo']['undo.gif'], compound=tk.LEFT)
+    image=photo['undo.gif'], compound=tk.LEFT)
   
   undo_button.grid(row=0, column=0, sticky=tk.W)
   
   redo_button = ttk.Button(frame, text='Redo', width=6,
-    image=root_images['Photo']['redo.gif'], compound=tk.LEFT)
+    image=photo['redo.gif'], compound=tk.LEFT)
   
   redo_button.grid(row=0, column=1, sticky=tk.W, padx=gui.PADX_QW)
   
@@ -52,7 +52,7 @@ def make_calibrate(frame, variables, class_names):
   calibration_frame.grid(row=0, sticky=tk.NSEW)
   
   calibration_text = gui.make_text(calibration_frame, font=('TkDefaultFont', 24))[1][0]
-  gui.embed_text(calibration_text)
+  gui.text_embed(calibration_text)
   
   # put in 100% as defaults if the calibration is empty/too short
   calibration_variable = variables['calibration']
@@ -72,7 +72,7 @@ def make_calibrate(frame, variables, class_names):
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')
     scale_frame.columnconfigure(1, weight=1, uniform='class_column')
     
-    gui.embed_insert(calibration_text, scale_frame)
+    gui.insert_embed(calibration_text, scale_frame)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)

@@ -26,3 +26,8 @@ def batched(seq, size):
 def try_split(value, *args, **kwargs):
   try: return value.split(*args, **kwargs)
   except: return value
+
+
+def try_int(value):
+  try: return int(value)
+  except: return value

@@ -445,7 +445,7 @@ def _embed():
     
     try:
       # if the placeholder exists, then delete it
-      try: text.delete(text.embed_text)
+      try: text.delete(text.embed)
       except tk.TclError: pass
       
       # use the insertion cursor so that it moves from the linestart to the lineend
@@ -508,12 +508,12 @@ def _embed():
   
   def text(text):
     try:
-      if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
+      if text.embed: raise RuntimeError('text_embed is single shot per-text')
     except AttributeError: pass
     
     # doubles as a placeholder to prevent text selection
-    text.embed_text = ttk.Frame(text)
-    embed_text = text.embed_text
+    text.embed = ttk.Frame(text)
+    embed = text.embed
     
     text['state'] = tk.NORMAL
     
@@ -524,7 +524,7 @@ def _embed():
       # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
       # (put a border around the surrounding frame instead)
       text.configure(takefocus=False, cursor='',
-        bg=lookup_style_widget(embed_text, 'background'), borderwidth=0)
+        bg=lookup_style_widget(embed, 'background'), borderwidth=0)
       
       # unbind from Text class so we can't get duplicate events
       # they'll be received from window instead
@@ -538,7 +538,7 @@ def _embed():
       # delete anything that might've been typed in before the text was passed to us
       # then create the placeholder frame
       text.delete('1.0', tk.END)
-      text.window_create(tk.END, window=embed_text, stretch=True)
+      text.window_create(tk.END, window=embed, stretch=True)
     finally:
       text['state'] = tk.DISABLED
     
@@ -662,7 +662,7 @@ def _embed():
   
   return insert, text
 
-embed_insert, embed_text = _embed()
+insert_embed, text_embed = _embed()
 
 
 def _minwidth_treeview():
@@ -905,7 +905,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   buttons = ()
   
-  def get_items(item=None):
+  def get_items(item=''):
     items = treeview.get_children(item=item)
     
     for item in items:
@@ -971,6 +971,74 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   
   return make_name(name_frame, name), (treeview, make_scrollbar(treeview, xscroll, yscroll)
     ), (buttons_frame, buttons)
+
+
+def _sorted():
+  ITEM = ''
+  
+  re_natural = re.compile(r'(\d+)')
+  
+  # uses "natural" sorting - the values being sorted here are often numbers
+  # https://nedbatchelder.com/blog/200712/human_sorting.html
+  def key_natural(value):
+    return [yamosse_utils.try_int(v) for v in re_natural.split(value)]
+  
+  def key_child(item):
+    return key_natural(item[0])
+  
+  def key_value(item):
+    return key_natural(item[1])
+  
+  def treeview(treeview):
+    try:
+      if treeview.sorted: raise RuntimeError('treeview_sorted is single shot per-treeview')
+    except AttributeError: pass
+    
+    treeview.sorted = True
+    
+    table_sort_icons = get_root_images()['Bitmap']['table sort icons']
+    sort_both_small = table_sort_icons['sort_both_small.xbm']
+    sort_up_small = table_sort_icons['sort_up_small.xbm']
+    sort_down_small = table_sort_icons['sort_down_small.xbm']
+    
+    # swaps between three sorting states for each heading: both, down, and up
+    # in the both state (the default,) columns are sorted by their ID
+    # in the down and up states, items are sorted forward and reversed, respectively
+    def sort(cid=None, reverse=False):
+      for column in treeview['columns']:
+        treeview.heading(
+          column,
+          image=sort_both_small,
+          command=lambda column=column: sort(cid=column)
+        )
+      
+      children = dict.fromkeys(treeview.get_children(item=ITEM))
+      key = key_child if cid is None else key_value
+      
+      if key is key_value:
+        for child in children.keys():
+          children[child] = treeview.set(child, cid)
+        
+        image = sort_up_small if reverse else sort_down_small
+        
+        # reverse sort next time
+        treeview.heading(
+          cid,
+          image=image,
+          command=lambda: sort(cid=None if reverse else cid, reverse=not reverse)
+        )
+      
+      children = yamosse_utils.dict_sorted(children, key=key, reverse=reverse)
+      
+      # rearrange items in sorted positions
+      for index, child in enumerate(children.keys()):
+        treeview.move(child, ITEM, index)
+    
+    sort()
+  
+  return treeview
+
+treeview_sorted = _sorted()
 
 
 def heading_text_columns(c):

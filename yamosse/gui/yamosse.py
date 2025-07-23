@@ -96,6 +96,7 @@ def make_classes(frame, variables, class_names):
     variables['classes'] = [int(s) for s in e.widget.selection()]
   
   treeview.bind('<<TreeviewSelect>>', select_treeview)
+  gui.treeview_sorted(treeview)
   gui.configure_widths_treeview(treeview, {0: 3})
   
   buttons_frame = treeview_widgets[2][0]
@@ -300,9 +301,9 @@ def make_sort(frame, variables):
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
   
-  root_images = gui.get_root_images()
-  up = root_images['Photo']['up.gif']
-  down = root_images['Photo']['down.gif']
+  photo = gui.get_root_images()['Photo']
+  up = photo['up.gif']
+  down = photo['down.gif']
   
   def show_sort_reverse_checkbutton():
     sort_reverse_checkbutton['image'] = up if sort_reverse_variable.get() else down
