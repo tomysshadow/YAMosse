@@ -148,7 +148,9 @@ def identification(option):
       self.calibration = np.take(options.calibration, options.classes)
     
     def identified(self):
-      if self.options.combine_all: return set()
+      options = self.options
+      
+      if options.combine_all or not options.combine: return set()
       return super().identified()
     
     def predict(self, top_scores, prediction_score=None):
@@ -197,8 +199,8 @@ def identification(option):
         class_scores = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
         
-        if combine_all: top_scores.add(class_scores)
-        else: top_scores[top] = class_scores
+        try: top_scores[top] = class_scores
+        except ValueError: top_scores.add(class_scores)
         return
       
       default += score
@@ -220,7 +222,11 @@ def identification(option):
         # TODO: handle top_scores being a set for combine all
         for timestamp, class_scores in top_scores.items():
           for class_, score in class_scores.items():
-            class_scores[class_] = f'{model_yamnet_class_names[class_]} ({score:.0%})'
+            class_name = model_yamnet_class_names[class_]
+            
+            if output_confidence_scores: class_name = f'{class_name} ({score:.0%})'
+            
+            class_scores[class_] = class_name
           
           print('\t', output.hours_minutes(timestamp), ': ',
             item_delimiter.join(class_scores.values()), sep='', file=file)

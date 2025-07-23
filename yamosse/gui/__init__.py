@@ -1418,7 +1418,7 @@ def _root_images():
         return result
       
       def callback_image(entry, make_image):
-        name = entry.name.lower()
+        name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
         
         if entry.is_dir():
           return (name, scandir(entry.path, lambda image_entry: callback_image(
