@@ -148,7 +148,7 @@ def identification(option):
       options = self.options
       classes = options.classes
       combine = options.combine
-      combine_all = options.combine_all # TODO not implemented yet
+      combine_all = options.combine_all # TODO STILL not implemented properly yet
       
       # TODO: combine all should wait until the very end to combine
       # output timestamps only controls whether timestamps are printed
