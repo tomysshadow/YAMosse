@@ -23,11 +23,11 @@ def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
-def try_split(value, *args, **kwargs):
-  try: return value.split(*args, **kwargs)
+def try_int(value, *args, **kwargs):
+  try: return int(value, *args, **kwargs)
   except: return value
 
 
-def try_int(value):
-  try: return int(value)
+def try_split(value, *args, **kwargs):
+  try: return value.split(*args, **kwargs)
   except: return value

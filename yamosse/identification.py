@@ -12,6 +12,9 @@ def identification(option):
       self.options = options
       self.np = np
     
+    def identified(self):
+      return {}
+    
     @abstractmethod
     def predict(self, identified, prediction_score=None):
       pass
@@ -144,6 +147,10 @@ def identification(option):
       
       self.calibration = np.take(options.calibration, options.classes)
     
+    def identified(self):
+      if self.options.combine_all: return set()
+      return super().identified()
+    
     def predict(self, top_scores, prediction_score=None):
       options = self.options
       classes = options.classes
@@ -187,10 +194,11 @@ def identification(option):
       if default is score:
         scores = self.np.stack(scores).mean(axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
-        
-        top_scores[top] = dict(zip(classes[class_indices].tolist(),
+        class_scores = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
         
+        if combine_all: top_scores.add(class_scores)
+        else: top_scores[top] = class_scores
         return
       
       default += score
@@ -209,6 +217,7 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
+        # TODO: handle top_scores being a set for combine all
         for timestamp, class_scores in top_scores.items():
           for class_, score in class_scores.items():
             class_scores[class_] = f'{model_yamnet_class_names[class_]} ({score:.0%})'
