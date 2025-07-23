@@ -236,7 +236,7 @@ def worker(file_name):
   shutdown = _shutdown
   if shutdown.is_set(): return None
   
-  identified = None
+  identified = {}
   worker_step = 0
   
   options = _options
@@ -253,7 +253,6 @@ def worker(file_name):
       import resampy
       
       # Decode the WAV file.
-      identified = identification.identified()
       seconds = 0.0
       
       sample_rate = _sample_rate

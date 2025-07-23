@@ -12,9 +12,6 @@ def identification(option):
       self.options = options
       self.np = np
     
-    def identified(self):
-      return {}
-    
     @abstractmethod
     def predict(self, identified, prediction_score=None):
       pass
@@ -147,12 +144,6 @@ def identification(option):
       
       self.calibration = np.take(options.calibration, options.classes)
     
-    def identified(self):
-      options = self.options
-      
-      if options.combine_all or not options.combine: return set()
-      return super().identified()
-    
     def predict(self, top_scores, prediction_score=None):
       options = self.options
       classes = options.classes
@@ -161,7 +152,7 @@ def identification(option):
       
       # TODO: combine all should wait until the very end to combine
       # output timestamps only controls whether timestamps are printed
-      top = 0
+      top = None if not combine or combine_all else 0
       scores = []
       
       if top_scores:
@@ -196,11 +187,9 @@ def identification(option):
       if default is score:
         scores = self.np.stack(scores).mean(axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
-        class_scores = dict(zip(classes[class_indices].tolist(),
+        top_scores[top] = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
         
-        try: top_scores[top] = class_scores
-        except ValueError: top_scores.add(class_scores)
         return
       
       default += score
@@ -219,8 +208,9 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
-        # TODO: handle top_scores being a set for combine all
         for timestamp, class_scores in top_scores.items():
+          # we don't want to sort class_scores here
+          # it is already sorted as intended (not by class!)
           for class_, score in class_scores.items():
             class_name = model_yamnet_class_names[class_]
             
@@ -228,8 +218,10 @@ def identification(option):
             
             class_scores[class_] = class_name
           
-          print('\t', output.hours_minutes(timestamp), ': ',
-            item_delimiter.join(class_scores.values()), sep='', file=file)
+          if not timestamp is None:
+            print('\t', output.hours_minutes(timestamp), ': ', sep='', end='', file=file)
+          
+          print(item_delimiter.join(class_scores.values()), sep='', file=file)
         
         print('', file=file)
   
