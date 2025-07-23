@@ -503,7 +503,7 @@ def _embed():
     return ''
   
   # a regex that handles text substitutions in scripts
-  # that properly handles escaped (%%) substitutions (which string.replace would not)
+  # that properly handles escaped (%%) substitutions (which str.replace would not)
   re_script = re.compile('%(.)')
   
   def text(text):
