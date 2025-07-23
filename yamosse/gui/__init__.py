@@ -526,6 +526,10 @@ def _embed():
       text.configure(takefocus=False, cursor='',
         bg=lookup_style_widget(embed_text, 'background'), borderwidth=0)
       
+      # unbind from Text class so we can't get duplicate events
+      # they'll be received from window instead
+      prevent_default_widget(text, class_=False, window=True, all_=True)
+      
       text.bind('<Configure>', configure)
       
       text.bind('<Enter>', enter)
