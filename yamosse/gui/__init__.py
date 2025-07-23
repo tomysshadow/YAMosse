@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
 import traceback
 from threading import Lock
+import re
 from math import ceil
 import shlex
 import os
@@ -501,6 +502,8 @@ def _embed():
     
     return ''
   
+  re_script = re.compile('%(.)')
+  
   def text(text):
     try:
       if text.embed_text: raise RuntimeError('embed_text is single shot per-text')
@@ -551,6 +554,10 @@ def _embed():
       getattr(window.nametowidget(widget), ''.join((view, 'view')))(*args)
     
     W = window.register(peek)
+    
+    def repl_W(match):
+      return f'${W}' if match.group(1) == 'W' else match.group()
+    
     focus_cbname = window.register(focus)
     view_cbname = window.register(view)
     
@@ -609,7 +616,7 @@ def _embed():
         
         interp hide {{}} focus
         interp alias {{}} focus {{}} {focus_cbname}
-        catch {{{script.replace("%W", f"${W}")}}} result options
+        catch {{{re_script.sub(repl_W, script)}}} result options
         
         interp alias {{}} focus {{}}
         interp expose {{}} focus
