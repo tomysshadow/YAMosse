@@ -7,6 +7,7 @@ def identification(option):
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
   
+  # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
     def __init__(self, options, np):
       self.options = options
