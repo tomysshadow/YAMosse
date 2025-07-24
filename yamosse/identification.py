@@ -218,7 +218,7 @@ def identification(option):
       
       # the presence of the None key is what determines if timestamps are output
       if not self.options.top_ranked_output_timestamps:
-        top_scores.setdefault(None, None)
+        top_scores.setdefault(None, {})
       
       return top_scores
     
@@ -235,6 +235,7 @@ def identification(option):
         output_timestamps = not None in top_scores
         
         for timestamp, class_scores in top_scores.items():
+          # number of Top Ranked items must be at least one
           if output_timestamps:
             print('\t', output.hours_minutes(timestamp), end=': ', sep='', file=file)
           elif class_scores:
