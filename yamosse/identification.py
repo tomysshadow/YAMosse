@@ -145,12 +145,8 @@ def identification(option):
       self.calibration = np.take(options.calibration, options.classes)
     
     def predict(self, top_scores, prediction_score=None):
-      np = self.np
-      
       options = self.options
       classes = options.classes
-      combine = options.combine
-      combine_all = options.combine_all
       
       top = 0
       scores = []
@@ -169,27 +165,33 @@ def identification(option):
         prediction, score = prediction_score
         score = score.take(classes) * self.calibration
         
-        # when combine is zero, prediction should always be set to its initial value
-        if combine_all:
+        if options.combine_all:
+          class_scores = top_scores.setdefault(None, {})
           class_indices = score.argsort()[::-1][:options.top_ranked]
-          default = top_scores.setdefault(None, {})
           
           for class_index in class_indices:
-            class_scores = default.setdefault(int(classes[class_index]), [])
-            class_scores += [score[class_index]]
+            scores = class_scores.setdefault(int(classes[class_index]), [])
+            scores += [score[class_index]]
           
           return
-        elif combine:
-          prediction = prediction // combine * combine
-        elif top_scores:
-          prediction = top
+        else:
+          # when combine is zero, prediction should always be set to its initial value
+          combine = options.combine
+          
+          if combine:
+            prediction = prediction // combine * combine
+          elif top_scores:
+            prediction = top
         
         default = top_scores.setdefault(prediction, [score])
-      elif combine_all:
-        combined_all = top_scores[None]
+      elif options.combine_all:
+        class_scores = top_scores[None]
         
-        for class_, scores in combined_all.items():
-          combined_all[class_] = float(np.array(scores).mean(axis=0))
+        for class_, scores in class_scores.items():
+          class_scores[class_] = float(self.np.mean(scores, axis=0))
+        
+        top_scores[None] = yamosse_utils.dict_sorted(class_scores,
+          key=lambda item: item[1], reverse=True)
         
         return
       
@@ -201,7 +203,7 @@ def identification(option):
       # that we are now ready to find the top scores in
       # here, we use "fancy indexing" in order to get the list of top ranked classes
       if default is score:
-        scores = np.stack(scores).mean(axis=0)
+        scores = self.np.stack(scores).mean(axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
         top_scores[top] = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
