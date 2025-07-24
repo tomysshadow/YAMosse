@@ -56,7 +56,7 @@ TIP_WORKER_OPTIONS_HIGH_PRIORITY = ''.join(('Mark YAMosse as High Priority to ma
 
 URL_ONLINE_HELP = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
-_fs_photo = gui.fs_photo()
+_fsenc_photo = gui.fsenc_photo()
 
 
 def make_header(frame, title):
@@ -304,7 +304,7 @@ def make_sort(frame, variables):
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
   
-  photo = gui.get_root_images()[_fs_photo]
+  photo = gui.get_root_images()[_fsenc_photo]
   up = photo[fsenc('up.gif')]
   down = photo[fsenc('down.gif')]
   
@@ -540,7 +540,7 @@ def make_footer(frame, yamscan, restore_defaults):
     webbrowser.open(URL_ONLINE_HELP)
   
   open_online_help_button = ttk.Button(frame, text='Open Online Help',
-    image=gui.get_root_images()[_fs_photo][fsenc('help symbol.gif')], compound=tk.LEFT,
+    image=gui.get_root_images()[_fsenc_photo][fsenc('help symbol.gif')], compound=tk.LEFT,
     command=open_online_help)
   
   open_online_help_button.grid(row=0, column=0, sticky=tk.W)
@@ -568,7 +568,7 @@ def make_yamosse(frame, title, options_variables,
   
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
-    iconphotos=gui.get_root_images()[_fs_photo][fsenc('emoji_u1f3a4')].values())
+    iconphotos=gui.get_root_images()[_fsenc_photo][fsenc('emoji_u1f3a4')].values())
   
   frame.rowconfigure(1, weight=1) # make options frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout

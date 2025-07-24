@@ -92,8 +92,8 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
-_fs_bitmap = fsenc('Bitmap')
-_fs_photo = fsenc('Photo')
+_fsenc_bitmap = fsenc('Bitmap')
+_fsenc_photo = fsenc('Photo')
 
 
 def _init_report_callback_exception():
@@ -978,9 +978,25 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     ), (buttons_frame, buttons)
 
 
-def _sorted():
-  ITEM = ''
+def heading_text_columns(c):
+  columns = {}
   
+  for cid, heading_text in yamosse_utils.dict_enumerate(c).items():
+    columns[cid] = {'heading': {'text': heading_text}}
+  
+  return columns
+
+
+def values_items(i):
+  items = {}
+  
+  for cid, values in yamosse_utils.dict_enumerate(i).items():
+    items[cid] = {'values': values}
+  
+  return items
+
+
+def _sorted():
   re_natural = re.compile(r'(\d+)')
   
   # uses "natural" sorting - the values being sorted here are often numbers
@@ -1001,7 +1017,7 @@ def _sorted():
     
     treeview.sorted = True
     
-    table_sort_icons = get_root_images()[_fs_bitmap][fsenc('table sort icons')]
+    table_sort_icons = get_root_images()[_fsenc_bitmap][fsenc('table sort icons')]
     sort_both_small = table_sort_icons[fsenc('sort_both_small.xbm')]
     sort_up_small = table_sort_icons[fsenc('sort_up_small.xbm')]
     sort_down_small = table_sort_icons[fsenc('sort_down_small.xbm')]
@@ -1010,6 +1026,25 @@ def _sorted():
     # in the both state (the default,) columns are sorted by their ID
     # in the down and up states, items are sorted forward and reversed, respectively
     def show(cid=None, reverse=False):
+      key = key_child if cid is None else key_value
+      
+      def move(item=''):
+        children = dict.fromkeys(treeview.get_children(item=item))
+        
+        for child in children.keys():
+          if key is key_value:
+            children[child] = treeview.set(child, cid)
+          
+          move(item=child)
+        
+        children = yamosse_utils.dict_sorted(children, key=key, reverse=reverse)
+        
+        # rearrange items in sorted positions
+        for index, child in enumerate(children.keys()):
+          treeview.move(child, item, index)
+      
+      move()
+      
       for column in treeview['columns']:
         treeview.heading(
           column,
@@ -1017,13 +1052,7 @@ def _sorted():
           command=lambda column=column: show(cid=column)
         )
       
-      children = dict.fromkeys(treeview.get_children(item=ITEM))
-      key = key_child if cid is None else key_value
-      
       if key is key_value:
-        for child in children.keys():
-          children[child] = treeview.set(child, cid)
-        
         image = sort_up_small if reverse else sort_down_small
         
         # reverse sort next time
@@ -1032,36 +1061,12 @@ def _sorted():
           image=image,
           command=lambda: show(cid=None if reverse else cid, reverse=not reverse)
         )
-      
-      children = yamosse_utils.dict_sorted(children, key=key, reverse=reverse)
-      
-      # rearrange items in sorted positions
-      for index, child in enumerate(children.keys()):
-        treeview.move(child, ITEM, index)
     
     show()
   
   return treeview
 
 treeview_sorted = _sorted()
-
-
-def heading_text_columns(c):
-  columns = {}
-  
-  for cid, heading_text in yamosse_utils.dict_enumerate(c).items():
-    columns[cid] = {'heading': {'text': heading_text}}
-  
-  return columns
-
-
-def values_items(i):
-  items = {}
-  
-  for cid, values in yamosse_utils.dict_enumerate(i).items():
-    items[cid] = {'values': values}
-  
-  return items
 
 
 def _progressbar():
@@ -1440,6 +1445,7 @@ def _root_images():
         return (image, scandir(entry.path, lambda image_entry: callback_image(
           image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))))))
       
+      # all names/paths here are encoded with fsenc so that they will be compared by ordinal
       root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
     
     return root_images
@@ -1449,12 +1455,12 @@ def _root_images():
 get_root_images = _root_images()
 
 
-def fs_bitmap():
-  return _fs_bitmap
+def fsenc_bitmap():
+  return _fsenc_bitmap
 
 
-def fs_photo():
-  return _fs_photo
+def fsenc_photo():
+  return _fsenc_photo
 
 
 def get_variables_from_object(object_):

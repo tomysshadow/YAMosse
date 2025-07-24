@@ -6,13 +6,13 @@ from .. import gui
 
 TITLE = 'Calibrate'
 
-_fs_photo = gui.fs_photo()
+_fsenc_photo = gui.fsenc_photo()
 
 
 def make_footer(frame, ok, cancel):
   frame.columnconfigure(2, weight=1)
   
-  photo = gui.get_root_images()[_fs_photo]
+  photo = gui.get_root_images()[_fsenc_photo]
   
   # TODO: undoable commands
   # TODO: move to make_undoable
