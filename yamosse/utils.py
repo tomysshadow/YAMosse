@@ -3,7 +3,7 @@ def ascii_backslashreplace(value):
 
 
 def latin1_unescape(value):
-  return str(value).encode('latin1').decode('unicode_escape')
+  return str(value).encode('latin1', 'backslashreplace').decode('unicode_escape')
 
 
 def try_int(value, *args, **kwargs):

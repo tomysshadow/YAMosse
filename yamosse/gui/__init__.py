@@ -1009,12 +1009,12 @@ def _sorted():
     # swaps between three sorting states for each heading: both, down, and up
     # in the both state (the default,) columns are sorted by their ID
     # in the down and up states, items are sorted forward and reversed, respectively
-    def sort(cid=None, reverse=False):
+    def show(cid=None, reverse=False):
       for column in treeview['columns']:
         treeview.heading(
           column,
           image=sort_both_small,
-          command=lambda column=column: sort(cid=column)
+          command=lambda column=column: show(cid=column)
         )
       
       children = dict.fromkeys(treeview.get_children(item=ITEM))
@@ -1030,7 +1030,7 @@ def _sorted():
         treeview.heading(
           cid,
           image=image,
-          command=lambda: sort(cid=None if reverse else cid, reverse=not reverse)
+          command=lambda: show(cid=None if reverse else cid, reverse=not reverse)
         )
       
       children = yamosse_utils.dict_sorted(children, key=key, reverse=reverse)
@@ -1039,7 +1039,7 @@ def _sorted():
       for index, child in enumerate(children.keys()):
         treeview.move(child, ITEM, index)
     
-    sort()
+    show()
   
   return treeview
 
