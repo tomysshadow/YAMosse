@@ -150,7 +150,7 @@ def identification(option):
       options = self.options
       classes = options.classes
       
-      # should be zero (not None) by default
+      # top should be zero (not None) by default
       # this is what ensures the timer starts at zero
       top = 0
       scores = []
