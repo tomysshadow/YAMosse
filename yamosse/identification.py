@@ -174,14 +174,14 @@ def identification(option):
             scores += [score[class_index]]
           
           return
-        else:
-          # when combine is zero, prediction should always be set to its initial value
-          combine = options.combine
-          
-          if combine:
-            prediction = prediction // combine * combine
-          elif top_scores:
-            prediction = top
+        
+        # when combine is zero, prediction should always be set to its initial value
+        combine = options.combine
+        
+        if combine:
+          prediction = prediction // combine * combine
+        elif top_scores:
+          prediction = top
         
         default = top_scores.setdefault(prediction, [score])
       elif options.combine_all:
