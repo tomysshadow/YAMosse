@@ -147,12 +147,11 @@ def identification(option):
     def predict(self, top_scores, prediction_score=None):
       options = self.options
       classes = options.classes
-      combine = options.combine
-      combine_all = options.combine_all # TODO STILL not implemented properly yet
+      combine = None if options.combine_all else options.combine
       
       # TODO: combine all should wait until the very end to combine
       # output timestamps only controls whether timestamps are printed
-      top = None if not combine or combine_all else 0
+      top = 0
       scores = []
       
       if top_scores:
@@ -173,6 +172,8 @@ def identification(option):
           prediction = prediction // combine * combine
         elif top_scores:
           prediction = top
+        else:
+          prediction = None
         
         score = [score.take(classes) * self.calibration]
         default = top_scores.setdefault(prediction, score)
@@ -218,10 +219,12 @@ def identification(option):
             
             class_scores[class_] = class_name
           
-          if not timestamp is None:
-            print('\t', output.hours_minutes(timestamp), ': ', sep='', end='', file=file)
+          print('\t', end='', file=file)
           
-          print(item_delimiter.join(class_scores.values()), sep='', file=file)
+          if not timestamp is None:
+            print(output.hours_minutes(timestamp), end=': ', file=file)
+          
+          print(item_delimiter.join(class_scores.values()), file=file)
         
         print('', file=file)
   
