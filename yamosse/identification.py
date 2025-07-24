@@ -145,6 +145,8 @@ def identification(option):
       self.calibration = np.take(options.calibration, options.classes)
     
     def predict(self, top_scores, prediction_score=None):
+      np = self.np
+      
       options = self.options
       classes = options.classes
       combine = options.combine
@@ -165,18 +167,31 @@ def identification(option):
       # we will be able to get them back later by indexing into the classes array
       if prediction_score:
         prediction, score = prediction_score
-        score = [score.take(classes) * self.calibration]
+        score = score.take(classes) * self.calibration
         
         # when combine is zero, prediction should always be set to its initial value
         if combine_all:
-          prediction = None
-          # TODO: something will happen here
+          class_indices = score.argsort()[::-1][:options.top_ranked]
+          default = top_scores.setdefault(None, {})
+          
+          for class_index in class_indices:
+            class_scores = default.setdefault(int(classes[class_index]), [])
+            class_scores += [score[class_index]]
+          
+          return
         elif combine:
           prediction = prediction // combine * combine
         elif top_scores:
           prediction = top
         
-        default = top_scores.setdefault(prediction, score)
+        default = top_scores.setdefault(prediction, [score])
+      elif combine_all:
+        combined_all = top_scores[None]
+        
+        for class_, scores in combined_all.items():
+          combined_all[class_] = float(np.array(scores).mean(axis=0))
+        
+        return
       
       # don't get top ranked classes or add to scores if scores is empty
       if not scores: return
@@ -186,14 +201,14 @@ def identification(option):
       # that we are now ready to find the top scores in
       # here, we use "fancy indexing" in order to get the list of top ranked classes
       if default is score:
-        scores = self.np.stack(scores).mean(axis=0)
+        scores = np.stack(scores).mean(axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
         top_scores[top] = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
         
         return
       
-      default += score
+      default += [score]
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
