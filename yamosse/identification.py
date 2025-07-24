@@ -108,6 +108,7 @@ def identification(option):
       for file_name, class_timestamps in results.items():
         output.print_file(file_name)
         
+        # this try-finally is just to ensure the newline is always printed even when continuing
         try:
           if not class_timestamps:
             print('\t', None, sep='', file=file)
@@ -119,6 +120,7 @@ def identification(option):
             
             continue
           
+          # key_identified is also used for sorting the JSON (TODO)
           class_timestamps = yamosse_utils.dict_sorted(class_timestamps, key=cls.key_identified)
           
           for class_, timestamp_scores in class_timestamps.items():
@@ -148,12 +150,19 @@ def identification(option):
       options = self.options
       classes = options.classes
       
+      # should be zero (not None) by default
+      # this is what ensures the timer starts at zero
       top = 0
       scores = []
       
+      # get the last top scores, if any
+      # this is so we can convert them into their final dictionary form later
       if top_scores:
         top, scores = yamosse_utils.dict_peekitem(top_scores)
       
+      # score and default are both initialized to the same value
+      # later, we will be checking if default is score to determine
+      # if a new item was added to top_scores or not
       score = None
       default = score
       
@@ -165,10 +174,18 @@ def identification(option):
         prediction, score = prediction_score
         score = score.take(classes) * self.calibration
         
+        # in the combine all case, we actually just want to list
+        # every class that is ever in the top ranked as one big summary
+        # so we don't bother with the whole numpy stacking thing
+        # we also don't care about timestamps in this case
+        # so the None key is used exclusively
         if options.combine_all:
           class_scores = top_scores.setdefault(None, {})
           class_indices = score.argsort()[::-1][:options.top_ranked]
           
+          # here we need to go back to storing this as a stock Python list
+          # as we need to expand it with new scores, so a numpy array wouldn't cut it
+          # (or at least, wouldn't be efficient with all the copying of arrays)
           for class_index in class_indices:
             scores = class_scores.setdefault(int(classes[class_index]), [])
             scores += [score[class_index]]
@@ -176,21 +193,28 @@ def identification(option):
           return
         
         # when combine is zero, prediction should always be set to its initial value
+        # this tells the location of the first sound identified, which is useful information
         combine = options.combine
         
-        if combine:
-          prediction = prediction // combine * combine
-        elif top_scores:
-          prediction = top
+        if combine: prediction = prediction // combine * combine
+        elif top_scores: prediction = top
         
         score = [score]
         default = top_scores.setdefault(prediction, score)
       elif options.combine_all:
+        # this only happens on the last call, from the timestamps method
+        # (when prediction_score is None)
+        # we use this opportunity to convert top_scores into its final form
+        # specifically, to find averages for all of the scores for each class
         class_scores = top_scores[None]
         
         for class_, scores in class_scores.items():
           class_scores[class_] = float(self.np.mean(scores, axis=0))
         
+        # normally numpy's argsort function handles the sorting directly on the arrays
+        # but now we've averaged the scores so it's all outta whack
+        # so we gotta sort it now again
+        # just using the stock Python functions this time, because now this is a dictionary
         top_scores[None] = yamosse_utils.dict_sorted(class_scores,
           key=lambda item: item[1], reverse=True)
         
@@ -211,12 +235,16 @@ def identification(option):
         
         return
       
+      # otherwise add the new score, to be stacked in a later call
       default += score
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
       
       # the presence of the None key is what determines if timestamps are output
+      # here, we are taking advantage of the fact that Top Ranked must be at least one
+      # (so an empty dictionary can be disregarded)
+      # the value can't be None! Otherwise sorting the top scores by their lengths could fail
       if not self.options.top_ranked_output_timestamps:
         top_scores.setdefault(None, {})
       
@@ -236,6 +264,8 @@ def identification(option):
         
         for timestamp, class_scores in top_scores.items():
           # number of Top Ranked items must be at least one
+          # if it's an empty dictionary we disregard it and continue
+          # (this facilitates the Output Timestamps option)
           if output_timestamps:
             print('\t', output.hours_minutes(timestamp), end=': ', sep='', file=file)
           elif class_scores:
@@ -243,10 +273,9 @@ def identification(option):
           else: continue
           
           # we don't want to sort class_scores here
-          # it is already sorted as intended (not by class!)
+          # it should already be sorted as intended by this point
           for class_, score in class_scores.items():
             class_name = model_yamnet_class_names[class_]
-            
             if output_confidence_scores: class_name = f'{class_name} ({score:.0%})'
             
             class_scores[class_] = class_name
