@@ -147,10 +147,9 @@ def identification(option):
     def predict(self, top_scores, prediction_score=None):
       options = self.options
       classes = options.classes
-      combine = None if options.combine_all else options.combine
+      combine = options.combine
+      combine_all = options.combine_all
       
-      # TODO: combine all should wait until the very end to combine
-      # output timestamps only controls whether timestamps are printed
       top = 0
       scores = []
       
@@ -166,16 +165,17 @@ def identification(option):
       # we will be able to get them back later by indexing into the classes array
       if prediction_score:
         prediction, score = prediction_score
+        score = [score.take(classes) * self.calibration]
         
         # when combine is zero, prediction should always be set to its initial value
-        if combine:
+        if combine_all:
+          prediction = None
+          # TODO: something will happen here
+        elif combine:
           prediction = prediction // combine * combine
         elif top_scores:
           prediction = top
-        else:
-          prediction = None
         
-        score = [score.take(classes) * self.calibration]
         default = top_scores.setdefault(prediction, score)
       
       # don't get top ranked classes or add to scores if scores is empty
