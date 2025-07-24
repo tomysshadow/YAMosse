@@ -24,6 +24,7 @@ except ImportError: gui = None
 
 NAME = 'YAMosse'
 VERSION = '1.0.0'
+TITLE = ' '.join((NAME, VERSION))
 
 WEIGHTS_FILETYPES = (
   ('HDF5', '*.h5'),
@@ -50,8 +51,6 @@ MESSAGE_WEIGHTS_NONE = ''.join(('You have not specified the weights file. Would 
 
 MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 
-_title = ' '.join((NAME, VERSION))
-
 
 def open_file(path):
   try: os.startfile(path)
@@ -68,10 +67,6 @@ def sf_input_filetypes():
   
   input_filetypes.append(('All Files', '*.*'))
   return input_filetypes
-
-
-def title():
-  return _title
 
 
 def yamosse(**kwargs):
@@ -210,7 +205,7 @@ def yamosse(**kwargs):
       
       window = gui.gui(
         gui_yamosse.make_yamosse,
-        _title,
+        TITLE,
         variables,
         sf_input_filetypes(),
         model_yamnet_class_names,

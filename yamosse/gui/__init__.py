@@ -85,15 +85,15 @@ WINDOWS_ICONPHOTO_BUGFIX = True
 
 IMAGES_DIR = 'images'
 
+FSENC_BITMAP = fsenc('Bitmap')
+FSENC_PHOTO = fsenc('Photo')
+
 VARIABLE_TYPES = {
   bool: tk.BooleanVar,
   int: tk.IntVar,
   float: tk.DoubleVar,
   str: tk.StringVar
 }
-
-_fsenc_bitmap = fsenc('Bitmap')
-_fsenc_photo = fsenc('Photo')
 
 
 def _init_report_callback_exception():
@@ -441,6 +441,10 @@ def _embed():
     '<<NextLine>>': (tk.Y, (tk.SCROLL, 1, tk.UNITS))
   }
   
+  # a regex that handles text substitutions in scripts
+  # that properly handles escaped (%%) substitutions (which str.replace would not)
+  RE_SCRIPT = re.compile('%(.)')
+  
   def insert(text, widget, line=0):
     # width for the widget needs to be set explicitly, not by its geometry manager
     widget.pack_propagate(False)
@@ -506,10 +510,6 @@ def _embed():
         stack.pop()
     
     return ''
-  
-  # a regex that handles text substitutions in scripts
-  # that properly handles escaped (%%) substitutions (which str.replace would not)
-  re_script = re.compile('%(.)')
   
   def text(text):
     try:
@@ -627,7 +627,7 @@ def _embed():
         
         interp hide {{}} focus
         interp alias {{}} focus {{}} {focus_cbname}
-        catch {{{re_script.sub(repl_W, script)}}} result options
+        catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
         
         interp alias {{}} focus {{}}
         interp expose {{}} focus
@@ -997,12 +997,12 @@ def values_items(i):
 
 
 def _sorted():
-  re_natural = re.compile(r'(\d+)')
+  RE_NATURAL = re.compile(r'(\d+)')
   
   # uses "natural" sorting - the values being sorted here are often numbers
   # https://nedbatchelder.com/blog/200712/human_sorting.html
   def key_natural(value):
-    return [yamosse_utils.try_int(v) for v in re_natural.split(value)]
+    return [yamosse_utils.try_int(v) for v in RE_NATURAL.split(value)]
   
   def key_child(item):
     return key_natural(item[0])
@@ -1017,7 +1017,7 @@ def _sorted():
     
     treeview.sorted = True
     
-    table_sort_icons = get_root_images()[_fsenc_bitmap][fsenc('table sort icons')]
+    table_sort_icons = get_root_images()[FSENC_BITMAP][fsenc('table sort icons')]
     sort_both_small = table_sort_icons[fsenc('sort_both_small.xbm')]
     sort_up_small = table_sort_icons[fsenc('sort_up_small.xbm')]
     sort_down_small = table_sort_icons[fsenc('sort_down_small.xbm')]
@@ -1453,14 +1453,6 @@ def _root_images():
   return get
 
 get_root_images = _root_images()
-
-
-def fsenc_bitmap():
-  return _fsenc_bitmap
-
-
-def fsenc_photo():
-  return _fsenc_photo
 
 
 def get_variables_from_object(object_):
