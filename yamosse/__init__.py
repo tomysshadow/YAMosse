@@ -37,7 +37,8 @@ PRESET_FILETYPES = (
 )
 
 PRESET_INITIALDIR = 'My Presets'
-PRESET_INITIALFILE = 'preset.json'
+PRESET_INITIALFILE = 'preset'
+PRESET_DEFAULTEXTENSION = 'json'
 
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
 MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
@@ -109,8 +110,13 @@ def yamosse(**kwargs):
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
       
-      file_name = gui.filedialog.asksaveasfilename(parent=window, filetypes=PRESET_FILETYPES,
-        initialdir=PRESET_INITIALDIR, initialfile=PRESET_INITIALFILE)
+      file_name = gui.filedialog.asksaveasfilename(
+        parent=window,
+        filetypes=PRESET_FILETYPES,
+        initialdir=PRESET_INITIALDIR,
+        initialfile=PRESET_INITIALFILE,
+        defaultextension=PRESET_DEFAULTEXTENSION
+      )
       
       if not file_name: return
     
@@ -124,10 +130,12 @@ def yamosse(**kwargs):
     
     FILETYPES = (
       ('Text Document', '*.txt'),
+      ('JSON', '*.json'),
       ('All Files', '*.*')
     )
     
     INITIALDIR = 'My YAMScans'
+    DEFAULTEXTENSION = 'txt'
     
     subsystem.variables_to_object(options)
     
@@ -150,7 +158,8 @@ def yamosse(**kwargs):
         parent=window,
         filetypes=FILETYPES,
         initialdir=INITIALDIR,
-        initialfile='%s.txt' % os.path.splitext(os.path.basename(input_[0]))[0]
+        initialfile=os.path.splitext(os.path.basename(input_[0]))[0],
+        defaultextension=DEFAULTEXTENSION
       )
       
       if not output_file_name: return

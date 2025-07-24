@@ -129,9 +129,6 @@ def identification(option):
             
             continue
           
-          # key_identified is also used for sorting the JSON (TODO)
-          class_timestamps = yamosse_utils.dict_sorted(class_timestamps, key=cls.key_identified)
-          
           for class_, timestamp_scores in class_timestamps.items():
             assert timestamp_scores, 'timestamp_scores must not be empty'
             
@@ -294,6 +291,11 @@ def identification(option):
           print(item_delimiter.join(class_scores.values()), file=file)
         
         print('', file=file)
+    
+    @classmethod
+    @staticmethod
+    def key_identified(item):
+      return False
   
   if option == IDENTIFICATION_CONFIDENCE_SCORE:
     return IdentificationConfidenceScore

@@ -1156,9 +1156,9 @@ configure_progressbar, make_progressbar = _progressbar()
 
 
 def make_filedialog(frame, name='', textvariable=None,
-  asks=None, parent=None, filetypes=None, **kwargs):
-  ASKS_ALL = ('openfilename', 'openfilenames', 'savefilename', 'directory')
-  ASKS_FILES = ('openfilename', 'openfilenames', 'savefilename')
+  asks=None, parent=None, filetypes=None, defaultextension=None, **kwargs):
+  ASKS_ALL = ('openfilename', 'openfilenames', 'saveasfilename', 'directory')
+  ASKS_FILES = ('openfilename', 'openfilenames', 'saveasfilename')
   
   if not textvariable: textvariable = tk.StringVar()
   
@@ -1183,7 +1183,13 @@ def make_filedialog(frame, name='', textvariable=None,
     textvariable.set(shlex.join(data))
   
   def show(ask='openfilename'):
-    kwargs = {'filetypes': filetypes} if filetypes and ask != 'directory' else {}
+    kwargs = {}
+    
+    if filetypes and ask != 'directory':
+      kwargs['filetypes'] = filetypes
+    
+    if defaultextension and ask == 'saveasfilename':
+      kwargs['defaultextension'] = defaultextension
     
     set_(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
   

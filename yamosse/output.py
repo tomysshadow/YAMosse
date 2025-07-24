@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from time import time
 from os import path
 from shlex import quote
+import json
 
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
@@ -10,7 +11,7 @@ NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
 DEFAULT_ITEM_DELIMITER = ' '
 
-_ext_json = '.json'.casefold()
+EXT_JSON = '.json'.casefold()
 
 
 def key_number_of_sounds(item):
@@ -79,7 +80,9 @@ def output(file_name, *args, **kwargs):
     
     @abstractmethod
     def results(self, results):
-      pass
+      for file_name, identified in results.items():
+        results[file_name] = yamosse_utils.dict_sorted(identified,
+          key=self.identification.key_identified)
     
     @abstractmethod
     def errors(self, errors):
@@ -114,6 +117,7 @@ def output(file_name, *args, **kwargs):
     
     def results(self, results):
       if not results: return
+      super().results(results)
       
       file = self.file
       
@@ -125,6 +129,7 @@ def output(file_name, *args, **kwargs):
     
     def errors(self, errors):
       if not errors: return
+      super().errors(errors)
       
       file = self.file
       
@@ -148,9 +153,44 @@ def output(file_name, *args, **kwargs):
     def print_file(self, name):
       print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)
   
+  class OutputJSON(Output):
+    def __init__(self, *args, **kwargs):
+      self._options = None
+      self._results = None
+      self._errors = None
+      
+      super().__init__(*args, **kwargs)
+    
+    def __exit__(self, *args, **kwargs):
+      d = {
+        'options': self._options,
+        'results': self._results,
+        'errors': self._errors
+      }
+      
+      json.dump({key: value for key, value in d.items() if value}, self.file)
+      
+      super().__exit__(*args, **kwargs)
+    
+    def options(self, options):
+      output_options = super().options(options)
+      
+      if output_options:
+        self._options = vars(options)
+      
+      return output_options
+    
+    def results(self, results):
+      super().results(results)
+      self._results = self._sort(results)
+    
+    def errors(self, errors):
+      super().errors(errors)
+      self._errors = errors
+  
   ext = path.splitext(file_name)[1]
   
-  # not yet implemented
-  #if ext.casefold() == _ext_json:
-  #  return OutputJSON(file_name, *args, **kwargs)
+  if ext.casefold() == EXT_JSON:
+    return OutputJSON(file_name, *args, **kwargs)
+  
   return OutputText(file_name, *args, **kwargs)
