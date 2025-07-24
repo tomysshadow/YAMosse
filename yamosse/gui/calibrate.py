@@ -1,25 +1,28 @@
 import tkinter as tk
 from tkinter import ttk
+from os import fsencode as fsenc
 
 from .. import gui
 
 TITLE = 'Calibrate'
 
+_fs_photo = gui.fs_photo()
+
 
 def make_footer(frame, ok, cancel):
   frame.columnconfigure(2, weight=1)
   
-  photo = gui.get_root_images()['Photo']
+  photo = gui.get_root_images()[_fs_photo]
   
   # TODO: undoable commands
-  # TODO: Undo/Redo text should not be set here
+  # TODO: move to make_undoable
   undo_button = ttk.Button(frame, text='Undo', width=6,
-    image=photo['undo.gif'], compound=tk.LEFT)
+    image=photo[fsenc('undo.gif')], compound=tk.LEFT)
   
   undo_button.grid(row=0, column=0, sticky=tk.W)
   
   redo_button = ttk.Button(frame, text='Redo', width=6,
-    image=photo['redo.gif'], compound=tk.LEFT)
+    image=photo[fsenc('redo.gif')], compound=tk.LEFT)
   
   redo_button.grid(row=0, column=1, sticky=tk.W, padx=gui.PADX_QW)
   

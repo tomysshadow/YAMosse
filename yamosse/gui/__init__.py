@@ -7,6 +7,8 @@ import re
 from math import ceil
 import shlex
 import os
+from os import fsencode as fsenc
+from os import fsdecode as fsdec
 
 try:
   import tkinterdnd2
@@ -89,6 +91,9 @@ VARIABLE_TYPES = {
   float: tk.DoubleVar,
   str: tk.StringVar
 }
+
+_fs_bitmap = fsenc('Bitmap')
+_fs_photo = fsenc('Photo')
 
 
 def _init_report_callback_exception():
@@ -996,10 +1001,10 @@ def _sorted():
     
     treeview.sorted = True
     
-    table_sort_icons = get_root_images()['Bitmap']['table sort icons']
-    sort_both_small = table_sort_icons['sort_both_small.xbm']
-    sort_up_small = table_sort_icons['sort_up_small.xbm']
-    sort_down_small = table_sort_icons['sort_down_small.xbm']
+    table_sort_icons = get_root_images()[_fs_bitmap][fsenc('table sort icons')]
+    sort_both_small = table_sort_icons[fsenc('sort_both_small.xbm')]
+    sort_up_small = table_sort_icons[fsenc('sort_up_small.xbm')]
+    sort_down_small = table_sort_icons[fsenc('sort_down_small.xbm')]
     
     # swaps between three sorting states for each heading: both, down, and up
     # in the both state (the default,) columns are sorted by their ID
@@ -1424,7 +1429,7 @@ def _root_images():
           return (name, scandir(entry.path, lambda image_entry: callback_image(
             image_entry, make_image)))
         
-        try: return (name, make_image(file=entry.path))
+        try: return (name, make_image(file=fsdec(entry.path)))
         except tk.TclError: return None
       
       def callback_images(entry):
@@ -1433,15 +1438,23 @@ def _root_images():
         image = entry.name.title()
         
         return (image, scandir(entry.path, lambda image_entry: callback_image(
-          image_entry, getattr(tk, ''.join((image, 'Image'))))))
+          image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))))))
       
-      root_images = scandir(yamosse_root.root(IMAGES_DIR), callback_images)
+      root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
     
     return root_images
   
   return get
 
 get_root_images = _root_images()
+
+
+def fs_bitmap():
+  return _fs_bitmap
+
+
+def fs_photo():
+  return _fs_photo
 
 
 def get_variables_from_object(object_):
