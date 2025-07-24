@@ -183,7 +183,8 @@ def identification(option):
         elif top_scores:
           prediction = top
         
-        default = top_scores.setdefault(prediction, [score])
+        score = [score]
+        default = top_scores.setdefault(prediction, score)
       elif options.combine_all:
         class_scores = top_scores[None]
         
@@ -210,10 +211,15 @@ def identification(option):
         
         return
       
-      default += [score]
+      default += score
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
+      
+      # the presence of the None key is what determines if timestamps are output
+      if not self.options.top_ranked_output_timestamps:
+        top_scores.setdefault(None, None)
+      
       return top_scores
     
     @classmethod
@@ -226,7 +232,15 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
+        output_timestamps = not None in top_scores
+        
         for timestamp, class_scores in top_scores.items():
+          if output_timestamps:
+            print('\t', output.hours_minutes(timestamp), end=': ', sep='', file=file)
+          elif class_scores:
+            print('\t', end='', file=file)
+          else: continue
+          
           # we don't want to sort class_scores here
           # it is already sorted as intended (not by class!)
           for class_, score in class_scores.items():
@@ -235,11 +249,6 @@ def identification(option):
             if output_confidence_scores: class_name = f'{class_name} ({score:.0%})'
             
             class_scores[class_] = class_name
-          
-          print('\t', end='', file=file)
-          
-          if not timestamp is None:
-            print(output.hours_minutes(timestamp), end=': ', file=file)
           
           print(item_delimiter.join(class_scores.values()), file=file)
         
