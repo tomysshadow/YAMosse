@@ -1156,7 +1156,7 @@ configure_progressbar, make_progressbar = _progressbar()
 
 
 def make_filedialog(frame, name='', textvariable=None,
-  asks=None, parent=None, filetypes=None, defaultextension=None, **kwargs):
+  asks=None, parent=None, filetypes=None, defaultextension='', **kwargs):
   ASKS_ALL = ('openfilename', 'openfilenames', 'saveasfilename', 'directory')
   ASKS_FILES = ('openfilename', 'openfilenames', 'saveasfilename')
   

@@ -96,7 +96,8 @@ def identification(option):
           
           score_end = prediction_end
         
-        results[class_] = timestamp_scores
+        # class is cast to int for same reason as above (it might come from a numpy array)
+        results[int(class_)] = timestamp_scores
       
       return results
     
@@ -206,7 +207,7 @@ def identification(option):
         elif top_scores: prediction = top
         
         score = [score]
-        default = top_scores.setdefault(prediction, score)
+        default = top_scores.setdefault(int(prediction), score)
       elif options.combine_all:
         # this only happens on the last call, from the timestamps method
         # (when prediction_score is None)
