@@ -106,6 +106,8 @@ def identification(option):
       
       return results
     
+    # TODO: this has to be decoupled from printing
+    # we need to make this work with JSON somehow
     @classmethod
     def print_results_to_output(cls, results, output):
       file = output.file
@@ -128,7 +130,7 @@ def identification(option):
           # if we're combining all we don't care about the timestamps
           # (but they're still in the data structure for sorting consistency)
           if combine_all:
-            if output_scores: 
+            if output_scores:
               class_timestamps = [f'{model_yamnet_class_names[c]} ({max(ts.values()):.0%})' for c, ts in class_timestamps.items()]
             else:
               class_timestamps = [model_yamnet_class_names[c] for c in class_timestamps.keys()]
@@ -137,20 +139,23 @@ def identification(option):
             continue
           
           for class_, timestamp_scores in class_timestamps.items():
-            for timestamp, score in timestamp_scores.items():
-              try: hms = ' - '.join(output.hours_minutes(t) for t in timestamp)
-              except TypeError: hms = output.hours_minutes(timestamp)
-              
-              if output_scores:
-                hms = f'{timestamp} ({score:.0%})'
-              
-              timestamp_scores[timestamp] = hms
+            # timestamp_scores will be a list if Output Scores is off
+            if output_scores:
+              timestamp_scores = [f'{cls._hms(t)} ({s:.0%})' for t, s in timestamp_scores.items()]
+            else:
+              timestamp_scores = [cls._hms(t) for t in timestamp_scores]
             
             print('\t', model_yamnet_class_names[class_], ':\n\t\t',
               item_delimiter.join(timestamp_scores), sep='', file=file)
           
         finally:
           print('', file=file)
+    
+    @classmethod
+    @staticmethod
+    def _hms(timestamp):
+      try: return ' - '.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+      except TypeError: return yamosse_utils.hours_minutes(timestamp)
   
   class IdentificationTopRanked(Identification):
     def __init__(self, options, np):
