@@ -80,7 +80,12 @@ def output(file_name, *args, **kwargs):
     
     @abstractmethod
     def results(self, results):
+      output_confidence_scores = self.output_confidence_scores
+      
       for file_name, identified in results.items():
+        if output_confidence_scores:
+          identified = {key: list(value.keys()) for key, value in identified.items()}
+        
         results[file_name] = yamosse_utils.dict_sorted(identified,
           key=self.identification.key_identified)
     

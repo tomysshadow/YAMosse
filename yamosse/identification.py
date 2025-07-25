@@ -137,14 +137,16 @@ def identification(option):
           for class_, timestamp_scores in class_timestamps.items():
             assert timestamp_scores, 'timestamp_scores must not be empty'
             
-            print('\t', model_yamnet_class_names[class_], end=':\n', sep='', file=file)
+            # try and get the timestamp/scores
+            # if timestamp_scores is a list, it is just timestamps
+            # (Output Confidence Scores turned off)
+            try: timestamp_scores = timestamp_scores.items()
+            except: pass
+            else: timestamp_scores = [f'{t} ({s:.0%})' for t, s in timestamp_scores]
             
-            if output_confidence_scores:
-              for timestamp, score in timestamp_scores.items():
-                timestamp_scores[timestamp] = f'{timestamp} ({score:.0%})'
-            
-            ts = timestamp_scores.values() if output_confidence_scores else timestamp_scores.keys()
-            print('\t\t', item_delimiter.join(ts), sep='', file=file)
+            print('\t', model_yamnet_class_names[class_], ':\n\t\t',
+              item_delimiter.join(timestamp_scores), sep='', file=file)
+          
         finally:
           print('', file=file)
   
@@ -268,7 +270,6 @@ def identification(option):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
-      output_confidence_scores = output.output_confidence_scores
       
       for file_name, top_scores in results.items():
         output.print_file(file_name)
@@ -287,13 +288,15 @@ def identification(option):
           
           # we don't want to sort class_scores here
           # it should already be sorted as intended by this point
-          for class_, score in class_scores.items():
-            class_name = model_yamnet_class_names[class_]
-            if output_confidence_scores: class_name = f'{class_name} ({score:.0%})'
-            
-            class_scores[class_] = class_name
+          try: class_scores = class_scores.items()
+          except:
+            class_scores = item_delimiter.join(
+              [model_yamnet_class_names[c] for c in class_scores])
+          else:
+            class_scores = item_delimiter.join(
+              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in class_scores])
           
-          print(item_delimiter.join(class_scores.values()), file=file)
+          print(class_scores, file=file)
         
         print('', file=file)
     
