@@ -40,9 +40,9 @@ TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each time
 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
-TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage along ',
-  'with each timestamp, so you can see how certain the model is that it identified a sound at ',
-  'that timestamp.'))
+TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage along with each ',
+  'timestamp, so you can see how certain the model is that it identified a sound at that ',
+  'timestamp.'))
 
 TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The per-worker Tensorflow logical device memory ',
   'limit, in megabytes.'))
