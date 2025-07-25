@@ -16,6 +16,18 @@ def try_split(value, *args, **kwargs):
   except: return value
 
 
+def hours_minutes(seconds):
+  TO_HMS = 60
+  
+  m, s = divmod(int(seconds), TO_HMS)
+  h, m = divmod(m, TO_HMS)
+  
+  if h:
+    return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
+  
+  return f'{m:.0f}:{s:02.0f}'
+
+
 def dict_peekitem(d, *args, **kwargs):
   return next(reversed(d.items()), *args, **kwargs)
 

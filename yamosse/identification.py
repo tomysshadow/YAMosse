@@ -86,10 +86,14 @@ def identification(option):
           if prediction_end == predictions_len or end < predictions[prediction_end]:
             begin = predictions[score_begin]
             
+            if combine and begin + combine < end:
+              timestamp = ' - '.join(yamosse_utils.hours_minutes(t) for t in (begin, end))
+            else:
+              timestamp = yamosse_utils.hours_minutes(begin)
+            
             # the cast to float here is to convert a potential Tensorflow or Numpy dtype
             # into a Python native type, because we want to pickle this result into the main process
             # which does not have those modules loaded
-            timestamp = (begin, end) if combine and begin + combine < end else begin
             timestamp_scores[timestamp] = float(max(scores[score_begin:score_end + 1]))
             
             score_begin = prediction_end
@@ -135,15 +139,12 @@ def identification(option):
             
             print('\t', model_yamnet_class_names[class_], end=':\n', sep='', file=file)
             
-            for timestamp, score in timestamp_scores.items():
-              try: hms = ' - '.join(output.hours_minutes(t) for t in timestamp)
-              except TypeError: hms = output.hours_minutes(timestamp)
-              
-              if output_confidence_scores: hms = f'{hms} ({score:.0%})'
-              
-              timestamp_scores[timestamp] = hms
+            if output_confidence_scores:
+              for timestamp, score in timestamp_scores.items():
+                timestamp_scores[timestamp] = f'{timestamp} ({score:.0%})'
             
-            print('\t\t', item_delimiter.join(timestamp_scores.values()), sep='', file=file)
+            ts = timestamp_scores.values() if output_confidence_scores else timestamp_scores.keys()
+            print('\t\t', item_delimiter.join(ts), sep='', file=file)
         finally:
           print('', file=file)
   
@@ -247,6 +248,9 @@ def identification(option):
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
+      class_scores = top_scores.pop(None, {})
+      
+      results = {yamosse_utils.hours_minutes(key): value in top_scores.items()}
       
       # the presence of the None key is what determines if timestamps are output
       # yes, this is a kludge - but we need to pickle out this information somehow
@@ -254,10 +258,10 @@ def identification(option):
       # here, we are taking advantage of the fact that Top Ranked must be at least one
       # (so an empty dictionary can be disregarded)
       # the value can't be None! Otherwise sorting the top scores by their lengths could fail
-      if not self.options.top_ranked_output_timestamps:
-        top_scores.setdefault(None, {})
+      if class_scores or not self.options.top_ranked_output_timestamps:
+        results.setdefault(None, class_scores)
       
-      return top_scores
+      return results
     
     @classmethod
     def print_results_to_output(cls, results, output):
@@ -276,7 +280,7 @@ def identification(option):
           # if it's an empty dictionary we disregard it and continue
           # (this facilitates the Output Timestamps option)
           if output_timestamps:
-            print('\t', output.hours_minutes(timestamp), end=': ', sep='', file=file)
+            print('\t', timestamp, end=': ', sep='', file=file)
           elif class_scores:
             print('\t', end='', file=file)
           else: continue

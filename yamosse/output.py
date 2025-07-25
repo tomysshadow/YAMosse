@@ -57,7 +57,7 @@ def output(file_name, *args, **kwargs):
       
       if subsystem:
         subsystem.show(values={
-          'log': 'Elapsed Time: %s' % self.hours_minutes(time() - self.seconds)
+          'log': 'Elapsed Time: %s' % yamosse_utils.hours_minutes(time() - self.seconds)
         })
     
     @abstractmethod
@@ -87,18 +87,6 @@ def output(file_name, *args, **kwargs):
     @abstractmethod
     def errors(self, errors):
       pass
-    
-    @staticmethod
-    def hours_minutes(seconds):
-      TO_HMS = 60
-      
-      m, s = divmod(int(seconds), TO_HMS)
-      h, m = divmod(m, TO_HMS)
-      
-      if h:
-        return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
-      
-      return f'{m:.0f}:{s:02.0f}'
     
     def _sort(self, results):
       return yamosse_utils.dict_sorted(results, key=self.sort_by, reverse=self.sort_reverse)
@@ -168,7 +156,7 @@ def output(file_name, *args, **kwargs):
         'errors': self._errors
       }
       
-      json.dump({key: value for key, value in d.items() if value}, self.file)
+      json.dump({key: value for key, value in d.items() if value}, self.file, indent=True)
       
       super().__exit__(*args, **kwargs)
     
