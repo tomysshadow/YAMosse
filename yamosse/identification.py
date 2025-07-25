@@ -25,7 +25,7 @@ def identification(option):
     
     @classmethod
     @abstractmethod
-    def print_results_to_output(results, output):
+    def print_results_to_output(cls, results, output):
       raise NotImplementedError
     
     @classmethod
