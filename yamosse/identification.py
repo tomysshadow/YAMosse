@@ -133,12 +133,9 @@ def identification(option):
               class_timestamps = [model_yamnet_class_names[c] for c in class_timestamps.keys()]
             
             print('\t', item_delimiter.join(class_timestamps), sep='', file=file)
-            
             continue
           
           for class_, timestamp_scores in class_timestamps.items():
-            assert timestamp_scores, 'timestamp_scores must not be empty'
-            
             # try and get the timestamp/scores
             # if timestamp_scores is a list, it is just timestamps
             # (Output Scores turned off)
