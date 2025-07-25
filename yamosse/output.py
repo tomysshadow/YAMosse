@@ -69,17 +69,21 @@ def output(file_name, *args, **kwargs):
       elif sort_by == FILE_NAME:
         self.sort_by = key_file_name
       
-      self._sort_reverse = options.sort_reverse
+      self.sort_reverse = options.sort_reverse
       
       item_delimiter = yamosse_utils.ascii_backslashreplace(
         yamosse_utils.latin1_unescape(options.item_delimiter))
       
       self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
       self.output_scores = options.output_scores
+      
+      self.top_ranked_output_timestamps = options.top_ranked_output_timestamps
       return options.output_options
     
     @abstractmethod
     def results(self, results):
+      results = yamosse_utils.dict_sorted(results, key=self.sort_by, reverse=self.sort_reverse)
+      
       output_scores = self.output_scores
       
       for file_name, identified in results.items():
@@ -88,13 +92,12 @@ def output(file_name, *args, **kwargs):
         
         results[file_name] = yamosse_utils.dict_sorted(identified,
           key=self.identification.key_identified)
+      
+      return self.identification.hms(results)
     
     @abstractmethod
     def errors(self, errors):
-      pass
-    
-    def _sort(self, results):
-      return yamosse_utils.dict_sorted(results, key=self.sort_by, reverse=self.sort_reverse)
+      return errors
   
   class OutputText(Output):
     def options(self, options):
@@ -110,19 +113,20 @@ def output(file_name, *args, **kwargs):
     
     def results(self, results):
       if not results: return
-      super().results(results)
+      results = super().results(results)
       
       file = self.file
       
       # print results
       self.print_section('Results')
-      self.identification.print_results_to_output(self._sort(results), self)
+      self.identification.print_results_to_output(results, self)
       
       print('', file=file)
+      return results
     
     def errors(self, errors):
       if not errors: return
-      super().errors(errors)
+      errors = super().errors(errors)
       
       file = self.file
       
@@ -137,6 +141,7 @@ def output(file_name, *args, **kwargs):
         print('', file=file)
       
       print('', file=file)
+      return errors
     
     def print_section(self, name):
       # name should not contain lines
@@ -174,12 +179,14 @@ def output(file_name, *args, **kwargs):
       return output_options
     
     def results(self, results):
-      super().results(results)
-      self._results = self._sort(results)
+      results = super().results(results)
+      self._results = results
+      return results
     
     def errors(self, errors):
-      super().errors(errors)
+      errors = super().errors(errors)
       self._errors = errors
+      return errors
   
   ext = path.splitext(file_name)[1]
   

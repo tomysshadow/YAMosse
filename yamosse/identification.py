@@ -7,7 +7,10 @@ def identification(option):
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
   
-  COMBINE_ALL_KEY = -1
+  TIMESTAMP_ALL = -1
+  
+  HMS_ALL = 'All'
+  HMS_SEPARATOR = ' - '
   
   # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
@@ -24,6 +27,31 @@ def identification(option):
       pass
     
     @classmethod
+    def hms(cls, timestamps):
+      # timestamps doesn't need to be a list, just an iterable
+      # but we want a list at the end
+      results = []
+      
+      try:
+        values = timestamps.values()
+        timestamps = timestamps.keys()
+      except: values = None
+      
+      for timestamp in timestamps:
+        if timestamp == TIMESTAMP_ALL:
+          timestamp = HMS_ALL
+        else:
+          try: timestamp = HMS_SEPARATOR.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+          except TypeError: timestamp = yamosse_utils.hours_minutes(timestamp)
+        
+        results.append(timestamp)
+      
+      if values is None:
+        return results
+      
+      return dict(zip(results, values))
+    
+    @classmethod
     @abstractmethod
     def print_results_to_output(cls, results, output):
       raise NotImplementedError
@@ -31,7 +59,7 @@ def identification(option):
     @classmethod
     @staticmethod
     def key_identified(item):
-      return item[0] # TODO
+      return item[0]
   
   class IdentificationConfidenceScore(Identification):
     def predict(self, class_predictions, prediction_score=None):
@@ -43,13 +71,15 @@ def identification(option):
       calibration = options.calibration
       confidence_score = options.confidence_score
       
+      if options.combine_all: prediction = TIMESTAMP_ALL
+      
       # this is pretty self explanatory
       # check if the score we got is above the confidence score
       # if it is, take the max score found per one second of the sound
       # for display if the Output Scores option is checked
       for class_ in options.classes:
         # TODO: min/max
-        calibrated_score = score[class_] * calibration[class_]
+        calibrated_score = min(score[class_] * calibration[class_], 1.0)
         if calibrated_score < confidence_score: continue
         
         prediction_scores = class_predictions.setdefault(class_, {})
@@ -63,10 +93,6 @@ def identification(option):
       
       options = self.options
       combine = options.combine
-      
-      # TODO: make a tuple in the return value and return this there, not here
-      if options.combine_all:
-        results[COMBINE_ALL_KEY] = {}
       
       for class_, prediction_scores in class_predictions.items():
         if shutdown.is_set(): return None
@@ -105,8 +131,15 @@ def identification(option):
       
       return results
     
-    # TODO: this has to be decoupled from printing
-    # we need to make this work with JSON somehow
+    @classmethod
+    def hms(cls, results):
+      identification = super()
+      
+      for file_name, class_timestamps in results.items():
+        results[file_name] = {c: identification.hms(ts) for c, ts in class_timestamps.items()}
+      
+      return results
+    
     @classmethod
     def print_results_to_output(cls, results, output):
       file = output.file
@@ -117,9 +150,6 @@ def identification(option):
       for file_name, class_timestamps in results.items():
         output.print_file(file_name)
         
-        # TODO JSON: need to pop this key
-        combine_all = not class_timestamps.pop(COMBINE_ALL_KEY, True)
-        
         # this try-finally is just to ensure the newline is always printed even when continuing
         try:
           # if no timestamps were found for this file, then print None for this file
@@ -127,40 +157,16 @@ def identification(option):
             print('\t', None, sep='', file=file)
             continue
           
-          # if we're combining all we don't care about the timestamps
-          # (but they're still in the data structure for sorting consistency)
-          if combine_all:
-            # TODO JSON: need to:
-            # - find the max score if output scores is true
-            #   (this CANNOT be done on the data structure, class_timestamps needs to be a dict)
-            # - get just a list of classes if output scores is off
-            if output_scores:
-              class_timestamps = [f'{model_yamnet_class_names[c]} ({max(ts.values()):.0%})' for c, ts in class_timestamps.items()]
-            else:
-              class_timestamps = [model_yamnet_class_names[c] for c in class_timestamps.keys()]
-            
-            print('\t', item_delimiter.join(class_timestamps), sep='', file=file)
-            continue
-          
           for class_, timestamp_scores in class_timestamps.items():
             # timestamp_scores will be a list if Output Scores is off
-            # TODO JSON: need to call hms on keys (otherwise data structure is the same)
             if output_scores:
-              timestamp_scores = [f'{cls._hms(t)} ({s:.0%})' for t, s in timestamp_scores.items()]
-            else:
-              timestamp_scores = [cls._hms(t) for t in timestamp_scores]
+              timestamp_scores = [f'{t} ({s:.0%})' for t, s in timestamp_scores.items()]
             
             print('\t', model_yamnet_class_names[class_], ':\n\t\t',
               item_delimiter.join(timestamp_scores), sep='', file=file)
           
         finally:
           print('', file=file)
-    
-    @classmethod
-    @staticmethod
-    def _hms(timestamp):
-      try: return ' - '.join(yamosse_utils.hours_minutes(t) for t in timestamp)
-      except TypeError: return yamosse_utils.hours_minutes(timestamp)
   
   class IdentificationTopRanked(Identification):
     def __init__(self, options, np):
@@ -169,6 +175,8 @@ def identification(option):
       self.calibration = np.take(options.calibration, options.classes)
     
     def predict(self, top_scores, prediction_score=None):
+      np = self.np
+      
       options = self.options
       classes = options.classes
       
@@ -194,7 +202,7 @@ def identification(option):
       # we will be able to get them back later by indexing into the classes array
       if prediction_score:
         prediction, score = prediction_score
-        score = score.take(classes) * self.calibration
+        score = np.minimum(score.take(classes) * self.calibration, 1.0)
         
         # in the combine all case, we actually just want to list
         # every class that is ever in the top ranked as one big summary
@@ -202,7 +210,7 @@ def identification(option):
         # we also don't care about timestamps in this case
         # so the None key is used exclusively
         if options.combine_all:
-          class_scores = top_scores.setdefault(COMBINE_ALL_KEY, {})
+          class_scores = top_scores.setdefault(TIMESTAMP_ALL, {})
           class_indices = score.argsort()[::-1][:options.top_ranked]
           
           # here we need to go back to storing this as a stock Python list
@@ -228,16 +236,16 @@ def identification(option):
         # (when prediction_score is None)
         # we use this opportunity to convert top_scores into its final form
         # specifically, to find averages for all of the scores for each class
-        class_scores = top_scores[COMBINE_ALL_KEY]
+        class_scores = top_scores[TIMESTAMP_ALL]
         
         for class_, scores in class_scores.items():
-          class_scores[class_] = float(self.np.mean(scores, axis=0))
+          class_scores[class_] = float(np.mean(scores, axis=0))
         
         # normally numpy's argsort function handles the sorting directly on the arrays
         # but now we've averaged the scores so it's all outta whack
         # so we gotta sort it now again
         # just using the stock Python functions this time, because now this is a dictionary
-        top_scores[COMBINE_ALL_KEY] = yamosse_utils.dict_sorted(class_scores,
+        top_scores[TIMESTAMP_ALL] = yamosse_utils.dict_sorted(class_scores,
           key=lambda item: item[1], reverse=True)
         
         return
@@ -250,7 +258,7 @@ def identification(option):
       # that we are now ready to find the top scores in
       # here, we use "fancy indexing" in order to get the list of top ranked classes
       if default is score:
-        scores = self.np.stack(scores).mean(axis=0)
+        scores = np.stack(scores).mean(axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
         top_scores[top] = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
@@ -262,17 +270,17 @@ def identification(option):
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
-      
-      # the presence of the COMBINE_ALL_KEY key is what determines if timestamps are output
-      # yes, this is a kludge - but we need to pickle out this information somehow
-      # plus we're basically already relying on this being true for Combine All to work anyway
-      # here, we are taking advantage of the fact that Top Ranked must be at least one
-      # (so an empty dictionary can be disregarded)
-      # the value can't be None! Otherwise sorting the top scores by their lengths could fail
-      if not self.options.top_ranked_output_timestamps:
-        top_scores.setdefault(COMBINE_ALL_KEY, {})
-      
       return top_scores
+    
+    @classmethod
+    def hms(cls, results):
+      identification = super()
+      
+      for file_name, top_scores in results.items():
+        results[file_name] = [{'timestamp': t, 'classes': cs} for t, cs in identification.hms(
+          top_scores).items()]
+      
+      return results
     
     @classmethod
     def print_results_to_output(cls, results, output):
@@ -280,33 +288,29 @@ def identification(option):
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
       output_scores = output.output_scores
+      output_timestamps = output.top_ranked_output_timestamps
       
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
-        # TODO JSON: need to pop this key
-        output_timestamps = not COMBINE_ALL_KEY in top_scores
-        
-        for timestamp, class_scores in top_scores.items():
-          # number of Top Ranked items must be at least one
-          # if it's an empty dictionary we disregard it and continue
-          # (this facilitates the Output Timestamps option)
-          if output_timestamps:
-            print('\t', yamosse_utils.hours_minutes(timestamp), end=': ', sep='', file=file)
-          elif class_scores:
-            print('\t', end='', file=file)
-          else: continue
+        for top_score in top_scores:
+          print('\t', end='', file=file)
           
-          # we don't want to sort class_scores here
+          if output_timestamps:
+            print(top_score['timestamp'], end=': ', sep='', file=file)
+          
+          classes = top_score['classes']
+          
+          # we don't want to sort classes here
           # it should already be sorted as intended by this point
           if output_scores:
-            class_scores = item_delimiter.join(
-              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in class_scores.items()])
+            classes = item_delimiter.join(
+              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in classes.items()])
           else:
-            class_scores = item_delimiter.join(
-              [model_yamnet_class_names[c] for c in class_scores])
+            classes = item_delimiter.join(
+              [model_yamnet_class_names[c] for c in classes])
           
-          print(class_scores, file=file)
+          print(classes, file=file)
         
         print('', file=file)
     
