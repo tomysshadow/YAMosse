@@ -7,6 +7,8 @@ def identification(option):
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
   
+  COMBINE_ALL_KEY = None
+  
   # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
     def __init__(self, options, np):
@@ -40,20 +42,17 @@ def identification(option):
       options = self.options
       calibration = options.calibration
       confidence_score = options.confidence_score
-      combine_all = options.combine_all
       
       # this is pretty self explanatory
       # check if the score we got is above the confidence score
       # if it is, take the max score found per one second of the sound
       # for display if the Output Scores option is checked
       for class_ in options.classes:
+        # TODO: min/max
         calibrated_score = score[class_] * calibration[class_]
         if calibrated_score < confidence_score: continue
         
         prediction_scores = class_predictions.setdefault(class_, {})
-        
-        # avoid unnecessary pickling of all the predictions/scores in the combine all case
-        if combine_all: continue
         
         prediction_scores[prediction] = max(
           prediction_scores.get(prediction, calibrated_score), calibrated_score)
@@ -62,7 +61,11 @@ def identification(option):
       # create timestamps from predictions/scores
       results = {}
       
-      combine = self.options.combine
+      options = self.options
+      combine = options.combine
+      
+      if options.combine_all:
+        results[COMBINE_ALL_KEY] = {}
       
       for class_, prediction_scores in class_predictions.items():
         if shutdown.is_set(): return None
@@ -112,12 +115,7 @@ def identification(option):
       item_delimiter = output.item_delimiter
       output_scores = output.output_scores
       
-      # combine all is true if any timestamp_scores is empty
-      # if timestamp_scores for any item is set, it must be set for every item
-      # results *could* be empty if every file errored out when opening
-      # so we define a default for it (just a placeholder value with the expected data structure)
-      class_timestamps = yamosse_utils.dict_peekitem(results, {'': {}})[1]
-      combine_all = not yamosse_utils.dict_peekitem(class_timestamps, (0, None))[1]
+      combine_all = COMBINE_ALL_KEY in results
       
       for file_name, class_timestamps in results.items():
         output.print_file(file_name)
@@ -129,8 +127,12 @@ def identification(option):
             continue
           
           if combine_all:
-            print('\t', item_delimiter.join(
-              model_yamnet_class_names[c] for c in class_timestamps.keys()), sep='', file=file)
+            if output_scores: 
+              class_timestamps = [f'{model_yamnet_class_names[c]} ({max(ts.values()):.0%})' for c, ts in class_timestamps.items()]
+            else:
+              class_timestamps = [model_yamnet_class_names[c] for c in class_timestamps.keys()]
+            
+            print('\t', item_delimiter.join(class_timestamps), sep='', file=file)
             
             continue
           
@@ -140,9 +142,8 @@ def identification(option):
             # try and get the timestamp/scores
             # if timestamp_scores is a list, it is just timestamps
             # (Output Scores turned off)
-            try: timestamp_scores = timestamp_scores.items()
-            except: pass
-            else: timestamp_scores = [f'{t} ({s:.0%})' for t, s in timestamp_scores]
+            if output_scores:
+              timestamp_scores = [f'{t} ({s:.0%})' for t, s in timestamp_scores.items()]
             
             print('\t', model_yamnet_class_names[class_], ':\n\t\t',
               item_delimiter.join(timestamp_scores), sep='', file=file)
@@ -190,7 +191,7 @@ def identification(option):
         # we also don't care about timestamps in this case
         # so the None key is used exclusively
         if options.combine_all:
-          class_scores = top_scores.setdefault(None, {})
+          class_scores = top_scores.setdefault(COMBINE_ALL_KEY, {})
           class_indices = score.argsort()[::-1][:options.top_ranked]
           
           # here we need to go back to storing this as a stock Python list
@@ -216,7 +217,7 @@ def identification(option):
         # (when prediction_score is None)
         # we use this opportunity to convert top_scores into its final form
         # specifically, to find averages for all of the scores for each class
-        class_scores = top_scores[None]
+        class_scores = top_scores[COMBINE_ALL_KEY]
         
         for class_, scores in class_scores.items():
           class_scores[class_] = float(self.np.mean(scores, axis=0))
@@ -225,7 +226,7 @@ def identification(option):
         # but now we've averaged the scores so it's all outta whack
         # so we gotta sort it now again
         # just using the stock Python functions this time, because now this is a dictionary
-        top_scores[None] = yamosse_utils.dict_sorted(class_scores,
+        top_scores[COMBINE_ALL_KEY] = yamosse_utils.dict_sorted(class_scores,
           key=lambda item: item[1], reverse=True)
         
         return
@@ -250,7 +251,7 @@ def identification(option):
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
-      class_scores = top_scores.pop(None, {})
+      class_scores = top_scores.pop(COMBINE_ALL_KEY, {})
       
       results = {yamosse_utils.hours_minutes(key): value in top_scores.items()}
       
@@ -261,7 +262,7 @@ def identification(option):
       # (so an empty dictionary can be disregarded)
       # the value can't be None! Otherwise sorting the top scores by their lengths could fail
       if class_scores or not self.options.top_ranked_output_timestamps:
-        results.setdefault(None, class_scores)
+        results.setdefault(COMBINE_ALL_KEY, class_scores)
       
       return results
     
@@ -270,11 +271,12 @@ def identification(option):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
+      output_scores = output.output_scores
       
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
-        output_timestamps = not None in top_scores
+        output_timestamps = not COMBINE_ALL_KEY in top_scores
         
         for timestamp, class_scores in top_scores.items():
           # number of Top Ranked items must be at least one
@@ -288,13 +290,12 @@ def identification(option):
           
           # we don't want to sort class_scores here
           # it should already be sorted as intended by this point
-          try: class_scores = class_scores.items()
-          except:
+          if output_scores:
             class_scores = item_delimiter.join(
-              [model_yamnet_class_names[c] for c in class_scores])
+              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in class_scores.items()])
           else:
             class_scores = item_delimiter.join(
-              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in class_scores])
+              [model_yamnet_class_names[c] for c in class_scores])
           
           print(class_scores, file=file)
         
