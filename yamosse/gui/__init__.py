@@ -979,21 +979,11 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
 
 
 def heading_text_columns(c):
-  columns = {}
-  
-  for cid, heading_text in yamosse_utils.dict_enumerate(c).items():
-    columns[cid] = {'heading': {'text': heading_text}}
-  
-  return columns
+  return {cid: {'heading': {'text': t}} for cid, t in yamosse_utils.dict_enumerate(c).items()}
 
 
 def values_items(i):
-  items = {}
-  
-  for cid, values in yamosse_utils.dict_enumerate(i).items():
-    items[cid] = {'values': values}
-  
-  return items
+  return {cid: {'values': v} for cid, v in yamosse_utils.dict_enumerate(i).items()}
 
 
 def _sorted():
