@@ -7,9 +7,7 @@ def identification(option):
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
   
-  # this key must be pickleable, hashable, and cannot be a string or integer type
-  # otherwise, it can be any value
-  COMBINE_ALL_KEY = None
+  COMBINE_ALL_KEY = -1
   
   # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
@@ -33,7 +31,7 @@ def identification(option):
     @classmethod
     @staticmethod
     def key_identified(item):
-      return item[0]
+      return item[0] # TODO
   
   class IdentificationConfidenceScore(Identification):
     def predict(self, class_predictions, prediction_score=None):
@@ -115,10 +113,10 @@ def identification(option):
       item_delimiter = output.item_delimiter
       output_scores = output.output_scores
       
-      combine_all = COMBINE_ALL_KEY in results
-      
       for file_name, class_timestamps in results.items():
         output.print_file(file_name)
+      
+        combine_all = not class_timestamps.pop(COMBINE_ALL_KEY, True)
         
         # this try-finally is just to ensure the newline is always printed even when continuing
         try:
