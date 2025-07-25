@@ -115,7 +115,8 @@ def identification(option):
       
       for file_name, class_timestamps in results.items():
         output.print_file(file_name)
-      
+        
+        # TODO JSON: need to pop this key
         combine_all = not class_timestamps.pop(COMBINE_ALL_KEY, True)
         
         # this try-finally is just to ensure the newline is always printed even when continuing
@@ -128,6 +129,10 @@ def identification(option):
           # if we're combining all we don't care about the timestamps
           # (but they're still in the data structure for sorting consistency)
           if combine_all:
+            # TODO JSON: need to:
+            # - find the max score if output scores is true
+            #   (this CANNOT be done on the data structure, class_timestamps needs to be a dict)
+            # - get just a list of classes if output scores is off
             if output_scores:
               class_timestamps = [f'{model_yamnet_class_names[c]} ({max(ts.values()):.0%})' for c, ts in class_timestamps.items()]
             else:
@@ -138,6 +143,7 @@ def identification(option):
           
           for class_, timestamp_scores in class_timestamps.items():
             # timestamp_scores will be a list if Output Scores is off
+            # TODO JSON: need to call hms on keys (otherwise data structure is the same)
             if output_scores:
               timestamp_scores = [f'{cls._hms(t)} ({s:.0%})' for t, s in timestamp_scores.items()]
             else:
@@ -277,6 +283,7 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
+        # TODO JSON: need to pop this key
         output_timestamps = not COMBINE_ALL_KEY in top_scores
         
         for timestamp, class_scores in top_scores.items():
