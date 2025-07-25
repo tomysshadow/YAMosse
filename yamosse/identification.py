@@ -64,6 +64,7 @@ def identification(option):
       options = self.options
       combine = options.combine
       
+      # TODO: make a tuple in the return value and return this there, not here
       if options.combine_all:
         results[COMBINE_ALL_KEY] = {}
       
