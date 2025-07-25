@@ -256,16 +256,16 @@ def identification(option):
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
       
-      # the presence of the None key is what determines if timestamps are output
+      # the presence of the COMBINE_ALL_KEY key is what determines if timestamps are output
       # yes, this is a kludge - but we need to pickle out this information somehow
       # plus we're basically already relying on this being true for Combine All to work anyway
       # here, we are taking advantage of the fact that Top Ranked must be at least one
       # (so an empty dictionary can be disregarded)
       # the value can't be None! Otherwise sorting the top scores by their lengths could fail
       if not self.options.top_ranked_output_timestamps:
-        results.setdefault(COMBINE_ALL_KEY, {})
+        top_scores.setdefault(COMBINE_ALL_KEY, {})
       
-      return results
+      return top_scores
     
     @classmethod
     def print_results_to_output(cls, results, output):
@@ -284,7 +284,7 @@ def identification(option):
           # if it's an empty dictionary we disregard it and continue
           # (this facilitates the Output Timestamps option)
           if output_timestamps:
-            print('\t', output.hours_minutes(timestamp), end=': ', sep='', file=file)
+            print('\t', yamosse_utils.hours_minutes(timestamp), end=': ', sep='', file=file)
           elif class_scores:
             print('\t', end='', file=file)
           else: continue
