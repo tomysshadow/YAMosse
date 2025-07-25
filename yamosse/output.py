@@ -37,7 +37,7 @@ def output(file_name, *args, **kwargs):
       self.sort_by = key_number_of_sounds
       self.sort_reverse = False
       self.item_delimiter = DEFAULT_ITEM_DELIMITER
-      self.output_confidence_scores = False
+      self.output_scores = False
       
       self.model_yamnet_class_names = model_yamnet_class_names
       self.identification = yamosse_identification.identification(identification)
@@ -75,15 +75,15 @@ def output(file_name, *args, **kwargs):
         yamosse_utils.latin1_unescape(options.item_delimiter))
       
       self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
-      self.output_confidence_scores = options.output_confidence_scores
+      self.output_scores = options.output_scores
       return options.output_options
     
     @abstractmethod
     def results(self, results):
-      output_confidence_scores = self.output_confidence_scores
+      output_scores = self.output_scores
       
       for file_name, identified in results.items():
-        if not output_confidence_scores:
+        if not output_scores:
           identified = {key: list(value.keys()) for key, value in identified.items()}
         
         results[file_name] = yamosse_utils.dict_sorted(identified,

@@ -40,9 +40,9 @@ TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each time
 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
-TIP_OUTPUT_FILE_OPTIONS_OUTPUT_CONFIDENCE_SCORE = ''.join(('Output the confidence score ',
-  'percentage along with each timestamp, so you can see how certain the model is that it ',
-  'identified a sound at that timestamp.'))
+TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage along ',
+  'with each timestamp, so you can see how certain the model is that it identified a sound at ',
+  'that timestamp.'))
 
 TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The per-worker Tensorflow logical device memory ',
   'limit, in megabytes.'))
@@ -362,18 +362,18 @@ def make_output_file_options(frame, variables):
   
   output_options_checkbutton.grid(row=2, sticky=tk.W, pady=gui.PADY_QN)
   
-  output_confidence_scores_checkbutton = ttk.Checkbutton(frame,
-    text='Output Confidence Scores', variable=variables['output_confidence_scores'])
+  output_scores_checkbutton = ttk.Checkbutton(frame,
+    text='Output Scores', variable=variables['output_scores'])
   
   # this is only sticky to W so Help only appears when mousing over the checkbutton itself
-  output_confidence_scores_checkbutton.grid(row=3, sticky=tk.W, pady=gui.PADY_QN)
+  output_scores_checkbutton.grid(row=3, sticky=tk.W, pady=gui.PADY_QN)
   
   frame_rows = frame.grid_size()[1]
   frame.rowconfigure(tuple(range(frame_rows)), weight=1,
     uniform='output_worker_options_row') # make the rows uniform
   
   return (sort_by_frame, sort_reverse_checkbutton, item_delimiter_frame,
-    output_options_checkbutton, output_confidence_scores_checkbutton)
+    output_options_checkbutton, output_scores_checkbutton)
 
 
 def make_worker_options(frame, variables):
@@ -508,7 +508,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     output_file_options_widgets[1]: TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSE,
     output_file_options_widgets[2]: TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER,
     output_file_options_widgets[3]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS,
-    output_file_options_widgets[4]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_CONFIDENCE_SCORE,
+    output_file_options_widgets[4]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE,
     
     worker_options_widgets[0]: TIP_WORKER_OPTIONS_MEMORY_LIMIT,
     worker_options_widgets[1]: TIP_WORKER_OPTIONS_MAX_WORKERS,

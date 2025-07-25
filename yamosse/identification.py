@@ -45,7 +45,7 @@ def identification(option):
       # this is pretty self explanatory
       # check if the score we got is above the confidence score
       # if it is, take the max score found per one second of the sound
-      # for display if the Output Confidence Scores option is checked
+      # for display if the Output Scores option is checked
       for class_ in options.classes:
         calibrated_score = score[class_] * calibration[class_]
         if calibrated_score < confidence_score: continue
@@ -110,7 +110,7 @@ def identification(option):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
-      output_confidence_scores = output.output_confidence_scores
+      output_scores = output.output_scores
       
       # combine all is true if any timestamp_scores is empty
       # if timestamp_scores for any item is set, it must be set for every item
@@ -139,7 +139,7 @@ def identification(option):
             
             # try and get the timestamp/scores
             # if timestamp_scores is a list, it is just timestamps
-            # (Output Confidence Scores turned off)
+            # (Output Scores turned off)
             try: timestamp_scores = timestamp_scores.items()
             except: pass
             else: timestamp_scores = [f'{t} ({s:.0%})' for t, s in timestamp_scores]
