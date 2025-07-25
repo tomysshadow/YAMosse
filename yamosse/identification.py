@@ -7,6 +7,8 @@ def identification(option):
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
   
+  # this key must be pickleable, hashable, and cannot be a string or integer type
+  # otherwise, it can be any value
   COMBINE_ALL_KEY = None
   
   # general TODO: this whole contraption is in desperate need of unit tests
@@ -122,10 +124,13 @@ def identification(option):
         
         # this try-finally is just to ensure the newline is always printed even when continuing
         try:
+          # if no timestamps were found for this file, then print None for this file
           if not class_timestamps:
             print('\t', None, sep='', file=file)
             continue
           
+          # if we're combining all we don't care about the timestamps
+          # (but they're still in the data structure for sorting consistency)
           if combine_all:
             if output_scores: 
               class_timestamps = [f'{model_yamnet_class_names[c]} ({max(ts.values()):.0%})' for c, ts in class_timestamps.items()]
