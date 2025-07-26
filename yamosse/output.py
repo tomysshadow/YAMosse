@@ -73,6 +73,7 @@ def output(file_name, *args, **kwargs):
       
       self.sort_reverse = options.sort_reverse
       
+      # this will take any escape characters like \n or \t and make them real characters
       item_delimiter = yamosse_utils.ascii_backslashreplace(
         yamosse_utils.latin1_unescape(options.item_delimiter))
       
@@ -84,14 +85,23 @@ def output(file_name, *args, **kwargs):
     
     @abstractmethod
     def results(self, results):
+      # this function makes any changes that are to be applied universally
+      # regardless of the identification setting (Confidence Scores or Top Ranked)
+      # first, we perform the "Sort By" setting (by Number of Sounds, or File Name)
       results = yamosse_utils.dict_sorted(results, key=self.sort_by, reverse=self.sort_reverse)
       
       output_scores = self.output_scores
       
       for file_name, result in results.items():
+        # if not outputting scores, take them out
+        # we take the dictionary (whose values are the scores) and turn its keys into a flat list
+        # this is needed for the JSON to be structured correct
+        # and when printing these to text, it is also the ideal format
+        # because all the timestamps can be simply joined n' printed
         if not output_scores:
           result = {key: list(value.keys()) for key, value in result.items()}
         
+        # this sorts the next column - sorting by class/timestamp so that the output is consistent
         results[file_name] = yamosse_utils.dict_sorted(result,
           key=self.identification.key_result)
       
@@ -168,6 +178,7 @@ def output(file_name, *args, **kwargs):
         'errors': self._errors
       }
       
+      # dump anything that is non-empty
       json.dump({key: value for key, value in d.items() if value}, self.file, indent=True)
       
       super().__exit__(*args, **kwargs)
