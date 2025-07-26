@@ -277,7 +277,7 @@ def identification(option):
       # that we are now ready to find the top scores in
       # here, we use "fancy indexing" in order to get the list of top ranked classes
       if default is score:
-        scores = np.stack(scores).mean(axis=0)
+        scores = np.mean(scores, axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
         top_scores[top] = dict(zip(classes[class_indices].tolist(),
           scores[class_indices].tolist()))
