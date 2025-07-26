@@ -150,7 +150,16 @@ def identification(option):
       identification = super()
       
       for file_name, class_timestamps in results.items():
-        results[file_name] = {c: identification.hms(ts) for c, ts in class_timestamps.items()}
+        for class_, timestamps in class_timestamps.items():
+          timestamps = identification.hms(timestamps)
+          
+          # if Output Scores is checked, timestamps will be a dictionary
+          # for JSON that won't preserve insertion order, so we need to make it a list
+          try:
+            timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps.items()]
+          except ValueError: pass
+          
+          class_timestamps[class_] = timestamps
       
       return results
     
@@ -179,18 +188,29 @@ def identification(option):
             
             # try and get the 'All' timestamp, if it exists
             # if it doesn't, just catch the error and move on
-            try:
-              if output_scores:
-                all_timestamps.append((class_name, timestamps.pop(HMS_ALL)))
-              else:
-                timestamps.remove(HMS_ALL)
-                all_timestamps.append(class_name)
-            except (KeyError, ValueError): pass
-            else: assert not timestamps, 'timestamps must be empty if Span All is checked'
+            all_timestamp = None
+            
+            if output_scores:
+              for t, timestamp_score in enumerate(timestamps):
+                if timestamp_score['timestamp'] == HMS_ALL:
+                  all_timestamp = (class_name, timestamps.pop(t))
+                  break
+            else:
+              try: timestamps.remove(HMS_ALL)
+              except ValueError: pass
+              else: all_timestamp = class_name
+            
+            if not all_timestamp is None:
+              assert not timestamps, 'timestamps must be empty if Span All is checked'
+              
+              all_timestamps.append(all_timestamp)
+              continue
             
             # timestamps will be a dictionary if Output Scores is on
             if output_scores:
-              class_timestamps[class_] = [f'{t} ({s:.0%})' for t, s in timestamps.items()]
+              timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
+            else:
+              timestamps = [t['timestamp'] for t in timestamps]
             
             print('\t', class_name, ':\n\t\t',
               item_delimiter.join(timestamps), sep='', file=file)
@@ -198,7 +218,7 @@ def identification(option):
           if all_timestamps:
             # in this case we want to print the class names and scores, but not timestamps
             if output_scores:
-              all_timestamps = [f'{c} ({s:.0%})' for c, s in all_timestamps]
+              all_timestamps = [f'{c} ({t["score"]:.0%})' for c, t in all_timestamps]
             
             print('\t', item_delimiter.join(all_timestamps), sep='', file=file)
         finally:
@@ -211,6 +231,11 @@ def identification(option):
     @staticmethod
     def _max(calibrated_score, confidence_score):
       return calibrated_score < confidence_score
+    
+    @staticmethod
+    def _filter_all_timestamps(timestamp_score):
+      return timestamp_score['timestamp'] == HMS_ALL
+      
   
   class IdentificationTopRanked(Identification):
     def __init__(self, options, np):

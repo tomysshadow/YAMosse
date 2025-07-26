@@ -293,15 +293,14 @@ def link_radiobuttons(radiobuttons, variable):
   radiobuttons = tuple(radiobuttons.keys())
   
   def show():
-    for w in range(len(widgets)):
-      widget = widgets[w]
+    for w, widget in enumerate(widgets):
+      if not widget: continue
       
-      if widget:
-        enabled = (w == variable.get())
-        enable_widget(widget, enabled=enabled)
+      enabled = (w == variable.get())
+      enable_widget(widget, enabled=enabled)
   
-  for r in range(len(radiobuttons)):
-    radiobuttons[r].configure(value=r, variable=variable, command=show)
+  for r, radiobutton in enumerate(radiobuttons):
+    radiobutton.configure(value=r, variable=variable, command=show)
   
   show()
 
@@ -1187,9 +1186,7 @@ def make_filedialog(frame, name='', textvariable=None,
   
   buttons = []
   
-  for a in range(len(asks)):
-    ask = asks[a]
-    
+  for ask in asks:
     if not ask in ASKS_ALL: raise ValueError('ask must be in %r' % (ASKS_ALL,))
     
     text = 'Browse...'
