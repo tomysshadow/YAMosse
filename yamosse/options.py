@@ -27,7 +27,7 @@ class Options:
     input='', input_recursive=False,
     weights='',
     classes=None, calibration=None,
-    combine=3, combine_all=False,
+    timespan=3, timespan_span_all=False,
     background_noise_volume=1, background_noise_volume_loglinear=False,
     identification=0,
     confidence_score=20, confidence_score_minmax=False,
@@ -49,8 +49,8 @@ class Options:
     self.classes = classes
     self.calibration = calibration
     
-    self.combine = combine
-    self.combine_all = combine_all
+    self.timespan = timespan
+    self.timespan_span_all = timespan_span_all
     
     self.background_noise_volume = background_noise_volume
     self.background_noise_volume_loglinear = background_noise_volume_loglinear
@@ -90,8 +90,8 @@ class Options:
     option('Weights', yamosse_utils.ascii_backslashreplace(self.weights))
     option('Classes', repr(self.classes))
     option('Calibration', repr(self.calibration))
-    option('Combine', str(self.combine), end=' seconds\n')
-    option('Combine All', repr(self.combine_all))
+    option('Timespan', str(self.timespan), end=' seconds\n')
+    option('Timespan Span All', repr(self.timespan_span_all))
     option('Background Noise Volume', str(self.background_noise_volume), end='%\n')
     option('Background Noise Volume Log/Linear', repr(self.background_noise_volume_loglinear))
     option('Identification', repr(self.identification))

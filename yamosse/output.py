@@ -17,7 +17,7 @@ EXT_JSON = '.json'.casefold()
 def key_number_of_sounds(item):
   result = 0
   
-  # the number of sounds, with uncombined timestamps at the end
+  # the number of sounds, with timespans at the end
   for timestamps in item[1].values():
     result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
   

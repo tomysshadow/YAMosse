@@ -84,7 +84,7 @@ def identification(option):
       calibration = options.calibration
       confidence_score = options.confidence_score
       
-      if options.combine_all: prediction = TIMESTAMP_ALL
+      if options.timespan_span_all: prediction = TIMESTAMP_ALL
       
       # this is pretty self explanatory
       # check if the score we got is above the confidence score
@@ -105,7 +105,7 @@ def identification(option):
       results = {}
       
       options = self.options
-      combine = options.combine
+      timespan = options.timespan
       
       for class_, prediction_scores in class_predictions.items():
         if shutdown.is_set(): return None
@@ -132,7 +132,7 @@ def identification(option):
             # the cast to float here is to convert a potential Tensorflow or Numpy dtype
             # into a Python native type, because we want to pickle this result into the main process
             # which does not have those modules loaded
-            timestamp = (begin, end) if combine and begin + combine < end else begin
+            timestamp = (begin, end) if timespan and begin + timespan < end else begin
             timestamp_scores[timestamp] = float(max(scores[score_begin:score_end + 1]))
             
             score_begin = prediction_end
@@ -186,7 +186,7 @@ def identification(option):
                 timestamps.remove(HMS_ALL)
                 all_timestamps.append(class_name)
             except (KeyError, ValueError): pass
-            else: assert not timestamps, 'timestamps must be empty if Combine All is checked'
+            else: assert not timestamps, 'timestamps must be empty if Span All is checked'
             
             # timestamps will be a dictionary if Output Scores is on
             if output_scores:
@@ -239,19 +239,19 @@ def identification(option):
       default = score
       
       # if we have a new prediction/score
-      # round down predictions to nearest "combine" range
+      # round down predictions to nearest timespan
       # we also only take the scores we specifically care about (saves memory)
       # we will be able to get them back later by indexing into the classes array
       if prediction_score:
         prediction, score = prediction_score
         score = np.minimum(score.take(classes) * self.calibration, 1.0)
         
-        # in the combine all case, we actually just want to list
+        # in the span all case, we actually just want to list
         # every class that is ever in the top ranked as one big summary
         # so we don't bother with the whole numpy stacking thing
         # we also don't care about timestamps in this case
         # so the None key is used exclusively
-        if options.combine_all:
+        if options.timespan_span_all:
           class_scores = top_scores.setdefault(TIMESTAMP_ALL, {})
           class_indices = score.argsort()[::-1][:options.top_ranked]
           
@@ -264,16 +264,16 @@ def identification(option):
           
           return
         
-        combine = options.combine
+        timespan = options.timespan
         
-        # when combine is zero, prediction should always be set to its initial value
+        # when timespan is zero, prediction should always be set to its initial value
         # this tells the location of the first sound identified, which is useful information
-        if combine: prediction = prediction // combine * combine
+        if timespan: prediction = prediction // timespan * timespan
         elif top_scores: prediction = top
         
         score = [score]
         default = top_scores.setdefault(int(prediction), score)
-      elif options.combine_all:
+      elif options.timespan_span_all:
         # this only happens on the last call, from the timestamps method
         # (when prediction_score is None)
         # we use this opportunity to convert top_scores into its final form

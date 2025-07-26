@@ -139,11 +139,12 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
     current_process = psutil.Process(os.getpid())
     current_process.nice(psutil.HIGH_PRIORITY_CLASS)
   
+  # currently, setting a per-CPU memory limit isn't supported by Tensorflow
+  # however in future the 'GPU' argument could be removed if it does ever become supported
   gpus = tf.config.list_physical_devices('GPU')
   
-  # memory limit is per-worker, so for multiple GPUs we need to divide amongst them
   if gpus:
-    memory_limit = options.memory_limit // len(gpus)
+    memory_limit = options.memory_limit
     
     logical_device_configuration = [
       tf.config.LogicalDeviceConfiguration(memory_limit=memory_limit)
@@ -241,7 +242,6 @@ def worker(file_name):
   
   options = _options
   identification = options.identification
-  combine = options.combine
   background_noise_volume = options.background_noise_volume
   
   try:

@@ -14,12 +14,12 @@ UNIT_SECONDS = 'seconds'
 TIP_WEIGHTS = ''.join(('The weights file for the YAMNet model. This option will be disabled if ',
   'you are using the Tensorflow Hub release of YAMNet.'))
 
-TIP_COMBINE = ''.join(('If a sound is less than this length in seconds, it will be combined into ',
-  'one timestamp. Otherwise, the beginning and ending timestamp will be output with a dash ',
-  'inbetween. To always combine timestamps, set this to zero.'))
+TIP_TIMESPAN = ''.join(('If a sound is less than this length in seconds, it will be combined ',
+  'into one timestamp. Otherwise, it will be output as a timespan: two timestamps with a dash ',
+  'inbetween. To never use timespans, set this to zero.'))
 
-TIP_COMBINE_ALL = ''.join(('If checked, timestamps are not used. Instead, one prediction is made ',
-  'for the entire sound file.'))
+TIP_TIMESPAN_SPAN_ALL = ''.join(('If checked, timestamps are not used. Instead, one prediction ',
+  'is made, spanning the entire sound file.'))
 
 TIP_BACKGROUND_NOISE_VOLUME = ''.join(('The volume below which all sounds are ignored. Setting ',
   'this to at least 1% will make scans significantly faster during silent parts of the sound ',
@@ -35,8 +35,8 @@ TIP_OUTPUT_FILE_OPTIONS_SORT_BY = ''.join(('Whether to sort results by the numbe
 
 TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSE = 'If checked, results will be sorted in reverse.'
 
-TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Seperator inbetween each timestamp or class. ',
-  'Escape characters are supported.'))
+TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Separator inbetween each timestamp or class. ',
+  'Escape characters are supported. This option is ignored if the output is a JSON file.'))
 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
@@ -44,8 +44,10 @@ TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage alo
   'timestamp, so you can see how certain the model is that it identified a sound at that ',
   'timestamp.'))
 
-TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The per-worker Tensorflow logical device memory ',
-  'limit, in megabytes.'))
+TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The Tensorflow logical device memory limit, in ',
+  'megabytes. This is both per-worker and per-device, so will be multiplied by the number of ',
+  'workers and the number of GPUs available. This option is ignored if GPU Acceleration is not ',
+  'enabled.'))
 
 TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers may make scans ',
   'faster, unless it is set too high - then you might run out of memory (workers cost memory, ',
@@ -235,7 +237,7 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
   make_presets(presets_labelframe, import_preset, export_preset)
 
 
-def make_combine(frame, variables):
+def make_timespan(frame, variables):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
@@ -246,25 +248,25 @@ def make_combine(frame, variables):
   
   spinbox_frame = ttk.Frame(cell_frame)
   spinbox_frame.grid(row=0, column=0, sticky=tk.EW)
-  gui.make_spinbox(spinbox_frame, textvariable=variables['combine'],
+  gui.make_spinbox(spinbox_frame, textvariable=variables['timespan'],
     from_=0, to=60, unit=UNIT_SECONDS)
   
-  combine_all_variable = variables['combine_all']
+  timespan_span_all_variable = variables['timespan_span_all']
   
   def show_spinbox_frame():
-    gui.enable_widget(spinbox_frame, enabled=not combine_all_variable.get())
+    gui.enable_widget(spinbox_frame, enabled=not timespan_span_all_variable.get())
   
   show_spinbox_frame()
   
-  combine_all_checkbutton = ttk.Checkbutton(
+  timespan_span_all_checkbutton = ttk.Checkbutton(
     cell_frame,
-    text='All',
-    variable=combine_all_variable,
+    text='Span All',
+    variable=timespan_span_all_variable,
     command=show_spinbox_frame
   )
   
-  combine_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
-  return combine_all_checkbutton
+  timespan_span_all_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
+  return timespan_span_all_checkbutton
 
 
 def make_background_noise_volume(frame, variables):
@@ -449,11 +451,11 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   
   row_frame.columnconfigure((0, 1), weight=1, uniform='advanced_column') # make the columns uniform
   
-  combine_labelframe = ttk.Labelframe(row_frame, text='Combine',
+  timespan_labelframe = ttk.Labelframe(row_frame, text='Timespan',
     padding=gui.PADDING_HNSEW)
   
-  combine_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
-  combine_all_checkbutton = make_combine(combine_labelframe, variables)
+  timespan_labelframe.grid(row=0, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
+  timespan_span_all_checkbutton = make_timespan(timespan_labelframe, variables)
   
   background_noise_volume_labelframe = ttk.Labelframe(row_frame, text='Background Noise Volume',
     padding=gui.PADDING_HNSEW)
@@ -497,8 +499,8 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   _link_tips(tips_text, {
     weights_labelframe: TIP_WEIGHTS,
     
-    combine_labelframe: TIP_COMBINE,
-    combine_all_checkbutton: TIP_COMBINE_ALL,
+    timespan_labelframe: TIP_TIMESPAN,
+    timespan_span_all_checkbutton: TIP_TIMESPAN_SPAN_ALL,
     
     background_noise_volume_labelframe: TIP_BACKGROUND_NOISE_VOLUME,
     background_noise_volume_radiobuttons[0]: TIP_BACKGROUND_NOISE_VOLUME_LOG,
