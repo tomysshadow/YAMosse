@@ -155,8 +155,7 @@ def identification(option):
           
           # if Output Scores is checked, timestamps will be a dictionary
           # for JSON that won't preserve insertion order, so we need to make it a list
-          try:
-            timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps.items()]
+          try: timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps]
           except ValueError: pass
           
           class_timestamps[class_] = timestamps
@@ -206,11 +205,8 @@ def identification(option):
               all_timestamps.append(all_timestamp)
               continue
             
-            # timestamps will be a dictionary if Output Scores is on
             if output_scores:
               timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
-            else:
-              timestamps = [t['timestamp'] for t in timestamps]
             
             print('\t', class_name, ':\n\t\t',
               item_delimiter.join(timestamps), sep='', file=file)
