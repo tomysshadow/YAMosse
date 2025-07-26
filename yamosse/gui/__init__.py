@@ -181,7 +181,7 @@ def enable_widget(widget, enabled=True, cursor=True):
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
-def prevent_default_widget(widget, class_=False, window=False, all_=False):
+def prevent_default_widget(widget, class_=False, window=True, all_=True):
   bindtags = [widget]
   if class_: bindtags.append(widget.winfo_class())
   if window: bindtags.append(widget.winfo_toplevel())
@@ -433,6 +433,8 @@ def make_text(frame, name='', width=10, height=10,
 
 
 def _embed():
+  CLASS_TEXT = 'Text'
+  
   VIEWS = {
     '<<PrevChar>>': (tk.X, (tk.SCROLL, -1, tk.UNITS)),
     '<<NextChar>>': (tk.X, (tk.SCROLL, 1, tk.UNITS)),
@@ -511,6 +513,8 @@ def _embed():
     return ''
   
   def text(text):
+    if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
+    
     try:
       if text.embed: raise RuntimeError('text_embed is single shot per-text')
     except AttributeError: pass
@@ -532,7 +536,7 @@ def _embed():
       
       # unbind from Text class so we can't get duplicate events
       # they'll be received from window instead
-      prevent_default_widget(text, class_=False, window=True, all_=True)
+      prevent_default_widget(text)
       
       text.bind('<Configure>', configure)
       
@@ -571,14 +575,9 @@ def _embed():
     focus_cbname = window.register(focus)
     view_cbname = window.register(view)
     
-    class_ = text.winfo_class()
-    
-    names = list(text.tk.call('bind', class_))
-    name = ''
-    
     bindings = {}
     
-    def bind(script):
+    def bind(name, script):
       # here is the problem this tries to solve
       # usually, events are only sent to the
       # specific widgets that have focus, or that the mouse is over, depending on the event
@@ -633,36 +632,43 @@ def _embed():
         return -options $options $result'''
       )
     
+    def text_unbind():
+      # try to clean up the window bindings
+      # but since this could happen at any old time
+      # (who knows when we might decide to garbage collect this object?)
+      # make sure to handle the case where window is already dead
+      try:
+        for name, binding in bindings.items():
+          window.unbind(name, binding)
+      except (tk.TclError, RuntimeError): pass
+    
+    def text_bind():
+      names = list(text.tk.call('bind', CLASS_TEXT))
+      
+      # this first loop is just necessary because
+      # we want to make the arrow keys scroll instantly
+      # default behaviour is to move the text marker, which
+      # will eventually scroll, but only when it hits the bottom of the screen
+      # this is the only instance where we want to forego the Text class defaults
+      for name in VIEWS.keys():
+        try: names.remove(name)
+        except ValueError: pass
+        
+        bind(name, f'{view_cbname} %W {name}')
+      
+      for name in names:
+        bind(name, text.tk.call('bind', CLASS_TEXT, name))
+    
     try: text_destroy = text.__del__
     except AttributeError: text_destroy = lambda: None
     
     def destroy():
       try: text_destroy()
-      finally:
-        # try to clean up the window bindings
-        # but since this could happen at any old time
-        # (who knows when we might decide to garbage collect this object?)
-        # make sure to handle the case where window is already dead
-        try:
-          for name, binding in bindings.items():
-            window.unbind(name, binding)
-        except tk.TclError: pass
+      finally: text_unbind()
     
     text.__del__ = destroy
     
-    # this first loop is just necessary because
-    # we want to make the arrow keys scroll instantly
-    # default behaviour is to move the text marker, which
-    # will eventually scroll, but only when it hits the bottom of the screen
-    # this is the only instance where we want to forego the Text class defaults
-    for name in VIEWS.keys():
-      try: names.remove(name)
-      except ValueError: pass
-      
-      bind(f'{view_cbname} %W {name}')
-    
-    for name in names:
-      bind(text.tk.call('bind', class_, name))
+    text_bind()
   
   return insert, text
 
