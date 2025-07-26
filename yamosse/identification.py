@@ -19,11 +19,11 @@ def identification(option):
       self.np = np
     
     @abstractmethod
-    def predict(self, identified, prediction_score=None):
+    def predict(self, result, prediction_score=None):
       pass
     
     @abstractmethod
-    def timestamps(self, identified, shutdown):
+    def timestamps(self, result, shutdown):
       pass
     
     @classmethod
@@ -63,7 +63,7 @@ def identification(option):
     
     @classmethod
     @staticmethod
-    def key_identified(item):
+    def key_result(item):
       # this function is used from Output
       # to sort the column of results that's tabbed in once (one column to the right of file names)
       # that is, classes in Confidence Score mode, or timestamps in Top Ranked mode

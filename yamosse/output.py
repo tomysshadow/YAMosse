@@ -86,12 +86,12 @@ def output(file_name, *args, **kwargs):
       
       output_scores = self.output_scores
       
-      for file_name, identified in results.items():
+      for file_name, result in results.items():
         if not output_scores:
-          identified = {key: list(value.keys()) for key, value in identified.items()}
+          result = {key: list(value.keys()) for key, value in result.items()}
         
-        results[file_name] = yamosse_utils.dict_sorted(identified,
-          key=self.identification.key_identified)
+        results[file_name] = yamosse_utils.dict_sorted(result,
+          key=self.identification.key_result)
       
       return self.identification.hms(results)
     
