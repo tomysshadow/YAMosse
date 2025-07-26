@@ -204,10 +204,12 @@ def identification(option):
         finally:
           print('', file=file)
     
-    def _min():
+    @staticmethod
+    def _min(calibrated_score, confidence_score):
       return calibrated_score >= confidence_score
     
-    def _max():
+    @staticmethod
+    def _max(calibrated_score, confidence_score):
       return calibrated_score < confidence_score
   
   class IdentificationTopRanked(Identification):
