@@ -512,6 +512,8 @@ def _embed():
     
     return ''
   
+  text_binds = []
+  
   def text(text):
     if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
     
@@ -551,33 +553,33 @@ def _embed():
       text['state'] = tk.DISABLED
     
     window = text.winfo_toplevel()
+    W = window.register(peek)
     
-    # text is not used in the inner scope of these functions
-    # in the hope of preventing a circular reference
-    # (where text can't del because it's kept alive in these scopes...)
+    def repl_W(match):
+      return f'${W}' if match.group(1) == 'W' else match.group()
+    
+    root_window = get_root_window()
+    tk_ = root_window.tk
+    
     def focus(*args):
       # allow getting focus, prevent setting focus
       if len(args) == 1: return ''
-      return window.tk.call('interp', 'invokehidden', '', 'focus', *args)
+      return tk_.call('interp', 'invokehidden', '', 'focus', *args)
+    
+    focus_cbname = window.register(focus)
     
     def view(widget, name):
       # need to use nametowidget because we want the text from the top of the stack
       # (not necessarily the same one in our scope here)
       view, args = VIEWS[name]
       
-      getattr(window.nametowidget(widget), ''.join((view, 'view')))(*args)
+      getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
     
-    W = window.register(peek)
-    
-    def repl_W(match):
-      return f'${W}' if match.group(1) == 'W' else match.group()
-    
-    focus_cbname = window.register(focus)
     view_cbname = window.register(view)
     
     bindings = {}
     
-    def bind(name, script):
+    def window_bind(name, script):
       # here is the problem this tries to solve
       # usually, events are only sent to the
       # specific widgets that have focus, or that the mouse is over, depending on the event
@@ -632,7 +634,7 @@ def _embed():
         return -options $options $result'''
       )
     
-    def text_unbind():
+    def window_unbind():
       # try to clean up the window bindings
       # but since this could happen at any old time
       # (who knows when we might decide to garbage collect this object?)
@@ -643,7 +645,9 @@ def _embed():
       except (tk.TclError, RuntimeError): pass
     
     def text_bind():
-      names = list(text.tk.call('bind', CLASS_TEXT))
+      window_unbind()
+      
+      names = list(tk_.call('bind', CLASS_TEXT))
       
       # this first loop is just necessary because
       # we want to make the arrow keys scroll instantly
@@ -654,19 +658,33 @@ def _embed():
         try: names.remove(name)
         except ValueError: pass
         
-        bind(name, f'{view_cbname} %W {name}')
+        window_bind(name, f'{view_cbname} %W {name}')
       
       for name in names:
-        bind(name, text.tk.call('bind', CLASS_TEXT, name))
+        window_bind(name, tk_.call('bind', CLASS_TEXT, name))
     
     try: text_destroy = text.__del__
     except AttributeError: text_destroy = lambda: None
     
     def destroy():
       try: text_destroy()
-      finally: text_unbind()
+      finally: window_unbind()
     
     text.__del__ = destroy
+    
+    def bind(*args):
+      # if we are binding a new script to the text class
+      # propagate it to all the text embed widgets
+      if len(args) == 3:
+        class_ = args[0]
+        
+        if class_ == CLASS_TEXT:
+          for text_bind in text_binds:
+            text_bind()
+      
+      return tk_.call('interp', 'invokehidden', '', 'bind', *args)
+    
+    bind_cbname = root_window.register(bind)
     
     text_bind()
   
