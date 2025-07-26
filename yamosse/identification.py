@@ -10,7 +10,7 @@ def identification(option):
   TIMESTAMP_ALL = -1
   
   HMS_ALL = 'All'
-  HMS_SPAN = ' - '
+  HMS_TIMESPAN = ' - '
   
   # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
@@ -46,7 +46,7 @@ def identification(option):
           timestamp = HMS_ALL
         else:
           # convert to HMS string and join the timestamps if this is a timespan
-          try: timestamp = HMS_SPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+          try: timestamp = HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
           except TypeError: timestamp = yamosse_utils.hours_minutes(timestamp)
         
         keys.append(timestamp)
