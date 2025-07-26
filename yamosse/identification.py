@@ -10,7 +10,7 @@ def identification(option):
   TIMESTAMP_ALL = -1
   
   HMS_ALL = 'All'
-  HMS_SEPARATOR = ' - '
+  HMS_SPAN = ' - '
   
   # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
@@ -32,6 +32,9 @@ def identification(option):
       # but we want a list at the end
       results = []
       
+      # this function can operate on either dictionaries or other iterables
+      # if operating on a dictionary, it replaces the keys
+      # (because the timestamps are always keys)
       try:
         values = timestamps.values()
         timestamps = timestamps.keys()
@@ -39,9 +42,11 @@ def identification(option):
       
       for timestamp in timestamps:
         if timestamp == TIMESTAMP_ALL:
+          # substitute TIMESTAMP_ALL for HMS_ALL
           timestamp = HMS_ALL
         else:
-          try: timestamp = HMS_SEPARATOR.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+          # convert to HMS string and join the timestamps if this is a timespan
+          try: timestamp = HMS_SPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
           except TypeError: timestamp = yamosse_utils.hours_minutes(timestamp)
         
         results.append(timestamp)
@@ -59,9 +64,17 @@ def identification(option):
     @classmethod
     @staticmethod
     def key_identified(item):
+      # this function is used from Output
+      # to sort the column of results that's tabbed in once (one column to the right of file names)
+      # that is, classes in Confidence Score mode, or timestamps in Top Ranked mode
       return item[0]
   
   class IdentificationConfidenceScore(Identification):
+    def __init__(self, options, *args, **kwargs):
+      super().__init__(options, *args, **kwargs)
+      
+      self._minmax = self._max if options.confidence_score_minmax else self._min
+    
     def predict(self, class_predictions, prediction_score=None):
       if not prediction_score: return
       
@@ -78,9 +91,9 @@ def identification(option):
       # if it is, take the max score found per one second of the sound
       # for display if the Output Scores option is checked
       for class_ in options.classes:
-        # TODO: min/max
+        # calibrate the score and ensure it is less than 100%
         calibrated_score = min(score[class_] * calibration[class_], 1.0)
-        if calibrated_score < confidence_score: continue
+        if not self._minmax(calibrated_score, confidence_score): continue
         
         prediction_scores = class_predictions.setdefault(class_, {})
         
@@ -133,6 +146,7 @@ def identification(option):
     
     @classmethod
     def hms(cls, results):
+      # super call must be done out here because super doesn't work in list comprehensions
       identification = super()
       
       for file_name, class_timestamps in results.items():
@@ -157,11 +171,14 @@ def identification(option):
             print('\t', None, sep='', file=file)
             continue
           
+          # a list of classes with 'All' timestamps, including the associated scores if available
           all_timestamps = []
           
           for class_, timestamps in class_timestamps.items():
             class_name = model_yamnet_class_names[class_]
             
+            # try and get the 'All' timestamp, if it exists
+            # if it doesn't, just catch the error and move on
             try:
               if output_scores:
                 all_timestamps.append((class_name, timestamps.pop(HMS_ALL)))
@@ -169,8 +186,7 @@ def identification(option):
                 timestamps.remove(HMS_ALL)
                 all_timestamps.append(class_name)
             except (KeyError, ValueError): pass
-            
-            if not timestamps: continue
+            else: assert not timestamps, 'timestamps must be empty if Combine All is checked'
             
             # timestamps will be a dictionary if Output Scores is on
             if output_scores:
@@ -180,12 +196,19 @@ def identification(option):
               item_delimiter.join(timestamps), sep='', file=file)
           
           if all_timestamps:
+            # in this case we want to print the class names and scores, but not timestamps
             if output_scores:
               all_timestamps = [f'{c} ({s:.0%})' for c, s in all_timestamps]
             
             print('\t', item_delimiter.join(all_timestamps), sep='', file=file)
         finally:
           print('', file=file)
+    
+    def _min():
+      return calibrated_score >= confidence_score
+    
+    def _max():
+      return calibrated_score < confidence_score
   
   class IdentificationTopRanked(Identification):
     def __init__(self, options, np):
@@ -241,10 +264,10 @@ def identification(option):
           
           return
         
-        # when combine is zero, prediction should always be set to its initial value
-        # this tells the location of the first sound identified, which is useful information
         combine = options.combine
         
+        # when combine is zero, prediction should always be set to its initial value
+        # this tells the location of the first sound identified, which is useful information
         if combine: prediction = prediction // combine * combine
         elif top_scores: prediction = top
         
@@ -284,7 +307,7 @@ def identification(option):
         
         return
       
-      # otherwise add the new score, to be stacked in a later call
+      # otherwise add the new score, we'll find the mean of them all later
       default += score
     
     def timestamps(self, top_scores, shutdown):
@@ -312,6 +335,8 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
+        # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
+        # (it's stored this way for JSON conversion where dictionaries don't preserve their order)
         for top_score in top_scores:
           print('\t', end='', file=file)
           
@@ -326,17 +351,11 @@ def identification(option):
             classes = item_delimiter.join(
               [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in classes.items()])
           else:
-            classes = item_delimiter.join(
-              [model_yamnet_class_names[c] for c in classes])
+            classes = item_delimiter.join([model_yamnet_class_names[c] for c in classes])
           
           print(classes, file=file)
         
         print('', file=file)
-    
-    @classmethod
-    @staticmethod
-    def key_identified(item):
-      return False
   
   if option == IDENTIFICATION_CONFIDENCE_SCORE:
     return IdentificationConfidenceScore
