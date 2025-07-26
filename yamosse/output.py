@@ -39,6 +39,8 @@ def output(file_name, *args, **kwargs):
       self.item_delimiter = DEFAULT_ITEM_DELIMITER
       self.output_scores = False
       
+      self.top_ranked_output_timestamps = True
+      
       self.model_yamnet_class_names = model_yamnet_class_names
       self.identification = yamosse_identification.identification(identification)
       
