@@ -157,14 +157,33 @@ def identification(option):
             print('\t', None, sep='', file=file)
             continue
           
-          for class_, timestamp_scores in class_timestamps.items():
-            # timestamp_scores will be a list if Output Scores is off
-            if output_scores:
-              timestamp_scores = [f'{t} ({s:.0%})' for t, s in timestamp_scores.items()]
-            
-            print('\t', model_yamnet_class_names[class_], ':\n\t\t',
-              item_delimiter.join(timestamp_scores), sep='', file=file)
+          all_timestamps = []
           
+          for class_, timestamps in class_timestamps.items():
+            class_name = model_yamnet_class_names[class_]
+            
+            try:
+              if output_scores:
+                all_timestamps.append((class_name, timestamps.pop(HMS_ALL)))
+              else:
+                timestamps.remove(HMS_ALL)
+                all_timestamps.append(class_name)
+            except (KeyError, ValueError): pass
+            
+            if not timestamps: continue
+            
+            # timestamps will be a dictionary if Output Scores is on
+            if output_scores:
+              class_timestamps[class_] = [f'{t} ({s:.0%})' for t, s in timestamps.items()]
+            
+            print('\t', class_name, ':\n\t\t',
+              item_delimiter.join(timestamps), sep='', file=file)
+          
+          if all_timestamps:
+            if output_scores:
+              all_timestamps = [f'{c} ({s:.0%})' for c, s in all_timestamps]
+            
+            print('\t', item_delimiter.join(all_timestamps), sep='', file=file)
         finally:
           print('', file=file)
   
