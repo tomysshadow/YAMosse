@@ -512,7 +512,7 @@ def _embed():
     
     return ''
   
-  text_binds = []
+  text_binds = set()
   
   def text(text):
     if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
@@ -558,6 +558,7 @@ def _embed():
     def repl_W(match):
       return f'${W}' if match.group(1) == 'W' else match.group()
     
+    # root window is used here for stuff that should be application wide
     root_window = get_root_window()
     tk_ = root_window.tk
     
@@ -668,15 +669,17 @@ def _embed():
     
     def destroy():
       try: text_destroy()
-      finally: window_unbind()
+      finally:
+        text_binds.discard(text_bind)
+        window_unbind()
     
     text.__del__ = destroy
     
     def bind(*args):
-      # if we are binding a new script to the text class
+      # if we are binding a new script to the Text class
       # propagate it to all the text embed widgets
       if len(args) == 3:
-        class_ = args[0]
+        class_ = str(args[0])
         
         if class_ == CLASS_TEXT:
           for text_bind in text_binds:
@@ -686,7 +689,13 @@ def _embed():
     
     bind_cbname = root_window.register(bind)
     
+    tk_.eval(
+      f'''interp hide {{}} bind
+      interp alias {{}} bind {{}} {bind_cbname}'''
+    )
+    
     text_bind()
+    text_binds.add(text_bind)
   
   return insert, text
 
