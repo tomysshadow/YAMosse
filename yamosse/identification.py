@@ -30,7 +30,7 @@ def identification(option):
     def hms(cls, timestamps):
       # timestamps doesn't need to be a list, just an iterable
       # but we want a list at the end
-      results = []
+      keys = []
       
       # this function can operate on either dictionaries or other iterables
       # if operating on a dictionary, it replaces the keys
@@ -49,12 +49,12 @@ def identification(option):
           try: timestamp = HMS_SPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
           except TypeError: timestamp = yamosse_utils.hours_minutes(timestamp)
         
-        results.append(timestamp)
+        keys.append(timestamp)
       
       if values is None:
-        return results
+        return keys
       
-      return dict(zip(results, values))
+      return dict(zip(keys, values))
     
     @classmethod
     @abstractmethod
@@ -146,7 +146,7 @@ def identification(option):
     
     @classmethod
     def hms(cls, results):
-      # super call must be done out here because super doesn't work in list comprehensions
+      # super call is done out here to avoid the overhead of doing it every loop
       identification = super()
       
       for file_name, class_timestamps in results.items():
@@ -228,10 +228,6 @@ def identification(option):
     @staticmethod
     def _max(calibrated_score, confidence_score):
       return calibrated_score < confidence_score
-    
-    @staticmethod
-    def _filter_all_timestamps(timestamp_score):
-      return timestamp_score['timestamp'] == HMS_ALL
       
   
   class IdentificationTopRanked(Identification):
@@ -340,6 +336,7 @@ def identification(option):
     
     @classmethod
     def hms(cls, results):
+      # super call must be done out here because it doesn't work in list comprehensions
       identification = super()
       
       for file_name, top_scores in results.items():
@@ -362,11 +359,6 @@ def identification(option):
         # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
         # (it's stored this way for JSON conversion where dictionaries don't preserve their order)
         for top_score in top_scores:
-          print('\t', end='', file=file)
-          
-          if output_timestamps:
-            print(top_score['timestamp'], end=': ', sep='', file=file)
-          
           classes = top_score['classes']
           
           # we don't want to sort classes here
@@ -376,6 +368,11 @@ def identification(option):
               [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in classes.items()])
           else:
             classes = item_delimiter.join([model_yamnet_class_names[c] for c in classes])
+          
+          print('\t', end='', file=file)
+          
+          if output_timestamps:
+            print(top_score['timestamp'], end=': ', sep='', file=file)
           
           print(classes, file=file)
         
