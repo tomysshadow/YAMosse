@@ -155,8 +155,9 @@ def identification(option):
           
           # if Output Scores is checked, timestamps will be a dictionary
           # for JSON that won't preserve insertion order, so we need to make it a list
-          try: timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps.items()]
-          except ValueError: pass
+          try: timestamps = timestamps.items()
+          except: pass
+          else: timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps]
           
           class_timestamps[class_] = timestamps
       
