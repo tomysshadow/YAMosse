@@ -619,12 +619,11 @@ def _embed():
                 try: widget = root_window.nametowidget(window)
                 except KeyError: continue
                 
-                if not test_widget(widget): continue
-                
                 # don't do this one if we've done it already
                 widgets_len = len(widgets)
                 if widgets.setdefault(widget, widgets_len) != widgets_len: continue
                 
+                if not test_widget(widget): continue
                 bind_window(widget, name)
               
               return result
