@@ -41,5 +41,10 @@ def dict_enumerate(d, *args, **kwargs):
   return dict(enumerate(d, *args, **kwargs))
 
 
+def dict_once(d, key):
+  d_len = len(d)
+  return d.setdefault(key, d_len) == d_len
+
+
 def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))

@@ -523,16 +523,10 @@ def _embed():
     
     return '<KeyPress-%c>' % name
   
-  def bind_window(window, name, view_script=''):
+  def bind_window(window, name):
     bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    # for the view script we want to forego the default behaviour of the text widget
-    # otherwise, we get the script that is currently binded for that class
-    if not view_script:
-      if name in VIEWS.keys(): return
-      
-      view_script = bind(CLASS_TEXT, name)
-    
+    # we always need to do the main script
     scripts = window.embed.setdefault(name, [])
     
     if scripts:
@@ -548,6 +542,14 @@ def _embed():
       
       scripts.append(script)
     
+    # we want to make the arrow keys scroll instantly
+    # default behaviour is to move the text marker, which
+    # will eventually scroll, but only when it hits the bottom of the screen
+    # this is the only instance where we want to forego the Text class defaults
+    # if script is empty, we can skip it entirely
+    script = f'{view_cbname} %W {name}' if name in VIEWS.keys() else bind(CLASS_TEXT, name)
+    if not script: return
+    
     bind(window, name,
       
       f'''+set {W} [{W} %M]
@@ -555,7 +557,7 @@ def _embed():
       
       interp hide {{}} focus
       interp alias {{}} focus {{}} {focus_cbname}
-      catch {{{RE_SCRIPT.sub(repl_W, view_script)}}} result options
+      catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
       
       interp alias {{}} focus {{}}
       interp expose {{}} focus
@@ -628,8 +630,7 @@ def _embed():
                 except KeyError: continue
                 
                 # don't do this one if we've done it already
-                widgets_len = len(widgets)
-                if widgets.setdefault(widget, widgets_len) != widgets_len: continue
+                if not yamosse_utils.dict_once(widgets, widget): continue
                 
                 if not test_widget(widget): continue
                 bind_window(widget, name_sequence(sequence))
@@ -730,15 +731,15 @@ def _embed():
     
     bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    # we want to make the arrow keys scroll instantly
-    # default behaviour is to move the text marker, which
-    # will eventually scroll, but only when it hits the bottom of the screen
-    # this is the only instance where we want to forego the Text class defaults
-    for name in VIEWS.keys():
-      bind_window(window, name, view_script=f'{view_cbname} %W {name}')
+    names = set([name_sequence(s) for s in bind(CLASS_TEXT)])
     
-    for sequence in bind(CLASS_TEXT):
-      bind_window(window, name_sequence(sequence))
+    # need to ensure the views are bound at least once
+    for name in VIEWS.keys():
+      bind_window(window, name)
+      names.discard(name)
+    
+    for name in names:
+      bind_window(window, name)
   
   return insert, text
 
@@ -821,8 +822,7 @@ def measure_widths_treeview(treeview, widths, item=None):
       # although it doesn't take very long to query a tag's configuration, it is still
       # worth checking if we've done it yet, as it is likely there are many many columns
       # but only a few tags they are collectively using
-      tags_len = len(tags)
-      if tags.setdefault(child_tag, tags_len) != tags_len: continue
+      if not yamosse_utils.dict_once(tags, child_tag): continue
       
       # after confirming we have not done the tag yet, query the tag's configuration
       # ideally, this would only get the "active" tag
