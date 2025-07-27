@@ -690,7 +690,7 @@ def _embed():
     def text_bind():
       window_unbind()
       
-      names = set(tk_.call('bind', CLASS_TEXT))
+      names = set([str(b) for b in tk_.call('bind', CLASS_TEXT)])
       
       # this first loop is just necessary because
       # we want to make the arrow keys scroll instantly
