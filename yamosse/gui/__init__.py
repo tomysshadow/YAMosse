@@ -581,7 +581,7 @@ def _embed():
     bindings = {}
     
     def window_bind(name, script):
-      window_binds.add(window_bind)
+      if not bindings: window_binds.add(window_bind)
       
       # here is the problem this tries to solve
       # usually, events are only sent to the
@@ -638,6 +638,7 @@ def _embed():
       )
     
     def window_unbind():
+      if not bindings: return
       window_binds.discard(window_bind)
       
       # try to clean up the window bindings
@@ -648,6 +649,8 @@ def _embed():
         for name, binding in bindings.items():
           window.unbind(name, binding)
       except (tk.TclError, RuntimeError): pass
+      
+      bindings.clear()
     
     def text_bind():
       window_unbind()
