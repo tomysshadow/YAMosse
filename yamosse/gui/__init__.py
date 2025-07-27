@@ -518,10 +518,10 @@ def _embed():
   def name_sequence(sequence):
     name = sequence.strip()
     
-    if not name.startswith('<'):
-      name = '<KeyPress-%c>' % name
+    if name.startswith('<'):
+      return str(name)
     
-    return str(name)
+    return '<KeyPress-%c>' % name
   
   def bind_window(window, name, view_script=''):
     bind, W, repl_W, focus_cbname, view_cbname = get_root()
