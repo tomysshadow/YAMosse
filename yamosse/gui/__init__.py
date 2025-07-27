@@ -614,12 +614,20 @@ def _embed():
     window = text.winfo_toplevel()
     tk_ = window.tk
     
-    # bindings needs to be a list, not a dictionary, to properly handle composition
-    # (that is, prefixing a binding with + to add another event)
-    bindings = []
+    bindings = {}
     
-    def window_bind(name, script, **kwargs):
+    def window_bind(name, script):
       if not bindings: window_binds.add(window_bind)
+      composition = bindings.setdefault(name, set())
+      
+      # need to knock out the previous composition if we rebind this event
+      if composition and not name.startswith('+'):
+        try:
+          for binding in composition:
+            window.unbind(name, binding)
+        except (tk.TclError, RuntimeError): pass
+        
+        composition.clear()
       
       # here is the problem this tries to solve
       # usually, events are only sent to the
@@ -661,21 +669,23 @@ def _embed():
       # disable the focus command, temporarily, by aliasing it, and then restore it back after
       # and that way, clicking random places in the window
       # won't ever give the text focus, it is completely impossible for it to steal away the focus
-      bindings.append((name, window.bind(name,
-        
-        f'''set {W} [{W} %M]
-        if {{${W} == ""}} {{ continue }}
-        
-        interp hide {{}} focus
-        interp alias {{}} focus {{}} {focus_cbname}
-        catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
-        
-        interp alias {{}} focus {{}}
-        interp expose {{}} focus
-        return -options $options $result''',
-        
-        **kwargs
-      )))
+      try:
+        composition.add(window.bind(name,
+          
+          f'''set {W} [{W} %M]
+          if {{${W} == ""}} {{ continue }}
+          
+          interp hide {{}} focus
+          interp alias {{}} focus {{}} {focus_cbname}
+          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+          
+          interp alias {{}} focus {{}}
+          interp expose {{}} focus
+          return -options $options $result''',
+          
+          add='+'
+        ))
+      except (tk.TclError, RuntimeError): pass
     
     def window_unbind():
       if not bindings: return
@@ -686,8 +696,9 @@ def _embed():
       # (who knows when we might decide to garbage collect this object?)
       # make sure to handle the case where window is already dead
       try:
-        for name, binding in bindings:
-          window.unbind(name, binding)
+        for name, composition in bindings.items():
+          for binding in composition:
+            window.unbind(name, binding)
       except (tk.TclError, RuntimeError): pass
       
       bindings.clear()
@@ -707,7 +718,7 @@ def _embed():
         window_bind(name, f'{view_cbname} %W {name}')
       
       for name in names:
-        window_bind(name, tk_.call('bind', CLASS_TEXT, name), add='+')
+        window_bind(name, tk_.call('bind', CLASS_TEXT, name))
     
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
