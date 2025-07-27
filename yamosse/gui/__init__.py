@@ -523,13 +523,21 @@ def _embed():
     scripts = bindings.setdefault(name, [])
     
     if scripts:
+      # set up the bindings that were originally on the window
       try:
         for script in scripts:
           call_bind(window, name, script)
       except (tk.TclError, RuntimeError): return
     else:
-      scripts.append(call_bind(window, name))
+      # back up the binding that was already on the window before
+      # we get this binding from Tk, so it shouldn't begin with a + prefix
+      script = call_bind(window, name)
+      assert not script.startswith('+'), 'script must not be prefixed'
+      
+      scripts.append(script)
     
+    # for the view script we want to forego the default behaviour of the text widget
+    # otherwise, we get the script that is currently binded for that class
     script = view_script
     
     if not script:
@@ -540,29 +548,32 @@ def _embed():
       
       f'''+set {W} [{W} %M]
       if {{${W} == ""}} {{ continue }}
-      ''' # newline at end is required
+      
+      interp hide {{}} focus
+      interp alias {{}} focus {{}} {focus_cbname}
+      
+      switch ${W} {{'''
     )
     
-    try:
-      for text in texts:
-        call_bind(window, name, 
-          
-          f'''+if {{${W} == "{text}"}} {{
-            interp hide {{}} focus
-            interp alias {{}} focus {{}} {focus_cbname}
-            
-            set error [catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options]
-            
-            interp alias {{}} focus {{}}
-            interp expose {{}} focus
-            
-            if {{$error}} {{ return -options $options $result }}
-            if {{$result == "break"}} {{ break }}
-            unset error result options
-          }}
-          ''' # newline at end is required
-        )
-    except (tk.TclError, RuntimeError): return
+    for text in texts:
+      call_bind(window, name,
+        
+        f'''+{{{text}}} {{
+          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+        }}'''
+      )
+    
+    call_bind(window, name,
+      
+      f'''+default {{
+          catch {{}} result options
+        }}
+      }}
+      
+      interp alias {{}} focus {{}}
+      interp expose {{}} focus
+      return -options $options $result'''
+    )
   
   def root():
     root = None
