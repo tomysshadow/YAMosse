@@ -634,7 +634,7 @@ def _embed():
               return result
             
             try: window = root_window.nametowidget(class_)
-            except KeyError: window = None
+            except KeyError: pass
             else:
               # handle the case where you want to put your own binding onto one of these windows
               # we don't need to test this window is dead
