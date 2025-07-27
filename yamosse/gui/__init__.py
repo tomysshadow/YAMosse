@@ -614,6 +614,8 @@ def _embed():
     window = text.winfo_toplevel()
     tk_ = window.tk
     
+    # bindings needs to be a list, not a dictionary, to properly handle composition
+    # (that is, prefixing a binding with + to add another event)
     bindings = []
     
     def window_bind(name, script, **kwargs):
