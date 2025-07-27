@@ -543,26 +543,7 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        window_binds = set()
-        
-        def bind(*args):
-          # if we are binding a new script to the Text class
-          # propagate it to all the text embed widgets
-          try: class_, name, script = args
-          except ValueError: pass
-          else:
-            # note: we'd have to do name.removeprefix('+') if VIEWS contained non-virtual events
-            # but since they are virtual, you can't use + with them anyway
-            if str(class_) == CLASS_TEXT and not name in VIEWS.keys():
-              for window_bind in window_binds:
-                window_bind(name, script)
-          
-          return tk_.call('interp', 'invokehidden', '', 'bind', *args)
-        
-        tk_.call('interp', 'hide', '', 'bind')
-        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
-        
-        root = (W, repl_W, focus_cbname, view_cbname, window_binds)
+        root = (W, repl_W, focus_cbname, view_cbname)
       
       return root
     
@@ -610,99 +591,49 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    W, repl_W, focus_cbname, view_cbname, window_binds = get_root()
+    W, repl_W, focus_cbname, view_cbname = get_root()
     
     window = text.winfo_toplevel()
+    
+    try:
+      if not window.embed is None: raise RuntimeError('text_embed is single shot per-window')
+    except AttributeError: pass
+    
+    window.embed = set()
+    
     tk_ = window.tk
     
-    bindings = {}
-    
     def window_bind(name, script):
-      if not bindings: window_binds.add(window_bind)
-      composition = bindings.setdefault(name, set())
+      window.embed.add(name)
       
-      # need to knock out the previous composition if we rebind this event
-      if composition and not name.startswith('+'):
-        try:
-          for binding in composition:
-            window.unbind(name, binding)
-        except (tk.TclError, RuntimeError): pass
+      window.bind(name,
         
-        composition.clear()
-      
-      # here is the problem this tries to solve
-      # usually, events are only sent to the
-      # specific widgets that have focus, or that the mouse is over, depending on the event
-      # so if you are over a Frame, Label, etc. the Text just won't get <MouseWheel> events
-      # similarly for Arrow Keys, Page Up/Page Down, etc.
-      # because the Text widget does not have focus, it doesn't get them
-      # but I want it to scroll as long as the mouse is over it, and any of these things happen
-      # and I don't want to just redefine those bindings myself, they're all platform specific
-      # bindtags don't solve this problem, all of these default behaviours are part of
-      # the Text class, but if we bind the children to the Text class, nothing happens because
-      # the Text class default bindings need the Text widget to be the recipient of the event
-      # (i.e., the value of e.widget in the event handler is wrong)
-      # so we want to "forward" or "retrigger" the event, from an arbitrary widget
-      # to the Text widget, so we get that sweet default behaviour for all those keys
-      # so we bind to window, which always gets these events
-      # thanks to the default bindtags of the child widgets
-      # (and we DON'T use bind_all - we only want events if the window's focused anyway)
-      # but what then?
-      # event_generate isn't sufficient because we can't just give it the Event object from Tkinter
-      # (i.e. the one with e.widget, e.num, e.keysym, e.delta etc.)
-      # all the values on the Event object undergo subtle transformations
-      # when it enters Python from Tk, so it's a lossy process and we can't go back the other way
-      # and either way, it still has the problem of sending the event to the wrong place
-      # because of focus not being set correctly
-      # and trying to restore focus back to a state it was in previously is a fool's errand
-      # to do this properly, we can't go Tk > Python, this needs to happen entirely Tk side
-      # that way text substitutions (like %b, %N, %D...) remain intact
-      # the default bindings get their original values, as they are expecting
-      # and we can replace the widget that actually got the event (the window we bound to)
-      # with the Text widget we want
-      # since %W is just a text substitution normally anyway, so find and replace
-      # and that way, the Text widget can get these events, even without focus!
-      # it even properly handles cases where the event was already swallowed by another widget
-      # i.e. you press arrow keys on a Scale, so the text doesn't scroll, in that case...
-      # and, you can still use Tab to traverse the interface too!
-      # the only weirdness is the text widget default bindings will usually focus the text widget
-      # even if takefocus is False (unlike most other widgets,) so we need to specifically
-      # disable the focus command, temporarily, by aliasing it, and then restore it back after
-      # and that way, clicking random places in the window
-      # won't ever give the text focus, it is completely impossible for it to steal away the focus
-      try:
-        composition.add(window.bind(name,
-          
-          f'''set {W} [{W} %M]
-          if {{${W} == ""}} {{ continue }}
-          
-          interp hide {{}} focus
-          interp alias {{}} focus {{}} {focus_cbname}
-          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
-          
-          interp alias {{}} focus {{}}
-          interp expose {{}} focus
-          return -options $options $result''',
-          
-          add='+'
-        ))
-      except (tk.TclError, RuntimeError): pass
+        f'''set {W} [{W} %M]
+        if {{${W} == ""}} {{ continue }}
+        
+        interp hide {{}} focus
+        interp alias {{}} focus {{}} {focus_cbname}
+        
+        set error [catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options]
+        
+        interp alias {{}} focus {{}}
+        interp expose {{}} focus
+        
+        if {{$error}} {{ return -options $options $result }}
+        if {{$result == "break"}} {{ break }}
+        unset error result options
+        ''' # newline at end is required
+      )
     
     def window_unbind():
-      if not bindings: return
-      window_binds.discard(window_bind)
-      
       # try to clean up the window bindings
       # but since this could happen at any old time
       # (who knows when we might decide to garbage collect this object?)
       # make sure to handle the case where window is already dead
       try:
-        for name, composition in bindings.items():
-          for binding in composition:
-            window.unbind(name, binding)
+        for name in window.embed:
+          window.unbind(name)
       except (tk.TclError, RuntimeError): pass
-      
-      bindings.clear()
     
     def text_bind():
       window_unbind()
