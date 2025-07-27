@@ -554,7 +554,11 @@ def _embed():
       return -options $options $result'''
     )
   
-  windows = set()
+  # this can't be a set
+  # for every window added, it must be removed once
+  # otherwise a new window with the same name might get randomly removed
+  # as the previous gets garbage collected at some later time
+  windows = []
   
   def root():
     root = None
@@ -593,8 +597,6 @@ def _embed():
         root = (call_bind, W, repl_W, focus_cbname, view_cbname)
         
         def bind(*args):
-          nonlocal windows
-          
           # if we are binding a new script to the Text class
           # propagate it to all the text embed widgets
           try: class_, name, script = args
@@ -608,23 +610,22 @@ def _embed():
               # which will copy the resulting class binding onto the windows
               result = call_bind(*args)
               
-              # filter out dead windows first so bind_window doesn't die on them
-              # and simultaneously convert the names to widgets
-              widgets = set()
+              # filter out dead windows so bind_window doesn't die on them
+              # do not remove dead windows from the list! No touching that here
+              # only the window getting destroyed should remove it
+              widgets = {}
               
-              def add_widget(name):
-                try: widget = root_window.nametowidget(name)
-                except KeyError: return False
+              for window in windows:
+                try: widget = root_window.nametowidget(window)
+                except KeyError: continue
                 
-                if not test_widget(widget): return False
+                if not test_widget(widget): continue
                 
-                widgets.add(widget)
-                return True
-              
-              windows = set(filter(add_widget, windows))
-              
-              for window in widgets:
-                bind_window(window, name)
+                # don't do this one if we've done it already
+                widgets_len = len(widgets)
+                if widgets.setdefault(widget, widgets_len) != widgets_len: continue
+                
+                bind_window(widget, name)
               
               return result
             
@@ -633,7 +634,7 @@ def _embed():
               # we don't need to worry about if this window is dead
               # because bind is supposed to fail with an error if it is anyway
               try: window = root_window.nametowidget(class_)
-              except KeyError: windows.discard(class_)
+              except KeyError: pass
               else:
                 scripts = window.embed.setdefault(name, [])
                 
@@ -707,7 +708,7 @@ def _embed():
       # references to their objects that would potentially keep them alive as zombies
       # even after they have actually been destroyed
       window_name = str(window)
-      windows.add(window_name)
+      windows.append(window_name)
       
       # this is where we clean up windows
       try: window_del = window.__del__
@@ -715,7 +716,7 @@ def _embed():
       
       def del_():
         try: window_del()
-        finally: windows.discard(window_name)
+        finally: windows.remove(window_name)
       
       window.__del__ = del_
     
