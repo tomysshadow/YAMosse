@@ -546,7 +546,6 @@ def _embed():
     # default behaviour is to move the text marker, which
     # will eventually scroll, but only when it hits the bottom of the screen
     # this is the only instance where we want to forego the Text class defaults
-    # if script is empty, we can skip it entirely
     if name in VIEWS.keys():
       script = f'{view_cbname} %W {name}'
     else:
@@ -554,6 +553,7 @@ def _embed():
       script = bind(CLASS_TEXT, name)
       assert not script.startswith('+'), 'script must not be prefixed'
       
+      # if script is empty, we can skip it entirely
       if not script: return
     
     bind(window, name,
