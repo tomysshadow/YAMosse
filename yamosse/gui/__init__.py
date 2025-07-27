@@ -555,10 +555,8 @@ def _embed():
           
           return tk_.call('interp', 'invokehidden', '', 'bind', *args)
         
-        tk_.eval(
-          f'''interp hide {{}} bind
-          interp alias {{}} bind {{}} {root_window.register(bind)}'''
-        )
+        tk_.call('interp', 'hide', '', 'bind')
+        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
         
         root = (W, repl_W, focus_cbname, view_cbname, window_binds)
       
