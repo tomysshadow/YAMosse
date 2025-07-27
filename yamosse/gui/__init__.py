@@ -516,7 +516,7 @@ def _embed():
     
     return ''
   
-  def bind_window(name, window, view_script=''):
+  def bind_window(window, name, view_script=''):
     bindings, texts = window.embed
     call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
@@ -610,7 +610,7 @@ def _embed():
               windows = set(filter(test_widget, windows))
               
               for window in windows:
-                bind_window(name, window)
+                bind_window(window, name)
               
               return result
             
@@ -627,7 +627,7 @@ def _embed():
                 
                 scripts.append(script)
                 
-                bind_window(name, window)
+                bind_window(window, name)
                 return ''
           
           return call_bind(*args)
@@ -722,10 +722,10 @@ def _embed():
       # this is the only instance where we want to forego the Text class defaults
       for name in VIEWS.keys():
         names.discard(name)
-        bind_window(name, window, view_script=f'{view_cbname} %W {name}')
+        bind_window(window, name, view_script=f'{view_cbname} %W {name}')
       
       for name in names:
-        bind_window(name, window)
+        bind_window(window, name)
     
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
