@@ -8,27 +8,18 @@ TITLE = 'Calibrate'
 
 
 def make_footer(frame, ok, cancel):
-  frame.columnconfigure(2, weight=1)
+  frame.columnconfigure(1, weight=1)
   
-  photo = gui.get_root_images()[gui.FSENC_PHOTO]
+  undoable_frame = ttk.Frame(frame)
+  undoable_frame.grid(row=0, column=0, sticky=tk.W)
   
-  # TODO: undoable commands
-  # TODO: move to make_undoable
-  undo_button = ttk.Button(frame, text='Undo', width=6,
-    image=photo[fsenc('undo.gif')], compound=tk.LEFT)
-  
-  undo_button.grid(row=0, column=0, sticky=tk.W)
-  
-  redo_button = ttk.Button(frame, text='Redo', width=6,
-    image=photo[fsenc('redo.gif')], compound=tk.LEFT)
-  
-  redo_button.grid(row=0, column=1, sticky=tk.W, padx=gui.PADX_QW)
+  gui.make_undoable(undoable_frame)
   
   ok_button = ttk.Button(frame, text='OK', underline=0, command=ok, default=tk.ACTIVE)
-  ok_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
+  ok_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
   
   cancel_button = ttk.Button(frame, text='Cancel', underline=0, command=cancel)
-  cancel_button.grid(row=0, column=4, sticky=tk.E, padx=gui.PADX_QW)
+  cancel_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   
   gui.bind_buttons_window(frame.winfo_toplevel(), ok_button=ok_button, cancel_button=cancel_button)
   

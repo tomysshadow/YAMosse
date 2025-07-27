@@ -1295,6 +1295,24 @@ def make_filedialog(frame, name='', textvariable=None,
   return make_name(name_frame, name), entry, (buttons_frame, buttons)
 
 
+def make_undoable(frame):
+  WIDTH = 6
+  
+  # TODO: commands, bindings
+  photo = get_root_images()[FSENC_PHOTO]
+  
+  undo_button = ttk.Button(frame, text='Undo', width=WIDTH,
+    image=photo[fsenc('undo.gif')], compound=tk.LEFT)
+  
+  undo_button.grid(row=0, column=0)
+  
+  redo_button = ttk.Button(frame, text='Redo', width=WIDTH,
+    image=photo[fsenc('redo.gif')], compound=tk.LEFT)
+  
+  redo_button.grid(row=0, column=1, padx=PADX_QW)
+  return undo_button, redo_button
+
+
 def _root_window():
   root_window = None
   
