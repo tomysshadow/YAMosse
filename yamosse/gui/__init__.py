@@ -571,7 +571,8 @@ def _embed():
   get_root = root()
   
   def text(text):
-    if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
+    if str(text.winfo_class()) != CLASS_TEXT:
+      raise ValueError('text must have class %r' % CLASS_TEXT)
     
     try:
       if text.embed: raise RuntimeError('text_embed is single shot per-text')
