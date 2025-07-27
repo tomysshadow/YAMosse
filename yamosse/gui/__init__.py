@@ -525,8 +525,7 @@ def _embed():
       if name in VIEWS.keys(): return
       view_script = call_bind(CLASS_TEXT, name)
     
-    bindings, texts = window.embed
-    scripts = bindings.setdefault(name, [])
+    scripts = window.embed.setdefault(name, [])
     
     if scripts:
       # set up the bindings that were originally on the window
@@ -541,7 +540,6 @@ def _embed():
       
       scripts.append(script)
     
-    # for the texts, we just use them as strings, so it's not a problem if they're dead
     call_bind(window, name,
       
       f'''+set {W} [{W} %M]
@@ -549,24 +547,7 @@ def _embed():
       
       interp hide {{}} focus
       interp alias {{}} focus {{}} {focus_cbname}
-      
-      switch ${W} {{'''
-    )
-    
-    for text in texts:
-      call_bind(window, name,
-        
-        f'''+{{{text}}} {{
-          catch {{{RE_SCRIPT.sub(repl_W, view_script)}}} result options
-        }}'''
-      )
-    
-    call_bind(window, name,
-      
-      f'''+default {{
-          catch {{}} result options
-        }}
-      }}
+      catch {{{RE_SCRIPT.sub(repl_W, view_script)}}} result options
       
       interp alias {{}} focus {{}}
       interp expose {{}} focus
@@ -654,8 +635,7 @@ def _embed():
               try: window = root_window.nametowidget(class_)
               except KeyError: windows.discard(class_)
               else:
-                bindings = window.embed[0]
-                scripts = bindings.setdefault(name, [])
+                scripts = window.embed.setdefault(name, [])
                 
                 # technically optional, but a good idea
                 if not script.startswith('+'):
@@ -722,20 +702,12 @@ def _embed():
     
     call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    try:
-      embed = window.embed
-    except AttributeError:
-      window.embed = ({}, set())
-      embed = window.embed
+    try: embed = window.embed
+    except AttributeError: window.embed = {}
     
-    # the purpose of converting the text and window to strings is so that we don't hold
+    # the purpose of converting the windows to strings is so that we don't hold
     # references to their objects that would potentially keep them alive as zombies
     # even after they have actually been destroyed
-    texts = embed[1]
-    
-    text_name = str(text)
-    texts.add(text_name)
-    
     window_name = str(window)
     windows.add(window_name)
     
@@ -761,8 +733,6 @@ def _embed():
     def unbind():
       try: text_del()
       finally:
-        texts.discard(text_name)
-        
         # we shouldn't call bind if the window is destroyed too
         # in that case the bindings are already gone anyway
         if not test_widget(window):
