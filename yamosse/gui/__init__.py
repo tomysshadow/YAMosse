@@ -591,48 +591,65 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    W, repl_W, focus_cbname, view_cbname = get_root()
+    W, repl_W, focus_cbname, view_cbname, windows = get_root()
     
     window = text.winfo_toplevel()
-    
-    try:
-      if not window.embed is None: raise RuntimeError('text_embed is single shot per-window')
-    except AttributeError: pass
-    
-    window.embed = set()
-    
     tk_ = window.tk
     
-    def window_bind(name, script):
-      window.embed.add(name)
+    if not hasattr(window, 'embed'):
+      window.embed = ({}, [])
+    
+    windows.add(window)
+    
+    def window_bind(name):
+      window_scripts, texts = window.embed
       
-      window.bind(name,
-        
-        f'''+set {W} [{W} %M]
+      window_script = window_scripts.get(name, '')
+      
+      if window_script:
+        try:
+          window.bind(name, window_script)
+        except (tk.TclError, RuntimeError): return
+      else:
+        window_scripts[name] = tk_.call('bind', window, name)
+      
+      text_script = f'''+set {W} [{W} %M]
         if {{${W} == ""}} {{ continue }}
-        
-        interp hide {{}} focus
-        interp alias {{}} focus {{}} {focus_cbname}
-        
-        set error [catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options]
-        
-        interp alias {{}} focus {{}}
-        interp expose {{}} focus
-        
-        if {{$error}} {{ return -options $options $result }}
-        if {{$result == "break"}} {{ break }}
-        unset error result options
         ''' # newline at end is required
-      )
+      
+      script = tk_.call('bind', CLASS_TEXT, name)
+      
+      try:
+        for text in texts:
+          window.bind(name,
+              
+            f'''+if {{${W} == {text}}} {{
+              interp hide {{}} focus
+              interp alias {{}} focus {{}} {focus_cbname}
+              
+              set error [catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options]
+              
+              interp alias {{}} focus {{}}
+              interp expose {{}} focus
+              
+              if {{$error}} {{ return -options $options $result }}
+              if {{$result == "break"}} {{ break }}
+              unset error result options
+            }}
+            ''' # newline at end is required
+          )
+      except (tk.TclError, RuntimeError): return
     
     def window_unbind():
       # try to clean up the window bindings
       # but since this could happen at any old time
       # (who knows when we might decide to garbage collect this object?)
       # make sure to handle the case where window is already dead
+      window_scripts = window.embed[0]
+      
       try:
-        for name in window.embed:
-          window.unbind(name)
+        for name, window_script in window_scripts.items():
+          window.bind(name, window_script)
       except (tk.TclError, RuntimeError): pass
     
     def text_bind():
