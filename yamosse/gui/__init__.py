@@ -519,6 +519,10 @@ def _embed():
       nonlocal root
       
       if not root:
+        # there's a bunch of stuff we only want to do once
+        # but we need the interpreter to be running to do it
+        # i.e. there needs to be a root window
+        # so all of that stuff is done in here
         root_window = get_root_window()
         tk_ = root_window.tk
         
@@ -533,8 +537,6 @@ def _embed():
         focus_cbname = root_window.register(focus)
         
         def view(widget, name):
-          # need to use nametowidget because we want the text from the top of the stack
-          # (not necessarily the same one in our scope here)
           view, args = VIEWS[name]
           
           getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
@@ -549,6 +551,8 @@ def _embed():
           try: class_, name, script = args
           except ValueError: pass
           else:
+            # note: we'd have to do name.removeprefix('+') if VIEWS contained non-virtual events
+            # but since they are virtual, you can't use + with them anyway
             if str(class_) == CLASS_TEXT and not name in VIEWS.keys():
               for window_bind in window_binds:
                 window_bind(name, script)
@@ -702,11 +706,11 @@ def _embed():
       for name in names:
         window_bind(name, tk_.call('bind', CLASS_TEXT, name))
     
-    try: text_destroy = text.__del__
-    except AttributeError: text_destroy = lambda: None
+    try: text_del = text.__del__
+    except AttributeError: text_del = lambda: None
     
     def text_unbind():
-      try: text_destroy()
+      try: text_del()
       finally: window_unbind()
     
     text.__del__ = text_unbind
