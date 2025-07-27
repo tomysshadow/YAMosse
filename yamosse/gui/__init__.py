@@ -160,6 +160,12 @@ def padding2_widget(widget, padding):
   return [left + right, top + bottom]
 
 
+def test_widget(widget):
+  try: widget.winfo_toplevel()
+  except tk.TclError: return False
+  else: return True
+
+
 def enable_widget(widget, enabled=True, cursor=True):
   try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
   except tk.TclError: pass
@@ -503,14 +509,60 @@ def _embed():
         text = stack[-1]
         
         # we're just giving the text widget a "vibe check" here to test it's still alive
-        try: text.winfo_toplevel()
-        except tk.TclError: pass
-        else: return text
+        if test_widget(text): return text
         
         # throw out dead text
         stack.pop()
     
     return ''
+  
+  def bind_window(name, window, view_script=''):
+    bindings, texts = window.embed
+    windows, call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
+    
+    scripts = bindings.get(name, [])
+    
+    if scripts:
+      try:
+        for script in scripts:
+          call_bind(window, name, script)
+      except (tk.TclError, RuntimeError): return
+    else:
+      scripts.append(call_bind(window, name))
+    
+    script = view_script
+    
+    if not script:
+      if name in VIEWS.keys(): return
+      script = call_bind(CLASS_TEXT, name)
+    
+    call_bind(window, name,
+      
+      f'''+set {W} [{W} %M]
+      if {{${W} == ""}} {{ continue }}
+      ''' # newline at end is required
+    )
+    
+    try:
+      for text in texts:
+        call_bind(window, name, 
+          
+          f'''+if {{${W} == "{text}"}} {{
+            interp hide {{}} focus
+            interp alias {{}} focus {{}} {focus_cbname}
+            
+            set error [catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options]
+            
+            interp alias {{}} focus {{}}
+            interp expose {{}} focus
+            
+            if {{$error}} {{ return -options $options $result }}
+            if {{$result == "break"}} {{ break }}
+            unset error result options
+          }}
+          ''' # newline at end is required
+        )
+    except (tk.TclError, RuntimeError): return
   
   def root():
     root = None
@@ -525,6 +577,55 @@ def _embed():
         # so all of that stuff is done in here
         root_window = get_root_window()
         tk_ = root_window.tk
+  
+        windows = set()
+        
+        def call_bind(*args):
+          return tk_.call('interp', 'invokehidden', '', 'bind', *args)
+        
+        def bind(*args):
+          nonlocal windows
+          
+          result = call_bind(*args)
+          
+          # if we are binding a new script to the Text class
+          # propagate it to all the text embed widgets
+          try: class_, name, script = args
+          except ValueError: pass
+          else:
+            window = None
+            
+            try: widget = root_window.nametowidget(class_)
+            except tk.TclError: widget = None
+            else:
+              if widget in windows:
+                window = widget
+            
+            if window:
+              if test_widget(window):
+                bindings = window.embed[0]
+                scripts = bindings.setdefault(name, [])
+                
+                # technically optional, but a good idea
+                if not script.startswith('+'):
+                  scripts.clear()
+                
+                scripts.append(script)
+                
+                bind_window(name, window)
+              else:
+                windows.discard(window)
+            
+            if str(class_) == CLASS_TEXT:
+              windows = set(filter(test_widget, windows))
+              
+              for window in windows:
+                bind_window(name, window)
+          
+          return result
+        
+        tk_.call('interp', 'hide', '', 'bind')
+        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
         
         W = root_window.register(peek)
         repl_W = lambda match: f'${W}' if match.group(1) == 'W' else match.group()
@@ -543,51 +644,7 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        windows = set()
-  
-        def call_bind(*args):
-          return tk_.call('interp', 'invokehidden', '', 'bind', *args)
-        
-        def bind(*args):
-          result = call_bind(*args)
-          
-          # if we are binding a new script to the Text class
-          # propagate it to all the text embed widgets
-          try: class_, name, script = args
-          except ValueError: pass
-          else:
-            window = None
-            
-            try: widget = root_window.nametowidget(class_)
-            except tk.TclError: widget = None
-            else:
-              if widget in windows:
-                window = widget
-            
-            if window:
-              bindings = window.embed[1]
-              scripts = bindings.setdefault(name, [])
-              
-              # technically optional, but a good idea
-              if not script.startswith('+'):
-                scripts.clear()
-              
-              scripts.append(script)
-            
-            if window or str(class_) == CLASS_TEXT:
-              for window in list(windows):
-                try: window.winfo_toplevel()
-                except tk.TclError: windows.discard(window)
-                else:
-                  bind = window.embed[0]
-                  bind(name)
-          
-          return result
-        
-        tk_.call('interp', 'hide', '', 'bind')
-        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
-        
-        root = (W, repl_W, focus_cbname, view_cbname, windows, call_bind)
+        root = (windows, call_bind, W, repl_W, focus_cbname, view_cbname)
       
       return root
     
@@ -635,63 +692,16 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    W, repl_W, focus_cbname, view_cbname, windows, call_bind = get_root()
-    
     window = text.winfo_toplevel()
     tk_ = window.tk
     
-    def bind(name, view_script=''):
-      bind, bindings, texts = window.embed
-      
-      scripts = bindings.get(name, [])
-      
-      if scripts:
-        try:
-          for script in scripts:
-            call_bind(window, name, script)
-        except (tk.TclError, RuntimeError): return
-      else:
-        scripts.append(call_bind(window, name))
-      
-      script = view_script
-      
-      if not script:
-        if name in VIEWS.keys(): return
-        script = call_bind(CLASS_TEXT, name)
-      
-      call_bind(window, name,
-        
-        f'''+set {W} [{W} %M]
-        if {{${W} == ""}} {{ continue }}
-        ''' # newline at end is required
-      )
-      
-      try:
-        for text in texts:
-          call_bind(window, name, 
-            
-            f'''+if {{${W} == "{text}"}} {{
-              interp hide {{}} focus
-              interp alias {{}} focus {{}} {focus_cbname}
-              
-              set error [catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options]
-              
-              interp alias {{}} focus {{}}
-              interp expose {{}} focus
-              
-              if {{$error}} {{ return -options $options $result }}
-              if {{$result == "break"}} {{ break }}
-              unset error result options
-            }}
-            ''' # newline at end is required
-          )
-      except (tk.TclError, RuntimeError): return
+    windows, call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
     if not window in windows:
-      window.embed = (bind, {}, set())
+      window.embed = ({}, set())
       windows.add(window)
     
-    texts = window.embed[2]
+    texts = window.embed[1]
     texts.add(text)
     
     def text_bind():
@@ -704,10 +714,10 @@ def _embed():
       # this is the only instance where we want to forego the Text class defaults
       for name in VIEWS.keys():
         names.discard(name)
-        bind(name, view_script=f'{view_cbname} %W {name}')
+        bind_window(name, window, view_script=f'{view_cbname} %W {name}')
       
       for name in names:
-        bind(name)
+        bind_window(name, window)
     
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
