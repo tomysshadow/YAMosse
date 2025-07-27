@@ -579,11 +579,12 @@ def _embed():
     
     # doubles as a placeholder to prevent text selection
     text.embed = ttk.Frame(text)
-    embed = text.embed
     
     text['state'] = tk.NORMAL
     
     try:
+      embed = text.embed
+      
       # we don't use enable_widget here as we don't actually want that
       # (it would disable any child widgets within the text)
       # it should not take focus until an event is fired (it hoards the focus otherwise)
