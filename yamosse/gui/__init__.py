@@ -167,14 +167,6 @@ def test_widget(widget):
   else: return True
 
 
-def safe_name_to_widget(name):
-  try: widget = get_root_window().nametowidget(name)
-  except KeyError: return None
-  
-  if not test_widget(widget): return None
-  return widget
-
-
 def enable_widget(widget, enabled=True, cursor=True):
   try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
   except tk.TclError: pass
@@ -641,8 +633,10 @@ def _embed():
               widgets = set()
               
               def add_widget(name):
-                widget = safe_name_to_widget(name)
-                if not widget: return False
+                try: widget = root_window.nametowidget(name)
+                except KeyError: return False
+                
+                if not test_widget(widget): return False
                 
                 widgets.add(widget)
                 return True
