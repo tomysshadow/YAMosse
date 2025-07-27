@@ -580,6 +580,18 @@ def _embed():
     
     view_cbname = window.register(view)
     
+    def bind(*args):
+      # if we are binding a new script to the Text class
+      # propagate it to all the text embed widgets
+      try: class_, name, script = args
+      except ValueError: pass
+      else:
+        if str(class_) == CLASS_TEXT:
+          for window_bind in window_binds:
+            window_bind(name, script)
+      
+      return tk_.call('interp', 'invokehidden', '', 'bind', *args)
+    
     if window_binds is None:
       window_binds = set()
       bind_cbname = root_window.register(bind)
@@ -690,18 +702,6 @@ def _embed():
       finally: window_unbind()
     
     text.__del__ = destroy
-    
-    def bind(*args):
-      # if we are binding a new script to the Text class
-      # propagate it to all the text embed widgets
-      try: class_, name, script = args
-      except ValueError: pass
-      else:
-        if str(class_) == CLASS_TEXT:
-          for window_bind in window_binds:
-            window_bind(name, script)
-      
-      return tk_.call('interp', 'invokehidden', '', 'bind', *args)
     
     text_bind()
   
