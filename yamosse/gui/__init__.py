@@ -521,7 +521,7 @@ def _embed():
     if not name.startswith('<'):
       name = '<KeyPress-%c>' % name
     
-    return name
+    return str(name)
   
   def bind_window(window, name, view_script=''):
     bind, W, repl_W, focus_cbname, view_cbname = get_root()
