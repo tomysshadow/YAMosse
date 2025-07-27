@@ -512,26 +512,13 @@ def _embed():
     
     return ''
   
-  def init():
-    root_window = None
-    
-    W = None
-    repl_W = None
-    
-    focus_cbname = None
-    view_cbname = None
-    
-    window_binds = None
+  def root():
+    root = None
     
     def get():
-      nonlocal root_window
-      nonlocal W
-      nonlocal repl_W
-      nonlocal focus_cbname
-      nonlocal view_cbname
-      nonlocal window_binds
+      nonlocal root
       
-      if root_window is None:
+      if not root:
         root_window = get_root_window()
         tk_ = root_window.tk
         
@@ -562,7 +549,7 @@ def _embed():
           try: class_, name, script = args
           except ValueError: pass
           else:
-            if str(class_) == CLASS_TEXT:
+            if str(class_) == CLASS_TEXT and not name in VIEWS.keys():
               for window_bind in window_binds:
                 window_bind(name, script)
           
@@ -572,12 +559,14 @@ def _embed():
           f'''interp hide {{}} bind
           interp alias {{}} bind {{}} {root_window.register(bind)}'''
         )
+        
+        root = (W, repl_W, focus_cbname, view_cbname, window_binds)
       
-      return W, repl_W, focus_cbname, view_cbname, window_binds
+      return root
     
     return get
   
-  get_init = init()
+  get_root = root()
   
   def text(text):
     if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
@@ -617,7 +606,7 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    W, repl_W, focus_cbname, view_cbname, window_binds = get_init()
+    W, repl_W, focus_cbname, view_cbname, window_binds = get_root()
     
     window = text.winfo_toplevel()
     tk_ = window.tk
@@ -723,7 +712,6 @@ def _embed():
       finally: window_unbind()
     
     text.__del__ = text_unbind
-    
     text_bind()
   
   return insert, text
