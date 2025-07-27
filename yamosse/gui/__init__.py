@@ -547,8 +547,14 @@ def _embed():
     # will eventually scroll, but only when it hits the bottom of the screen
     # this is the only instance where we want to forego the Text class defaults
     # if script is empty, we can skip it entirely
-    script = f'{view_cbname} %W {name}' if name in VIEWS.keys() else bind(CLASS_TEXT, name)
-    if not script: return
+    if name in VIEWS.keys():
+      script = f'{view_cbname} %W {name}'
+    else:
+      # note: the scripts are *not* stripped of leading/trailing whitespace
+      script = bind(CLASS_TEXT, name)
+      assert not script.startswith('+'), 'script must not be prefixed'
+      
+      if not script: return
     
     bind(window, name,
       
