@@ -690,7 +690,7 @@ def _embed():
     def text_bind():
       window_unbind()
       
-      names = list(tk_.call('bind', CLASS_TEXT))
+      names = set(tk_.call('bind', CLASS_TEXT))
       
       # this first loop is just necessary because
       # we want to make the arrow keys scroll instantly
@@ -698,9 +698,7 @@ def _embed():
       # will eventually scroll, but only when it hits the bottom of the screen
       # this is the only instance where we want to forego the Text class defaults
       for name in VIEWS.keys():
-        try: names.remove(name)
-        except ValueError: pass
-        
+        names.discard(name)
         window_bind(name, f'{view_cbname} %W {name}')
       
       for name in names:
