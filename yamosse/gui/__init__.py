@@ -161,7 +161,7 @@ def padding2_widget(widget, padding):
 
 
 def test_widget(widget):
-  try: widget.winfo_toplevel()
+  try: widget.winfo_name()
   except tk.TclError: return False
   else: return True
 
