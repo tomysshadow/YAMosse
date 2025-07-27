@@ -614,9 +614,9 @@ def _embed():
     window = text.winfo_toplevel()
     tk_ = window.tk
     
-    bindings = {}
+    bindings = []
     
-    def window_bind(name, script):
+    def window_bind(name, script, **kwargs):
       if not bindings: window_binds.add(window_bind)
       
       # here is the problem this tries to solve
@@ -659,7 +659,7 @@ def _embed():
       # disable the focus command, temporarily, by aliasing it, and then restore it back after
       # and that way, clicking random places in the window
       # won't ever give the text focus, it is completely impossible for it to steal away the focus
-      bindings[name] = window.bind(name,
+      bindings.append((name, window.bind(name,
         
         f'''set {W} [{W} %M]
         if {{${W} == ""}} {{ continue }}
@@ -672,8 +672,8 @@ def _embed():
         interp expose {{}} focus
         return -options $options $result''',
         
-        add='+'
-      )
+        **kwargs
+      )))
     
     def window_unbind():
       if not bindings: return
@@ -684,7 +684,7 @@ def _embed():
       # (who knows when we might decide to garbage collect this object?)
       # make sure to handle the case where window is already dead
       try:
-        for name, binding in bindings.items():
+        for name, binding in bindings:
           window.unbind(name, binding)
       except (tk.TclError, RuntimeError): pass
       
@@ -705,7 +705,7 @@ def _embed():
         window_bind(name, f'{view_cbname} %W {name}')
       
       for name in names:
-        window_bind(name, tk_.call('bind', CLASS_TEXT, name))
+        window_bind(name, tk_.call('bind', CLASS_TEXT, name), add='+')
     
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
