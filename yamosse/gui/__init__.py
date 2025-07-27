@@ -516,9 +516,16 @@ def _embed():
     return ''
   
   def bind_window(window, name, view_script=''):
-    bindings, texts = window.embed
+    name = str(name)
     call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
+    # for the view script we want to forego the default behaviour of the text widget
+    # otherwise, we get the script that is currently binded for that class
+    if not view_script:
+      if name in VIEWS.keys(): return
+      view_script = call_bind(CLASS_TEXT, name)
+    
+    bindings, texts = window.embed
     scripts = bindings.setdefault(name, [])
     
     if scripts:
@@ -533,14 +540,6 @@ def _embed():
       assert not script.startswith('+'), 'script must not be prefixed'
       
       scripts.append(script)
-    
-    # for the view script we want to forego the default behaviour of the text widget
-    # otherwise, we get the script that is currently binded for that class
-    script = view_script
-    
-    if not script:
-      if name in VIEWS.keys(): return
-      script = call_bind(CLASS_TEXT, name)
     
     # for the texts, we just use them as strings, so it's not a problem if they're dead
     call_bind(window, name,
@@ -558,7 +557,7 @@ def _embed():
       call_bind(window, name,
         
         f'''+{{{text}}} {{
-          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+          catch {{{RE_SCRIPT.sub(repl_W, view_script)}}} result options
         }}'''
       )
     
@@ -741,15 +740,13 @@ def _embed():
     windows.add(window_name)
     
     def bind():
-      names = set([str(n) for n in call_bind(CLASS_TEXT)])
+      names = call_bind(CLASS_TEXT)
       
-      # this first loop is just necessary because
       # we want to make the arrow keys scroll instantly
       # default behaviour is to move the text marker, which
       # will eventually scroll, but only when it hits the bottom of the screen
       # this is the only instance where we want to forego the Text class defaults
       for name in VIEWS.keys():
-        names.discard(name)
         bind_window(window, name, view_script=f'{view_cbname} %W {name}')
       
       for name in names:
