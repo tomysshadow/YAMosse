@@ -723,6 +723,11 @@ def _embed():
     windows.add(window)
     
     def bind():
+      # here the window might be dead if we're doing this on unbind
+      if not test_widget(window):
+        windows.discard(window)
+        return
+      
       names = set([str(n) for n in call_bind(CLASS_TEXT)])
       
       # this first loop is just necessary because
