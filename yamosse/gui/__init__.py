@@ -608,7 +608,7 @@ def _embed():
       
       window.bind(name,
         
-        f'''set {W} [{W} %M]
+        f'''+set {W} [{W} %M]
         if {{${W} == ""}} {{ continue }}
         
         interp hide {{}} focus
