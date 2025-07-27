@@ -512,9 +512,11 @@ def _embed():
     
     return ''
   
-  window_binds = set()
+  window_binds = None
   
   def text(text):
+    nonlocal window_binds
+    
     if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
     
     try:
@@ -577,6 +579,15 @@ def _embed():
       getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
     
     view_cbname = window.register(view)
+    
+    if window_binds is None:
+      window_binds = set()
+      bind_cbname = root_window.register(bind)
+      
+      tk_.eval(
+        f'''interp hide {{}} bind
+        interp alias {{}} bind {{}} {bind_cbname}'''
+      )
     
     bindings = {}
     
@@ -691,13 +702,6 @@ def _embed():
             window_bind(name, script)
       
       return tk_.call('interp', 'invokehidden', '', 'bind', *args)
-    
-    bind_cbname = root_window.register(bind)
-    
-    tk_.eval(
-      f'''interp hide {{}} bind
-      interp alias {{}} bind {{}} {bind_cbname}'''
-    )
     
     text_bind()
   
