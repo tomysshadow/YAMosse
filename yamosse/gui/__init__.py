@@ -512,7 +512,7 @@ def _embed():
     
     return ''
   
-  text_binds = set()
+  window_binds = set()
   
   def text(text):
     if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
@@ -581,6 +581,8 @@ def _embed():
     bindings = {}
     
     def window_bind(name, script):
+      window_binds.add(window_bind)
+      
       # here is the problem this tries to solve
       # usually, events are only sent to the
       # specific widgets that have focus, or that the mouse is over, depending on the event
@@ -636,6 +638,8 @@ def _embed():
       )
     
     def window_unbind():
+      window_binds.discard(window_bind)
+      
       # try to clean up the window bindings
       # but since this could happen at any old time
       # (who knows when we might decide to garbage collect this object?)
@@ -669,21 +673,19 @@ def _embed():
     
     def destroy():
       try: text_destroy()
-      finally:
-        text_binds.discard(text_bind)
-        window_unbind()
+      finally: window_unbind()
     
     text.__del__ = destroy
     
     def bind(*args):
       # if we are binding a new script to the Text class
       # propagate it to all the text embed widgets
-      if len(args) == 3:
-        class_ = str(args[0])
-        
-        if class_ == CLASS_TEXT:
-          for text_bind in text_binds:
-            text_bind()
+      try: class_, name, script = args
+      except ValueError: pass
+      else:
+        if str(class_) == CLASS_TEXT:
+          for window_bind in window_binds:
+            window_bind(name, script)
       
       return tk_.call('interp', 'invokehidden', '', 'bind', *args)
     
@@ -695,7 +697,6 @@ def _embed():
     )
     
     text_bind()
-    text_binds.add(text_bind)
   
   return insert, text
 
