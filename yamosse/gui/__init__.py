@@ -512,9 +512,6 @@ def _embed():
     
     return ''
   
-  def bindhidden(tk_, *args):
-    return tk_.call('interp', 'invokehidden', '', 'bind', *args)
-  
   def root():
     root = None
     
@@ -546,41 +543,51 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        window_names = set()
+        windows = set()
+  
+        def call_bind(*args):
+          return tk_.call('interp', 'invokehidden', '', 'bind', *args)
         
         def bind(*args):
-          result = bindhidden(tk_, *args)
+          result = call_bind(*args)
           
           # if we are binding a new script to the Text class
           # propagate it to all the text embed widgets
           try: class_, name, script = args
           except ValueError: pass
           else:
-            class_ = str(class_)
-            is_window_script = class_ in window_names
+            window = None
             
-            if is_window_script or class_ == CLASS_TEXT:
-              if is_window_script:
-                window = root_window.nametowidget(class_)
-                window_scripts = window.embed[1]
-                window_script = window_scripts.setdefault(name, [])
-                
-                # technically optional, but a good idea
-                if not script.startswith('+'):
-                  window_script.clear()
-                
-                window_script.append(script)
+            try: widget = root_window.nametowidget(class_)
+            except tk.TclError: widget = None
+            else:
+              if widget in windows:
+                window = widget
             
-            for window_name in window_names:
-              window = root_window.nametowidget(window_name)
-              window.embed[0](name)
+            if window:
+              bindings = window.embed[1]
+              scripts = bindings.setdefault(name, [])
+              
+              # technically optional, but a good idea
+              if not script.startswith('+'):
+                scripts.clear()
+              
+              scripts.append(script)
+            
+            if window or str(class_) == CLASS_TEXT:
+              for window in list(windows):
+                try: window.winfo_toplevel()
+                except tk.TclError: windows.discard(window)
+                else:
+                  bind = window.embed[0]
+                  bind(name)
           
           return result
         
         tk_.call('interp', 'hide', '', 'bind')
         tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
         
-        root = (W, repl_W, focus_cbname, view_cbname, window_names)
+        root = (W, repl_W, focus_cbname, view_cbname, windows, call_bind)
       
       return root
     
@@ -628,31 +635,31 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    W, repl_W, focus_cbname, view_cbname, window_names = get_root()
+    W, repl_W, focus_cbname, view_cbname, windows, call_bind = get_root()
     
     window = text.winfo_toplevel()
     tk_ = window.tk
     
-    def window_bind(name, view_script=''):
-      window_bind, window_scripts, texts = window.embed
+    def bind(name, view_script=''):
+      bind, bindings, texts = window.embed
       
-      window_script = window_scripts.get(name, [])
+      scripts = bindings.get(name, [])
       
-      if window_script:
+      if scripts:
         try:
-          for script in window_script:
-            bindhidden(tk_, window, name, script)
+          for script in scripts:
+            call_bind(window, name, script)
         except (tk.TclError, RuntimeError): return
       else:
-        window_script.append(bindhidden(tk_, window, name))
+        scripts.append(call_bind(window, name))
       
       script = view_script
       
       if not script:
         if name in VIEWS.keys(): return
-        script = bindhidden(tk_, CLASS_TEXT, name)
+        script = call_bind(CLASS_TEXT, name)
       
-      bindhidden(tk_, window, name,
+      call_bind(window, name,
         
         f'''+set {W} [{W} %M]
         if {{${W} == ""}} {{ continue }}
@@ -661,7 +668,7 @@ def _embed():
       
       try:
         for text in texts:
-          bindhidden(tk_, window, name, 
+          call_bind(window, name, 
             
             f'''+if {{${W} == "{text}"}} {{
               interp hide {{}} focus
@@ -680,29 +687,15 @@ def _embed():
           )
       except (tk.TclError, RuntimeError): return
     
-    def window_unbind():
-      # try to clean up the window bindings
-      # but since this could happen at any old time
-      # (who knows when we might decide to garbage collect this object?)
-      # make sure to handle the case where window is already dead
-      window_scripts = window.embed[1]
-      
-      try:
-        bindhidden(tk_, window, name)
-        
-        for name, window_script in window_scripts.items():
-          bindhidden(tk_, window, name, window_script)
-      except (tk.TclError, RuntimeError): pass
-    
-    if not hasattr(window, 'embed'):
-      window.embed = (window_bind, {}, set())
-      window_names.add(str(window))
+    if not window in windows:
+      window.embed = (bind, {}, set())
+      windows.add(window)
     
     texts = window.embed[2]
     texts.add(text)
     
     def text_bind():
-      names = set([str(n) for n in tk_.call('bind', CLASS_TEXT)])
+      names = set([str(n) for n in call_bind(CLASS_TEXT)])
       
       # this first loop is just necessary because
       # we want to make the arrow keys scroll instantly
@@ -711,25 +704,21 @@ def _embed():
       # this is the only instance where we want to forego the Text class defaults
       for name in VIEWS.keys():
         names.discard(name)
-        window_bind(name, view_script=f'{view_cbname} %W {name}')
+        bind(name, view_script=f'{view_cbname} %W {name}')
       
       for name in names:
-        window_bind(name)
+        bind(name)
     
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
     
-    def text_unbind():
+    def del_():
       try: text_del()
       finally:
         texts.discard(text)
-        
-        names = set([str(n) for n in tk_.call('bind', CLASS_TEXT)])
-        
-        for name in names:
-          window_bind(name)
+        text_bind()
     
-    text.__del__ = text_unbind
+    text.__del__ = del_
     text_bind()
   
   return insert, text
