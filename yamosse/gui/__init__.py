@@ -518,16 +518,15 @@ def _embed():
   
   def bind_window(name, window, view_script=''):
     bindings, texts = window.embed
-    windows, call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
+    call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
     scripts = bindings.setdefault(name, [])
     
     if scripts:
       # set up the bindings that were originally on the window
-      try:
-        for script in scripts:
-          call_bind(window, name, script)
-      except (tk.TclError, RuntimeError): return
+      # these scripts *will* already have a + prefix if they need to be added
+      for script in scripts:
+        call_bind(window, name, script)
     else:
       # back up the binding that was already on the window before
       # we get this binding from Tk, so it shouldn't begin with a + prefix
@@ -575,6 +574,8 @@ def _embed():
       return -options $options $result'''
     )
   
+  windows = set()
+  
   def root():
     root = None
     
@@ -588,8 +589,6 @@ def _embed():
         # so all of that stuff is done in here
         root_window = get_root_window()
         tk_ = root_window.tk
-  
-        windows = set()
         
         def call_bind(*args):
           return tk_.call('interp', 'invokehidden', '', 'bind', *args)
@@ -603,6 +602,10 @@ def _embed():
           except ValueError: pass
           else:
             if str(class_) == CLASS_TEXT:
+              # we check for the Text class first to avoid an unnecessary widget lookup
+              # here we need the binding to be applied in advance of calling bind_window
+              # which will copy the resulting class binding onto the windows
+              # we also filter out dead windows first so bind_window doesn't die on them
               result = call_bind(*args)
               windows = set(filter(test_widget, windows))
               
@@ -649,7 +652,7 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        root = (windows, call_bind, W, repl_W, focus_cbname, view_cbname)
+        root = (call_bind, W, repl_W, focus_cbname, view_cbname)
       
       return root
     
@@ -700,7 +703,7 @@ def _embed():
     window = text.winfo_toplevel()
     tk_ = window.tk
     
-    windows, call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
+    call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
     if not window in windows:
       window.embed = ({}, set())
