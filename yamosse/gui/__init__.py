@@ -670,7 +670,9 @@ def _embed():
         
         interp alias {{}} focus {{}}
         interp expose {{}} focus
-        return -options $options $result'''
+        return -options $options $result''',
+        
+        add='+'
       )
     
     def window_unbind():
