@@ -523,6 +523,7 @@ def _embed():
     # otherwise, we get the script that is currently binded for that class
     if not view_script:
       if name in VIEWS.keys(): return
+      
       view_script = call_bind(CLASS_TEXT, name)
     
     scripts = window.embed.setdefault(name, [])
