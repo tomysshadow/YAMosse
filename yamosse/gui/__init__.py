@@ -161,6 +161,7 @@ def padding2_widget(widget, padding):
 
 
 def test_widget(widget):
+  # give a widget a "vibe check" to test it's still alive
   try: widget.winfo_name()
   except tk.TclError: return False
   else: return True
@@ -507,8 +508,6 @@ def _embed():
     if not int(M):
       while stack:
         text = stack[-1]
-        
-        # we're just giving the text widget a "vibe check" here to test it's still alive
         if test_widget(text): return text
         
         # throw out dead text
