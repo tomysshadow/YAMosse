@@ -167,6 +167,14 @@ def test_widget(widget):
   else: return True
 
 
+def safe_name_to_widget(name):
+  try: widget = get_root_window().nametowidget(name)
+  except KeyError: return None
+  
+  if not test_widget(widget): return None
+  return widget
+
+
 def enable_widget(widget, enabled=True, cursor=True):
   try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
   except tk.TclError: pass
@@ -620,26 +628,39 @@ def _embed():
           try: class_, name, script = args
           except ValueError: pass
           else:
-            if str(class_) == CLASS_TEXT:
-              # we check for the Text class first to avoid an unnecessary widget lookup
+            class_ = str(class_)
+            
+            if class_ == CLASS_TEXT:
+              # we check for the Text class first to avoid an unnecessary lookup on windows
               # here we need the binding to be applied in advance of calling bind_window
               # which will copy the resulting class binding onto the windows
-              # we also filter out dead windows first so bind_window doesn't die on them
               result = call_bind(*args)
-              windows = set(filter(test_widget, windows))
               
-              for window in windows:
+              # filter out dead windows first so bind_window doesn't die on them
+              # and simultaneously convert the names to widgets
+              widgets = set()
+              
+              def add_widget(name):
+                widget = safe_name_to_widget(name)
+                if not widget: return False
+                
+                widgets.add(widget)
+                return True
+              
+              windows = set(filter(add_widget, windows))
+              
+              for window in widgets:
                 bind_window(window, name)
               
               return result
             
-            try: window = root_window.nametowidget(class_)
-            except KeyError: pass
-            else:
+            if class_ in windows:
               # handle the case where you want to put your own binding onto one of these windows
-              # we don't need to test this window is dead
+              # we don't need to worry about if this window is dead
               # because bind is supposed to fail with an error if it is anyway
-              if window in windows:
+              try: window = root_window.nametowidget(class_)
+              except KeyError: windows.discard(class_)
+              else:
                 bindings = window.embed[0]
                 scripts = bindings.setdefault(name, [])
                 
@@ -714,20 +735,15 @@ def _embed():
     # delete any dead text widgets, then add the new one
     # this is not perfect, there may be stale widgets sometimes
     # but we at least handle the cases of a window being destroyed, or quit and recreated
-    # the intention is for this to trigger the unbinding of these text widgets
-    # so that they don't continually stack up, as windows are destroyed and created
-    texts = set(filter(test_widget, texts))
-    texts.add(text)
+    texts.add(str(text))
     
+    # the purpose of converting the text and window to strings is so that we don't hold
+    # references to their objects that would potentially keep them alive as zombies
+    # even after they have actually been destroyed
     window.embed = (bindings, texts)
-    windows.add(window)
+    windows.add(str(window))
     
     def bind():
-      # here the window might be dead if we're doing this on unbind
-      if not test_widget(window):
-        windows.discard(window)
-        return
-      
       names = set([str(n) for n in call_bind(CLASS_TEXT)])
       
       # this first loop is just necessary because
@@ -746,11 +762,20 @@ def _embed():
     except AttributeError: text_del = lambda: None
     
     # this will have the effect of removing this text from the bindings
-    # (it won't exist in window.embed - otherwise this wouldn't even get called)
-    # this may get called as the result of the filtering above, which would drop the refcount
+    # note that we don't need an unbind function on window
+    # because when the window is destroyed, it'll necessarily destroy the text too
     def unbind():
       try: text_del()
-      finally: bind()
+      finally:
+        texts.discard(str(text))
+        
+        # we shouldn't call bind if the window is destroyed too
+        # in that case the bindings are already gone anyway
+        if not test_widget(window):
+          windows.discard(str(window))
+          return
+        
+        bind()
     
     text.__del__ = unbind
     bind()
