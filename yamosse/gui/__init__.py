@@ -512,6 +512,9 @@ def _embed():
     
     return ''
   
+  def bindhidden(tk_, *args):
+    return tk_.call('interp', 'invokehidden', '', 'bind', *args)
+  
   def root():
     root = None
     
@@ -543,7 +546,41 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        root = (W, repl_W, focus_cbname, view_cbname)
+        window_names = set()
+        
+        def bind(*args):
+          result = bindhidden(tk_, *args)
+          
+          # if we are binding a new script to the Text class
+          # propagate it to all the text embed widgets
+          try: class_, name, script = args
+          except ValueError: pass
+          else:
+            class_ = str(class_)
+            is_window_script = class_ in window_names
+            
+            if is_window_script or class_ == CLASS_TEXT:
+              if is_window_script:
+                window = root_window.nametowidget(class_)
+                window_scripts = window.embed[1]
+                window_script = window_scripts.setdefault(name, [])
+                
+                # technically optional, but a good idea
+                if not script.startswith('+'):
+                  window_script.clear()
+                
+                window_script.append(script)
+            
+            for window_name in window_names:
+              window = root_window.nametowidget(window_name)
+              window.embed[0](name)
+          
+          return result
+        
+        tk_.call('interp', 'hide', '', 'bind')
+        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
+        
+        root = (W, repl_W, focus_cbname, view_cbname, window_names)
       
       return root
     
@@ -591,39 +628,42 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
-    W, repl_W, focus_cbname, view_cbname, windows = get_root()
+    W, repl_W, focus_cbname, view_cbname, window_names = get_root()
     
     window = text.winfo_toplevel()
     tk_ = window.tk
     
-    if not hasattr(window, 'embed'):
-      window.embed = ({}, [])
-    
-    windows.add(window)
-    
-    def window_bind(name):
-      window_scripts, texts = window.embed
+    def window_bind(name, view_script=''):
+      window_bind, window_scripts, texts = window.embed
       
-      window_script = window_scripts.get(name, '')
+      window_script = window_scripts.get(name, [])
       
       if window_script:
         try:
-          window.bind(name, window_script)
+          for script in window_script:
+            bindhidden(tk_, window, name, script)
         except (tk.TclError, RuntimeError): return
       else:
-        window_scripts[name] = tk_.call('bind', window, name)
+        window_script.append(bindhidden(tk_, window, name))
       
-      text_script = f'''+set {W} [{W} %M]
+      script = view_script
+      
+      if not script:
+        if name in VIEWS.keys(): return
+        script = bindhidden(tk_, CLASS_TEXT, name)
+      
+      bindhidden(tk_, window, name,
+        
+        f'''+set {W} [{W} %M]
         if {{${W} == ""}} {{ continue }}
         ''' # newline at end is required
-      
-      script = tk_.call('bind', CLASS_TEXT, name)
+      )
       
       try:
         for text in texts:
-          window.bind(name,
-              
-            f'''+if {{${W} == {text}}} {{
+          bindhidden(tk_, window, name, 
+            
+            f'''+if {{${W} == "{text}"}} {{
               interp hide {{}} focus
               interp alias {{}} focus {{}} {focus_cbname}
               
@@ -645,16 +685,23 @@ def _embed():
       # but since this could happen at any old time
       # (who knows when we might decide to garbage collect this object?)
       # make sure to handle the case where window is already dead
-      window_scripts = window.embed[0]
+      window_scripts = window.embed[1]
       
       try:
+        bindhidden(tk_, window, name)
+        
         for name, window_script in window_scripts.items():
-          window.bind(name, window_script)
+          bindhidden(tk_, window, name, window_script)
       except (tk.TclError, RuntimeError): pass
     
+    if not hasattr(window, 'embed'):
+      window.embed = (window_bind, {}, set())
+      window_names.add(str(window))
+    
+    texts = window.embed[2]
+    texts.add(text)
+    
     def text_bind():
-      window_unbind()
-      
       names = set([str(n) for n in tk_.call('bind', CLASS_TEXT)])
       
       # this first loop is just necessary because
@@ -664,17 +711,23 @@ def _embed():
       # this is the only instance where we want to forego the Text class defaults
       for name in VIEWS.keys():
         names.discard(name)
-        window_bind(name, f'{view_cbname} %W {name}')
+        window_bind(name, view_script=f'{view_cbname} %W {name}')
       
       for name in names:
-        window_bind(name, tk_.call('bind', CLASS_TEXT, name))
+        window_bind(name)
     
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
     
     def text_unbind():
       try: text_del()
-      finally: window_unbind()
+      finally:
+        texts.discard(text)
+        
+        names = set([str(n) for n in tk_.call('bind', CLASS_TEXT)])
+        
+        for name in names:
+          window_bind(name)
     
     text.__del__ = text_unbind
     text_bind()
