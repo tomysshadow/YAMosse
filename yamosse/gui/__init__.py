@@ -714,6 +714,8 @@ def _embed():
     # delete any dead text widgets, then add the new one
     # this is not perfect, there may be stale widgets sometimes
     # but we at least handle the cases of a window being destroyed, or quit and recreated
+    # the intention is for this to trigger the unbinding of these text widgets
+    # so that they don't continually stack up, as windows are destroyed and created
     texts = set(filter(test_widget, texts))
     texts.add(text)
     
@@ -740,6 +742,7 @@ def _embed():
     
     # this will have the effect of removing this text from the bindings
     # (it won't exist in window.embed - otherwise this wouldn't even get called)
+    # this may get called as the result of the filtering above, which would drop the refcount
     def unbind():
       try: text_del()
       finally: bind()
