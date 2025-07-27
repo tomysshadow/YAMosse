@@ -520,7 +520,7 @@ def _embed():
     bindings, texts = window.embed
     windows, call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    scripts = bindings.get(name, [])
+    scripts = bindings.setdefault(name, [])
     
     if scripts:
       try:
@@ -586,23 +586,24 @@ def _embed():
         def bind(*args):
           nonlocal windows
           
-          result = call_bind(*args)
-          
           # if we are binding a new script to the Text class
           # propagate it to all the text embed widgets
           try: class_, name, script = args
           except ValueError: pass
           else:
-            window = None
+            if str(class_) == CLASS_TEXT:
+              result = call_bind(*args)
+              windows = set(filter(test_widget, windows))
+              
+              for window in windows:
+                bind_window(name, window)
+              
+              return result
             
-            try: widget = root_window.nametowidget(class_)
-            except tk.TclError: widget = None
+            try: window = root_window.nametowidget(class_)
+            except KeyError: window = None
             else:
-              if widget in windows:
-                window = widget
-            
-            if window:
-              if test_widget(window):
+              if window in windows:
                 bindings = window.embed[0]
                 scripts = bindings.setdefault(name, [])
                 
@@ -613,16 +614,9 @@ def _embed():
                 scripts.append(script)
                 
                 bind_window(name, window)
-              else:
-                windows.discard(window)
-            
-            if str(class_) == CLASS_TEXT:
-              windows = set(filter(test_widget, windows))
-              
-              for window in windows:
-                bind_window(name, window)
+                return ''
           
-          return result
+          return call_bind(*args)
         
         tk_.call('interp', 'hide', '', 'bind')
         tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
