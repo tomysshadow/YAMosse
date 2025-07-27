@@ -542,6 +542,7 @@ def _embed():
       if name in VIEWS.keys(): return
       script = call_bind(CLASS_TEXT, name)
     
+    # for the texts, we just use them as strings, so it's not a problem if they're dead
     call_bind(window, name,
       
       f'''+set {W} [{W} %M]
@@ -553,7 +554,6 @@ def _embed():
       switch ${W} {{'''
     )
     
-    # we just use these as strings, so it's not a problem if they're dead
     for text in texts:
       call_bind(window, name,
         
