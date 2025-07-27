@@ -553,6 +553,7 @@ def _embed():
       switch ${W} {{'''
     )
     
+    # we just use these as strings, so it's not a problem if they're dead
     for text in texts:
       call_bind(window, name,
         
@@ -592,6 +593,25 @@ def _embed():
         def call_bind(*args):
           return tk_.call('interp', 'invokehidden', '', 'bind', *args)
         
+        W = root_window.register(peek)
+        repl_W = lambda match: f'${W}' if match.group(1) == 'W' else match.group()
+        
+        def focus(*args):
+          # allow getting focus, prevent setting focus
+          if len(args) == 1: return ''
+          return tk_.call('interp', 'invokehidden', '', 'focus', *args)
+        
+        focus_cbname = root_window.register(focus)
+        
+        def view(widget, name):
+          view, args = VIEWS[name]
+          
+          getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
+        
+        view_cbname = root_window.register(view)
+        
+        root = (call_bind, W, repl_W, focus_cbname, view_cbname)
+        
         def bind(*args):
           nonlocal windows
           
@@ -616,6 +636,9 @@ def _embed():
             try: window = root_window.nametowidget(class_)
             except KeyError: window = None
             else:
+              # handle the case where you want to put your own binding onto one of these windows
+              # we don't need to test this window is dead
+              # because bind is supposed to fail with an error if it is anyway
               if window in windows:
                 bindings = window.embed[0]
                 scripts = bindings.setdefault(name, [])
@@ -633,25 +656,6 @@ def _embed():
         
         tk_.call('interp', 'hide', '', 'bind')
         tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
-        
-        W = root_window.register(peek)
-        repl_W = lambda match: f'${W}' if match.group(1) == 'W' else match.group()
-        
-        def focus(*args):
-          # allow getting focus, prevent setting focus
-          if len(args) == 1: return ''
-          return tk_.call('interp', 'invokehidden', '', 'focus', *args)
-        
-        focus_cbname = root_window.register(focus)
-        
-        def view(widget, name):
-          view, args = VIEWS[name]
-          
-          getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
-        
-        view_cbname = root_window.register(view)
-        
-        root = (call_bind, W, repl_W, focus_cbname, view_cbname)
       
       return root
     
@@ -704,14 +708,19 @@ def _embed():
     
     call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    if not window in windows:
-      window.embed = ({}, set())
-      windows.add(window)
+    try: bindings, texts = window.embed
+    except AttributeError: bindings, texts = ({}, set())
     
-    texts = window.embed[1]
+    # delete any dead text widgets, then add the new one
+    # this is not perfect, there may be stale widgets sometimes
+    # but we at least handle the cases of a window being destroyed, or quit and recreated
+    texts = set(filter(test_widget, texts))
     texts.add(text)
     
-    def text_bind():
+    window.embed = (bindings, texts)
+    windows.add(window)
+    
+    def bind():
       names = set([str(n) for n in call_bind(CLASS_TEXT)])
       
       # this first loop is just necessary because
@@ -729,14 +738,14 @@ def _embed():
     try: text_del = text.__del__
     except AttributeError: text_del = lambda: None
     
-    def del_():
+    # this will have the effect of removing this text from the bindings
+    # (it won't exist in window.embed - otherwise this wouldn't even get called)
+    def unbind():
       try: text_del()
-      finally:
-        texts.discard(text)
-        text_bind()
+      finally: bind()
     
-    text.__del__ = del_
-    text_bind()
+    text.__del__ = unbind
+    bind()
   
   return insert, text
 
