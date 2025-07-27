@@ -550,6 +550,7 @@ def _embed():
       script = f'{view_cbname} %W {name}'
     else:
       # note: the scripts are *not* stripped of leading/trailing whitespace
+      # a + after a space is not interpreted as a prefix
       script = bind(CLASS_TEXT, name)
       assert not script.startswith('+'), 'script must not be prefixed'
       
