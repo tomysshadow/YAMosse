@@ -723,19 +723,22 @@ def _embed():
     
     call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    try: bindings, texts = window.embed
-    except AttributeError: bindings, texts = ({}, set())
-    
-    # delete any dead text widgets, then add the new one
-    # this is not perfect, there may be stale widgets sometimes
-    # but we at least handle the cases of a window being destroyed, or quit and recreated
-    texts.add(str(text))
+    try:
+      embed = window.embed
+    except AttributeError:
+      window.embed = ({}, set())
+      embed = window.embed
     
     # the purpose of converting the text and window to strings is so that we don't hold
     # references to their objects that would potentially keep them alive as zombies
     # even after they have actually been destroyed
-    window.embed = (bindings, texts)
-    windows.add(str(window))
+    texts = embed[1]
+    
+    text_name = str(text)
+    texts.add(text_name)
+    
+    window_name = str(window)
+    windows.add(window_name)
     
     def bind():
       names = set([str(n) for n in call_bind(CLASS_TEXT)])
@@ -761,12 +764,12 @@ def _embed():
     def unbind():
       try: text_del()
       finally:
-        texts.discard(str(text))
+        texts.discard(text_name)
         
         # we shouldn't call bind if the window is destroyed too
         # in that case the bindings are already gone anyway
         if not test_widget(window):
-          windows.discard(str(window))
+          windows.discard(window_name)
           return
         
         bind()
