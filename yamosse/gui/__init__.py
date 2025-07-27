@@ -512,11 +512,74 @@ def _embed():
     
     return ''
   
-  window_binds = None
+  def init():
+    root_window = None
+    
+    W = None
+    repl_W = None
+    
+    focus_cbname = None
+    view_cbname = None
+    
+    window_binds = None
+    
+    def get():
+      nonlocal root_window
+      nonlocal W
+      nonlocal repl_W
+      nonlocal focus_cbname
+      nonlocal view_cbname
+      nonlocal window_binds
+      
+      if root_window is None:
+        root_window = get_root_window()
+        tk_ = root_window.tk
+        
+        W = root_window.register(peek)
+        repl_W = lambda match: f'${W}' if match.group(1) == 'W' else match.group()
+        
+        def focus(*args):
+          # allow getting focus, prevent setting focus
+          if len(args) == 1: return ''
+          return tk_.call('interp', 'invokehidden', '', 'focus', *args)
+        
+        focus_cbname = root_window.register(focus)
+        
+        def view(widget, name):
+          # need to use nametowidget because we want the text from the top of the stack
+          # (not necessarily the same one in our scope here)
+          view, args = VIEWS[name]
+          
+          getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
+        
+        view_cbname = root_window.register(view)
+        
+        window_binds = set()
+        
+        def bind(*args):
+          # if we are binding a new script to the Text class
+          # propagate it to all the text embed widgets
+          try: class_, name, script = args
+          except ValueError: pass
+          else:
+            if str(class_) == CLASS_TEXT:
+              for window_bind in window_binds:
+                window_bind(name, script)
+          
+          return tk_.call('interp', 'invokehidden', '', 'bind', *args)
+        
+        tk_.eval(
+          f'''interp hide {{}} bind
+          interp alias {{}} bind {{}} {root_window.register(bind)}'''
+        )
+      
+      return W, repl_W, focus_cbname, view_cbname, window_binds
+    
+    return get
+  
+  get_init = init()
   
   def text(text):
-    nonlocal window_binds
-    
     if str(text.winfo_class()) != CLASS_TEXT: raise ValueError('text must have class Text')
     
     try:
@@ -554,52 +617,10 @@ def _embed():
     finally:
       text['state'] = tk.DISABLED
     
+    W, repl_W, focus_cbname, view_cbname, window_binds = get_init()
+    
     window = text.winfo_toplevel()
-    W = window.register(peek)
-    
-    def repl_W(match):
-      return f'${W}' if match.group(1) == 'W' else match.group()
-    
-    # root window is used here for stuff that should be application wide
-    root_window = get_root_window()
-    tk_ = root_window.tk
-    
-    def focus(*args):
-      # allow getting focus, prevent setting focus
-      if len(args) == 1: return ''
-      return tk_.call('interp', 'invokehidden', '', 'focus', *args)
-    
-    focus_cbname = window.register(focus)
-    
-    def view(widget, name):
-      # need to use nametowidget because we want the text from the top of the stack
-      # (not necessarily the same one in our scope here)
-      view, args = VIEWS[name]
-      
-      getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
-    
-    view_cbname = window.register(view)
-    
-    def bind(*args):
-      # if we are binding a new script to the Text class
-      # propagate it to all the text embed widgets
-      try: class_, name, script = args
-      except ValueError: pass
-      else:
-        if str(class_) == CLASS_TEXT:
-          for window_bind in window_binds:
-            window_bind(name, script)
-      
-      return tk_.call('interp', 'invokehidden', '', 'bind', *args)
-    
-    if window_binds is None:
-      window_binds = set()
-      bind_cbname = root_window.register(bind)
-      
-      tk_.eval(
-        f'''interp hide {{}} bind
-        interp alias {{}} bind {{}} {bind_cbname}'''
-      )
+    tk_ = window.tk
     
     bindings = {}
     
@@ -697,11 +718,11 @@ def _embed():
     try: text_destroy = text.__del__
     except AttributeError: text_destroy = lambda: None
     
-    def destroy():
+    def text_unbind():
       try: text_destroy()
       finally: window_unbind()
     
-    text.__del__ = destroy
+    text.__del__ = text_unbind
     
     text_bind()
   
