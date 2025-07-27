@@ -515,33 +515,40 @@ def _embed():
     
     return ''
   
-  def bind_window(window, sequence, view_script=''):
-    sequence = str(sequence)
+  def name_sequence(sequence):
+    name = sequence.strip()
+    
+    if not name.startswith('<'):
+      name = '<KeyPress-%c>' % name
+    
+    return name
+  
+  def bind_window(window, name, view_script=''):
     bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
     # for the view script we want to forego the default behaviour of the text widget
     # otherwise, we get the script that is currently binded for that class
     if not view_script:
-      if sequence in VIEWS.keys(): return
+      if name in VIEWS.keys(): return
       
-      view_script = bind(CLASS_TEXT, sequence)
+      view_script = bind(CLASS_TEXT, name)
     
-    scripts = window.embed.setdefault(sequence, [])
+    scripts = window.embed.setdefault(name, [])
     
     if scripts:
       # set up the bindings that were originally on the window
       # these scripts *will* already have a + prefix if they need to be added
       for script in scripts:
-        bind(window, sequence, script)
+        bind(window, name, script)
     else:
       # back up the binding that was already on the window before
       # we get this binding from Tk, so it shouldn't begin with a + prefix
-      script = bind(window, sequence)
+      script = bind(window, name)
       assert not script.startswith('+'), 'script must not be prefixed'
       
       scripts.append(script)
     
-    bind(window, sequence,
+    bind(window, name,
       
       f'''+set {W} [{W} %M]
       if {{${W} == ""}} {{ continue }}
@@ -588,8 +595,8 @@ def _embed():
         
         focus_cbname = root_window.register(focus)
         
-        def view(widget, sequence):
-          view, args = VIEWS[sequence]
+        def view(widget, name):
+          view, args = VIEWS[name]
           
           getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
         
@@ -625,7 +632,7 @@ def _embed():
                 if widgets.setdefault(widget, widgets_len) != widgets_len: continue
                 
                 if not test_widget(widget): continue
-                bind_window(widget, sequence)
+                bind_window(widget, name_sequence(sequence))
               
               return result
             
@@ -636,7 +643,8 @@ def _embed():
               try: window = root_window.nametowidget(class_)
               except KeyError: pass
               else:
-                scripts = window.embed.setdefault(sequence, [])
+                name = name_sequence(sequence)
+                scripts = window.embed.setdefault(name, [])
                 
                 # technically optional, but a good idea
                 if not script.startswith('+'):
@@ -644,7 +652,7 @@ def _embed():
                 
                 scripts.append(script)
                 
-                bind_window(window, sequence)
+                bind_window(window, name)
                 return ''
           
           return bind(*args)
@@ -722,17 +730,15 @@ def _embed():
     
     bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    sequences = bind(CLASS_TEXT)
-    
     # we want to make the arrow keys scroll instantly
     # default behaviour is to move the text marker, which
     # will eventually scroll, but only when it hits the bottom of the screen
     # this is the only instance where we want to forego the Text class defaults
-    for sequence in VIEWS.keys():
-      bind_window(window, sequence, view_script=f'{view_cbname} %W {sequence}')
+    for name in VIEWS.keys():
+      bind_window(window, name, view_script=f'{view_cbname} %W {name}')
     
-    for sequence in sequences:
-      bind_window(window, sequence)
+    for sequence in bind(CLASS_TEXT):
+      bind_window(window, name_sequence(sequence))
   
   return insert, text
 
