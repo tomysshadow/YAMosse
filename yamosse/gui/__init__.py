@@ -698,51 +698,40 @@ def _embed():
       text['state'] = tk.DISABLED
     
     window = text.winfo_toplevel()
-    tk_ = window.tk
+    
+    try: embed = window.embed
+    except AttributeError:
+      window.embed = {}
+      
+      # the purpose of converting the windows to strings is so that we don't hold
+      # references to their objects that would potentially keep them alive as zombies
+      # even after they have actually been destroyed
+      window_name = str(window)
+      windows.add(window_name)
+      
+      # this is where we clean up windows
+      try: window_del = window.__del__
+      except AttributeError: window_del = lambda: None
+      
+      def del_():
+        try: window_del()
+        finally: windows.discard(window_name)
+      
+      window.__del__ = del_
     
     call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    try: embed = window.embed
-    except AttributeError: window.embed = {}
+    names = call_bind(CLASS_TEXT)
     
-    # the purpose of converting the windows to strings is so that we don't hold
-    # references to their objects that would potentially keep them alive as zombies
-    # even after they have actually been destroyed
-    window_name = str(window)
-    windows.add(window_name)
+    # we want to make the arrow keys scroll instantly
+    # default behaviour is to move the text marker, which
+    # will eventually scroll, but only when it hits the bottom of the screen
+    # this is the only instance where we want to forego the Text class defaults
+    for name in VIEWS.keys():
+      bind_window(window, name, view_script=f'{view_cbname} %W {name}')
     
-    def bind():
-      names = call_bind(CLASS_TEXT)
-      
-      # we want to make the arrow keys scroll instantly
-      # default behaviour is to move the text marker, which
-      # will eventually scroll, but only when it hits the bottom of the screen
-      # this is the only instance where we want to forego the Text class defaults
-      for name in VIEWS.keys():
-        bind_window(window, name, view_script=f'{view_cbname} %W {name}')
-      
-      for name in names:
-        bind_window(window, name)
-    
-    try: text_del = text.__del__
-    except AttributeError: text_del = lambda: None
-    
-    # this will have the effect of removing this text from the bindings
-    # note that we don't need an unbind function on window
-    # because when the window is destroyed, it'll necessarily destroy the text too
-    def unbind():
-      try: text_del()
-      finally:
-        # we shouldn't call bind if the window is destroyed too
-        # in that case the bindings are already gone anyway
-        if not test_widget(window):
-          windows.discard(window_name)
-          return
-        
-        bind()
-    
-    text.__del__ = unbind
-    bind()
+    for name in names:
+      bind_window(window, name)
   
   return insert, text
 
