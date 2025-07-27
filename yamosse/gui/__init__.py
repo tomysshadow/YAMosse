@@ -517,14 +517,14 @@ def _embed():
   
   def bind_window(window, name, view_script=''):
     name = str(name)
-    call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
+    bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
     # for the view script we want to forego the default behaviour of the text widget
     # otherwise, we get the script that is currently binded for that class
     if not view_script:
       if name in VIEWS.keys(): return
       
-      view_script = call_bind(CLASS_TEXT, name)
+      view_script = bind(CLASS_TEXT, name)
     
     scripts = window.embed.setdefault(name, [])
     
@@ -532,16 +532,16 @@ def _embed():
       # set up the bindings that were originally on the window
       # these scripts *will* already have a + prefix if they need to be added
       for script in scripts:
-        call_bind(window, name, script)
+        bind(window, name, script)
     else:
       # back up the binding that was already on the window before
       # we get this binding from Tk, so it shouldn't begin with a + prefix
-      script = call_bind(window, name)
+      script = bind(window, name)
       assert not script.startswith('+'), 'script must not be prefixed'
       
       scripts.append(script)
     
-    call_bind(window, name,
+    bind(window, name,
       
       f'''+set {W} [{W} %M]
       if {{${W} == ""}} {{ continue }}
@@ -575,7 +575,7 @@ def _embed():
         root_window = get_root_window()
         tk_ = root_window.tk
         
-        def call_bind(*args):
+        def bind(*args):
           return tk_.call('interp', 'invokehidden', '', 'bind', *args)
         
         W = root_window.register(peek)
@@ -595,9 +595,9 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        root = (call_bind, W, repl_W, focus_cbname, view_cbname)
+        root = (bind, W, repl_W, focus_cbname, view_cbname)
         
-        def bind(*args):
+        def bind_alias(*args):
           # if we are binding a new script to the Text class
           # propagate it to all the text embed widgets
           try: class_, name, script = args
@@ -609,7 +609,7 @@ def _embed():
               # we check for the Text class first to avoid an unnecessary lookup on windows
               # here we need the binding to be applied in advance of calling bind_window
               # which will copy the resulting class binding onto the windows
-              result = call_bind(*args)
+              result = bind(*args)
               
               # filter out dead windows so bind_window doesn't die on them
               # do not remove dead windows from the list! No touching that here
@@ -647,10 +647,10 @@ def _embed():
                 bind_window(window, name)
                 return ''
           
-          return call_bind(*args)
+          return bind(*args)
         
         tk_.call('interp', 'hide', '', 'bind')
-        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind))
+        tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind_alias))
       
       return root
     
@@ -720,9 +720,9 @@ def _embed():
       
       window.__del__ = del_
     
-    call_bind, W, repl_W, focus_cbname, view_cbname = get_root()
+    bind, W, repl_W, focus_cbname, view_cbname = get_root()
     
-    names = call_bind(CLASS_TEXT)
+    names = bind(CLASS_TEXT)
     
     # we want to make the arrow keys scroll instantly
     # default behaviour is to move the text marker, which
