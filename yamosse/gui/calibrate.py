@@ -12,6 +12,10 @@ CLASS_UNDOABLE_SCALE = 'UndoableScale'
 def undoable_scales(scales, window, undooptions, undokey):
   oldvalues = {s: s.get() for s in scales}
   
+  def revert(widget, newvalue):
+    widget.set(newvalue)
+    oldvalues[widget] = newvalue
+  
   def data(e):
     if undokey(e): return
     
@@ -21,7 +25,7 @@ def undoable_scales(scales, window, undooptions, undokey):
     newvalue = widget.get()
     if oldvalue == newvalue: return
     
-    undooptions((widget.set, (oldvalue,)), (widget.set, (newvalue,)))
+    undooptions((revert, (widget, oldvalue,)), (revert, (widget, newvalue,)))
     oldvalues[widget] = newvalue
   
   gui.truekey_widget(window, class_=CLASS_UNDOABLE_SCALE, release=data)
