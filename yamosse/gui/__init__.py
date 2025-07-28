@@ -215,6 +215,12 @@ def bind_truekey_widget(widget, class_='', keysym='',
       if state_release != state_press:
         release(e)
     
+    # this must be after with zero milliseconds, it cannot be after_idle
+    # as per the Tk docs, using after with zero milliseconds will
+    # schedule for the next round of events, which is what we need here
+    # to test if the press/release are paired
+    # if we wait until idle, multiple rounds of events will pass
+    # and we'll miss our window of opportunity
     if release: widget.after(0, callback)
   
   KEYS = {
