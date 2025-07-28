@@ -30,10 +30,13 @@ def make_footer(frame, ok, cancel):
   return undooptions
 
 
-def undoable_scales(scales, window, undooptions):
+def _undoable_scales(scales, text, undooptions):
   oldvalues = {s: s.get() for s in scales}
   
   def revert(widget, newvalue):
+    text.see(widget.master)
+    widget.focus_set()
+    
     widget.set(newvalue)
     oldvalues[widget] = newvalue
   
@@ -49,8 +52,8 @@ def undoable_scales(scales, window, undooptions):
     undooptions((revert, (widget, oldvalue,)), (revert, (widget, newvalue,)))
     oldvalues[widget] = newvalue
   
-  gui.bind_truekey_widget(window, class_=CLASS_UNDOABLE_SCALE, release=data)
-  window.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
+  gui.bind_truekey_widget(text, class_=CLASS_UNDOABLE_SCALE, release=data)
+  text.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
 
 
 def make_calibrate(frame, variables, class_names):
@@ -106,6 +109,6 @@ def make_calibrate(frame, variables, class_names):
     lambda: gui.release_modal_window(window)
   )
   
-  undoable_scales(scales, window, undooptions)
+  _undoable_scales(scales, calibration_text, undooptions)
   
   gui.set_modal_window(window)
