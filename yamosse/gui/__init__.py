@@ -1364,6 +1364,13 @@ def make_undoable(frame):
           # then the arguments to redo the operation.
   redoings = [] # list of redoable things - copy of those undoings which have been undone.
   
+  undo_button = None
+  redo_button = None
+  
+  def show():
+    undo_button['state'] = tk.NORMAL if undoings else tk.DISABLED
+    redo_button['state'] = tk.NORMAL if redoings else tk.DISABLED
+  
   def undooptions(undodata, dodata): # save undooptions sufficient to undo and redo an action
     if not undoing:
       # store state before and after event change.
@@ -1372,6 +1379,8 @@ def make_undoable(frame):
       # not in an undo so save event.
       undoings.append((undodata, dodata))
       redoings.clear()
+      
+      show()
     else:
       #print(f'In undo dont save event {args}')
       pass
@@ -1385,6 +1394,8 @@ def make_undoable(frame):
     undo(undothis[0])
     
     redoings.append(undothis)
+    
+    show()
   
   def redolast():
     if not redoings:
@@ -1395,6 +1406,8 @@ def make_undoable(frame):
     #frame.update_idletasks()
     
     undoings.append(redothis)
+    
+    show()
   
   photo = get_root_images()[FSENC_PHOTO]
   
