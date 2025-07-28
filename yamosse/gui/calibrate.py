@@ -9,7 +9,7 @@ TITLE = 'Calibrate'
 CLASS_UNDOABLE_SCALE = 'UndoableScale'
 
 
-def undoable_scales(scales, window, undooptions, undokeysym):
+def undoable_scales(scales, window, undooptions):
   oldvalues = {s: s.get() for s in scales}
   
   def revert(widget, newvalue):
@@ -17,8 +17,6 @@ def undoable_scales(scales, window, undooptions, undokeysym):
     oldvalues[widget] = newvalue
   
   def data(e):
-    if undokeysym(e): return
-    
     widget = e.widget
     
     oldvalue = oldvalues[widget]
@@ -40,7 +38,7 @@ def make_footer(frame, ok, cancel):
   undoable_frame = ttk.Frame(frame)
   undoable_frame.grid(row=0, column=0, sticky=tk.W)
   
-  undooptions, undokeysym = gui.make_undoable(undoable_frame)[0]
+  undooptions = gui.make_undoable(undoable_frame)[0]
   
   ok_button = ttk.Button(frame, text='OK', underline=0, command=ok, default=tk.ACTIVE)
   ok_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
@@ -53,7 +51,7 @@ def make_footer(frame, ok, cancel):
   for button in (ok_button, cancel_button):
     gui.enable_traversal_button(button)
   
-  return undooptions, undokeysym
+  return undooptions
 
 
 def make_calibrate(frame, variables, class_names):
@@ -103,12 +101,12 @@ def make_calibrate(frame, variables, class_names):
     variables['calibration'] = [int(s.get()) for s in scales]
     gui.release_modal_window(window)
   
-  undooptions, undokeysym = make_footer(
+  undooptions = make_footer(
     footer_frame,
     ok,
     lambda: gui.release_modal_window(window)
   )
   
-  undoable_scales(scales, window, undooptions, undokeysym)
+  undoable_scales(scales, window, undooptions)
   
   gui.set_modal_window(window)

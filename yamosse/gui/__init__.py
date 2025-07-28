@@ -81,9 +81,6 @@ DEFAULT_MINWIDTH = -1
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
-KEYSYM_Z = 'z'
-KEYSYM_Y = 'y'
-
 WINDOWS_ICONPHOTO_BUGFIX = True
 
 IMAGES_DIR = 'images'
@@ -1428,17 +1425,6 @@ def make_undoable(frame):
       #print(f'In undo dont save event {args}')
       pass
   
-  def undokeysym(e):
-    CONTROL_MASK = (1<<2)
-    
-    if e.state & CONTROL_MASK:
-      keysym = e.keysym
-      
-      if keysym in (KEYSYM_Z, KEYSYM_Y):
-        return keysym
-    
-    return ''
-  
   def undolast(): # undoes last undoable operation.
     if not undoings:
       print('No more undoable events')
@@ -1478,9 +1464,9 @@ def make_undoable(frame):
   redo_button.grid(row=0, column=1, padx=PADX_QW)
   
   window = frame.winfo_toplevel()
-  window.bind('<Control-%s>' % KEYSYM_Z, lambda e: undolast())
-  window.bind('<Control-%s>' % KEYSYM_Y, lambda e: redolast())
-  return (undooptions, undokeysym), (undo_button, redo_button)
+  window.bind('<Control-Z>', lambda e: undolast())
+  window.bind('<Control-Y>', lambda e: redolast())
+  return undooptions, (undo_button, redo_button)
 
 
 def _root_window():
