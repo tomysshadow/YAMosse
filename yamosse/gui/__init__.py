@@ -188,6 +188,46 @@ def enable_widget(widget, enabled=True, cursor=True):
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
+def truekey_widget(widget, class_='', keysym='',
+  press=None, release=None, add=None):
+  # disables autorepeat
+  # https://wiki.tcl-lang.org/page/Disable+autorepeat+under+X11
+  # TODO: this needs to be actually tested on X11
+  if keysym: keysym = '-%s' % keysym
+  
+  state_press = None
+  state_release = None
+  
+  def call_press(e):
+    nonlocal state_press
+    
+    state_press = e.serial
+    
+    if press and state_press != state_release:
+      press(e)
+  
+  def call_release(e):
+    nonlocal state_release
+    
+    state_release = e.serial
+    
+    def callback():
+      if state_release != state_press:
+        release(e)
+    
+    if release: widget.after(0, callback)
+  
+  KEYS = {
+    '<KeyPress%s>' % keysym: call_press,
+    '<KeyRelease%s>' % keysym: call_release
+  }
+  
+  if class_:
+    return [widget.bind_class(class_, s, c, add) for s, c in KEYS.items()]
+  
+  return [widget.bind(s, c, add) for s, c in KEYS.items()]
+
+
 def prevent_default_widget(widget, class_=False, window=True, all_=True):
   bindtags = [widget]
   if class_: bindtags.append(widget.winfo_class())
@@ -420,7 +460,7 @@ def delete_lines_text(text, max_lines=1000):
 
 
 def make_text(frame, name='', width=10, height=10,
-  autoseparators=False, wrap=tk.WORD, font=None, xscroll=False, yscroll=True, **kwargs):
+  wrap=tk.WORD, font=None, xscroll=False, yscroll=True, **kwargs):
   FONT = ('Courier', 10)
   
   frame.rowconfigure(1, weight=1) # make scrollbar frame vertically resizable
@@ -433,7 +473,7 @@ def make_text(frame, name='', width=10, height=10,
   scrollbar_frame.columnconfigure(0, weight=1) # make text horizontally resizable
   
   text = tk.Text(scrollbar_frame, width=width, height=height,
-    autoseparators=autoseparators, wrap=wrap, font=font if font else FONT, **kwargs)
+    wrap=wrap, font=font if font else FONT, **kwargs)
   
   text.grid(row=0, column=0, sticky=tk.NSEW)
   return make_name(frame, name), (text, make_scrollbar(text, xscroll, yscroll))

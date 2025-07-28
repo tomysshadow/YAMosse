@@ -491,7 +491,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)
   tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui.PADY_QN)
   tips_text = gui.make_text(tips_labelframe,
-    takefocus=False, undo=True, yscroll=False)[1][0]
+    takefocus=False, undo=True, autoseparators=False, yscroll=False)[1][0]
   
   gui.prevent_default_widget(tips_text) # no selection when double clicking
   gui.enable_widget(tips_text, enabled=False)
