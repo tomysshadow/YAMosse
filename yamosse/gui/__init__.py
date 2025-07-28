@@ -754,6 +754,8 @@ def _embed():
     # this step must be done out here
     # if we only got the Text class bindings in get_root
     # then they'd become out of date on future calls
+    # this doesn't need to go through name_sequence
+    # these are already names
     names = set([str(s) for s in bind(CLASS_TEXT)])
     
     # need to ensure the views are bound at least once
