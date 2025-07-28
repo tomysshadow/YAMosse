@@ -81,6 +81,9 @@ DEFAULT_MINWIDTH = -1
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
+KEYSYM_Z = 'z'
+KEYSYM_Y = 'y'
+
 WINDOWS_ICONPHOTO_BUGFIX = True
 
 IMAGES_DIR = 'images'
@@ -1425,15 +1428,20 @@ def make_undoable(frame):
       #print(f'In undo dont save event {args}')
       pass
   
-  def undokey(e):
+  def undokeysym(e):
     CONTROL_MASK = (1<<2)
     
-    if not e.state & CONTROL_MASK: return False
+    if e.state & CONTROL_MASK:
+      keysym = e.keysym
+      
+      if keysym in (KEYSYM_Z, KEYSYM_Y):
+        return keysym
     
-    keysym = e.keysym
-    return keysym == 'z' or keysym == 'y'
+    return ''
   
-  def undolast(): # undoes last undoable operation.
+  def undolast(e=None): # undoes last undoable operation.
+    if e and undokeysym(e) != KEYSYM_Z: return
+    
     if not undoings:
       print('No more undoable events')
       return
@@ -1445,7 +1453,9 @@ def make_undoable(frame):
     
     show()
   
-  def redolast():
+  def redolast(e=None):
+    if e and undokeysym(e) != KEYSYM_Y: return
+    
     if not redoings:
       return
     
@@ -1471,10 +1481,15 @@ def make_undoable(frame):
   
   redo_button.grid(row=0, column=1, padx=PADX_QW)
   
+  # the Control key can be "mod-mapped" to something other than <Control>
+  # so we just bind to z and y, and check the CONTROL_MASK when we get the event
+  # I usually wouldn't bother, but this way other widgets can also check
+  # if we've got the undo/redo keys currently pressed in a consistent fashion
+  # https://www.in-ulm.de/~mascheck/X11/xmodmap.html
   window = frame.winfo_toplevel()
-  window.bind('<Control-z>', lambda e: undolast())
-  window.bind('<Control-y>', lambda e: redolast())
-  return (undooptions, undokey), (undo_button, redo_button)
+  window.bind(KEYSYM_Z, undolast)
+  window.bind(KEYSYM_Y, redolast)
+  return (undooptions, undokeysym), (undo_button, redo_button)
 
 
 def _root_window():
