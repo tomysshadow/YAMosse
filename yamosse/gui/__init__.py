@@ -188,6 +188,15 @@ def enable_widget(widget, enabled=True, cursor=True):
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
+def prevent_default_widget(widget, class_=False, window=True, all_=True):
+  bindtags = [widget]
+  if class_: bindtags.append(widget.winfo_class())
+  if window: bindtags.append(widget.winfo_toplevel())
+  if all_: bindtags.append(tk.ALL)
+  
+  widget.bindtags(bindtags)
+
+
 def bind_truekey_widget(widget, class_='', keysym='',
   press=None, release=None, add=None):
   # disables autorepeat
@@ -232,15 +241,6 @@ def bind_truekey_widget(widget, class_='', keysym='',
     return [widget.bind_class(class_, s, c, add) for s, c in KEYS.items()]
   
   return [widget.bind(s, c, add) for s, c in KEYS.items()]
-
-
-def prevent_default_widget(widget, class_=False, window=True, all_=True):
-  bindtags = [widget]
-  if class_: bindtags.append(widget.winfo_class())
-  if window: bindtags.append(widget.winfo_toplevel())
-  if all_: bindtags.append(tk.ALL)
-  
-  widget.bindtags(bindtags)
 
 
 def lookup_style_widget(widget, option, element='', state=None, **kwargs):
