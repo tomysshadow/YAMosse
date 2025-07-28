@@ -1425,6 +1425,12 @@ def make_undoable(frame):
       #print(f'In undo dont save event {args}')
       pass
   
+  def undokey(e):
+    CONTROL = 0x04
+    
+    keysym = e.keysym
+    return e.state & CONTROL and (keysym == 'z' or keysym == 'y')
+  
   def undolast(): # undoes last undoable operation.
     if not undoings:
       print('No more undoable events')
@@ -1466,7 +1472,7 @@ def make_undoable(frame):
   window = frame.winfo_toplevel()
   window.bind('<Control-z>', lambda e: undolast())
   window.bind('<Control-y>', lambda e: redolast())
-  return undooptions, (undo_button, redo_button)
+  return (undooptions, undokey), (undo_button, redo_button)
 
 
 def _root_window():

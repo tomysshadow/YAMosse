@@ -6,21 +6,26 @@ from .. import gui
 
 TITLE = 'Calibrate'
 
+CLASS_UNDOABLE_SCALE = 'UndoableScale'
 
-def undoable_scale(scale, undooptions):
-  oldvalue = scale.get()
+
+def undoable_scales(scales, window, undooptions, undokey):
+  oldvalues = {s: s.get() for s in scales}
   
   def data(e):
-    nonlocal oldvalue
+    if undokey(e): return
     
-    newvalue = scale.get()
+    widget = e.widget
+    
+    oldvalue = oldvalues[widget]
+    newvalue = widget.get()
     if oldvalue == newvalue: return
     
-    undooptions((scale.set, (oldvalue,)), (scale.set, (newvalue,)))
-    oldvalue = newvalue
+    undooptions((widget.set, (oldvalue,)), (widget.set, (newvalue,)))
+    oldvalues[widget] = newvalue
   
-  gui.truekey_widget(scale, release=data)
-  scale.bind('<ButtonRelease>', data)
+  gui.truekey_widget(window, class_=CLASS_UNDOABLE_SCALE, release=data)
+  window.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
 
 
 def make_footer(frame, ok, cancel):
@@ -29,7 +34,7 @@ def make_footer(frame, ok, cancel):
   undoable_frame = ttk.Frame(frame)
   undoable_frame.grid(row=0, column=0, sticky=tk.W)
   
-  undooptions = gui.make_undoable(undoable_frame)[0]
+  undooptions, undokey = gui.make_undoable(undoable_frame)[0]
   
   ok_button = ttk.Button(frame, text='OK', underline=0, command=ok, default=tk.ACTIVE)
   ok_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
@@ -42,7 +47,7 @@ def make_footer(frame, ok, cancel):
   for button in (ok_button, cancel_button):
     gui.enable_traversal_button(button)
   
-  return undooptions
+  return undooptions, undokey
 
 
 def make_calibrate(frame, variables, class_names):
@@ -64,19 +69,6 @@ def make_calibrate(frame, variables, class_names):
   calibration_text = gui.make_text(calibration_frame, font=('TkDefaultFont', 24))[1][0]
   gui.text_embed(calibration_text)
   
-  footer_frame = ttk.Frame(frame)
-  footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)
-  
-  def ok():
-    variables['calibration'] = [int(s.get()) for s in scales]
-    gui.release_modal_window(window)
-  
-  undooptions = make_footer(
-    footer_frame,
-    ok,
-    lambda: gui.release_modal_window(window)
-  )
-  
   # put in 100% as defaults if the calibration is empty/too short
   calibration_variable = variables['calibration']
   calibration_variable += [100] * (len(class_names) - len(calibration_variable))
@@ -90,12 +82,27 @@ def make_calibrate(frame, variables, class_names):
       to=200)[1]
     
     scale.set(int(calibration_variable[c]))
-    undoable_scale(scale, undooptions)
+    scale.bindtags((CLASS_UNDOABLE_SCALE,) + scale.bindtags())
     scales.append(scale)
     
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')
     scale_frame.columnconfigure(1, weight=1, uniform='class_column')
     
     gui.insert_embed(calibration_text, scale_frame)
+  
+  footer_frame = ttk.Frame(frame)
+  footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)
+  
+  def ok():
+    variables['calibration'] = [int(s.get()) for s in scales]
+    gui.release_modal_window(window)
+  
+  undooptions, undokey = make_footer(
+    footer_frame,
+    ok,
+    lambda: gui.release_modal_window(window)
+  )
+  
+  undoable_scales(scales, window, undooptions, undokey)
   
   gui.set_modal_window(window)
