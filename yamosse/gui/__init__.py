@@ -449,10 +449,6 @@ def _embed():
     '<<NextLine>>': (tk.Y, (tk.SCROLL, 1, tk.UNITS))
   }
   
-  # a regex that handles text substitutions in scripts
-  # that properly handles escaped (%%) substitutions (which str.replace would not)
-  RE_SCRIPT = re.compile('%(.)')
-  
   def insert(text, widget, line=0):
     # width for the widget needs to be set explicitly, not by its geometry manager
     widget.pack_propagate(False)
@@ -515,62 +511,6 @@ def _embed():
     
     return ''
   
-  def name_sequence(sequence):
-    name = sequence.strip()
-    
-    if name.startswith('<'):
-      return str(name)
-    
-    return '<KeyPress-%c>' % name
-  
-  def bind_window(window, name):
-    bind, W, repl_W, focus_cbname, view_cbname = get_root()
-    
-    # we always need to do the main script
-    scripts = window.embed.setdefault(name, [])
-    
-    if scripts:
-      # set up the bindings that were originally on the window
-      # these scripts *will* already have a + prefix if they need to be added
-      for script in scripts:
-        bind(window, name, script)
-    else:
-      # back up the binding that was already on the window before
-      # we get this binding from Tk, so it shouldn't begin with a + prefix
-      script = bind(window, name)
-      assert not script.startswith('+'), 'script must not be prefixed'
-      
-      scripts.append(script)
-    
-    # we want to make the arrow keys scroll instantly
-    # default behaviour is to move the text marker, which
-    # will eventually scroll, but only when it hits the bottom of the screen
-    # this is the only instance where we want to forego the Text class defaults
-    if name in VIEWS.keys():
-      script = f'{view_cbname} %W {name}'
-    else:
-      # note: the scripts are *not* stripped of leading/trailing whitespace
-      # a + after a space is not interpreted as a prefix
-      script = bind(CLASS_TEXT, name)
-      assert not script.startswith('+'), 'script must not be prefixed'
-      
-      # if script is empty, we can skip it entirely
-      if not script: return
-    
-    bind(window, name,
-      
-      f'''+set {W} [{W} %M]
-      if {{${W} == ""}} {{ continue }}
-      
-      interp hide {{}} focus
-      interp alias {{}} focus {{}} {focus_cbname}
-      catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
-      
-      interp alias {{}} focus {{}}
-      interp expose {{}} focus
-      return -options $options $result'''
-    )
-  
   # this can't be a set
   # for every window added, it must be removed once
   # otherwise a new window with the same name might get randomly removed
@@ -611,11 +551,82 @@ def _embed():
         
         view_cbname = root_window.register(view)
         
-        root = (bind, W, repl_W, focus_cbname, view_cbname)
+        bindtag = None
+        
+        def name_sequence(sequence):
+          # bind the sequence to the dummy bindtag
+          bind(bindtag, sequence, ' ')
+          
+          # get the name, which should be the only binding
+          # then unbind the sequence
+          try: name, = bind(bindtag)
+          finally: bind(bindtag, sequence, '')
+          return str(name)
+          
+          #name = sequence.strip()
+          #
+          #if name.startswith('<'):
+          #  return str('-'.join(name.split()))
+          #
+          #return '<KeyPress-%c>' % name
+        
+        bindtag = repr(id(name_sequence))
+        
+        # a regex that handles text substitutions in scripts
+        # that properly handles escaped (%%) substitutions (which str.replace would not)
+        RE_SCRIPT = re.compile('%(.)')
+        
+        def bind_window(window, name):
+          # we always need to do the main script
+          scripts = window.embed.setdefault(name, [])
+          
+          if scripts:
+            # set up the bindings that were originally on the window
+            # these scripts *will* already have a + prefix if they need to be added
+            for script in scripts:
+              bind(window, name, script)
+          else:
+            # back up the binding that was already on the window before
+            # we get this binding from Tk, so it shouldn't begin with a + prefix
+            script = bind(window, name)
+            assert not script.startswith('+'), 'script must not be prefixed'
+            
+            scripts.append(script)
+          
+          # we want to make the arrow keys scroll instantly
+          # default behaviour is to move the text marker, which
+          # will eventually scroll, but only when it hits the bottom of the screen
+          # this is the only instance where we want to forego the Text class defaults
+          if name in VIEWS:
+            script = f'{view_cbname} %W {name}'
+          else:
+            # note: the scripts are *not* stripped of leading/trailing whitespace
+            # a + after a space is not interpreted as a prefix
+            script = bind(CLASS_TEXT, name)
+            assert not script.startswith('+'), 'script must not be prefixed'
+            
+            # if script is empty, we can skip it entirely
+            if not script: return
+          
+          bind(window, name,
+            
+            f'''+set {W} [{W} %M]
+            if {{${W} == ""}} {{ continue }}
+            
+            interp hide {{}} focus
+            interp alias {{}} focus {{}} {focus_cbname}
+            catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+            
+            interp alias {{}} focus {{}}
+            interp expose {{}} focus
+            return -options $options $result'''
+          )
         
         def bind_alias(*args):
           # if we are binding a new script to the Text class
-          # propagate it to all the text embed widgets
+          # propagate it to all the windows
+          # if we are binding a new script to a window
+          # then add the binding, before the Text class binding
           try: class_, sequence, script = args
           except ValueError: pass
           else:
@@ -667,6 +678,8 @@ def _embed():
         
         tk_.call('interp', 'hide', '', 'bind')
         tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind_alias))
+        
+        root = (bind, bind_window)
       
       return root
     
@@ -736,12 +749,15 @@ def _embed():
       
       window.__del__ = del_
     
-    bind, W, repl_W, focus_cbname, view_cbname = get_root()
+    bind, bind_window = get_root()
     
-    names = set([name_sequence(s) for s in bind(CLASS_TEXT)])
+    # this step must be done out here
+    # if we only got the Text class bindings in get_root
+    # then they'd become out of date on future calls
+    names = set([str(s) for s in bind(CLASS_TEXT)])
     
     # need to ensure the views are bound at least once
-    for name in VIEWS.keys():
+    for name in VIEWS:
       bind_window(window, name)
       names.discard(name)
     
@@ -1103,7 +1119,7 @@ def _sorted():
       def move(item=''):
         children = dict.fromkeys(treeview.get_children(item=item))
         
-        for child in children.keys():
+        for child in children:
           if key is key_value:
             children[child] = treeview.set(child, cid)
           
@@ -1112,7 +1128,7 @@ def _sorted():
         children = yamosse_utils.dict_sorted(children, key=key, reverse=reverse)
         
         # rearrange items in sorted positions
-        for index, child in enumerate(children.keys()):
+        for index, child in enumerate(children):
           treeview.move(child, item, index)
       
       move()
@@ -1149,7 +1165,7 @@ def _progressbar():
     progressbar, taskbar = widgets
     variable_set = False
     
-    if not type_ in yamosse_progress.types.keys():
+    if not type_ in yamosse_progress.types:
       variable.set(int(type_))
       return True
     

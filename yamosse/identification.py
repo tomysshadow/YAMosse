@@ -35,9 +35,7 @@ def identification(option):
       # this function can operate on either dictionaries or other iterables
       # if operating on a dictionary, it replaces the keys
       # (because the timestamps are always keys)
-      try:
-        values = timestamps.values()
-        timestamps = timestamps.keys()
+      try: values = timestamps.values()
       except: values = None
       
       for timestamp in timestamps:
