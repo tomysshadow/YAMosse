@@ -169,8 +169,6 @@ def bind_truekey_widget(widget, class_='', keysym='',
   # disables autorepeat
   # https://wiki.tcl-lang.org/page/Disable+autorepeat+under+X11
   # TODO: this needs to be actually tested on X11
-  if keysym: keysym = '-%s' % keysym
-  
   state_press = None
   state_release = None
   
@@ -198,6 +196,8 @@ def bind_truekey_widget(widget, class_='', keysym='',
     # if we wait until idle, multiple rounds of events will pass
     # and we'll miss our window of opportunity
     if release: widget.after(0, callback)
+  
+  if keysym: keysym = '-%s' % keysym
   
   KEYS = {
     '<KeyPress%s>' % keysym: call_press,
