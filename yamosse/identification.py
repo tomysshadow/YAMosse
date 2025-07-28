@@ -49,10 +49,7 @@ def identification(option):
         
         keys.append(timestamp)
       
-      if values is None:
-        return keys
-      
-      return dict(zip(keys, values))
+      return keys if values is None else dict(zip(keys, values))
     
     @classmethod
     @abstractmethod
