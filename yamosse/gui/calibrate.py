@@ -11,10 +11,13 @@ def undoable_scale(scale, undooptions):
   oldvalue = scale.get()
   
   def data(e):
+    nonlocal oldvalue
+    
     newvalue = scale.get()
     if oldvalue == newvalue: return
     
     undooptions((scale.set, (oldvalue,)), (scale.set, (newvalue,)))
+    oldvalue = newvalue
   
   gui.truekey_widget(scale, release=data)
   scale.bind('<ButtonRelease>', data)
