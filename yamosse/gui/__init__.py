@@ -608,13 +608,6 @@ def _embed():
           try: name, = bind(bindtag)
           finally: bind(bindtag, sequence, '')
           return str(name)
-          
-          #name = sequence.strip()
-          #
-          #if name.startswith('<'):
-          #  return str('-'.join(name.split()))
-          #
-          #return '<KeyPress-%c>' % name
         
         bindtag = repr(id(name_sequence))
         
