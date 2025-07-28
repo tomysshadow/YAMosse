@@ -1409,7 +1409,7 @@ def make_undoable(frame):
   undo_button = None
   redo_button = None
   
-  def show():
+  def enable():
     undo_button['state'] = tk.NORMAL if undoings else tk.DISABLED
     redo_button['state'] = tk.NORMAL if redoings else tk.DISABLED
   
@@ -1422,7 +1422,7 @@ def make_undoable(frame):
       undoings.append((undodata, dodata))
       redoings.clear()
       
-      show()
+      enable()
     else:
       #print(f'In undo dont save event {args}')
       pass
@@ -1437,7 +1437,7 @@ def make_undoable(frame):
     
     redoings.append(undothis)
     
-    show()
+    enable()
   
   def redolast():
     if not redoings:
@@ -1449,7 +1449,7 @@ def make_undoable(frame):
     
     undoings.append(redothis)
     
-    show()
+    enable()
   
   photo = get_root_images()[FSENC_PHOTO]
   
@@ -1466,8 +1466,8 @@ def make_undoable(frame):
   redo_button.grid(row=0, column=1, padx=PADX_QW)
   
   window = frame.winfo_toplevel()
-  window.bind('<Control-Z>', lambda e: undolast())
-  window.bind('<Control-Y>', lambda e: redolast())
+  window.bind('<Control-z>', lambda e: undolast())
+  window.bind('<Control-y>', lambda e: redolast())
   return undooptions, (undo_button, redo_button)
 
 
