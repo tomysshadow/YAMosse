@@ -6,7 +6,7 @@ from .. import gui
 
 TITLE = 'Calibrate'
 
-CLASS_UNDOABLE_SCALE = 'UndoableScale'
+CLASS_UNDOABLE_SCALE = 'CalibrateUndoableScale'
 
 
 def undoable_scales(scales, window, undooptions):
