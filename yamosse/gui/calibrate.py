@@ -25,6 +25,8 @@ def undoable_scales(scales, window, undooptions, undokey):
     newvalue = widget.get()
     if oldvalue == newvalue: return
     
+    print(f'Undo scale save {widget} {newvalue} {oldvalue}')
+    
     undooptions((revert, (widget, oldvalue,)), (revert, (widget, newvalue,)))
     oldvalues[widget] = newvalue
   
