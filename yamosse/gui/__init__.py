@@ -1439,9 +1439,7 @@ def make_undoable(frame):
     
     return ''
   
-  def undolast(e=None): # undoes last undoable operation.
-    if e and undokeysym(e) != KEYSYM_Z: return
-    
+  def undolast(): # undoes last undoable operation.
     if not undoings:
       print('No more undoable events')
       return
@@ -1453,9 +1451,7 @@ def make_undoable(frame):
     
     show()
   
-  def redolast(e=None):
-    if e and undokeysym(e) != KEYSYM_Y: return
-    
+  def redolast():
     if not redoings:
       return
     
@@ -1481,14 +1477,9 @@ def make_undoable(frame):
   
   redo_button.grid(row=0, column=1, padx=PADX_QW)
   
-  # the Control key can be "mod-mapped" to something other than <Control>
-  # so we just bind to z and y, and check the CONTROL_MASK when we get the event
-  # I usually wouldn't bother, but this way other widgets can also check
-  # if we've got the undo/redo keys currently pressed in a consistent fashion
-  # https://www.in-ulm.de/~mascheck/X11/xmodmap.html
   window = frame.winfo_toplevel()
-  window.bind(KEYSYM_Z, undolast)
-  window.bind(KEYSYM_Y, redolast)
+  window.bind('<Control-%s>' % KEYSYM_Z, lambda e: undolast())
+  window.bind('<Control-%s>' % KEYSYM_Y, lambda e: redolast())
   return (undooptions, undokeysym), (undo_button, redo_button)
 
 
