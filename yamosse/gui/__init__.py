@@ -1428,8 +1428,10 @@ def make_undoable(frame):
   def undokey(e):
     CONTROL_MASK = (1<<2)
     
+    if not e.state & CONTROL_MASK: return False
+    
     keysym = e.keysym
-    return e.state & CONTROL_MASK and (keysym == 'z' or keysym == 'y')
+    return keysym == 'z' or keysym == 'y'
   
   def undolast(): # undoes last undoable operation.
     if not undoings:
