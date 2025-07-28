@@ -1348,19 +1348,72 @@ def make_filedialog(frame, name='', textvariable=None,
 def make_undoable(frame):
   WIDTH = 6
   
-  # TODO: commands, bindings
+  undoing = False
+  
+  def undo(command):
+    undoing = True
+    
+    try:
+      revert, args = command
+      revert(*args)
+    finally:
+      undoing = False
+  
+  undoings = [] # list of undoable things - each is a 2 part list 
+          # first the arguments to undo the operation;
+          # then the arguments to redo the operation.
+  redoings = [] # list of redoable things - copy of those undoings which have been undone.
+  
+  def undooptions(undodata, dodata): # save undooptions sufficient to undo and redo an action
+    if not undoing:
+      # store state before and after event change.
+      #for un in undoings: print(f'Undo:: {un}')
+      
+      # not in an undo so save event.
+      undoings.append((undodata, dodata))
+      redoings.clear()
+    else:
+      #print(f'In undo dont save event {args}')
+      pass
+  
+  def undolast(): # undoes last undoable operation.
+    if not undoings:
+      print('No more undoable events')
+      return
+    
+    undothis = undoings.pop()
+    undo(undothis[0])
+    
+    redoings.append(undothis)
+  
+  def redolast():
+    if not redoings:
+      return
+    
+    redothis = redoings.pop()
+    undo(redothis[1])
+    #frame.update_idletasks()
+    
+    undoings.append(redothis)
+  
   photo = get_root_images()[FSENC_PHOTO]
   
   undo_button = ttk.Button(frame, text='Undo', width=WIDTH,
-    image=photo[fsenc('undo.gif')], compound=tk.LEFT)
+    image=photo[fsenc('undo.gif')], compound=tk.LEFT,
+    state=tk.DISABLED, command=undolast)
   
   undo_button.grid(row=0, column=0)
   
   redo_button = ttk.Button(frame, text='Redo', width=WIDTH,
-    image=photo[fsenc('redo.gif')], compound=tk.LEFT)
+    image=photo[fsenc('redo.gif')], compound=tk.LEFT,
+    state=tk.DISABLED, command=redolast)
   
   redo_button.grid(row=0, column=1, padx=PADX_QW)
-  return undo_button, redo_button
+  
+  window = frame.winfo_toplevel()
+  window.bind("<Control-z>", lambda e: undolast())
+  window.bind("<Control-y>", lambda e: redolast())
+  return (undooptions, undolast, redolast), (undo_button, redo_button)
 
 
 def _root_window():
