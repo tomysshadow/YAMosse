@@ -1,35 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
-from os import fsencode as fsenc
 
 from .. import gui
 
 TITLE = 'Calibrate'
 
 CLASS_UNDOABLE_SCALE = 'CalibrateUndoableScale'
-
-
-def undoable_scales(scales, window, undooptions):
-  oldvalues = {s: s.get() for s in scales}
-  
-  def revert(widget, newvalue):
-    widget.set(newvalue)
-    oldvalues[widget] = newvalue
-  
-  def data(e):
-    widget = e.widget
-    
-    oldvalue = oldvalues[widget]
-    newvalue = widget.get()
-    if oldvalue == newvalue: return
-    
-    print(f'Undo scale save {widget} {newvalue} {oldvalue}')
-    
-    undooptions((revert, (widget, oldvalue,)), (revert, (widget, newvalue,)))
-    oldvalues[widget] = newvalue
-  
-  gui.truekey_widget(window, class_=CLASS_UNDOABLE_SCALE, release=data)
-  window.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
 
 
 def make_footer(frame, ok, cancel):
@@ -52,6 +28,29 @@ def make_footer(frame, ok, cancel):
     gui.enable_traversal_button(button)
   
   return undooptions
+
+
+def undoable_scales(scales, window, undooptions):
+  oldvalues = {s: s.get() for s in scales}
+  
+  def revert(widget, newvalue):
+    widget.set(newvalue)
+    oldvalues[widget] = newvalue
+  
+  def data(e):
+    widget = e.widget
+    
+    oldvalue = oldvalues[widget]
+    newvalue = widget.get()
+    if oldvalue == newvalue: return
+    
+    print(f'Undo scale save {widget} {newvalue} {oldvalue}')
+    
+    undooptions((revert, (widget, oldvalue,)), (revert, (widget, newvalue,)))
+    oldvalues[widget] = newvalue
+  
+  gui.bind_truekey_widget(window, class_=CLASS_UNDOABLE_SCALE, release=data)
+  window.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
 
 
 def make_calibrate(frame, variables, class_names):

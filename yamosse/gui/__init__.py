@@ -188,7 +188,7 @@ def enable_widget(widget, enabled=True, cursor=True):
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
-def truekey_widget(widget, class_='', keysym='',
+def bind_truekey_widget(widget, class_='', keysym='',
   press=None, release=None, add=None):
   # disables autorepeat
   # https://wiki.tcl-lang.org/page/Disable+autorepeat+under+X11
@@ -1455,13 +1455,13 @@ def make_undoable(frame):
   
   undo_button = ttk.Button(frame, text='Undo', width=WIDTH,
     image=photo[fsenc('undo.gif')], compound=tk.LEFT,
-    state=tk.DISABLED, command=undolast)
+    command=undolast, state=tk.DISABLED)
   
   undo_button.grid(row=0, column=0)
   
   redo_button = ttk.Button(frame, text='Redo', width=WIDTH,
     image=photo[fsenc('redo.gif')], compound=tk.LEFT,
-    state=tk.DISABLED, command=redolast)
+    command=redolast, state=tk.DISABLED)
   
   redo_button.grid(row=0, column=1, padx=PADX_QW)
   
