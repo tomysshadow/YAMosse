@@ -1391,6 +1391,8 @@ def make_undoable(frame):
   undoing = False
   
   def undo(command):
+    nonlocal undoing
+    
     undoing = True
     
     try:
