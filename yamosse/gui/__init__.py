@@ -1413,7 +1413,7 @@ def make_undoable(frame):
   window = frame.winfo_toplevel()
   window.bind("<Control-z>", lambda e: undolast())
   window.bind("<Control-y>", lambda e: redolast())
-  return (undooptions, undolast, redolast), (undo_button, redo_button)
+  return undooptions, (undo_button, redo_button)
 
 
 def _root_window():
