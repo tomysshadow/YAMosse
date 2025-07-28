@@ -1464,8 +1464,8 @@ def make_undoable(frame):
   redo_button.grid(row=0, column=1, padx=PADX_QW)
   
   window = frame.winfo_toplevel()
-  window.bind("<Control-z>", lambda e: undolast())
-  window.bind("<Control-y>", lambda e: redolast())
+  window.bind('<Control-z>', lambda e: undolast())
+  window.bind('<Control-y>', lambda e: redolast())
   return undooptions, (undo_button, redo_button)
 
 
