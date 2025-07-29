@@ -39,14 +39,6 @@ def _high_priority(psutil):
     psutil.Process().nice(psutil.HIGH_PRIORITY_CLASS)
     return
   
-  import resource
-  
-  # set the soft limit as high as it can go
-  soft, hard = resource.getrlimit(resource.RLIMIT_NICE)
-  
-  if hard > soft:
-    resource.setrlimit(resource.RLIMIT_NICE, (hard, hard))
-  
   try:
     # try and decrease the niceness until we eventually hit a limit or error out
     # as far as I can tell this is necessary because
