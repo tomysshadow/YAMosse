@@ -171,7 +171,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   def done(window):
     if not ask_cancel(window, title, footer_widgets): return
     
-    gui.configure_progressbar(
+    gui_progressbar.configure_progressbar(
       progressbar_widgets, progressbar_variable, yamosse_progress.RESET)
     
     gui.release_modal_window(window)
