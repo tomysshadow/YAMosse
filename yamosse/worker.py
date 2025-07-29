@@ -144,10 +144,8 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   gpus = tf.config.list_physical_devices('GPU')
   
   if gpus:
-    memory_limit = options.memory_limit
-    
     logical_device_configuration = [
-      tf.config.LogicalDeviceConfiguration(memory_limit=memory_limit)
+      tf.config.LogicalDeviceConfiguration(memory_limit=options.memory_limit)
     ]
     
     for gpu in gpus:
