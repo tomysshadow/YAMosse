@@ -44,7 +44,7 @@ def _high_priority(psutil):
   # setting it too low just fails without doing anything
   # and using get/setpriority would introduce a race condition
   try:
-    while os.nice(-1) > os.nice(-1): pass
+    while os.nice(-1) != os.nice(-1): pass
   except OSError: pass
 
 
