@@ -168,7 +168,7 @@ def prevent_default_widget(widget, class_=False, window=True, all_=True):
 
 def bind_truekey_widget(widget, class_='', keysym='',
   press=None, release=None, add=None):
-  # disables autorepeat on X11
+  # disables autorepeat on Linux (X11)
   # https://wiki.tcl-lang.org/page/Disable+autorepeat+under+X11
   state_press = None
   state_release = None
@@ -532,7 +532,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   
   fonts = {font}
   
-  # get the per-heading font, but only if the heading is shown
+  # get the per-heading padding and font, but only if the heading is shown
   show = yamosse_utils.try_split(treeview['show'])
   show_headings = True
   
@@ -542,6 +542,9 @@ def measure_widths_treeview(treeview, widths, item=None):
     show_headings = 'headings' in show
     
     if show_headings:
+      padding_width = max(padding_width, width_padding(
+        lookup_style_widget(treeview, 'padding', element='Heading')))
+      
       font = lookup_style_widget(treeview, 'font', element='Heading')
       if font: fonts.add(font)
   
@@ -1131,6 +1134,9 @@ def make_window(window, make_frame, *args, **kwargs):
   style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
   style.configure('Title.TLabel', font=('Trebuchet MS', 24))
   
+  if windowingsystem() == 'x11':
+    style.configure('Treeview.Heading', padding=(2, 0))
+  
   style.layout('Borderless.TNotebook', [])
   style.configure('Borderless.TNotebook > .TFrame', relief=tk.RAISED)
   
@@ -1229,6 +1235,10 @@ def set_variables_to_object(variables, object_):
 
 def threaded():
   assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
+
+
+def windowingsystem():
+  return get_root_window().tk.call('tk', 'windowingsystem')
 
 
 def gui(make_frame, *args, child=False, **kwargs):
