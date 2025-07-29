@@ -39,11 +39,11 @@ def _high_priority(psutil):
     psutil.Process().nice(psutil.HIGH_PRIORITY_CLASS)
     return
   
+  # try and decrease the niceness until we eventually hit a limit or error out
+  # as far as I can tell this is necessary because
+  # setting it too low just fails without doing anything
+  # and using get/setpriority would introduce a race condition
   try:
-    # try and decrease the niceness until we eventually hit a limit or error out
-    # as far as I can tell this is necessary because
-    # setting it too low just fails without doing anything
-    # and using get/setpriority would introduce a race condition
     while os.nice(-1) > os.nice(-1): pass
   except OSError: pass
 
