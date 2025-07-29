@@ -155,7 +155,8 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   import numpy as np
   import tensorflow as tf
   
-  # only require psutil on Windows, as Unix can use the Python built in modules
+  # we only require psutil on Windows
+  # Python's built in modules are fine for this purpose on Linux
   # we require this even if we are not setting the process priority to high
   # because it should be highlighted to you that you're missing the module early on
   # in case you ever do decide to check the box to do it
