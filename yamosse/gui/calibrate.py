@@ -5,7 +5,6 @@ from .. import gui
 
 TITLE = 'Calibrate'
 
-CLASS_UNDOABLE_SCALE = 'CalibrateUndoableScale'
 DEFAULT_SCALE_VALUE = 100
 
 
@@ -35,9 +34,16 @@ def make_footer(frame, ok, cancel):
 
 
 def _undoable_scales(scales, text, reset_button, undooptions):
-  DEFAULTS = {s: DEFAULT_SCALE_VALUE for s in scales}
+  bindtag = gui.bindtag_for_object(text)
   
-  oldvalues = {s: s.get() for s in scales}
+  defaults = {}
+  oldvalues = {}
+  
+  for scale in scales:
+    defaults[scale] = DEFAULT_SCALE_VALUE
+    oldvalues[scale] = scale.get()
+    
+    scale.bindtags((bindtag,) + scale.bindtags())
   
   def data(e):
     widget = e.widget
@@ -58,8 +64,8 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
     oldvalues[widget] = newvalue
   
-  gui.bind_truekey_widget(text, class_=CLASS_UNDOABLE_SCALE, release=data)
-  text.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
+  gui.bind_truekey_widget(text, class_=bindtag, release=data)
+  text.bind_class(bindtag, '<ButtonRelease>', data)
   
   def reset():
     def revert(newvalues=DEFAULTS):
@@ -113,7 +119,6 @@ def make_calibrate(frame, variables, class_names):
       to=200)[1]
     
     scale.set(int(calibration))
-    scale.bindtags((CLASS_UNDOABLE_SCALE,) + scale.bindtags())
     scales.append(scale)
     
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')

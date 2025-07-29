@@ -609,7 +609,7 @@ def _embed():
           finally: bind(bindtag, sequence, '')
           return str(name)
         
-        bindtag = repr(id(name_sequence))
+        bindtag = bindtag_for_object(name_sequence)
         
         # a regex that handles text substitutions in scripts
         # that properly handles escaped (%%) substitutions (which str.replace would not)
@@ -1672,6 +1672,10 @@ def _root_images():
   return get
 
 get_root_images = _root_images()
+
+
+def bindtag_for_object(object_):
+  return repr(id(object_))
 
 
 def get_variables_from_object(object_):
