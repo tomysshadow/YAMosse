@@ -167,11 +167,12 @@ class Options:
     
     self.worker = single_shot
     
-    # cast calibration from percentages to floats and ensure it is long enough
-    calibration = np.divide(self.calibration, 100.0)
+    # cast calibration from percentages to floats and ensure it is the right length
+    class_names_len = len(class_names)
+    calibration = np.divide(self.calibration[:class_names_len], 100.0)
     
     calibration = np.concatenate((calibration,
-      np.ones(len(class_names) - calibration.size)))
+      np.ones(class_names_len - calibration.size)))
     
     # make background noise volume logarithmic if requested
     background_noise_volume = self.background_noise_volume / 100.0
@@ -180,7 +181,7 @@ class Options:
       background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
     
     # create a numpy array of this so it can be used with fancy indexing
-    self.classes = np.array(self.classes)
+    self.classes = np.array(self.classes).unique()
     self.calibration = calibration
     self.background_noise_volume = background_noise_volume
     self.confidence_score /= 100.0

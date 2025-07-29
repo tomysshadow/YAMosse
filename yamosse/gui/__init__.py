@@ -611,6 +611,8 @@ def _embed():
         
         bindtag = bindtag_for_object(name_sequence)
         
+        ADD = '+'
+        
         # a regex that handles text substitutions in scripts
         # that properly handles escaped (%%) substitutions (which str.replace would not)
         RE_SCRIPT = re.compile('%(.)')
@@ -628,7 +630,7 @@ def _embed():
             # back up the binding that was already on the window before
             # we get this binding from Tk, so it shouldn't begin with a + prefix
             script = bind(window, name)
-            assert not script.startswith('+'), 'script must not be prefixed'
+            assert not script.startswith(ADD), 'script must not be prefixed'
             
             scripts.append(script)
           
@@ -642,7 +644,7 @@ def _embed():
             # note: the scripts are *not* stripped of leading/trailing whitespace
             # a + after a space is not interpreted as a prefix
             script = bind(CLASS_TEXT, name)
-            assert not script.startswith('+'), 'script must not be prefixed'
+            assert not script.startswith(ADD), 'script must not be prefixed'
             
             # if script is empty, we can skip it entirely
             if not script: return
@@ -705,7 +707,7 @@ def _embed():
                 scripts = window.embed.setdefault(name, [])
                 
                 # technically optional, but a good idea
-                if not script.startswith('+'):
+                if not script.startswith(ADD):
                   scripts.clear()
                 
                 scripts.append(script)
@@ -1675,7 +1677,9 @@ get_root_images = _root_images()
 
 
 def bindtag_for_object(object_):
-  return repr(id(object_))
+  # this is prefixed to ensure the string doesn't start with a period (.) character
+  # which would indicate this is a widget, not a bindtag
+  return ''.join(('bindtag', repr(id(object_))))
 
 
 def get_variables_from_object(object_):
