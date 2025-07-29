@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
 import traceback
 from threading import Lock
+from weakref import WeakKeyDictionary
 from math import ceil
 import shlex
 import os
@@ -93,6 +94,8 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
+_normalcursors = WeakKeyDictionary()
+
 
 def _init_report_callback_exception():
   reported = False
@@ -141,13 +144,14 @@ def enable_widget(widget, enabled=True, cursor=True):
     # if we were successfully able to change the state
     if cursor:
       if enabled:
-        try:
-          widget['cursor'] = widget.normalcursor
-          del widget.normalcursor
-        except AttributeError: pass
+        try: widget['cursor'] = _normalcursors.pop(widget)
+        except KeyError: pass
       else:
-        widget.normalcursor = widget['cursor']
-        widget['cursor'] = ''
+        normalcursor = widget['cursor']
+        
+        if normalcursor:
+          _normalcursors[widget] = normalcursor
+          widget['cursor'] = ''
   
   for child_widget in widget.winfo_children():
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
@@ -234,11 +238,6 @@ def padding4_widget(widget, padding):
     padding, = padding
   except TypeError: pass
   return fpixels_widget(widget, (padding, padding, padding, padding))
-
-
-def padding2_widget(widget, padding):
-  left, top, right, bottom = padding4_widget(widget, padding)
-  return [left + right, top + bottom]
 
 
 def lookup_style_widget(widget, option, element='', state=None, **kwargs):
@@ -523,7 +522,11 @@ def measure_widths_treeview(treeview, widths, item=None):
   try: indent = treeview.winfo_fpixels(indent)
   except tk.TclError: indent = DEFAULT_TREEVIEW_INDENT
   
-  padding_width = padding2_widget(treeview, DEFAULT_TREEVIEW_CELL_PADDING)[0]
+  def width_padding(padding):
+    left, top, right, bottom = padding4_widget(treeview, padding)
+    return left + right
+  
+  padding_width = width_padding(DEFAULT_TREEVIEW_CELL_PADDING)
   
   font = lookup_style_widget(treeview, 'font')
   assert font, 'font must not be empty'
@@ -570,7 +573,7 @@ def measure_widths_treeview(treeview, widths, item=None):
       except tk.TclError:
         pass # not supported in this version
       else:
-        padding_width = max(padding_width, padding2_widget(treeview, padding)[0])
+        padding_width = max(padding_width, width_padding(padding))
       
       try:
         font = treeview.tag_configure(child_tag, 'font')
@@ -591,11 +594,11 @@ def measure_widths_treeview(treeview, widths, item=None):
       width_image(treeview.item(child, 'image')))
   
   # get the per-element (item/cell) padding
-  item_padding_width = padding2_widget(treeview,
-    lookup_style_widget(treeview, 'padding', element='Item'))[0]
+  item_padding_width = width_padding(
+    lookup_style_widget(treeview, 'padding', element='Item'))
   
-  cell_padding_width = padding2_widget(treeview,
-    lookup_style_widget(treeview, 'padding', element='Cell'))[0]
+  cell_padding_width = width_padding(
+    lookup_style_widget(treeview, 'padding', element='Cell'))
   
   # measure the widths
   measured_widths = {}

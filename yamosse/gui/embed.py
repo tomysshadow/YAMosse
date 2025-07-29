@@ -260,27 +260,6 @@ def _root_embed():
 _get_root_embed = _root_embed()
 
 
-def _configure_text_embed(e):
-  widget = e.widget
-  
-  # set the width of the children to fill the available space
-  for child in widget.winfo_children():
-    inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
-    child['width'] = e.width - (inset * 2)
-
-
-def _enter_text_embed(e):
-  widget = e.widget
-  
-  if _stack and _stack[-1] == widget: return
-  _stack.append(widget)
-
-
-def _leave_text_embed(e):
-  if not _stack: return
-  _stack.pop()
-
-
 def text_embed(text):
   if str(text.winfo_class()) != CLASS_TEXT:
     raise ValueError('text must have class %r' % CLASS_TEXT)
@@ -309,10 +288,29 @@ def text_embed(text):
     # they'll be received from window instead
     gui.prevent_default_widget(text)
     
-    text.bind('<Configure>', _configure_text_embed)
+    def configure(e):
+      widget = e.widget
+      
+      # set the width of the children to fill the available space
+      for child in widget.winfo_children():
+        inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
+        child['width'] = e.width - (inset * 2)
     
-    text.bind('<Enter>', _enter_text_embed)
-    text.bind('<Leave>', _leave_text_embed)
+    text.bind('<Configure>', configure)
+    
+    def enter(e):
+      widget = e.widget
+      
+      if _stack and _stack[-1] == widget: return
+      _stack.append(widget)
+    
+    text.bind('<Enter>', enter)
+    
+    def leave(e):
+      if not _stack: return
+      _stack.pop()
+    
+    text.bind('<Leave>', leave)
     
     # delete anything that might've been typed in before the text was passed to us
     # then create the placeholder frame
