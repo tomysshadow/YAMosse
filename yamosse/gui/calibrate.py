@@ -6,6 +6,7 @@ from .. import gui
 TITLE = 'Calibrate'
 
 CLASS_UNDOABLE_SCALE = 'CalibrateUndoableScale'
+DEFAULT_SCALE_VALUE = 100
 
 
 def make_footer(frame, ok, cancel):
@@ -22,23 +23,21 @@ def make_footer(frame, ok, cancel):
   cancel_button = ttk.Button(frame, text='Cancel', underline=0, command=cancel)
   cancel_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   
+  reset_button = ttk.Button(frame, text='Reset', underline=0)
+  reset_button.grid(row=0, column=4, sticky=tk.E, padx=gui.PADX_QW)
+  
   gui.bind_buttons_window(frame.winfo_toplevel(), ok_button=ok_button, cancel_button=cancel_button)
   
-  for button in (ok_button, cancel_button):
+  for button in (ok_button, cancel_button, reset_button):
     gui.enable_traversal_button(button)
   
-  return undooptions
+  return undooptions, reset_button
 
 
-def _undoable_scales(scales, text, undooptions):
-  oldvalues = {s: s.get() for s in scales}
+def _undoable_scales(scales, text, undooptions, reset_button):
+  DEFAULTS = {s: DEFAULT_SCALE_VALUE for s in scales}
   
-  def revert(widget, newvalue):
-    text.see(widget.master)
-    widget.focus_set()
-    
-    widget.set(newvalue)
-    oldvalues[widget] = newvalue
+  oldvalues = {s: s.get() for s in scales}
   
   def data(e):
     widget = e.widget
@@ -49,11 +48,36 @@ def _undoable_scales(scales, text, undooptions):
     
     print(f'Undo scale save {widget} {newvalue} {oldvalue}')
     
-    undooptions((revert, (widget, oldvalue,)), (revert, (widget, newvalue,)))
+    def revert(widget, newvalue):
+      text.see(widget.master)
+      widget.focus_set()
+      
+      widget.set(newvalue)
+      oldvalues[widget] = newvalue
+    
+    undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
     oldvalues[widget] = newvalue
   
   gui.bind_truekey_widget(text, class_=CLASS_UNDOABLE_SCALE, release=data)
   text.bind_class(CLASS_UNDOABLE_SCALE, '<ButtonRelease>', data)
+  
+  def reset():
+    def revert(newvalues=DEFAULTS):
+      nonlocal oldvalues
+      
+      for scale, newvalue in newvalues.items():
+        scale.set(newvalue)
+      
+      # we must copy this here so we don't mutate a redo state
+      oldvalues = newvalues.copy()
+    
+    # the oldvalues must be copied when turned into an undooption
+    # because they get changed as the scales are set
+    # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
+    undooptions((revert, oldvalues.copy()), (revert,))
+    revert()
+  
+  reset_button['command'] = reset
 
 
 def make_calibrate(frame, variables, class_names):
@@ -77,17 +101,18 @@ def make_calibrate(frame, variables, class_names):
   
   # put in 100% as defaults if the calibration is empty/too short
   calibration_variable = variables['calibration']
-  calibration_variable += [100] * (len(class_names) - len(calibration_variable))
+  calibration_variable += [DEFAULT_SCALE_VALUE] * (len(class_names) - len(calibration_variable))
   
+  index = 0
   scales = []
   
-  for c, class_name in enumerate(class_names):
+  for class_name, calibration in zip(class_names, calibration_variable):
     scale_frame = ttk.Frame(calibration_text)
     
-    scale = gui.make_scale(scale_frame, name='%d. %s' % (c + 1, class_name),
+    scale = gui.make_scale(scale_frame, name='%d. %s' % (index := index + 1, class_name),
       to=200)[1]
     
-    scale.set(int(calibration_variable[c]))
+    scale.set(int(calibration))
     scale.bindtags((CLASS_UNDOABLE_SCALE,) + scale.bindtags())
     scales.append(scale)
     
@@ -103,12 +128,12 @@ def make_calibrate(frame, variables, class_names):
     variables['calibration'] = [int(s.get()) for s in scales]
     gui.release_modal_window(window)
   
-  undooptions = make_footer(
+  undooptions, reset_button = make_footer(
     footer_frame,
     ok,
     lambda: gui.release_modal_window(window)
   )
   
-  _undoable_scales(scales, calibration_text, undooptions)
+  _undoable_scales(scales, calibration_text, undooptions, reset_button)
   
   gui.set_modal_window(window)

@@ -1395,8 +1395,8 @@ def make_undoable(frame):
     undoing = True
     
     try:
-      revert, args = command
-      revert(*args)
+      revert = command[0]
+      revert(*command[1:])
     finally:
       undoing = False
   
