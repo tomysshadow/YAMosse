@@ -168,9 +168,8 @@ def prevent_default_widget(widget, class_=False, window=True, all_=True):
 
 def bind_truekey_widget(widget, class_='', keysym='',
   press=None, release=None, add=None):
-  # disables autorepeat
+  # disables autorepeat on X11
   # https://wiki.tcl-lang.org/page/Disable+autorepeat+under+X11
-  # TODO: this needs to be actually tested on X11
   state_press = None
   state_release = None
   
