@@ -111,7 +111,16 @@ def _root_embed():
       bindtag = None
       
       def name_sequence(sequence):
-        # bind the sequence to the dummy bindtag
+        # we need to get the "canonical" name from the sequence
+        # sequences can have multiple forms that are considered equivalent
+        # for example, '<KeyPress-a>' and 'a' refer to the same event
+        # for the purpose of storing them in a dictionary, we need
+        # to squash these inconsistencies
+        # we could try and parse the string ourselves, but why leave it to guesswork
+        # it's easier to just create a dummy binding so Tk translates the sequence
+        # for us, into a canonical name, then get the name
+        # the bindtag here is intended to be unique to this function
+        # so that only one event will be bound to it at a time
         bind(bindtag, sequence, ' ')
         
         # get the name, which should be the only binding
@@ -154,6 +163,22 @@ def _root_embed():
           # if script is empty, we can skip it entirely
           if not script: return
         
+        # this is how we "forward" the event from the window to an arbitrary text widget
+        # so that we can get the scrolling behaviour of the default bindings
+        # this can't be done in Python because the Event object
+        # (that is, the one containing e.widget, e.keysym, e.delta, etc.)
+        # goes through subtle transformations when it's received from Tk
+        # which is a lossy process
+        # so we have to do this Tk side, to keep the text substitutions intact
+        # even ignoring that problem, the focus would need to be set
+        # to the text widget for event_generate, but
+        # then we'd have to restore it back after, which is borderline impossible
+        # to do correctly when multiple windows are open
+        # this allows us to trigger an event on the text widget even if it doesn't have focus
+        # we temporarily disable the focus command via aliasing because
+        # the Text widget, unlike most widgets, will take focus when clicked on
+        # even if takefocus is False, and we don't want it to randomly steal focus
+        # from the widgets it contains just because the window got an event
         bind(window, name,
           
           f'''+set {W} [{W} %M]
