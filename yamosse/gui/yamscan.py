@@ -125,7 +125,7 @@ def show_yamscan(widgets, values=None):
 
 def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   RESIZABLE = True
-  SIZE = (480, 360)
+  SIZE = (540, 430)
   
   window = frame.master
   parent = window.master
