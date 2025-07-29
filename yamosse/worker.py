@@ -43,7 +43,7 @@ def _high_priority(psutil=None):
   # as far as I can tell this is necessary because
   # setting it too low just fails without doing anything
   try:
-    for priority in range(os.getpriority(os.PRIO_PROCESS, 0), -21, -1):
+    for priority in range(os.getpriority(os.PRIO_PROCESS, 0) - 1, -21, -1):
       os.setpriority(os.PRIO_PROCESS, 0, priority)
   except OSError: pass
 
