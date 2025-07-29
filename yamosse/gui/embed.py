@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import re
+from weakref import WeakKeyDictionary
 
 from .. import gui
 
@@ -22,12 +23,8 @@ ADD = '+'
 RE_SCRIPT = re.compile('%(.)')
 
 _stack = []
-
-# this can't be a set
-# for every window added, it must be removed once
-# otherwise a new window with the same name might get randomly removed
-# as the previous gets garbage collected at some later time
-_windows = []
+_texts = WeakKeyDictionary()
+_windows = WeakKeyDictionary()
 
 
 def insert_embed(text, widget, line=0):
@@ -39,7 +36,7 @@ def insert_embed(text, widget, line=0):
   
   try:
     # if the placeholder exists, then delete it
-    try: text.delete(text.embed)
+    try: text.delete(_texts[text])
     except tk.TclError: pass
     
     # use the insertion cursor so that it moves from the linestart to the lineend
@@ -131,9 +128,11 @@ def _root_embed():
       
       bindtag = gui.bindtag_for_object(name_sequence)
       
-      def bind_window(window, name):
+      def bind_window(window_bindings, name):
+        window, bindings = window_bindings
+        
         # we always need to do the main script
-        scripts = window.embed.setdefault(name, [])
+        scripts = bindings.setdefault(name, [])
         
         if scripts:
           # set up the bindings that were originally on the window
@@ -213,38 +212,31 @@ def _root_embed():
             # filter out dead windows so bind_window doesn't die on them
             # do not remove dead windows from the list! No touching that here
             # only the window getting destroyed should remove it
-            widgets = {}
-            
-            for window in _windows:
-              try: widget = root_window.nametowidget(window)
-              except KeyError: continue
-              
-              # don't do this one if we've done it already
-              if not yamosse_utils.dict_once(widgets, widget): continue
-              
-              if not gui.test_widget(widget): continue
-              bind_window(widget, name_sequence(sequence))
+            for window_bindings in _windows.items():
+              if not gui.test_widget(window_bindings[0]): continue
+              bind_window(window_bindings, name_sequence(sequence))
             
             return result
           
-          if class_ in _windows:
-            # handle the case where you want to put your own binding onto one of these windows
-            # we don't need to worry about if this window is dead
-            # because bind is supposed to fail with an error if it is anyway
-            try: window = root_window.nametowidget(class_)
-            except KeyError: pass
-            else:
-              name = name_sequence(sequence)
-              scripts = window.embed.setdefault(name, [])
-              
-              # technically optional, but a good idea
-              if not script.startswith(ADD):
-                scripts.clear()
-              
-              scripts.append(script)
-              
-              bind_window(window, name)
-              return ''
+          # handle the case where you want to put your own binding onto one of these windows
+          # we don't need to worry about if this window is dead
+          # because bind is supposed to fail with an error if it is anyway
+          try:
+            window = root_window.nametowidget(class_)
+            bindings = _windows[window]
+          except KeyError: pass
+          else:
+            name = name_sequence(sequence)
+            scripts = bindings.setdefault(name, [])
+            
+            # technically optional, but a good idea
+            if not script.startswith(ADD):
+              scripts.clear()
+            
+            scripts.append(script)
+            
+            bind_window((window, bindings), name)
+            return ''
         
         return bind(*args)
       
@@ -264,25 +256,23 @@ def text_embed(text):
   if str(text.winfo_class()) != CLASS_TEXT:
     raise ValueError('text must have class %r' % CLASS_TEXT)
   
-  try:
-    if text.embed: raise RuntimeError('text_embed is single shot per-text')
-  except AttributeError: pass
+  # setdefault is not used here - it's probably not worth the cost of creating a frame
+  if text in _texts: raise RuntimeError('text_embed is single shot per-text')
   
-  # doubles as a placeholder to prevent text selection
-  text.embed = ttk.Frame(text)
+  # placeholder to prevent text selection
+  frame = ttk.Frame(text)
+  _texts[text] = frame
   
   text['state'] = tk.NORMAL
   
   try:
-    embed = text.embed
-    
     # we don't use enable_widget here as we don't actually want that
     # (it would disable any child widgets within the text)
     # it should not take focus until an event is fired (it hoards the focus otherwise)
     # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
     # (put a border around the surrounding frame instead)
     text.configure(takefocus=False, cursor='',
-      bg=gui.lookup_style_widget(embed, 'background'), borderwidth=0)
+      bg=gui.lookup_style_widget(frame, 'background'), borderwidth=0)
     
     # unbind from Text class so we can't get duplicate events
     # they'll be received from window instead
@@ -315,31 +305,12 @@ def text_embed(text):
     # delete anything that might've been typed in before the text was passed to us
     # then create the placeholder frame
     text.delete('1.0', tk.END)
-    text.window_create(tk.END, window=embed, stretch=True)
+    text.window_create(tk.END, window=frame, stretch=True)
   finally:
     text['state'] = tk.DISABLED
   
   window = text.winfo_toplevel()
-  
-  try: embed = window.embed
-  except AttributeError:
-    window.embed = {}
-    
-    # the purpose of converting the windows to strings is so that we don't hold
-    # references to their objects that would potentially keep them alive as zombies
-    # even after they have actually been destroyed
-    window_name = str(window)
-    _windows.append(window_name)
-    
-    # this is where we clean up windows
-    try: window_del = window.__del__
-    except AttributeError: window_del = lambda: None
-    
-    def del_():
-      try: window_del()
-      finally: _windows.remove(window_name)
-    
-    window.__del__ = del_
+  window_bindings = (window, _windows.setdefault(window, {}))
   
   bind, bind_window = _get_root_embed()
   
@@ -352,8 +323,8 @@ def text_embed(text):
   
   # need to ensure the views are bound at least once
   for name in VIEWS:
-    bind_window(window, name)
+    bind_window(window_bindings, name)
     names.discard(name)
   
   for name in names:
-    bind_window(window, name)
+    bind_window(window_bindings, name)

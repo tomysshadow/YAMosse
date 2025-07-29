@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
+from weakref import WeakKeyDictionary
 import traceback
 from threading import Lock
-from weakref import WeakKeyDictionary
 from math import ceil
 import shlex
 import os
