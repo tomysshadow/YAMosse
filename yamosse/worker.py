@@ -40,8 +40,8 @@ def _high_priority(psutil=None):
     return
   
   # try and decrease the niceness until we eventually hit a limit or error out
-  # as far as I can tell this is necessary because
-  # setting it too low just fails without doing anything
+  # as far as I can tell this is necessary because, without root permissions
+  # setting it too low and ending up below the RLIMIT just fails without doing anything
   try:
     for priority in range(os.getpriority(os.PRIO_PROCESS, 0) - 1, -21, -1):
       os.setpriority(os.PRIO_PROCESS, 0, priority)
