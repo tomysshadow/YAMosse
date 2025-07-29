@@ -181,7 +181,7 @@ class Options:
       background_noise_volume **= BACKGROUND_NOISE_VOLUME_LOG
     
     # create a numpy array of this so it can be used with fancy indexing
-    self.classes = np.array(self.classes).unique()
+    self.classes = np.unique(self.classes)
     self.calibration = calibration
     self.background_noise_volume = background_noise_volume
     self.confidence_score /= 100.0
