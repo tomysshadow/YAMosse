@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from os import fsencode as fsenc
 
 from .. import gui
+from . import progressbar as gui_progressbar
 
 import yamosse.progress as yamosse_progress
 
@@ -85,7 +86,7 @@ def show_yamscan(widgets, values=None):
     value = values.get('progressbar')
     
     if not value is None:
-      gui.configure_progressbar(
+      gui_progressbar.configure_progressbar(
         progressbar_widgets, progressbar_variable, value)
     
     value = values.get('log')
@@ -140,8 +141,15 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   progressbar_frame = ttk.Frame(frame)
   progressbar_frame.grid(row=0, sticky=tk.EW)
   progressbar_variable = tk.IntVar()
-  progressbar_widgets = gui.make_progressbar(progressbar_frame, variable=progressbar_variable,
-    maximum=progressbar_maximum, type_=yamosse_progress.LOADING, parent=parent, task=True)[1]
+  
+  progressbar_widgets = gui_progressbar.make_progressbar(
+    progressbar_frame,
+    variable=progressbar_variable,
+    maximum=progressbar_maximum,
+    type_=yamosse_progress.LOADING,
+    parent=parent,
+    task=True
+  )[1]
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)

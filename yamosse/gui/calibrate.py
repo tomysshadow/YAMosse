@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from .. import gui
+from . import embed as gui_embed
 
 TITLE = 'Calibrate'
 
@@ -13,7 +14,6 @@ def make_footer(frame, ok, cancel):
   
   undoable_frame = ttk.Frame(frame)
   undoable_frame.grid(row=0, column=0, sticky=tk.W)
-  
   undooptions = gui.make_undoable(undoable_frame)[0]
   
   ok_button = ttk.Button(frame, text='OK', underline=0, command=ok, default=tk.ACTIVE)
@@ -103,7 +103,7 @@ def make_calibrate(frame, variables, class_names):
   calibration_frame.grid(row=0, sticky=tk.NSEW)
   
   calibration_text = gui.make_text(calibration_frame, font=('TkDefaultFont', 24))[1][0]
-  gui.text_embed(calibration_text)
+  gui_embed.text_embed(calibration_text)
   
   # put in 100% as defaults if the calibration is empty/too short
   calibration_variable = variables['calibration']
@@ -124,7 +124,7 @@ def make_calibrate(frame, variables, class_names):
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')
     scale_frame.columnconfigure(1, weight=1, uniform='class_column')
     
-    gui.insert_embed(calibration_text, scale_frame)
+    gui_embed.insert_embed(calibration_text, scale_frame)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)

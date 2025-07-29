@@ -1,0 +1,335 @@
+import tkinter as tk
+from tkinter import ttk
+import re
+
+from .. import gui
+
+import yamosse.utils as yamosse_utils
+
+CLASS_TEXT = 'Text'
+
+VIEWS = {
+  '<<PrevChar>>': (tk.X, (tk.SCROLL, -1, tk.UNITS)),
+  '<<NextChar>>': (tk.X, (tk.SCROLL, 1, tk.UNITS)),
+  '<<PrevLine>>': (tk.Y, (tk.SCROLL, -1, tk.UNITS)),
+  '<<NextLine>>': (tk.Y, (tk.SCROLL, 1, tk.UNITS))
+}
+
+ADD = '+'
+
+# a regex that handles text substitutions in scripts
+# that properly handles escaped (%%) substitutions (which str.replace would not)
+RE_SCRIPT = re.compile('%(.)')
+
+_stack = []
+
+# this can't be a set
+# for every window added, it must be removed once
+# otherwise a new window with the same name might get randomly removed
+# as the previous gets garbage collected at some later time
+_windows = []
+
+
+def insert_embed(text, widget, line=0):
+  # width for the widget needs to be set explicitly, not by its geometry manager
+  widget.pack_propagate(False)
+  widget.grid_propagate(False)
+  
+  text['state'] = tk.NORMAL
+  
+  try:
+    # if the placeholder exists, then delete it
+    try: text.delete(text.embed)
+    except tk.TclError: pass
+    
+    # use the insertion cursor so that it moves from the linestart to the lineend
+    text.mark_set(tk.INSERT,
+      '%d.0' % line if line > 0 else '%s - %d lines' % (tk.END, -line))
+    
+    # if there is anything before us on the line, insert a newline
+    if text.compare(tk.INSERT, '>', '%s linestart' % tk.INSERT):
+      text.insert(tk.INSERT, '\n')
+    
+    # actual magic happens here
+    text.window_create(tk.INSERT, window=widget, stretch=True)
+    
+    # if there is anything after us on the line, insert a newline
+    if text.compare(tk.INSERT, '<', '%s lineend' % tk.INSERT):
+      text.insert(tk.INSERT, '\n')
+  finally:
+    text['state'] = tk.DISABLED
+
+
+def _peek_embed(M):
+  # if some other widget has already handled this event
+  # then don't do anything
+  if not int(M):
+    while _stack:
+      text = _stack[-1]
+      if gui.test_widget(text): return text
+      
+      # throw out dead text
+      _stack.pop()
+  
+  return ''
+
+
+def _root_embed():
+  root = None
+  
+  def get():
+    nonlocal root
+    
+    if not root:
+      # there's a bunch of stuff we only want to do once
+      # but we need the interpreter to be running to do it
+      # i.e. there needs to be a root window
+      # so all of that stuff is done in here
+      root_window = gui.get_root_window()
+      tk_ = root_window.tk
+      
+      def bind(*args):
+        return tk_.call('interp', 'invokehidden', '', 'bind', *args)
+      
+      W = root_window.register(_peek_embed)
+      repl_W = lambda match: f'${W}' if match.group(1) == 'W' else match.group()
+      
+      def focus(*args):
+        # allow getting focus, prevent setting focus
+        if len(args) == 1: return ''
+        return tk_.call('interp', 'invokehidden', '', 'focus', *args)
+      
+      focus_cbname = root_window.register(focus)
+      
+      def view(widget, name):
+        view, args = VIEWS[name]
+        
+        getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
+      
+      view_cbname = root_window.register(view)
+      
+      bindtag = None
+      
+      def name_sequence(sequence):
+        # bind the sequence to the dummy bindtag
+        bind(bindtag, sequence, ' ')
+        
+        # get the name, which should be the only binding
+        # then unbind the sequence
+        try: name, = bind(bindtag)
+        finally: bind(bindtag, sequence, '')
+        return str(name)
+      
+      bindtag = gui.bindtag_for_object(name_sequence)
+      
+      def bind_window(window, name):
+        # we always need to do the main script
+        scripts = window.embed.setdefault(name, [])
+        
+        if scripts:
+          # set up the bindings that were originally on the window
+          # these scripts *will* already have a + prefix if they need to be added
+          for script in scripts:
+            bind(window, name, script)
+        else:
+          # back up the binding that was already on the window before
+          # we get this binding from Tk, so it shouldn't begin with a + prefix
+          script = bind(window, name)
+          assert not script.startswith(ADD), 'script must not be prefixed'
+          
+          scripts.append(script)
+        
+        # we want to make the arrow keys scroll instantly
+        # default behaviour is to move the text marker, which
+        # will eventually scroll, but only when it hits the bottom of the screen
+        # this is the only instance where we want to forego the Text class defaults
+        if name in VIEWS:
+          script = f'{view_cbname} %W {name}'
+        else:
+          # note: the scripts are *not* stripped of leading/trailing whitespace
+          # a + after a space is not interpreted as a prefix
+          script = bind(CLASS_TEXT, name)
+          assert not script.startswith(ADD), 'script must not be prefixed'
+          
+          # if script is empty, we can skip it entirely
+          if not script: return
+        
+        bind(window, name,
+          
+          f'''+set {W} [{W} %M]
+          if {{${W} == ""}} {{ continue }}
+          
+          interp hide {{}} focus
+          interp alias {{}} focus {{}} {focus_cbname}
+          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+          
+          interp alias {{}} focus {{}}
+          interp expose {{}} focus
+          return -options $options $result'''
+        )
+      
+      def bind_alias(*args):
+        # if we are binding a new script to the Text class
+        # propagate it to all the windows
+        # if we are binding a new script to a window
+        # then add the binding, before the Text class binding
+        try: class_, sequence, script = args
+        except ValueError: pass
+        else:
+          class_ = str(class_)
+          
+          if class_ == CLASS_TEXT:
+            # we check for the Text class first to avoid an unnecessary lookup on windows
+            # here we need the binding to be applied in advance of calling bind_window
+            # which will copy the resulting class binding onto the windows
+            result = bind(*args)
+            
+            # filter out dead windows so bind_window doesn't die on them
+            # do not remove dead windows from the list! No touching that here
+            # only the window getting destroyed should remove it
+            widgets = {}
+            
+            for window in _windows:
+              try: widget = root_window.nametowidget(window)
+              except KeyError: continue
+              
+              # don't do this one if we've done it already
+              if not yamosse_utils.dict_once(widgets, widget): continue
+              
+              if not gui.test_widget(widget): continue
+              bind_window(widget, name_sequence(sequence))
+            
+            return result
+          
+          if class_ in _windows:
+            # handle the case where you want to put your own binding onto one of these windows
+            # we don't need to worry about if this window is dead
+            # because bind is supposed to fail with an error if it is anyway
+            try: window = root_window.nametowidget(class_)
+            except KeyError: pass
+            else:
+              name = name_sequence(sequence)
+              scripts = window.embed.setdefault(name, [])
+              
+              # technically optional, but a good idea
+              if not script.startswith(ADD):
+                scripts.clear()
+              
+              scripts.append(script)
+              
+              bind_window(window, name)
+              return ''
+        
+        return bind(*args)
+      
+      tk_.call('interp', 'hide', '', 'bind')
+      tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind_alias))
+      
+      root = (bind, bind_window)
+    
+    return root
+  
+  return get
+
+_get_root_embed = _root_embed()
+
+
+def _configure_text_embed(e):
+  widget = e.widget
+  
+  # set the width of the children to fill the available space
+  for child in widget.winfo_children():
+    inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
+    child['width'] = e.width - (inset * 2)
+
+
+def _enter_text_embed(e):
+  widget = e.widget
+  
+  if _stack and _stack[-1] == widget: return
+  _stack.append(widget)
+
+
+def _leave_text_embed(e):
+  if not _stack: return
+  _stack.pop()
+
+
+def text_embed(text):
+  if str(text.winfo_class()) != CLASS_TEXT:
+    raise ValueError('text must have class %r' % CLASS_TEXT)
+  
+  try:
+    if text.embed: raise RuntimeError('text_embed is single shot per-text')
+  except AttributeError: pass
+  
+  # doubles as a placeholder to prevent text selection
+  text.embed = ttk.Frame(text)
+  
+  text['state'] = tk.NORMAL
+  
+  try:
+    embed = text.embed
+    
+    # we don't use enable_widget here as we don't actually want that
+    # (it would disable any child widgets within the text)
+    # it should not take focus until an event is fired (it hoards the focus otherwise)
+    # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
+    # (put a border around the surrounding frame instead)
+    text.configure(takefocus=False, cursor='',
+      bg=gui.lookup_style_widget(embed, 'background'), borderwidth=0)
+    
+    # unbind from Text class so we can't get duplicate events
+    # they'll be received from window instead
+    gui.prevent_default_widget(text)
+    
+    text.bind('<Configure>', _configure_text_embed)
+    
+    text.bind('<Enter>', _enter_text_embed)
+    text.bind('<Leave>', _leave_text_embed)
+    
+    # delete anything that might've been typed in before the text was passed to us
+    # then create the placeholder frame
+    text.delete('1.0', tk.END)
+    text.window_create(tk.END, window=embed, stretch=True)
+  finally:
+    text['state'] = tk.DISABLED
+  
+  window = text.winfo_toplevel()
+  
+  try: embed = window.embed
+  except AttributeError:
+    window.embed = {}
+    
+    # the purpose of converting the windows to strings is so that we don't hold
+    # references to their objects that would potentially keep them alive as zombies
+    # even after they have actually been destroyed
+    window_name = str(window)
+    _windows.append(window_name)
+    
+    # this is where we clean up windows
+    try: window_del = window.__del__
+    except AttributeError: window_del = lambda: None
+    
+    def del_():
+      try: window_del()
+      finally: _windows.remove(window_name)
+    
+    window.__del__ = del_
+  
+  bind, bind_window = _get_root_embed()
+  
+  # this step must be done out here
+  # if we only got the Text class bindings in get_root_embed
+  # then they'd become out of date on future calls
+  # this doesn't need to go through name_sequence
+  # these are already names
+  names = set([str(s) for s in bind(CLASS_TEXT)])
+  
+  # need to ensure the views are bound at least once
+  for name in VIEWS:
+    bind_window(window, name)
+    names.discard(name)
+  
+  for name in names:
+    bind_window(window, name)

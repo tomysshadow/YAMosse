@@ -4,6 +4,7 @@ import webbrowser
 from os import fsencode as fsenc
 
 from .. import gui
+from . import sorted as gui_sorted
 from . import calibrate as gui_calibrate
 
 import yamosse.output as yamosse_output
@@ -101,7 +102,7 @@ def make_classes(frame, variables, class_names):
     variables['classes'] = [int(s) for s in e.widget.selection()]
   
   treeview.bind('<<TreeviewSelect>>', select_treeview)
-  gui.treeview_sorted(treeview)
+  gui_sorted.treeview_sorted(treeview)
   gui.configure_widths_treeview(treeview, {0: 3})
   
   buttons_frame = treeview_widgets[2][0]
@@ -336,7 +337,6 @@ def make_output_file_options(frame, variables):
   
   item_delimiter_frame = ttk.Frame(frame)
   item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
-  
   item_delimiter_variable = variables['item_delimiter']
   
   def invalid_item_delimiter(W, v):
