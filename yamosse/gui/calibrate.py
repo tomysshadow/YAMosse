@@ -34,7 +34,7 @@ def make_footer(frame, ok, cancel):
   return undooptions, reset_button
 
 
-def _undoable_scales(scales, text, undooptions, reset_button):
+def _undoable_scales(scales, text, reset_button, undooptions):
   DEFAULTS = {s: DEFAULT_SCALE_VALUE for s in scales}
   
   oldvalues = {s: s.get() for s in scales}
@@ -134,6 +134,6 @@ def make_calibrate(frame, variables, class_names):
     lambda: gui.release_modal_window(window)
   )
   
-  _undoable_scales(scales, calibration_text, undooptions, reset_button)
+  _undoable_scales(scales, calibration_text, reset_button, undooptions)
   
   gui.set_modal_window(window)
