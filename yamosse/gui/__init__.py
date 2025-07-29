@@ -528,7 +528,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   padding_width = width_padding(DEFAULT_TREEVIEW_CELL_PADDING)
   
   font = lookup_style_widget(treeview, 'font')
-  assert font, 'font must not be empty'
+  if not font: font = 'TkDefaultFont'
   
   fonts = {font}
   
@@ -538,15 +538,14 @@ def measure_widths_treeview(treeview, widths, item=None):
   
   try: show = [str(s) for s in show]
   except TypeError: pass
-  else:
-    show_headings = 'headings' in show
+  else: show_headings = 'headings' in show
+  
+  if show_headings:
+    padding_width = max(padding_width, width_padding(
+      lookup_style_widget(treeview, 'padding', element='Heading')))
     
-    if show_headings:
-      padding_width = max(padding_width, width_padding(
-        lookup_style_widget(treeview, 'padding', element='Heading')))
-      
-      font = lookup_style_widget(treeview, 'font', element='Heading')
-      if font: fonts.add(font)
+    font = lookup_style_widget(treeview, 'font', element='Heading')
+    if font: fonts.add(font)
   
   def width_image(name):
     return int(treeview.tk.call('image', 'width', name)) if name else 0
