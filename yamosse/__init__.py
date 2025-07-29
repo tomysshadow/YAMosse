@@ -55,7 +55,7 @@ MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 
 def open_file(path):
   try: os.startfile(path)
-  except NotImplementedError:
+  except AttributeError:
     subprocess.check_call(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
 
 
