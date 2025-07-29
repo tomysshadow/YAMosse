@@ -68,7 +68,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   text.bind_class(bindtag, '<ButtonRelease>', data)
   
   def reset():
-    def revert(newvalues=DEFAULTS):
+    def revert(newvalues=defaults):
       nonlocal oldvalues
       
       for scale, newvalue in newvalues.items():
@@ -109,13 +109,13 @@ def make_calibrate(frame, variables, class_names):
   calibration_variable = variables['calibration']
   calibration_variable += [DEFAULT_SCALE_VALUE] * (len(class_names) - len(calibration_variable))
   
-  index = 0
+  num = 0
   scales = []
   
   for class_name, calibration in zip(class_names, calibration_variable):
     scale_frame = ttk.Frame(calibration_text)
     
-    scale = gui.make_scale(scale_frame, name='%d. %s' % (index := index + 1, class_name),
+    scale = gui.make_scale(scale_frame, name='%d. %s' % (num := num + 1, class_name),
       to=200)[1]
     
     scale.set(int(calibration))
