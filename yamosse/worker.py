@@ -34,7 +34,7 @@ _root_model_yamnet_dir = yamosse_root.root(MODEL_YAMNET_DIR)
 _tfhub_enabled = not os.path.isdir(_root_model_yamnet_dir)
 
 
-def _high_priority(psutil):
+def _high_priority(psutil=None):
   if psutil:
     psutil.Process().nice(psutil.HIGH_PRIORITY_CLASS)
     return
@@ -159,7 +159,7 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   
   options.worker(np, model_yamnet_class_names)
   
-  if options.high_priority: _high_priority(psutil)
+  if options.high_priority: _high_priority(psutil=psutil)
   
   # currently, setting a per-CPU memory limit isn't supported by Tensorflow
   # however in future the 'GPU' argument could be removed if it does ever become supported
