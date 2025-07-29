@@ -164,7 +164,8 @@ def _root_embed():
           if not script: return
         
         # this is how we "forward" the event from the window to an arbitrary text widget
-        # so that we can get the scrolling behaviour of the default bindings
+        # so that we can get the scrolling behaviour of the default bindings whenever the mouse
+        # is over it, regardless of focus, or if there's a widget inside swallowing the event
         # this can't be done in Python because the Event object
         # (that is, the one containing e.widget, e.keysym, e.delta, etc.)
         # goes through subtle transformations when it's received from Tk
