@@ -141,6 +141,7 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   
   # currently, setting a per-CPU memory limit isn't supported by Tensorflow
   # however in future the 'GPU' argument could be removed if it does ever become supported
+  # (then error handling/logging would need to be added here for compatibility with old versions)
   gpus = tf.config.list_physical_devices('GPU')
   
   if gpus:
