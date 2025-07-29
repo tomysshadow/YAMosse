@@ -6,7 +6,7 @@ from __future__ import division, print_function
 import os
 import shlex
 import platform
-import subprocess
+from subprocess import Popen
 
 import soundfile as sf
 
@@ -56,7 +56,7 @@ MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 def open_file(path):
   try: os.startfile(path)
   except AttributeError:
-    subprocess.check_call(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
+    Popen(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
 
 
 def sf_input_filetypes():
