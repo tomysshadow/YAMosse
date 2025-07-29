@@ -34,7 +34,29 @@ _root_model_yamnet_dir = yamosse_root.root(MODEL_YAMNET_DIR)
 _tfhub_enabled = not os.path.isdir(_root_model_yamnet_dir)
 
 
-def step_progress(worker_step, current_worker_step=1.0):
+def _high_priority(psutil):
+  if psutil:
+    psutil.Process().nice(psutil.HIGH_PRIORITY_CLASS)
+    return
+  
+  import resource
+  
+  # set the soft limit as high as it can go
+  soft, hard = resource.getrlimit(resource.RLIMIT_NICE)
+  
+  if hard > soft:
+    resource.setrlimit(resource.RLIMIT_NICE, (hard, hard))
+  
+  try:
+    # try and decrease the niceness until we eventually hit a limit or error out
+    # as far as I can tell this is necessary because
+    # setting it too low just fails without doing anything
+    # and using get/setpriority would introduce a race condition
+    while os.nice(-1) > os.nice(-1): pass
+  except OSError: pass
+
+
+def _step_progress(worker_step, current_worker_step=1.0):
   current_worker_step = int(current_worker_step * PROGRESSBAR_MAXIMUM) - worker_step
   if current_worker_step <= 0: return worker_step
   
@@ -122,6 +144,7 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   # the main process consumes a non-trivial amount of memory for no benefit
   # and causes startup to take significantly longer
   import sys
+  import platform
   
   try: import tf_keras
   except ImportError:
@@ -131,13 +154,19 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   
   import numpy as np
   import tensorflow as tf
-  import psutil
+  
+  # only require psutil on Windows, as Unix can use the Python built in modules
+  # we require this even if we are not setting the process priority to high
+  # because it should be highlighted to you that you're missing the module early on
+  # in case you ever do decide to check the box to do it
+  psutil = None
+  
+  if platform.system() == 'Windows':
+    import psutil
   
   options.worker(np, model_yamnet_class_names)
   
-  if options.high_priority:
-    current_process = psutil.Process(os.getpid())
-    current_process.nice(psutil.HIGH_PRIORITY_CLASS)
+  if options.high_priority: _high_priority(psutil)
   
   # currently, setting a per-CPU memory limit isn't supported by Tensorflow
   # however in future the 'GPU' argument could be removed if it does ever become supported
@@ -284,7 +313,7 @@ def worker(file_name):
         # should I check this every loop? Would a variable to keep track actually save time...?
         if shutdown.is_set(): return None
         
-        worker_step = step_progress(worker_step, seconds / seconds_worker_steps)
+        worker_step = _step_progress(worker_step, seconds / seconds_worker_steps)
         
         assert waveform.dtype == int16, 'Bad sample type: %r' % waveform.dtype
         
@@ -312,6 +341,6 @@ def worker(file_name):
           identification.predict(identified, (int(seconds), np.array(score)))
           seconds += patch_hop_seconds
   finally:
-    step_progress(worker_step)
+    _step_progress(worker_step)
   
   return identification.timestamps(identified, shutdown)

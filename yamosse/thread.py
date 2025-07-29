@@ -1,4 +1,5 @@
 import os
+import shlex
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
 from threading import Lock
@@ -81,7 +82,7 @@ def input_file_names(input_, recursive=True):
 
 def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, options=None):
   if options:
-    weights = options.weights
+    weights, = shlex.split(options.weights)
     if weights: return open(weights, 'rb')
   
   if subsystem:
@@ -102,6 +103,7 @@ def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, o
     except FileExistsError: continue
     
     try:
+      i = shlex.quote(i)
       assert i, 'i must not be empty'
       
       if options:
