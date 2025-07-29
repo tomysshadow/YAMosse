@@ -18,7 +18,7 @@ VIEWS = {
 
 ADD = '+'
 
-# a regex that handles text substitutions in scripts
+# a regex that finds text substitutions in scripts
 # that properly handles escaped (%%) substitutions (which str.replace would not)
 RE_SCRIPT = re.compile('%(.)')
 
