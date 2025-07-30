@@ -157,6 +157,13 @@ def enable_widget(widget, enabled=True, cursor=True):
     enable_widget(child_widget, enabled=enabled, cursor=cursor)
 
 
+def after_invalidcommand_widget(widget, validate):
+  # editing a variable from within an invalidcommand normally resets validate to none
+  # this ensures it remains set to focusout
+  # see: https://www.tcl-lang.org/man/tcl8.5/TkCmd/entry.htm#M7
+  widget.after_idle(lambda: widget.configure(validate=validate))
+
+
 def prevent_default_widget(widget, class_=False, window=True, all_=True):
   bindtags = [widget]
   if class_: bindtags.append(widget.winfo_class())
@@ -209,13 +216,6 @@ def bind_truekey_widget(widget, class_='', keysym='',
     return [widget.bind_class(class_, s, c, add) for s, c in KEYS.items()]
   
   return [widget.bind(s, c, add) for s, c in KEYS.items()]
-
-
-def after_invalidcommand_widget(widget, validate):
-  # editing a variable from within an invalidcommand normally resets validate to none
-  # this ensures it remains set to focusout
-  # see: https://www.tcl-lang.org/man/tcl8.5/TkCmd/entry.htm#M7
-  widget.after_idle(lambda: widget.configure(validate=validate))
 
 
 def fpixels_widget(widget, lengths):
