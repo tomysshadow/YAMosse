@@ -418,7 +418,11 @@ def make_entry(frame, name='', **kwargs):
 def invalidcommand_spinbox(frame):
   def command(W, P, v):
     widget = frame.nametowidget(W)
-    widget.set(yamosse_utils.clamp(int(P), int(widget['from']), int(widget['to'])))
+    
+    try: number = int(P)
+    except ValueError: number = 0
+    
+    widget.set(yamosse_utils.clamp(number, int(widget['from']), int(widget['to'])))
     after_invalidcommand_widget(widget, v)
   
   return frame.register(command), '%W', '%P', '%v'
@@ -427,7 +431,11 @@ def invalidcommand_spinbox(frame):
 def validatecommand_spinbox(frame):
   def command(W, P):
     widget = frame.nametowidget(W)
-    return int(P) in range(int(widget['from']), int(widget['to']))
+    
+    try: P = int(P)
+    except ValueError: return False
+    
+    return P in range(int(widget['from']), int(widget['to']))
   
   return frame.register(command), '%W', '%P'
 
