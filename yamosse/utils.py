@@ -1,5 +1,5 @@
 def clamp(number, min_, max_):
-  return min(max_, max(number, min_))
+  return min(max_, max(min_, number))
 
 
 def intersects(a, b):
