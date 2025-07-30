@@ -1,5 +1,5 @@
 import sys
-from ast import literal_eval
+import json
 
 import yamosse
 import yamosse.worker as yamosse_worker
@@ -58,8 +58,8 @@ def main(argc, argv):
           
           a += 1
           
-          try: options_items[key] = literal_eval(args[a])
-          except ValueError:
+          try: options_items[key] = json.loads(args[a])
+          except json.JSONDecodeError:
             help_()
             return 1
   

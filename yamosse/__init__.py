@@ -41,6 +41,7 @@ PRESET_INITIALFILE = 'preset'
 PRESET_DEFAULTEXTENSION = 'json'
 
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
+MESSAGE_IMPORT_PRESET_NOT_JSON = 'The imported preset is not a valid JSON document.'
 MESSAGE_IMPORT_PRESET_INVALID = 'The imported preset is invalid.'
 
 MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
@@ -96,6 +97,9 @@ def yamosse(**kwargs):
       options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
       subsystem.show_warning(MESSAGE_IMPORT_PRESET_VERSION)
+      return
+    except yamosse_options.json.JSONDecodeError:
+      subsystem.show_warning(MESSAGE_IMPORT_PRESET_NOT_JSON)
       return
     except (KeyError, TypeError):
       subsystem.show_warning(MESSAGE_IMPORT_PRESET_INVALID)
