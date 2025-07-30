@@ -270,10 +270,11 @@ def yamosse(**kwargs):
       return None
     
     window.mainloop()
-    return window.children
   finally:
     subsystem.variables_to_object(options)
     options.dump()
+  
+  return window.children
 
 
 # "All I need, is for someone to catch my smoke signal, and rescue me, from myself."
