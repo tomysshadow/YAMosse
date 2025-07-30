@@ -144,7 +144,6 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
     # the main process consumes a non-trivial amount of memory for no benefit
     # and causes startup to take significantly longer
     import sys
-    import platform
     
     try: import tf_keras
     except ImportError:
@@ -155,14 +154,16 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
     import numpy as np
     import tensorflow as tf
     
-    # we only require psutil on Windows
-    # Python's built in modules are fine for this purpose on Linux
+    # Python's built in modules are fine for setting priority on Linux
+    # otherwise we require psutil
     # we require this even if we are not setting the process priority to high
     # because it should be highlighted to you that you're missing the module early on
     # in case you ever do decide to check the box to do it
     psutil = None
     
-    if platform.system() == 'Windows':
+    # this is used instead of platform.system() here because this is what truly determines
+    # the availability of setpriority on the os module
+    if os.name != 'posix':
       import psutil
     
     options.worker(np, model_yamnet_class_names)
