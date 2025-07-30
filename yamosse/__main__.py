@@ -59,7 +59,7 @@ def main(argc, argv):
           a += 1
           
           try: options_items[key] = json.loads(args[a])
-          except json.JSONDecodeError:
+          except (json.JSONDecodeError, UnicodeDecodeError):
             help_()
             return 1
   

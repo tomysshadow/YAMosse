@@ -98,7 +98,7 @@ def yamosse(**kwargs):
     except yamosse_options.Options.VersionError:
       subsystem.show_warning(MESSAGE_IMPORT_PRESET_VERSION)
       return
-    except yamosse_options.json.JSONDecodeError:
+    except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
       subsystem.show_warning(MESSAGE_IMPORT_PRESET_NOT_JSON)
       return
     except (KeyError, TypeError):
