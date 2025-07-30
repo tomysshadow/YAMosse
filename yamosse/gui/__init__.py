@@ -995,6 +995,7 @@ def make_undoable(frame):
     finally:
       undoing = False
   
+  # https://wiki.tcl-lang.org/page/Undo+and+Redo+undoable+widgets
   undoings = [] # list of undoable things - each is a 2 part list 
           # first the arguments to undo the operation;
           # then the arguments to redo the operation.
