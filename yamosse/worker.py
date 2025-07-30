@@ -264,7 +264,7 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
 def worker(file_name):
   # the main process can only see exception tracebacks from the worker, not initializer
   # so we raise it here to make it visible to the main process
-  if not _initializer_ex is None: raise _initializer_ex[1]
+  if _initializer_ex: raise _initializer_ex[1]
   
   shutdown = _shutdown
   if shutdown.is_set(): return None
