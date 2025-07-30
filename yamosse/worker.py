@@ -1,3 +1,4 @@
+from sys import exc_info
 import atexit
 import os
 import csv
@@ -16,6 +17,8 @@ MODEL_YAMNET_WEIGHTS_PATH = 'yamnet.h5'
 TFHUB_YAMNET_MODEL_URL = 'https://www.kaggle.com/models/google/yamnet/TensorFlow2/yamnet/1'
 
 MONO = 1
+
+_initializer_ex = None
 
 _step = None
 _steps = None
@@ -107,6 +110,8 @@ def tfhub_cache(dir_='tfhub_modules'):
 
 def initializer(worker, step, steps, receiver, sender, shutdown, options,
   model_yamnet_class_names, tfhub_enabled):
+  global _initializer_ex
+  
   global _step
   global _steps
   global _sender
@@ -120,141 +125,147 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
   
   global _yamnet
   
-  # for Linux, child process inherits receiver pipe from parent
-  # so the receiver instance must be closed explicitly here
-  # as for the sender... supposedly it would get garbage collected
-  # (somehow I don't trust it, would rather just do it explicitly)
-  atexit.register(sender.close)
-  receiver.close()
-  
-  _shutdown = shutdown
-  if shutdown.is_set(): return
-  
-  assert _tfhub_enabled == tfhub_enabled, 'tfhub_enabled mismatch'
-  
-  # seperated out because loading the worker dependencies (mainly Tensorflow) in
-  # the main process consumes a non-trivial amount of memory for no benefit
-  # and causes startup to take significantly longer
-  import sys
-  import platform
-  
-  try: import tf_keras
-  except ImportError:
-    # for Windows, where we can't use tf_keras with GPU Acceleration
-    from tensorflow import keras
-    sys.modules['tf_keras'] = keras
-  
-  import numpy as np
-  import tensorflow as tf
-  
-  # we only require psutil on Windows
-  # Python's built in modules are fine for this purpose on Linux
-  # we require this even if we are not setting the process priority to high
-  # because it should be highlighted to you that you're missing the module early on
-  # in case you ever do decide to check the box to do it
-  psutil = None
-  
-  if platform.system() == 'Windows':
-    import psutil
-  
-  options.worker(np, model_yamnet_class_names)
-  
-  if options.high_priority: _high_priority(psutil=psutil)
-  
-  # currently, setting a per-CPU memory limit isn't supported by Tensorflow
-  # however in future the 'GPU' argument could be removed if it does ever become supported
-  # (then error handling/logging would need to be added here for compatibility with old versions)
-  gpus = tf.config.list_physical_devices('GPU')
-  
-  if gpus:
-    logical_device_configuration = [
-      tf.config.LogicalDeviceConfiguration(memory_limit=options.memory_limit)
-    ]
+  try:
+    # for Linux, child process inherits receiver pipe from parent
+    # so the receiver instance must be closed explicitly here
+    # as for the sender... supposedly it would get garbage collected
+    # (somehow I don't trust it, would rather just do it explicitly)
+    atexit.register(sender.close)
+    receiver.close()
     
-    for gpu in gpus:
-      tf.config.set_logical_device_configuration(
-        gpu,
-        logical_device_configuration
-      )
-  
-  if tfhub_enabled:
-    import tensorflow_hub as tfhub
-  else:
-    # this sucks but I can't do anything about it
-    # the repo version doesn't include an __init__.py, so I can't just relative import it
-    # but I still want it linked as a git submodule so it'll get updates
-    # so it needs to be on sys.path, there's no way around it
-    sys.path.append(_root_model_yamnet_dir)
+    _shutdown = shutdown
+    if shutdown.is_set(): return
     
-    import params as yamnet_params
-    import yamnet as yamnet_model
-  
-  yamnet = None
-  
-  with worker.get_lock():
-    if tfhub_enabled:
-      if not worker.value:
-        # the first time YAMNet is downloaded it may have to download and extract
-        # so print a message then so the user knows what's going on
-        # consequent loads should be faster
-        sender.send({
-          'log': 'Loading YAMNet, please wait...'
-        })
+    assert _tfhub_enabled == tfhub_enabled, 'tfhub_enabled mismatch'
+    
+    # seperated out because loading the worker dependencies (mainly Tensorflow) in
+    # the main process consumes a non-trivial amount of memory for no benefit
+    # and causes startup to take significantly longer
+    import sys
+    import platform
+    
+    try: import tf_keras
+    except ImportError:
+      # for Windows, where we can't use tf_keras with GPU Acceleration
+      from tensorflow import keras
+      sys.modules['tf_keras'] = keras
+    
+    import numpy as np
+    import tensorflow as tf
+    
+    # we only require psutil on Windows
+    # Python's built in modules are fine for this purpose on Linux
+    # we require this even if we are not setting the process priority to high
+    # because it should be highlighted to you that you're missing the module early on
+    # in case you ever do decide to check the box to do it
+    psutil = None
+    
+    if platform.system() == 'Windows':
+      import psutil
+    
+    options.worker(np, model_yamnet_class_names)
+    
+    if options.high_priority: _high_priority(psutil=psutil)
+    
+    # currently, setting a per-CPU memory limit isn't supported by Tensorflow
+    # however in future the 'GPU' argument could be removed if it does ever become supported
+    # (then error handling/logging would need to be added here for compatibility with old versions)
+    gpus = tf.config.list_physical_devices('GPU')
+    
+    if gpus:
+      logical_device_configuration = [
+        tf.config.LogicalDeviceConfiguration(memory_limit=options.memory_limit)
+      ]
       
-      # this is done under the worker lock because
-      # the docs don't clarify if this is safe to call
-      # from multiple processes at the same time
-      # from a cursory look at the source code, it looks like there are
-      # attempts to safeguard for that, but only for downloading and not extracting
-      # i.e. two processes won't download at the same time, but if one
-      # begins extracting it's possible to get the half extracted result
-      # either way docs don't mention any of this, so I'm slapping my own lock on it
-      yamnet = tfhub.load(TFHUB_YAMNET_MODEL_URL)
+      for gpu in gpus:
+        tf.config.set_logical_device_configuration(
+          gpu,
+          logical_device_configuration
+        )
     
-    worker.value += 1
+    if tfhub_enabled:
+      import tensorflow_hub as tfhub
+    else:
+      # this sucks but I can't do anything about it
+      # the repo version doesn't include an __init__.py, so I can't just relative import it
+      # but I still want it linked as a git submodule so it'll get updates
+      # so it needs to be on sys.path, there's no way around it
+      sys.path.append(_root_model_yamnet_dir)
+      
+      import params as yamnet_params
+      import yamnet as yamnet_model
     
-    sender.send({
-      'log': 'Worker #%d: GPU Acceleration %s' % (worker.value, 'Enabled' if gpus else 'Disabled')
-    })
-  
-  if tfhub_enabled:
-    # confirm that the model has the same classes we expect
-    assert class_names(yamnet.class_map_path().numpy()
-      ) == model_yamnet_class_names, 'model_yamnet_class_names mismatch'
-  else:
-    params = yamnet_params.Params()
-    _sample_rate = params.sample_rate
+    yamnet = None
     
-    patch_window_seconds = params.patch_window_seconds
+    with worker.get_lock():
+      if tfhub_enabled:
+        if not worker.value:
+          # the first time YAMNet is downloaded it may have to download and extract
+          # so print a message then so the user knows what's going on
+          # consequent loads should be faster
+          sender.send({
+            'log': 'Loading YAMNet, please wait...'
+          })
+        
+        # this is done under the worker lock because
+        # the docs don't clarify if this is safe to call
+        # from multiple processes at the same time
+        # from a cursory look at the source code, it looks like there are
+        # attempts to safeguard for that, but only for downloading and not extracting
+        # i.e. two processes won't download at the same time, but if one
+        # begins extracting it's possible to get the half extracted result
+        # either way docs don't mention any of this, so I'm slapping my own lock on it
+        yamnet = tfhub.load(TFHUB_YAMNET_MODEL_URL)
+      
+      worker.value += 1
+      
+      sender.send({
+        'log': 'Worker #%d: GPU Acceleration %s' % (worker.value, 'Enabled' if gpus else 'Disabled')
+      })
     
-    assert patch_window_seconds > 0.0, 'patch_window_seconds must be greater than zero'
-    assert patch_window_seconds <= 1.0, 'patch_window_seconds must be less than or equal to one'
+    if tfhub_enabled:
+      # confirm that the model has the same classes we expect
+      assert class_names(yamnet.class_map_path().numpy()
+        ) == model_yamnet_class_names, 'model_yamnet_class_names mismatch'
+    else:
+      params = yamnet_params.Params()
+      _sample_rate = params.sample_rate
+      
+      patch_window_seconds = params.patch_window_seconds
+      
+      assert patch_window_seconds > 0.0, 'patch_window_seconds must be greater than zero'
+      assert patch_window_seconds <= 1.0, 'patch_window_seconds must be less than or equal to one'
+      
+      patch_hop_seconds = params.patch_hop_seconds
+      
+      assert patch_hop_seconds > 0.0, 'patch_hop_seconds must be greater than zero'
+      assert patch_hop_seconds <= patch_window_seconds, ''.join(('patch_hop_seconds must be less ',
+        'than or equal to patch_window_seconds'))
+      
+      _patch_window_seconds = patch_window_seconds
+      _patch_hop_seconds = patch_hop_seconds
+      
+      yamnet = yamnet_model.yamnet_frames_model(params)
+      
+      weights = options.weights
+      assert weights, 'weights must not be empty'
+      
+      yamnet.load_weights(weights)
     
-    patch_hop_seconds = params.patch_hop_seconds
+    _step = step
+    _steps = steps
+    _sender = sender
     
-    assert patch_hop_seconds > 0.0, 'patch_hop_seconds must be greater than zero'
-    assert patch_hop_seconds <= patch_window_seconds, ''.join(('patch_hop_seconds must be less ',
-      'than or equal to patch_window_seconds'))
-    
-    _patch_window_seconds = patch_window_seconds
-    _patch_hop_seconds = patch_hop_seconds
-    
-    yamnet = yamnet_model.yamnet_frames_model(params)
-    
-    weights = options.weights
-    assert weights, 'weights must not be empty'
-    
-    yamnet.load_weights(weights)
-  
-  _step = step
-  _steps = steps
-  _sender = sender
-  
-  _options = options
-  _yamnet = yamnet
+    _options = options
+    _yamnet = yamnet
+  except: _initializer_ex = exc_info()
 
 
 def worker(file_name):
+  # the main process can only see exception tracebacks from the worker, not initializer
+  # so we raise it here to make it visible to the main process
+  if not _initializer_ex is None: raise _initializer_ex[1]
+  
   shutdown = _shutdown
   if shutdown.is_set(): return None
   
