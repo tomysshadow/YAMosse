@@ -469,7 +469,6 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
     kwargs |= {o: v(frame) for o, v in validation_options_spinbox.items()}
   
   spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
-  
   spinbox.grid(row=0, column=1, sticky=tk.EW)
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 
