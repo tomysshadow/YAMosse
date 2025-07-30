@@ -809,6 +809,10 @@ def make_filedialog(frame, name='', textvariable=None,
   
   if not textvariable: textvariable = tk.StringVar()
   
+  # we ensure the default extension starts with a period (necessary on Linux)
+  if defaultextension:
+    defaultextension = '.%s' % defaultextension.removeprefix('.')
+  
   frame.rowconfigure(0, weight=1) # make entry vertically centered
   frame.columnconfigure(0, weight=1) # make entry horizontally resizable
   
@@ -835,9 +839,8 @@ def make_filedialog(frame, name='', textvariable=None,
     if filetypes and ask != 'directory':
       kwargs['filetypes'] = filetypes
     
-    # we ensure the default extension starts with a period (necessary on Linux)
     if defaultextension and ask == 'saveasfilename':
-      kwargs['defaultextension'] = '.%s' % defaultextension.removeprefix('.')
+      kwargs['defaultextension'] = defaultextension
     
     set_(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
   
