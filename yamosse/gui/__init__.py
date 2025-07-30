@@ -809,6 +809,12 @@ def make_filedialog(frame, name='', textvariable=None,
   
   if not textvariable: textvariable = tk.StringVar()
   
+  if asks == None: asks = ('openfilename',)
+  
+  asks_file = any(ask in asks for ask in ASKS_FILES)
+  asks_dir = 'directory' in asks
+  asks_multiple = 'openfilenames' in asks
+  
   # we ensure the default extension starts with a period (necessary on Linux)
   if defaultextension:
     defaultextension = '.%s' % defaultextension.removeprefix('.')
@@ -829,8 +835,17 @@ def make_filedialog(frame, name='', textvariable=None,
   
   def set_(data):
     if not data: return
-    if isinstance(data, str): data = (data,)
-    if 'openfilenames' in asks: data = shlex.join(data)
+    
+    is_str = isinstance(data, str)
+    
+    if asks_multiple:
+      if is_str: data = (data,)
+      
+      data = shlex.join(data)
+    elif not is_str:
+      data, = data
+      
+      assert isinstance(data, str), 'data must be a string or sequence of strings'
     
     textvariable.set(data)
   
@@ -844,8 +859,6 @@ def make_filedialog(frame, name='', textvariable=None,
       kwargs['defaultextension'] = defaultextension
     
     set_(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
-  
-  if asks == None: asks = ('openfilename',)
   
   buttons = []
   
@@ -881,17 +894,16 @@ def make_filedialog(frame, name='', textvariable=None,
       multiple = len(data) > 1
       
       # if multiple selection is not enabled, refuse multiple files
-      if multiple and not 'openfilenames' in asks:
+      if multiple and not asks_multiple:
         return tkinterdnd2.REFUSE_DROP
       
-      asks_no_files = not any(ask in asks for ask in ASKS_FILES)
-      asks_no_dirs = multiple or not 'directory' in asks
+      not_asks_dir = multiple or not asks_dir
       
       for d in data:
-        if asks_no_files and os.path.isfile(d):
+        if not asks_file and os.path.isfile(d):
           return tkinterdnd2.REFUSE_DROP
         
-        if asks_no_dirs and os.path.isdir(d):
+        if not_asks_dir and os.path.isdir(d):
           return tkinterdnd2.REFUSE_DROP
       
       return e.action
