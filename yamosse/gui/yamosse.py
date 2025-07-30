@@ -345,13 +345,7 @@ def make_output_file_options(frame, variables):
   def invalid_item_delimiter(W, v):
     # item delimiter should be a space at minimum
     item_delimiter_variable.set(yamosse_output.DEFAULT_ITEM_DELIMITER)
-    
-    # editing a variable from within an invalidcommand normally resets validate to none
-    # this ensures it remains set to focusout
-    # see: https://www.tcl-lang.org/man/tcl8.5/TkCmd/entry.htm#M7
-    item_delimiter_frame.after_idle(
-      lambda: item_delimiter_frame.nametowidget(W).configure(validate=v)
-    )
+    gui.after_invalidcommand_widget(item_delimiter_frame.nametowidget(W), v)
   
   item_delimiter_entry = gui.make_entry(
     item_delimiter_frame,
@@ -389,7 +383,7 @@ def make_worker_options(frame, variables):
   memory_limit_frame = ttk.Frame(frame)
   memory_limit_frame.grid(row=0, sticky=tk.EW)
   gui.make_spinbox(memory_limit_frame, name='Memory Limit', textvariable=variables['memory_limit'],
-    from_=1, to=4096, unit='MB')
+    from_=1, to=64*1024, unit='MB')
   
   max_workers_frame = ttk.Frame(frame)
   max_workers_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)

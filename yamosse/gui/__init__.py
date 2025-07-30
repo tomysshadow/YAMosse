@@ -211,6 +211,13 @@ def bind_truekey_widget(widget, class_='', keysym='',
   return [widget.bind(s, c, add) for s, c in KEYS.items()]
 
 
+def after_invalidcommand_widget(widget, validate):
+  # editing a variable from within an invalidcommand normally resets validate to none
+  # this ensures it remains set to focusout
+  # see: https://www.tcl-lang.org/man/tcl8.5/TkCmd/entry.htm#M7
+  widget.after_idle(lambda: widget.configure(validate=validate))
+
+
 def fpixels_widget(widget, lengths):
   return [widget.winfo_fpixels(l) for l in lengths]
 
@@ -408,11 +415,38 @@ def make_entry(frame, name='', **kwargs):
   return make_name(frame, name), entry
 
 
-def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
+def invalidcommand_spinbox(frame):
+  def command(W, P, v):
+    widget = frame.nametowidget(W)
+    widget.set(yamosse_utils.clamp(int(P), int(widget['from']), int(widget['to'])))
+    after_invalidcommand_widget(widget, v)
+  
+  return frame.register(command), '%W', '%P', '%v'
+
+
+def validatecommand_spinbox(frame):
+  def command(W, P):
+    widget = frame.nametowidget(W)
+    return int(P) in range(int(widget['from']), int(widget['to']))
+  
+  return frame.register(command), '%W', '%P'
+
+
+def make_spinbox(frame, name='', wrap=False, unit='', validate='focusout', **kwargs):
   frame.rowconfigure(0, weight=1) # make spinbox vertically centered
   frame.columnconfigure(1, weight=1) # make spinbox horizontally resizable
   
-  spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
+  # intentionally not setdefault so we don't pointlessly register commands
+  # we also don't want to define these to None as default
+  # (in case you actually want no validation)
+  if not 'invalidcommand' in kwargs:
+    kwargs['invalidcommand'] = invalidcommand_spinbox(frame)
+  
+  if not 'validatecommand' in kwargs:
+    kwargs['validatecommand'] = validatecommand_spinbox(frame)
+  
+  spinbox = ttk.Spinbox(frame, wrap=wrap, validate=validate, **kwargs)
+  
   spinbox.grid(row=0, column=1, sticky=tk.EW)
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 

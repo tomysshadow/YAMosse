@@ -260,16 +260,18 @@ def yamosse(**kwargs):
   if kwargs:
     call(export_preset, 'export_preset_file_name')
   
+  if window: window.mainloop()
+  
   # try and ensure we dump the options
   # even if we crash during a YAMScan
   # we don't do this up above during the operations that manipulate the options
   # in case they would leave it in an invalid state
+  # and we don't do it for the window mainloop
+  # because that can also change the options and leave it in an invalid state
   try:
     if kwargs:
       call(yamscan, 'output_file_name')
       return None
-    
-    window.mainloop()
   finally:
     subsystem.variables_to_object(options)
     options.dump()

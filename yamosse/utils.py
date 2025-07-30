@@ -16,6 +16,10 @@ def try_split(value, *args, **kwargs):
   except: return value
 
 
+def clamp(number, min_, max_):
+  return min(max_, max(number, min_))
+
+
 def hours_minutes(seconds):
   TO_HMS = 60
   
