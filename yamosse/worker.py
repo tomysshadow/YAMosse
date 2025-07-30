@@ -2,7 +2,6 @@ from sys import exc_info
 import atexit
 import os
 import csv
-import shlex
 
 import soundfile as sf
 
@@ -255,7 +254,6 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
       weights = options.weights
       assert weights, 'weights must not be empty'
       
-      weights, = shlex.split(options.weights)
       yamnet.load_weights(weights)
     
     _step = step

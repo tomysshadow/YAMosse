@@ -77,7 +77,7 @@ class Options:
       return value == shlex.join(shlex.split(value))
     
     assert joined(self.input), 'input must be joined'
-    assert joined(self.weights), 'weights must be joined'
+    #assert joined(self.weights), 'weights must be joined'
     
     def option(name, value, end='\n'):
       print(name, ': ', value, end=end, sep='', file=file)

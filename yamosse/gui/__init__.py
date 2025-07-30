@@ -830,8 +830,9 @@ def make_filedialog(frame, name='', textvariable=None,
   def set_(data):
     if not data: return
     if isinstance(data, str): data = (data,)
+    if 'openfilenames' in asks: data = shlex.join(data)
     
-    textvariable.set(shlex.join(data))
+    textvariable.set(data)
   
   def show(ask='openfilename'):
     kwargs = {}
