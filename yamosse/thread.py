@@ -82,8 +82,9 @@ def input_file_names(input_, recursive=True):
 
 def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, options=None):
   if options:
-    weights, = shlex.split(options.weights)
-    if weights: return open(weights, 'rb')
+    try: weights, = shlex.split(options.weights)
+    except ValueError: pass
+    else: return open(weights, 'rb')
   
   if subsystem:
     subsystem.show(values={
