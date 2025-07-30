@@ -109,8 +109,6 @@ def yamosse(**kwargs):
     subsystem.quit()
   
   def export_preset(file_name=''):
-    nonlocal options
-    
     if not file_name:
       assert window, 'file_name must not be empty if there is no window'
       
@@ -128,8 +126,6 @@ def yamosse(**kwargs):
     options.export_preset(file_name)
   
   def yamscan(output_file_name=''):
-    nonlocal options
-    
     FILETYPES = (
       ('Text Document', '*.txt'),
       ('JSON', '*.json'),
@@ -199,12 +195,15 @@ def yamosse(**kwargs):
     )
   
   def restore_defaults():
+    nonlocal options
+    
     if not subsystem.ask_yes_no(
       MESSAGE_ASK_RESTORE_DEFAULTS,
       default=False
     ): return
     
-    subsystem.variables_from_object(yamosse_options.Options())
+    options = yamosse_options.Options()
+    subsystem.variables_from_object(options)
     subsystem.quit()
   
   variables = None
@@ -261,13 +260,12 @@ def yamosse(**kwargs):
   if kwargs:
     call(export_preset, 'export_preset_file_name')
     call(yamscan, 'output_file_name')
-    return None
   
-  window.mainloop()
+  if window: window.mainloop()
   
   subsystem.variables_to_object(options)
   options.dump()
-  return window.children
+  return window.children if window else None
 
 
 # "All I need, is for someone to catch my smoke signal, and rescue me, from myself."
