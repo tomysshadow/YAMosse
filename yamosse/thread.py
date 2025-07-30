@@ -85,8 +85,8 @@ def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, o
     weights = options.weights
     
     if weights:
-      try: weights, = shlex.split(weights)
-      except ValueError: pass
+      weights, = shlex.split(weights)
+      except ValueError: raise ValueError('weights must be a single file')
       else: return open(weights, 'rb')
   
   if subsystem:
