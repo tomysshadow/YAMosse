@@ -1,3 +1,11 @@
+def clamp(number, min_, max_):
+  return min(max_, max(number, min_))
+
+
+def intersects(a, b):
+  return any(c in a for c in b)
+
+
 def ascii_backslashreplace(value):
   return str(value).encode('ascii', 'backslashreplace').decode()
 
@@ -14,10 +22,6 @@ def try_int(value, *args, **kwargs):
 def try_split(value, *args, **kwargs):
   try: return value.split(*args, **kwargs)
   except: return value
-
-
-def clamp(number, min_, max_):
-  return min(max_, max(number, min_))
 
 
 def hours_minutes(seconds):

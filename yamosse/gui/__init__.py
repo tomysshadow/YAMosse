@@ -415,45 +415,60 @@ def make_entry(frame, name='', **kwargs):
   return make_name(frame, name), entry
 
 
-def invalidcommand_spinbox(frame):
-  def command(W, P, v):
-    widget = frame.nametowidget(W)
-    
-    try: number = int(P)
-    except ValueError: number = 0
-    
-    widget.set(yamosse_utils.clamp(number, int(widget['from']), int(widget['to'])))
-    after_invalidcommand_widget(widget, v)
+def _init_validation_options_spinbox():
+  VALIDATE = 'focus'
   
-  return frame.register(command), '%W', '%P', '%v'
-
-
-def validatecommand_spinbox(frame):
-  def command(W, P):
-    widget = frame.nametowidget(W)
-    
-    try: P = int(P)
-    except ValueError: return False
-    
-    return P in range(int(widget['from']), int(widget['to']))
+  _spinbox_numbers = WeakKeyDictionary()
   
-  return frame.register(command), '%W', '%P'
+  def invalidcommand(frame):
+    def command(W, P, v):
+      widget = frame.nametowidget(W)
+      
+      try: number = int(P)
+      except ValueError: number = _spinbox_numbers[widget]
+      
+      widget.set(yamosse_utils.clamp(number, int(widget['from']), int(widget['to'])))
+      after_invalidcommand_widget(widget, v)
+    
+    return frame.register(command), '%W', '%P', '%v'
+  
+  
+  def validatecommand(frame):
+    def command(W, P):
+      widget = frame.nametowidget(W)
+      
+      try: P = int(P)
+      except ValueError: return False
+      
+      valid = P in range(int(widget['from']), int(widget['to']))
+      
+      if valid: _spinbox_numbers[widget] = P
+      return valid
+    
+    return frame.register(command), '%W', '%P'
+  
+  def validate(*args):
+    return VALIDATE
+  
+  return {
+    'invalidcommand': invalidcommand,
+    'validatecommand': validatecommand,
+    'validate': validate
+  }
+
+validation_options_spinbox = _init_validation_options_spinbox()
 
 
-def make_spinbox(frame, name='', wrap=False, unit='', validate='focusout', **kwargs):
+def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   frame.rowconfigure(0, weight=1) # make spinbox vertically centered
   frame.columnconfigure(1, weight=1) # make spinbox horizontally resizable
   
-  # intentionally not setdefault so we don't pointlessly register commands
-  # we also don't want to define these to None as default
-  # (in case you actually want no validation)
-  if not 'invalidcommand' in kwargs:
-    kwargs['invalidcommand'] = invalidcommand_spinbox(frame)
+  # we don't want to just define the args to None as default and then use these if they're None
+  # because you might actually want no validation
+  if not yamosse_utils.intersects(kwargs, validation_options_spinbox):
+    kwargs |= {o: v(frame) for o, v in validation_options_spinbox.items()}
   
-  if not 'validatecommand' in kwargs:
-    kwargs['validatecommand'] = validatecommand_spinbox(frame)
-  
-  spinbox = ttk.Spinbox(frame, wrap=wrap, validate=validate, **kwargs)
+  spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
   
   spinbox.grid(row=0, column=1, sticky=tk.EW)
   return make_name(frame, name), spinbox, make_unit(frame, unit)
@@ -853,7 +868,7 @@ def make_filedialog(frame, name='', textvariable=None,
   
   if asks == None: asks = ('openfilename',)
   
-  asks_file = any(ask in asks for ask in ASKS_FILES)
+  asks_file = yamosse_utils.intersects(asks, ASKS_FILES)
   asks_dir = 'directory' in asks
   asks_multiple = 'openfilenames' in asks
   
