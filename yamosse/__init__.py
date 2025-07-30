@@ -259,13 +259,21 @@ def yamosse(**kwargs):
   
   if kwargs:
     call(export_preset, 'export_preset_file_name')
-    call(yamscan, 'output_file_name')
   
-  if window: window.mainloop()
-  
-  subsystem.variables_to_object(options)
-  options.dump()
-  return window.children if window else None
+  # try and ensure we dump the options
+  # even if we crash during a YAMScan
+  # we don't do this up above during the operations that manipulate the options
+  # in case they would leave it in an invalid state
+  try:
+    if kwargs:
+      call(yamscan, 'output_file_name')
+      return None
+    
+    window.mainloop()
+    return window.children
+  finally:
+    subsystem.variables_to_object(options)
+    options.dump()
 
 
 # "All I need, is for someone to catch my smoke signal, and rescue me, from myself."
