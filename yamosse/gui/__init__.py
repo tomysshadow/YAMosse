@@ -425,7 +425,7 @@ def _init_validation_options_spinbox():
       widget = frame.nametowidget(W)
       
       try: number = int(P)
-      except ValueError: number = _spinbox_numbers[widget]
+      except ValueError: number = _spinbox_numbers.get(widget, 0)
       
       widget.set(yamosse_utils.clamp(number, int(widget['from']), int(widget['to'])))
       after_invalidcommand_widget(widget, v)
