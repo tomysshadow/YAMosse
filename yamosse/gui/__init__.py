@@ -835,8 +835,9 @@ def make_filedialog(frame, name='', textvariable=None,
     if filetypes and ask != 'directory':
       kwargs['filetypes'] = filetypes
     
+    # we ensure the default extension starts with a period (necessary on Linux)
     if defaultextension and ask == 'saveasfilename':
-      kwargs['defaultextension'] = defaultextension
+      kwargs['defaultextension'] = '.%s' % defaultextension.removeprefix('.')
     
     set_(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
   
