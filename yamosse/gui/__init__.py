@@ -424,6 +424,8 @@ def _init_validation_options_spinbox():
     def command(W, P, v):
       widget = frame.nametowidget(W)
       
+      # we default to zero if the widget has never had a valid value
+      # don't use setdefault here because once we clamp, we might end up with a different number
       try: number = int(P)
       except ValueError: number = _spinbox_numbers.get(widget, 0)
       
