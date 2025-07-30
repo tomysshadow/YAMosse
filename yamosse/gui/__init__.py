@@ -996,6 +996,7 @@ def _root_window():
     
     if not root_window:
       root_window = tkdnd.Tk() if tkdnd else tk.Tk()
+      _style()
     
     return root_window
   
@@ -1129,16 +1130,6 @@ def make_window(window, make_frame, *args, **kwargs):
   window.show_sizegrip = show_sizegrip
   show_sizegrip()
   
-  style = ttk.Style(window)
-  style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
-  style.configure('Title.TLabel', font=('Trebuchet MS', 24))
-  
-  if windowingsystem() == 'x11':
-    style.configure('Treeview.Heading', padding=(2, 0))
-  
-  style.layout('Borderless.TNotebook', [])
-  style.configure('Borderless.TNotebook > .TFrame', relief=tk.RAISED)
-  
   frame = ttk.Frame(window)
   frame.grid(row=1, column=1, sticky=tk.NSEW)
   return window, make_frame(frame, *args, **kwargs)
@@ -1230,6 +1221,18 @@ def set_variables_to_object(variables, object_):
       continue
     
     setattr(object_, key, value)
+
+
+def _style():
+  style = ttk.Style()
+  style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
+  style.configure('Title.TLabel', font=('Trebuchet MS', 24))
+  
+  if windowingsystem() == 'x11':
+    style.configure('Treeview.Heading', padding=(2, 0))
+  
+  style.layout('Borderless.TNotebook', [])
+  style.configure('Borderless.TNotebook > .TFrame', relief=tk.RAISED)
 
 
 def threaded():

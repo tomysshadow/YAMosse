@@ -169,6 +169,7 @@ def output(file_name, *args, **kwargs):
       self._results = None
       self._errors = None
       
+      # should be called last so file is opened as last step
       super().__init__(*args, **kwargs)
     
     def __exit__(self, *args, **kwargs):
