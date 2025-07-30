@@ -220,7 +220,8 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
       worker.value += 1
       
       sender.send({
-        'log': 'Worker #%d: GPU Acceleration %s' % (worker.value, 'Enabled' if gpus else 'Disabled')
+        'log': 'Worker #%d: GPU Acceleration %s' % (worker.value,
+          'Enabled' if gpus else 'Disabled')
       })
     
     if tfhub_enabled:
