@@ -1224,6 +1224,8 @@ def set_variables_to_object(variables, object_):
 
 
 def _style():
+  # this is an internal function, so we trust that this will only be called
+  # after we have gotten the root window
   style = ttk.Style()
   style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
   style.configure('Title.TLabel', font=('Trebuchet MS', 24))
