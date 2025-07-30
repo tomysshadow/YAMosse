@@ -74,6 +74,8 @@ PADY_QS = (0, PADDING_Q)
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
+VALIDATION_OPTIONS = ('validatecommand', 'invalidcommand', 'validate', 'vcmd')
+
 DEFAULT_MINWIDTH = -1
 
 # these default numbers come from the Tk Treeview documentation
@@ -467,7 +469,7 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   
   # we don't want to just define the args to None as default and then use these if they're None
   # because you might actually want no validation
-  if not yamosse_utils.intersects(kwargs, validation_options_spinbox):
+  if not yamosse_utils.intersects(kwargs, VALIDATION_OPTIONS):
     kwargs |= {o: v(frame) for o, v in validation_options_spinbox.items()}
   
   spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
