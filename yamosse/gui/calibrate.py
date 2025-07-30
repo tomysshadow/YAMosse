@@ -5,6 +5,8 @@ from .. import gui
 from . import embed as gui_embed
 
 TITLE = 'Calibrate'
+RESIZABLE = True
+SIZE = (520, 500)
 
 DEFAULT_SCALE_VALUE = 100
 
@@ -87,9 +89,6 @@ def _undoable_scales(scales, text, reset_button, undooptions):
 
 
 def make_calibrate(frame, variables, class_names):
-  RESIZABLE = True
-  SIZE = (520, 500)
-  
   window = frame.master
   parent = window.master
   

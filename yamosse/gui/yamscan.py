@@ -7,10 +7,14 @@ from . import progressbar as gui_progressbar
 
 import yamosse.progress as yamosse_progress
 
+TITLE = 'YAMScan'
+RESIZABLE = True
+SIZE = (540, 430)
+
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
 
-def ask_cancel(window, title, footer_widgets):
+def ask_cancel(window, footer_widgets):
   open_output_file_button, done_button = footer_widgets
   
   # while this may feel like a bit of a hack, doing it this way ensures that
@@ -18,7 +22,7 @@ def ask_cancel(window, title, footer_widgets):
   if str(done_button['text']) == 'OK': return True
   
   return messagebox.askyesno(
-    parent=window, title=title, message=ASK_CANCEL_MESSAGE, default=messagebox.NO)
+    parent=window, title=TITLE, message=ASK_CANCEL_MESSAGE, default=messagebox.NO)
 
 
 def make_footer(frame, log_text, open_output_file, done):
@@ -123,14 +127,11 @@ def show_yamscan(widgets, values=None):
   return gui.after_idle_window(window, callback)
 
 
-def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
-  RESIZABLE = True
-  SIZE = (540, 430)
-  
+def make_yamscan(frame, open_output_file, progressbar_maximum=100):
   window = frame.master
   parent = window.master
   
-  gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
+  gui.customize_window(window, TITLE, resizable=RESIZABLE, size=SIZE,
     location=gui.location_center_window(parent, SIZE))
   
   frame.rowconfigure(1, weight=1) # make log frame vertically resizable
@@ -169,7 +170,7 @@ def make_yamscan(frame, title, open_output_file, progressbar_maximum=100):
   footer_widgets = None
   
   def done(window):
-    if not ask_cancel(window, title, footer_widgets): return
+    if not ask_cancel(window, footer_widgets): return
     
     gui_progressbar.configure_progressbar(
       progressbar_widgets, progressbar_variable, yamosse_progress.RESET)

@@ -126,8 +126,6 @@ def yamosse(**kwargs):
   def yamscan(output_file_name=''):
     nonlocal options
     
-    TITLE = 'YAMScan'
-    
     FILETYPES = (
       ('Text Document', '*.txt'),
       ('JSON', '*.json'),
@@ -166,7 +164,6 @@ def yamosse(**kwargs):
       
       child, widgets = gui.gui(
         gui_yamscan.make_yamscan,
-        TITLE,
         lambda: open_file(os.path.realpath(output_file_name)),
         progressbar_maximum=yamosse_worker.PROGRESSBAR_MAXIMUM,
         child=True

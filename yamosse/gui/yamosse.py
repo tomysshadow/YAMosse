@@ -9,6 +9,9 @@ from . import calibrate as gui_calibrate
 
 import yamosse.output as yamosse_output
 
+RESIZABLE = True
+SIZE = (600, 580)
+
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
@@ -565,9 +568,6 @@ def make_footer(frame, yamscan, restore_defaults):
 def make_yamosse(frame, title, options_variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset, yamscan, restore_defaults):
-  RESIZABLE = True
-  SIZE = (600, 580)
-  
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
     iconphotos=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('emoji_u1f3a4')].values())
