@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from time import time
-from os import path
+from os.path import splitext
 from shlex import quote
 import json
 
@@ -202,7 +202,7 @@ def output(file_name, *args, **kwargs):
       self._errors = errors
       return errors
   
-  ext = path.splitext(file_name)[1]
+  ext = splitext(file_name)[1]
   
   if ext.casefold() == EXT_JSON:
     return OutputJSON(file_name, *args, **kwargs)

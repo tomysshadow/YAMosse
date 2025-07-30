@@ -1,9 +1,8 @@
-from collections.abc import Callable
-import os
-import shlex
 import pickle
 import json
 from datetime import datetime
+import shlex
+from os import cpu_count
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
@@ -115,7 +114,7 @@ class Options:
     # unless there are two or less CPU cores, in which case use only one thread
     RESERVED_THREADS = 2
     
-    max_workers = os.cpu_count()
+    max_workers = cpu_count()
     
     if max_workers > RESERVED_THREADS:
       max_workers -= RESERVED_THREADS

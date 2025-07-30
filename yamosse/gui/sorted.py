@@ -1,4 +1,3 @@
-import tkinter as tk
 import re
 from os import fsencode as fsenc
 

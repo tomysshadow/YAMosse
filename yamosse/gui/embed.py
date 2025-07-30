@@ -5,8 +5,6 @@ from weakref import WeakKeyDictionary
 
 from .. import gui
 
-import yamosse.utils as yamosse_utils
-
 CLASS_TEXT = 'Text'
 
 VIEWS = {

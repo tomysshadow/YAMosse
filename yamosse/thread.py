@@ -4,7 +4,7 @@ from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
 from threading import Lock
 from sys import exc_info
-import traceback
+from traceback import format_exception
 
 import soundfile as sf
 
@@ -309,7 +309,7 @@ def report_thread_exception(subsystem, exc, val, tb):
       
       'log': ':\n'.join((
         'Exception in YAMScan thread',
-        ''.join(traceback.format_exception(exc, val, tb))
+        ''.join(format_exception(exc, val, tb))
       ))
     })
   except yamosse_subsystem.SubsystemExit: pass
