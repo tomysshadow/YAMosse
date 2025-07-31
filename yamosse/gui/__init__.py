@@ -74,7 +74,7 @@ PADY_QS = (0, PADDING_Q)
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
-VALIDATION_OPTIONS = ('validatecommand', 'invalidcommand', 'validate', 'vcmd')
+VALIDATIONOPTIONS = ('validatecommand', 'invalidcommand', 'validate', 'vcmd')
 
 DEFAULT_MINWIDTH = -1
 
@@ -417,7 +417,10 @@ def make_entry(frame, name='', **kwargs):
   return make_name(frame, name), entry
 
 
-def _init_validation_options_spinbox():
+def _init_validationoptions_spinbox():
+  # the spinbox should always be valid on focusin
+  # but we validate on focus so we can save the valid number
+  # in case an invalid edit is made and %s is too late to recover it
   VALIDATE = 'focus'
   
   _spinbox_numbers = WeakKeyDictionary()
@@ -441,12 +444,12 @@ def _init_validation_options_spinbox():
     def command(W, P):
       widget = frame.nametowidget(W)
       
-      try: P = int(P)
+      try: number = int(P)
       except ValueError: return False
       
-      valid = P in range(int(widget['from']), int(widget['to']))
+      valid = str(number) == str(P) and number in range(int(widget['from']), int(widget['to']))
       
-      if valid: _spinbox_numbers[widget] = P
+      if valid: _spinbox_numbers[widget] = number
       return valid
     
     return frame.register(command), '%W', '%P'
@@ -460,7 +463,7 @@ def _init_validation_options_spinbox():
     'validate': validate
   }
 
-validation_options_spinbox = _init_validation_options_spinbox()
+validationoptions_spinbox = _init_validationoptions_spinbox()
 
 
 def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
@@ -469,11 +472,17 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   
   # we don't want to just define the args to None as default and then use these if they're None
   # because you might actually want no validation
-  if not yamosse_utils.intersects(kwargs, VALIDATION_OPTIONS):
-    kwargs |= {o: v(frame) for o, v in validation_options_spinbox.items()}
+  validation = not yamosse_utils.intersects(kwargs, VALIDATIONOPTIONS)
+  
+  if validation:
+    kwargs |= {o: v(frame) for o, v in validationoptions_spinbox.items()}
   
   spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
   spinbox.grid(row=0, column=1, sticky=tk.EW)
+  
+  # you can easily call validate yourself if you pass your own validatecommand
+  # but if you're relying on the default, we do it, as it's required for the scheme to work
+  if validation: spinbox.validate()
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 
 
@@ -877,7 +886,7 @@ def make_filedialog(frame, name='', textvariable=None,
   
   # we ensure the default extension starts with a period (necessary on Linux)
   if defaultextension:
-    defaultextension = '.%s' % defaultextension.removeprefix('.')
+    defaultextension = yamosse_utils.str_ensureprefix(defaultextension, '.')
   
   frame.rowconfigure(0, weight=1) # make entry vertically centered
   frame.columnconfigure(0, weight=1) # make entry horizontally resizable
@@ -1190,6 +1199,10 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
 
 
 def make_window(window, make_frame, *args, **kwargs):
+  for child in tuple(window.children.values()):
+    try: child.destroy()
+    except tk.TclError: pass
+  
   window.rowconfigure(1, weight=1) # make frame vertically resizable
   window.columnconfigure(1, weight=1) # make frame horizontally resizable
   

@@ -1,7 +1,7 @@
 import sys
-import json
 
 import yamosse
+import yamosse.options as yamosse_options
 import yamosse.worker as yamosse_worker
 
 
@@ -52,8 +52,8 @@ def main(argc, argv):
         if arg == '-o' or arg == '--options':
           key = args[a := a + 1]
           
-          try: options_items[key] = json.loads(args[a := a + 1])
-          except (json.JSONDecodeError, UnicodeDecodeError):
+          try: options_items[key] = yamosse_options.json.loads(args[a := a + 1])
+          except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
             help_()
             return 1
   

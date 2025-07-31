@@ -202,13 +202,17 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           done.clear()
         
         for future, file_name in done_copy.items():
-          try: results[file_name] = future.result()
-          except sf.LibsndfileError as ex: errors[file_name] = ex
+          try:
+            results[file_name] = future.result()
+            status = 'Done'
+          except sf.LibsndfileError as ex:
+            errors[file_name] = ex
+            status = 'Done (with errors)'
           
           file_names_pos += 1
           next_ = file_names_pos & BATCH_MASK
           
-          log = f'{log}Done {file_names_pos}/{file_names_len}: "{file_name}"\n'
+          log = f'{log}{status} {file_names_pos}/{file_names_len}: "{file_name}"\n'
         
         log = log.rstrip()
         

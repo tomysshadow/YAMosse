@@ -1,9 +1,11 @@
-def clamp(number, min_, max_):
-  return min(max_, max(min_, number))
+def try_int(value, *args, **kwargs):
+  try: return int(value, *args, **kwargs)
+  except ValueError: return value
 
 
-def intersects(a, b):
-  return any(c in a for c in b)
+def try_split(value, *args, **kwargs):
+  try: return value.split(*args, **kwargs)
+  except AttributeError: return value
 
 
 def ascii_backslashreplace(value):
@@ -14,14 +16,8 @@ def latin1_unescape(value):
   return str(value).encode('latin1', 'backslashreplace').decode('unicode_escape')
 
 
-def try_int(value, *args, **kwargs):
-  try: return int(value, *args, **kwargs)
-  except: return value
-
-
-def try_split(value, *args, **kwargs):
-  try: return value.split(*args, **kwargs)
-  except: return value
+def clamp(number, min_, max_):
+  return min(max_, max(min_, number))
 
 
 def hours_minutes(seconds):
@@ -34,6 +30,14 @@ def hours_minutes(seconds):
     return f'{h:.0f}:{m:02.0f}:{s:02.0f}'
   
   return f'{m:.0f}:{s:02.0f}'
+
+
+def intersects(a, b):
+  return any(c in a for c in b)
+
+
+def str_ensureprefix(s, prefix):
+  return ''.join((prefix, s.removeprefix(prefix)))
 
 
 def dict_peekitem(d, *args, **kwargs):

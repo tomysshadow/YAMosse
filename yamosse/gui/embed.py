@@ -87,7 +87,9 @@ def _root_embed():
         return tk_.call('interp', 'invokehidden', '', 'bind', *args)
       
       W = root_window.register(_peek_embed)
-      repl_W = lambda match: f'${W}' if match.group(1) == 'W' else match.group()
+      
+      def repl_W(match):
+        return f'${W}' if match.group(1) == 'W' else match.group()
       
       def focus(*args):
         # allow getting focus, prevent setting focus
