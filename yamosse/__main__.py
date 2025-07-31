@@ -29,7 +29,7 @@ def main(argc, argv):
   argc = len(args)
   
   kwargs = {}
-  options_items = {}
+  options_attrs = {}
   argc2 = argc - 1
   argc3 = argc - 2
   
@@ -49,15 +49,15 @@ def main(argc, argv):
       elif arg == '-y' or arg == '--yamscan':
         kwargs['output_file_name'] = args[a := a + 1]
       elif a < argc3:
-        if arg == '-o' or arg == '--options':
+        if arg == '-o' or arg == '--option':
           key = args[a := a + 1]
           
-          try: options_items[key] = yamosse_options.json.loads(args[a := a + 1])
+          try: options_attrs[key] = yamosse_options.json.loads(args[a := a + 1])
           except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
             help_()
             return 1
   
-  if options_items: kwargs['options_items'] = options_items
+  if options_attrs: kwargs['options_attrs'] = options_attrs
   
   yamosse_worker.tfhub_cache()
   

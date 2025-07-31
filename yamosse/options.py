@@ -135,10 +135,10 @@ class Options:
     with open(_root_file_name, 'wb') as f:
       pickle.dump(self, f)
   
-  def set(self, items, strict=True):
+  def set(self, attrs, strict=True):
     for key, value in vars(self).items():
-      if strict or key in items:
-        setattr(self, key, type(value)(items[key]))
+      if strict or key in attrs:
+        setattr(self, key, type(value)(attrs[key]))
   
   @classmethod
   def import_preset(cls, file_name):
