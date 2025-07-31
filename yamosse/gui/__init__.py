@@ -347,17 +347,14 @@ enable_traversal_button, disable_traversal_button = _traversal_button()
 def link_radiobuttons(radiobuttons, variable):
   radiobuttons = dict(radiobuttons)
   
-  widgets = tuple(radiobuttons.values())
-  radiobuttons = tuple(radiobuttons.keys())
-  
   def show():
-    for w, widget in enumerate(widgets):
+    for w, widget in enumerate(radiobuttons.values()):
       if not widget: continue
       
       enabled = (w == variable.get())
       enable_widget(widget, enabled=enabled)
   
-  for r, radiobutton in enumerate(radiobuttons):
+  for r, radiobutton in enumerate(radiobuttons.keys()):
     radiobutton.configure(value=r, variable=variable, command=show)
   
   show()
@@ -1199,7 +1196,7 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
 
 
 def make_window(window, make_frame, *args, **kwargs):
-  for child in tuple(window.children.values()):
+  for child in list(window.children.values()):
     try: child.destroy()
     except tk.TclError: pass
   
