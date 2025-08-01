@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 
 import yamosse.utils as yamosse_utils
 
@@ -98,9 +99,7 @@ def identification(option):
     def timestamps(self, class_predictions, shutdown):
       # create timestamps from predictions/scores
       results = {}
-      
-      options = self.options
-      timespan = options.timespan
+      timespan = self.options.timespan
       
       for class_, prediction_scores in class_predictions.items():
         if shutdown.is_set(): return None
@@ -267,7 +266,7 @@ def identification(option):
         # we also don't care about timestamps in this case
         # so the None key is used exclusively
         if options.timespan_span_all:
-          class_scores = top_scores.setdefault(TIMESTAMP_ALL, {})
+          class_scores = top_scores.setdefault(TIMESTAMP_ALL, OrderedDict())
           class_indices = score.argsort()[::-1][:options.top_ranked]
           
           # here we need to go back to storing this as a stock Python list
@@ -302,8 +301,8 @@ def identification(option):
         # but now we've averaged the scores so it's all outta whack
         # so we gotta sort it now again
         # just using the stock Python functions this time, because now this is a dictionary
-        top_scores[TIMESTAMP_ALL] = yamosse_utils.dict_sorted(class_scores,
-          key=lambda item: item[1], reverse=True)
+        top_scores[TIMESTAMP_ALL] = OrderedDict(sorted(class_scores,
+          key=lambda item: item[1], reverse=True))
         
         return
       
@@ -317,8 +316,8 @@ def identification(option):
       if default is score:
         scores = np.mean(scores, axis=0)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
-        top_scores[top] = dict(zip(classes[class_indices].tolist(),
-          scores[class_indices].tolist()))
+        top_scores[top] = OrderedDict(zip(classes[class_indices].tolist(),
+          scores[class_indices]))
         
         return
       
@@ -327,7 +326,50 @@ def identification(option):
     
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
-      return top_scores
+      
+      results = {}
+      predictions = list(top_scores.keys())
+      
+      if not predictions: return results
+      predictions_len = len(predictions)
+      
+      np = self.np
+      timespan = self.options.timespan
+      
+      score_end = predictions[0]
+      
+      begin = score_end
+      score_begin = score_end
+      
+      class_scores = top_scores[score_end]
+      result = [np.fromiter(class_scores.values(), dtype=float)]
+      
+      for prediction_end in range(1, predictions_len + 1):
+        if shutdown.is_set(): return None
+        
+        if prediction_end != predictions_len:
+          score_end = predictions[prediction_end]
+          
+          if score_begin + timespan == score_end:
+            class_scores = top_scores[score_end]
+            
+            if class_scores.keys() == top_scores[score_begin].keys():
+              score_begin = score_end
+              result.append(np.fromiter(class_scores.values(), dtype=float))
+              continue
+        
+        end = score_end - timespan
+        timestamp = (begin, end) if begin + timespan < end else begin
+        
+        results[timestamp] = dict(zip(class_scores.keys(), np.mean(result, axis=0).tolist()))
+        
+        begin = score_end
+        score_begin = score_end
+        
+        class_scores = top_scores[score_end]
+        result = [np.fromiter(class_scores.values(), dtype=float)]
+        
+      return results
     
     @classmethod
     def hms(cls, results):
@@ -372,6 +414,15 @@ def identification(option):
           print(classes, file=file)
         
         print('', file=file)
+    
+    @classmethod
+    @staticmethod
+    def key_result(item):
+      begin = item[0]
+      
+      try: begin, end = begin
+      except TypeError: return begin, 0
+      return begin, end
   
   if option == IDENTIFICATION_CONFIDENCE_SCORE:
     return IdentificationConfidenceScore
