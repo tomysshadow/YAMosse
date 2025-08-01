@@ -328,24 +328,29 @@ def identification(option):
       self.predict(top_scores)
       
       results = {}
-      predictions = list(top_scores.keys())
       
+      predictions = list(top_scores.keys())
       if not predictions: return results
-      predictions_len = len(predictions)
       
       np = self.np
       timespan = self.options.timespan
       
+      score_begin = None
       score_end = predictions[0]
       
-      begin = score_end
-      score_begin = score_end
+      predictions_len = len(predictions)
       
-      class_scores = top_scores[score_end]
-      result = [np.fromiter(class_scores.values(), dtype=float)]
-      
-      for prediction_end in range(1, predictions_len + 1):
+      for prediction_end in range(predictions_len + 1):
         if shutdown.is_set(): return None
+        
+        if score_begin != score_end:
+          begin = score_end
+          score_begin = score_end
+          
+          class_scores = top_scores[score_end]
+          result = [np.fromiter(class_scores.values(), dtype=float)]
+          
+          if not prediction_end: continue
         
         if prediction_end != predictions_len:
           score_end = predictions[prediction_end]
@@ -362,12 +367,6 @@ def identification(option):
         timestamp = (begin, end) if begin + timespan < end else begin
         
         results[timestamp] = dict(zip(class_scores.keys(), np.mean(result, axis=0).tolist()))
-        
-        begin = score_end
-        score_begin = score_end
-        
-        class_scores = top_scores[score_end]
-        result = [np.fromiter(class_scores.values(), dtype=float)]
         
       return results
     
