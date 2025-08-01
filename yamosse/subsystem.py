@@ -7,6 +7,7 @@ try: from . import gui
 except ImportError: gui = None
 
 class SubsystemExit(Exception): pass
+class SubsystemWarning(Warning): pass
 
 
 def subsystem(window, title, variables):
@@ -20,9 +21,8 @@ def subsystem(window, title, variables):
     def show(self, values=None):
       pass
     
-    @abstractmethod
     def show_warning(self, message, parent=None):
-      pass
+      raise SubsystemWarning(message)
     
     @abstractmethod
     def ask_yes_no(self, message, default=None, parent=None):
@@ -104,10 +104,6 @@ def subsystem(window, title, variables):
     def show(values=None):
       if values and 'log' in values:
         print(yamosse_utils.ascii_backslashreplace(values['log']))
-    
-    @staticmethod
-    def show_warning(message, parent=None):
-      print(message)
     
     @staticmethod
     def ask_yes_no(message, default=None, parent=None):

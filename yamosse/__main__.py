@@ -3,6 +3,7 @@ import sys
 import yamosse
 import yamosse.options as yamosse_options
 import yamosse.worker as yamosse_worker
+import yamosse.subsystem as yamosse_subsystem
 
 
 def help_():
@@ -61,7 +62,12 @@ def main(argc, argv):
   
   yamosse_worker.tfhub_cache()
   
-  while yamosse.yamosse(**kwargs): pass
+  try:
+    while yamosse.yamosse(**kwargs): pass
+  except yamosse_subsystem.SubsystemWarning as ex:
+    print(ex)
+    return 1
+  
   return 0
 
 
