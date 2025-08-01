@@ -163,6 +163,9 @@ def files(input_, model_yamnet_class_names, subsystem, options):
     )
     
     try:
+      def show_received():
+        while receiver.poll(): subsystem.show(values=receiver.recv())
+      
       # the done dictionary is keyed by future, not file name
       # it doesn't really matter which is the key since we loop through everything
       # but this way, we guarantee there are no duplicate or dropped futures
@@ -177,7 +180,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
       
       # show any value received by the receiver
       # then show progress and logs for the futures that are done
-      def clear_done_normal(received):
+      def clear_done_normal():
         nonlocal done
         nonlocal done_lock
         
@@ -221,7 +224,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
             'log': log
           })
         
-        subsystem.show(values=received)
+        show_received()
       
       clear_done = None
       
@@ -229,7 +232,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
       # set the progress bar to normal if the worker has started
       # or if there is a future that is done
       # then change into the normal state so we don't have to continually check this
-      def clear_done_loading(received):
+      def clear_done_loading():
         nonlocal done
         nonlocal done_lock
         
@@ -248,10 +251,10 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           })
           
           clear_done = clear_done_normal
-          clear_done_normal(received)
+          clear_done_normal()
           return
         
-        subsystem.show(values=received)
+        show_received()
       
       clear_done = clear_done_loading
       
@@ -276,14 +279,11 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         while next_ and file_names_pos < file_names_len:
           # show any values that we've gotten while waiting for the files to process
           # wait for up to a second so we aren't busy waiting
-          # note that this only logs a single message at a time
-          # (so that new incoming logs won't have the side effect of keeping the window alive)
-          clear_done(receiver.recv() if receiver.poll(timeout=1) else None)
+          # even if we didn't get any values, clear the done futures
+          receiver.poll(timeout=1)
+          clear_done()
         
         next_ = NEXT_SUBMITTING
-      
-      # clean up any more messages still waiting for us after we've read all the files
-      while receiver.poll(): subsystem.show(values=receiver.recv())
     finally:
       # process pool executor must be shut down first
       # so that no exception can prevent it from getting shut down
