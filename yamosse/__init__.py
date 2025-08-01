@@ -38,7 +38,7 @@ PRESET_FILETYPES = (
 
 PRESET_INITIALDIR = 'My Presets'
 PRESET_INITIALFILE = 'preset'
-PRESET_DEFAULTEXTENSION = 'json'
+PRESET_DEFAULTEXTENSION = '.json'
 
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
 MESSAGE_IMPORT_PRESET_NOT_JSON = 'The imported preset is not a valid JSON document.'
@@ -133,7 +133,7 @@ def yamosse(**kwargs):
     )
     
     INITIALDIR = 'My YAMScans'
-    DEFAULTEXTENSION = 'txt'
+    DEFAULTEXTENSION = '.txt' # must start with period on Linux
     
     subsystem.variables_to_object(options)
     
