@@ -328,14 +328,11 @@ def identification(option):
       self.predict(top_scores)
       
       results = {}
-      
-      predictions = list(top_scores.keys())
-      if not predictions: return results
-      
-      np = self.np
       timespan = self.options.timespan
+      np = self.np
       
-      scores = []
+      class_scores_begin = {}
+      class_scores_end = {}
       
       begin = 0
       end = 0
@@ -343,10 +340,10 @@ def identification(option):
       score_begin = 0
       score_end = 0
       
-      class_scores_begin = {}
-      class_scores_end = {}
-      
+      predictions = list(top_scores.keys())
       predictions_len = len(predictions)
+      
+      scores = []
       
       for prediction in range(predictions_len + 1):
         if shutdown.is_set(): return None
