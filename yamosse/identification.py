@@ -366,7 +366,7 @@ def identification(option):
             # this is where it's important that these were created as OrderedDict
             # as we want to ensure not only that both timestamps have the same classes
             # but also, that they are in the same order
-            # these should not compare equal if the classes are in a different order
+            # these should not compare equal if the keys are in a different order
             if prediction != predictions_len and score_begin == score_end:
               if class_scores_begin.keys() == class_scores_end.keys():
                 scores.append(np.fromiter(class_scores_end.values(), dtype=float))
