@@ -96,8 +96,6 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
-_normalcursors = WeakKeyDictionary()
-
 
 def _init_report_callback_exception():
   reported = False
@@ -137,26 +135,33 @@ def test_widget(widget):
   else: return True
 
 
-def enable_widget(widget, enabled=True, cursor=True):
-  try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
-  except tk.TclError: pass
-  else:
-    # we do this in the try-else block
-    # this way, we'll only attempt to change the cursor
-    # if we were successfully able to change the state
-    if cursor:
-      if enabled:
-        try: widget['cursor'] = _normalcursors.pop(widget)
-        except KeyError: pass
-      else:
-        normalcursor = widget['cursor']
-        
-        if normalcursor:
-          _normalcursors[widget] = normalcursor
-          widget['cursor'] = ''
+def _init_enable_widget():
+  normalcursors = WeakKeyDictionary()
   
-  for child_widget in widget.winfo_children():
-    enable_widget(child_widget, enabled=enabled, cursor=cursor)
+  def enable_widget(widget, enabled=True, cursor=True):
+    try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
+    except tk.TclError: pass
+    else:
+      # we do this in the try-else block
+      # this way, we'll only attempt to change the cursor
+      # if we were successfully able to change the state
+      if cursor:
+        if enabled:
+          try: widget['cursor'] = normalcursors.pop(widget)
+          except KeyError: pass
+        else:
+          normalcursor = widget['cursor']
+          
+          if normalcursor:
+            normalcursors[widget] = normalcursor
+            widget['cursor'] = ''
+    
+    for child_widget in widget.winfo_children():
+      enable_widget(child_widget, enabled=enabled, cursor=cursor)
+  
+  return enable_widget
+
+enable_widget = _init_enable_widget()
 
 
 def after_invalidcommand_widget(widget, validate):
