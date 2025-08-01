@@ -29,7 +29,7 @@ class Options:
     timespan=3, timespan_span_all=False,
     background_noise_volume=1, background_noise_volume_loglinear=False,
     identification=0,
-    confidence_score=20, confidence_score_minmax=False,
+    confidence_score=50, confidence_score_minmax=False,
     top_ranked=5, top_ranked_output_timestamps=True,
     sort_by='Number of Sounds', sort_reverse=False, item_delimiter=', ',
     output_options=True, output_scores=False,
