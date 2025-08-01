@@ -414,31 +414,32 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
-        if not top_scores:
-          print('\t', None, sep='', file=file)
-          continue
-        
-        # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
-        # (it's stored this way for JSON conversion where dictionaries don't preserve their order)
-        for top_score in top_scores:
-          classes = top_score['classes']
+        try:
+          if not top_scores:
+            print('\t', None, sep='', file=file)
+            continue
           
-          # we don't want to sort classes here
-          # it should already be sorted as intended by this point
-          if output_scores:
-            classes = item_delimiter.join(
-              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in classes.items()])
-          else:
-            classes = item_delimiter.join([model_yamnet_class_names[c] for c in classes])
-          
-          print('\t', end='', file=file)
-          
-          if output_timestamps:
-            print(top_score['timestamp'], end=': ', sep='', file=file)
-          
-          print(classes, file=file)
-        
-        print('', file=file)
+          # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
+          # (it's stored this way for JSON conversion where dictionaries don't preserve their order)
+          for top_score in top_scores:
+            classes = top_score['classes']
+            
+            # we don't want to sort classes here
+            # it should already be sorted as intended by this point
+            if output_scores:
+              classes = item_delimiter.join(
+                [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in classes.items()])
+            else:
+              classes = item_delimiter.join([model_yamnet_class_names[c] for c in classes])
+            
+            print('\t', end='', file=file)
+            
+            if output_timestamps:
+              print(top_score['timestamp'], end=': ', sep='', file=file)
+            
+            print(classes, file=file)
+        finally:
+          print('', file=file)
     
     @classmethod
     @staticmethod
