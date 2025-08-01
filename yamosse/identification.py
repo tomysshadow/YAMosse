@@ -375,6 +375,9 @@ def identification(option):
             end = score_begin
             timestamp = self._range_timestamp(begin, end, timespan)
             
+            # it is not necessary to sort here again, as it would be impossible
+            # for the order to change as the result of averaging here, because
+            # we are only joining timestamps where the keys are in the same order
             results[timestamp] = dict(zip(class_scores_begin.keys(),
               np.mean(scores, axis=0).tolist()))
         finally:
