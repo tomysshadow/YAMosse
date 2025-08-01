@@ -384,7 +384,7 @@ def identification(option):
           score_begin = score_end
         
         # this bit should only be executed if the continue above is not hit
-        # scores should always have at least one item in it
+        # scores should start with at least one item in it
         # to work correctly for one-shot sounds not part of a contiguous range
         if prediction != predictions_len:
           begin = score_end
