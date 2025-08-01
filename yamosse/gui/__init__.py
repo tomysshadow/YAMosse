@@ -128,13 +128,6 @@ def _init_report_callback_exception():
 _init_report_callback_exception()
 
 
-def test_widget(widget):
-  # give a widget a "vibe check" to test it's still alive
-  try: widget.winfo_name()
-  except tk.TclError: return False
-  else: return True
-
-
 def _init_enable_widget():
   normalcursors = WeakKeyDictionary()
   
@@ -162,6 +155,13 @@ def _init_enable_widget():
   return enable_widget
 
 enable_widget = _init_enable_widget()
+
+
+def test_widget(widget):
+  # give a widget a "vibe check" to test it's still alive
+  try: widget.winfo_name()
+  except tk.TclError: return False
+  else: return True
 
 
 def after_invalidcommand_widget(widget, validate):
