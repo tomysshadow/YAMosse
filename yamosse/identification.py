@@ -335,6 +335,8 @@ def identification(option):
       np = self.np
       timespan = self.options.timespan
       
+      scores = []
+      
       begin = 0
       end = 0
       
@@ -344,7 +346,6 @@ def identification(option):
       class_scores_begin = {}
       class_scores_end = {}
       
-      result = []
       predictions_len = len(predictions)
       
       for prediction in range(predictions_len + 1):
@@ -354,9 +355,9 @@ def identification(option):
           score_end = predictions[prediction]
           class_scores_end = top_scores[score_end]
         
-        # the first loop iteration is just to initialize result
+        # the first loop iteration is just to initialize scores
         try:
-          if result:
+          if scores:
             class_scores_begin = top_scores[score_begin]
             score_begin += timespan
             
@@ -367,23 +368,23 @@ def identification(option):
               # but also, that they are in the same order
               # these should not compare equal if the classes are in a different order
               if class_scores_begin.keys() == class_scores_end.keys():
-                result.append(np.fromiter(class_scores_end.values(), dtype=float))
+                scores.append(np.fromiter(class_scores_end.values(), dtype=float))
                 continue
             
             end = score_begin
             timestamp = (begin, end) if begin + timespan < end else begin
             
             results[timestamp] = dict(zip(class_scores_begin.keys(),
-              np.mean(result, axis=0).tolist()))
+              np.mean(scores, axis=0).tolist()))
         finally:
           score_begin = score_end
         
         # this bit should only be executed if the continue above is not hit
-        # result should always have at least one item in it
+        # scores should always have at least one item in it
         # to work correctly for one-shot sounds not part of a contiguous range
         if prediction != predictions_len:
           begin = score_end
-          result = [np.fromiter(class_scores_end.values(), dtype=float)]
+          scores = [np.fromiter(class_scores_end.values(), dtype=float)]
         
       return results
     
