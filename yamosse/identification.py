@@ -335,38 +335,52 @@ def identification(option):
       np = self.np
       timespan = self.options.timespan
       
-      score_begin = None
-      score_end = predictions[0]
+      begin = 0
+      end = 0
+      
+      score_begin = 0
+      score_end = 0
+      
+      class_scores_begin = {}
+      class_scores_end = {}
       
       predictions_len = len(predictions)
       
       for prediction_end in range(predictions_len + 1):
         if shutdown.is_set(): return None
         
-        if score_begin != score_end:
-          begin = score_end
-          score_begin = score_end
+        try:
+          if prediction_end != predictions_len:
+            score_end = predictions[prediction_end]
+            class_scores_end = top_scores[score_end]
           
-          class_scores = top_scores[score_end]
-          result = [np.fromiter(class_scores.values(), dtype=float)]
-          
-          if not prediction_end: continue
-        
-        if prediction_end != predictions_len:
-          score_end = predictions[prediction_end]
-          
-          if score_begin + timespan == score_end:
-            class_scores = top_scores[score_end]
+          # the first loop iteration is just to initialize variables
+          if prediction_end:
+            class_scores_begin = top_scores[score_begin]
             
-            if class_scores.keys() == top_scores[score_begin].keys():
-              score_begin = score_end
-              result.append(np.fromiter(class_scores.values(), dtype=float))
-              continue
-        
-        end = score_end - timespan
-        timestamp = (begin, end) if begin + timespan < end else begin
-        
-        results[timestamp] = dict(zip(class_scores.keys(), np.mean(result, axis=0).tolist()))
+            # check if we are still in a contiguous range of timestamps
+            if score_begin + timespan >= score_end:
+              # this is where it's important that these were created as OrderedDict
+              # as we want to ensure not only that both timestamps have the same classes
+              # but also, that they are in the same order
+              # these should not compare equal if the classes are in a different order
+              if class_scores_begin.keys() == class_scores_end.keys():
+                result.append(np.fromiter(class_scores_end.values(), dtype=float))
+                continue
+            
+            end = score_begin - timespan
+            timestamp = (begin, end) if begin + timespan < end else begin
+            
+            results[timestamp] = dict(zip(class_scores_begin.keys(),
+              np.mean(result, axis=0).tolist()))
+          
+          # result should always have at least one item in it
+          # to work correctly for one-shot sounds not part of a contiguous range
+          if prediction_end != predictions_len:
+            begin = score_end
+            result = [np.fromiter(class_scores_end.values(), dtype=float)]
+        finally:
+          score_begin = score_end
         
       return results
     
