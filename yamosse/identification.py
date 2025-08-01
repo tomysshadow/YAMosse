@@ -358,9 +358,10 @@ def identification(option):
         try:
           if result:
             class_scores_begin = top_scores[score_begin]
+            score_begin += timespan
             
             # check if we are still in a contiguous range of timestamps
-            if score_begin + timespan >= score_end:
+            if score_begin == score_end:
               # this is where it's important that these were created as OrderedDict
               # as we want to ensure not only that both timestamps have the same classes
               # but also, that they are in the same order
@@ -369,7 +370,7 @@ def identification(option):
                 result.append(np.fromiter(class_scores_end.values(), dtype=float))
                 continue
             
-            end = score_begin - timespan
+            end = score_begin
             timestamp = (begin, end) if begin + timespan < end else begin
             
             results[timestamp] = dict(zip(class_scores_begin.keys(),
