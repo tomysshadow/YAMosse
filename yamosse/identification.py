@@ -128,8 +128,8 @@ def identification(option):
             begin = predictions[score_begin]
             
             # the cast to float here is to convert a potential Tensorflow or Numpy dtype
-            # into a Python native type, because we want to pickle this result into the main process
-            # which does not have those modules loaded
+            # into a Python native type, because we want to pickle this result
+            # into the main process which does not have those modules loaded
             timestamp = self._range_timestamp(begin, end, timespan)
             timestamp_scores[timestamp] = float(max(scores[score_begin:score_end + 1]))
             
