@@ -1330,12 +1330,12 @@ def _style():
   style.configure('Borderless.TNotebook > .TFrame', relief=tk.RAISED)
 
 
-def threaded():
-  assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
-
-
 def windowingsystem():
   return get_root_window().tk.call('tk', 'windowingsystem')
+
+
+def threaded():
+  assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
 
 
 def gui(make_frame, *args, child=False, **kwargs):
