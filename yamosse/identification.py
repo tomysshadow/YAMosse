@@ -347,11 +347,11 @@ def identification(option):
       result = []
       predictions_len = len(predictions)
       
-      for prediction_end in range(predictions_len + 1):
+      for prediction in range(predictions_len + 1):
         if shutdown.is_set(): return None
         
-        if prediction_end != predictions_len:
-          score_end = predictions[prediction_end]
+        if prediction != predictions_len:
+          score_end = predictions[prediction]
           class_scores_end = top_scores[score_end]
         
         # the first loop iteration is just to initialize result
@@ -381,7 +381,7 @@ def identification(option):
         # this bit should only be executed if the continue above is not hit
         # result should always have at least one item in it
         # to work correctly for one-shot sounds not part of a contiguous range
-        if prediction_end != predictions_len:
+        if prediction != predictions_len:
           begin = score_end
           result = [np.fromiter(class_scores_end.values(), dtype=float)]
         
