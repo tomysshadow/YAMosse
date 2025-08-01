@@ -83,8 +83,10 @@ def _step_progress(worker_step, current_worker_step=1.0):
 
 def class_names(class_map_csv=''):
   if not class_map_csv:
-    class_map_csv = yamosse_root.root(MODEL_YAMNET_CLASS_MAP_CSV
-      ) if _tfhub_enabled else os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
+    if _tfhub_enabled:
+      class_map_csv = yamosse_root.root(MODEL_YAMNET_CLASS_MAP_CSV)
+    else:
+      class_map_csv = os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
   
   # alternate method that does not depend on Tensorflow
   with open(class_map_csv) as csv_file:
