@@ -69,14 +69,15 @@ def _step_progress(worker_step, current_worker_step=1.0):
     step.value += current_worker_step
     current_step = step.value
   
-  current_progress = current_step / steps
-  progress = int(current_progress * PROGRESSBAR_MAXIMUM)
-  if progress <= int(previous_step / steps * PROGRESSBAR_MAXIMUM): return worker_step
+  previous_progress = int(previous_step / steps * PROGRESSBAR_MAXIMUM)
+  current_progress = int(current_step / steps * PROGRESSBAR_MAXIMUM)
   
-  _sender.send({
-    'progressbar': progress,
-    'log': '%d%% complete' % progress
-  })
+  for progress in range(previous_progress + 1, current_progress + 1):
+    _sender.send({
+      'progressbar': progress,
+      'log': '%d%% complete' % progress
+    })
+  
   return worker_step
 
 

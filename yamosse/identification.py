@@ -305,7 +305,7 @@ def identification(option):
         # but now we've averaged the scores so it's all outta whack
         # so we gotta sort it now again
         # just using the stock Python functions this time, because now this is a dictionary
-        top_scores[TIMESTAMP_ALL] = OrderedDict(sorted(class_scores,
+        top_scores[TIMESTAMP_ALL] = OrderedDict(sorted(class_scores.items(),
           key=lambda item: item[1], reverse=True))
         
         return
