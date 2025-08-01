@@ -414,6 +414,10 @@ def identification(option):
       for file_name, top_scores in results.items():
         output.print_file(file_name)
         
+        if not top_scores:
+          print('\t', None, sep='', file=file)
+          continue
+        
         # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
         # (it's stored this way for JSON conversion where dictionaries don't preserve their order)
         for top_score in top_scores:
