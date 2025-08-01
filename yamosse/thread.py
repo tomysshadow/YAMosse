@@ -281,6 +281,9 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           clear_done(receiver.recv() if receiver.poll(timeout=1) else None)
         
         next_ = NEXT_SUBMITTING
+      
+      # clean up any more messages still waiting for us after we've read all the files
+      while receiver.poll(): subsystem.show(values=receiver.recv())
     finally:
       # process pool executor must be shut down first
       # so that no exception can prevent it from getting shut down
