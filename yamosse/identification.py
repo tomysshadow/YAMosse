@@ -121,10 +121,10 @@ def identification(option):
         
         scores = list(prediction_scores.values())
         
-        for prediction_end in range(1, predictions_len + 1):
+        for prediction in range(1, predictions_len + 1):
           end = predictions[score_end] + 1
           
-          if prediction_end == predictions_len or end < predictions[prediction_end]:
+          if prediction == predictions_len or end < predictions[prediction]:
             begin = predictions[score_begin]
             
             # the cast to float here is to convert a potential Tensorflow or Numpy dtype
@@ -133,9 +133,9 @@ def identification(option):
             timestamp = self._range_timestamp(begin, end, timespan)
             timestamp_scores[timestamp] = float(max(scores[score_begin:score_end + 1]))
             
-            score_begin = prediction_end
+            score_begin = prediction
           
-          score_end = prediction_end
+          score_end = prediction
         
         # class is cast to int for same reason as above (it might come from a numpy array)
         results[int(class_)] = timestamp_scores
