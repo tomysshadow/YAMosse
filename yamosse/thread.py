@@ -277,9 +277,9 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         except StopIteration: file_names_batched = None
         
         while next_ and file_names_pos < file_names_len:
-          # show any values that we've gotten while waiting for the files to process
-          # wait for up to a second so we aren't busy waiting
-          # even if we didn't get any values, clear the done futures
+          # waits for incoming values so they'll be instantly shown when they arrive
+          # we wait for up to a second so we aren't busy waiting
+          # if we didn't get any values, we still want to clear the done futures
           receiver.poll(timeout=1)
           clear_done()
         
