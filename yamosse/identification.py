@@ -344,18 +344,19 @@ def identification(option):
       class_scores_begin = {}
       class_scores_end = {}
       
+      result = []
       predictions_len = len(predictions)
       
       for prediction_end in range(predictions_len + 1):
         if shutdown.is_set(): return None
         
+        if prediction_end != predictions_len:
+          score_end = predictions[prediction_end]
+          class_scores_end = top_scores[score_end]
+        
+        # the first loop iteration is just to initialize result
         try:
-          if prediction_end != predictions_len:
-            score_end = predictions[prediction_end]
-            class_scores_end = top_scores[score_end]
-          
-          # the first loop iteration is just to initialize variables
-          if prediction_end:
+          if result:
             class_scores_begin = top_scores[score_begin]
             
             # check if we are still in a contiguous range of timestamps
@@ -373,14 +374,15 @@ def identification(option):
             
             results[timestamp] = dict(zip(class_scores_begin.keys(),
               np.mean(result, axis=0).tolist()))
-          
-          # result should always have at least one item in it
-          # to work correctly for one-shot sounds not part of a contiguous range
-          if prediction_end != predictions_len:
-            begin = score_end
-            result = [np.fromiter(class_scores_end.values(), dtype=float)]
         finally:
           score_begin = score_end
+        
+        # this bit should only be executed if the continue above is not hit
+        # result should always have at least one item in it
+        # to work correctly for one-shot sounds not part of a contiguous range
+        if prediction_end != predictions_len:
+          begin = score_end
+          result = [np.fromiter(class_scores_end.values(), dtype=float)]
         
       return results
     
