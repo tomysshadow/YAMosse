@@ -27,6 +27,10 @@ def identification(option):
     def timestamps(self, result, shutdown):
       pass
     
+    @staticmethod
+    def _range_timestamp(begin, end, timespan):
+      return (begin, end) if timespan and begin + timespan < end else begin
+    
     @classmethod
     def hms(cls, timestamps):
       # timestamps doesn't need to be a list, just an iterable
@@ -126,7 +130,7 @@ def identification(option):
             # the cast to float here is to convert a potential Tensorflow or Numpy dtype
             # into a Python native type, because we want to pickle this result into the main process
             # which does not have those modules loaded
-            timestamp = (begin, end) if timespan and begin + timespan < end else begin
+            timestamp = self._range_timestamp(begin, end, timespan)
             timestamp_scores[timestamp] = float(max(scores[score_begin:score_end + 1]))
             
             score_begin = prediction_end
@@ -359,17 +363,17 @@ def identification(option):
             score_begin += timespan
             
             # check if we are still in a contiguous range of timestamps
-            if score_begin == score_end:
-              # this is where it's important that these were created as OrderedDict
-              # as we want to ensure not only that both timestamps have the same classes
-              # but also, that they are in the same order
-              # these should not compare equal if the classes are in a different order
+            # this is where it's important that these were created as OrderedDict
+            # as we want to ensure not only that both timestamps have the same classes
+            # but also, that they are in the same order
+            # these should not compare equal if the classes are in a different order
+            if prediction != predictions_len and score_begin == score_end:
               if class_scores_begin.keys() == class_scores_end.keys():
                 scores.append(np.fromiter(class_scores_end.values(), dtype=float))
                 continue
             
             end = score_begin
-            timestamp = (begin, end) if begin + timespan < end else begin
+            timestamp = self._range_timestamp(begin, end, timespan)
             
             results[timestamp] = dict(zip(class_scores_begin.keys(),
               np.mean(scores, axis=0).tolist()))
