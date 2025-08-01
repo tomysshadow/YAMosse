@@ -382,7 +382,7 @@ def identification(option):
         if prediction != predictions_len:
           begin = score_end
           scores = [np.fromiter(class_scores_end.values(), dtype=float)]
-        
+      
       return results
     
     @classmethod
