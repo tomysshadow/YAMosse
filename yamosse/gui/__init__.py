@@ -744,7 +744,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   columns = yamosse_utils.dict_enumerate(columns) if columns else {}
   
   if show is None:
-    show = ('tree', 'headings')
+    show = ['tree', 'headings']
   else:
     show = [str(s) for s in yamosse_utils.try_split(show)]
   
