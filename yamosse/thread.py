@@ -1,4 +1,5 @@
 import os
+from shlex import quote
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
 from threading import Lock
@@ -215,7 +216,8 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           file_names_pos += 1
           next_ = file_names_pos & BATCH_MASK
           
-          log = f'{log}{status} {file_names_pos}/{file_names_len}: "{file_name}"\n'
+          # quote function is used here to match file name format used in output files
+          log = f'{log}{status} {file_names_pos}/{file_names_len}: {quote(file_name)}\n'
         
         log = log.rstrip()
         
