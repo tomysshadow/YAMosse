@@ -27,7 +27,7 @@ VERSION = '1.0.0'
 TITLE = ' '.join((NAME, VERSION))
 
 WEIGHTS_FILETYPES = (
-  ('HDF5', '*.h5'),
+  ('HDF5', '*.h5;*.hdf5'),
   ('All Files', '*.*')
 )
 
