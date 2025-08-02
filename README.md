@@ -94,7 +94,7 @@ Any filetypes that libsoundfile can open are supported. This includes all standa
 
 ## Does YAMosse support scanning videos?
 
-To scan the audio from a video file with YAMosse, you first need to convert it to one of the supported sound file formats, then scan the sound file. You could use [ffmpeg](https://ffmpeg.org) or [GoldWave](https://www.goldwave.com/goldwave.php) to do this. If the audio codec supports it, you can make the conversion process very fast by specifying to make a Direct Stream Copy (include `-c:a copy` as one of the command line arguments to ffmpeg.)
+To scan the audio from a video file with YAMosse, you first need to convert it to one of the supported sound file formats - such as MP3, for example - then scan the sound file. You could use [ffmpeg](https://ffmpeg.org) or [GoldWave](https://www.goldwave.com/goldwave.php) to do this. If the audio codec supports it, you can make the conversion process very fast by specifying to make a Direct Stream Copy (include `-c:a copy` as one of the command line arguments to ffmpeg.)
 
 ## When scanning MP3s, sometimes there are a lot of timestamps past the end of the file. Why?
 
