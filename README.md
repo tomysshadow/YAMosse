@@ -132,11 +132,11 @@ Sounds that are quieter than the Background Noise Volume (on the Advanced tab) a
 
 Silence is just one of the classes of sound that the YAMNet model can recognize like any other, and it is technically independent of the current volume level. In practice, if you're seeing Silence a lot but don't want to, you should either raise the Background Noise Volume more or just deselect it from the Classes list so it'll never be used (it's class #440 in the list.)
 
-## I get an error saying "could not find TaskbarLib.tlb," why?
+## Why do I get an error saying "could not find TaskbarLib.tlb?"
 
 The TaskbarLib.tlb file is a requirement of PyTaskbar, one of the dependencies used by YAMosse. It is included in the root folder of the project, along with this README. The TaskbarLib.tlb file must be in your current working directory when you run YAMosse. If you run the YAMosse module from outside the project directory, you need to make sure the TaskbarLib.tlb is there. Alternatively, you can uninstall PyTaskbar, because it is optional and YAMosse will work without it (but then you won't be able to see the progress of running scans in the taskbar.)
 
-## When I run YAMosse, instead of a GUI I get a command line prompt asking "please enter the output file name," why?
+## When I run YAMosse, instead of a GUI I get a command line prompt asking "please enter the output file name." Why?
 
 If the GUI fails to load because of a missing dependency, YAMosse will fallback into the command line interface. Because no arguments are specified in this case, it will ask for an output filename so it can perform a YAMScan. If this is not what you want, it is possible that your download is incomplete (there should be a "gui" folder within the yamosse module) or that your Python install is not properly configured for Tkinter.
 
