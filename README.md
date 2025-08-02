@@ -115,8 +115,11 @@ This output would indicate that there is is one second of speech (maybe a single
 In contrast, using Top Ranked identification will create a transcript of the sounds that it thinks are the most likely to be in the sound file at any given time, ignoring any sound classes that you don't have selected. The result is a list of classes over time.
 
 0:00 - 0:10: Music
+
 0:10: Speech
+
 0:11 - 0:20: Vehicle
+
 0:20 - 0:35: Speech
 
 As you can see, the timestamps are now in the left column, with the right column being the sounds that are playing at those times.
