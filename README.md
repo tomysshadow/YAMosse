@@ -4,11 +4,13 @@ Get timestamps for sound files by harnessing the power of pristine quality yams.
 
 **IMPORTANT:** this module requires Python 3.10 64-bit or newer.
 
-YAMosse is an easy to use interface for Tensorflow's [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model, written in Python. It can be used to identify the timestamps of specific sounds, or create a transcript of the sounds in a sound file. For example, you could use it to tell which parts of a sound file contain music, or which parts contain speech. It could be used to annotate a collection of sounds, or as part of an automatically generated caption system. You can use it as a GUI or use it on the command line. YAMosse has been tested on Windows 10 and on Ubuntu 24.04 LTS. It is recommended that you have at least 8 GB of RAM.
+YAMosse is an easy to use interface for Tensorflow's [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model, written in Python. It can be used to identify the timestamps of specific sounds, or create a transcript of the sounds in a sound file. For example, you could use it to tell which parts of a sound file contain music, or which parts contain speech. It could be used to annotate a collection of sounds, or as part of an automatically generated caption system. You can use it as a GUI or use it on the command line.
+
+YAMosse has been tested on Windows 10 and on Ubuntu 24.04 LTS. It is recommended that you have at least 8 GB of RAM.
 
 # Installation
 
-To use YAMosse, install the following Python packages:
+To use YAMosse, use pip to install the following Python packages:
 
  - [`numpy`](http://www.numpy.org/)
  - [`tf-keras`](https://github.com/keras-team/tf-keras) or [`keras`](https://keras.io) (`tf-keras` is recommended)
@@ -26,7 +28,7 @@ There are two installation methods you can use: installing via Tensorflow Hub, o
 
 ## Method 1: Tensorflow Hub
 
-The easiest way to install the YAMNet model is by using Tensorflow Hub. All you need to do is use pip to install the `tensorflow-hub` module. The YAMNet model will be automatically loaded the first time you perform a YAMScan. However, installing the `tensorflow-hub` module will also update your Tensorflow version. If you would like to stay on an older version of Tensorflow, you should use Method 2 instead.
+The easiest way to install the YAMNet model is by using Tensorflow Hub. All you need to do is use pip to install the `tensorflow-hub` package. The YAMNet model will be automatically loaded the first time you perform a YAMScan. However, installing the `tensorflow-hub` package will also update your Tensorflow version. If you would like to stay on an older version of Tensorflow, you should use Method 2 instead.
 
 ## Method 2: Tensorflow Model Garden
 
@@ -36,11 +38,11 @@ After using Git to clone the YAMosse repository, run a submodule update. The sub
 
 To run YAMosse in a window, open the `yamosse_window.pyw` file. Alternatively, you can run the command `pythonw -m yamosse` in a command prompt.
 
-To run YAMosse with a console, open the `yamosse_console.py` file. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see Tensorflow's log output, which is useful for troubleshooting GPU Acceleration.
+To run YAMosse with a console, open the `yamosse_console.py` file. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see Tensorflow's error logs, which is useful for troubleshooting GPU Acceleration.
 
 ![Usage](https://github.com/tomysshadow/YAMosse/blob/main/usage.jpg?raw=true)
 
-The first step to using YAMosse is to select an input file or folders (1). Click the Browse Folder or Browse Files buttons to select the sound files you'd like to scan. If you select a folder and the Recursive option is checked, then subfolders will also be included in the scan. If you have the `tkinterdnd2` module installed, you can also select files or folders by clicking and dragging them.
+The first step to using YAMosse is to select an input file or folders (1). Click the Browse Folder or Browse Files buttons to select the sound files you'd like to scan. If you select a folder and the Recursive option is checked, then subfolders will also be included in the scan. If you have the `tkinterdnd2` package installed, you can also select files or folders by clicking and dragging them.
 
 The next step is to select the classes of sound you'd like to scan for (2). There are 521 classes to choose from, including speech, music, various animals, instruments, forms of transportation, and lots more. If you'd like to scan for everything, use the Select All button to select every class.
 
@@ -64,7 +66,7 @@ Just like the GUI, any options that you specify will be remembered for next time
 
 ## Module Interface
 
-You can import YAMosse to use it on your own module. It will throw `SubsystemWarning` (from the subsystem module) if there is a reason the YAMScan can't be performed.
+You can import YAMosse to use it in your own module. It will throw `SubsystemWarning` (from the subsystem module) if there is a reason the YAMScan can't be performed.
 
 ```
 import yamosse
@@ -96,17 +98,17 @@ To scan the audio from a video file with YAMosse, you first need to convert it t
 
 ## When scanning MP3s, sometimes there are a lot of timestamps past the end of the file. Why?
 
-This is due to a bug in libsoundfile where it misreports the length of MP3s that have album art in them. It is a problem with the soundfile module and cannot be fixed by YAMosse. For now, you can use an ID3 editor like [The GodFather](https://www.jtclipper.eu/thegodfather/) to remove the album art from your MP3s before scanning them.
+This is due to a bug in libsoundfile where it misreports the length of MP3s that have album art in them. It is a problem with the soundfile package and cannot be fixed by YAMosse. For now, you can use an ID3 editor like [The GodFather](https://www.jtclipper.eu/thegodfather/) to remove the album art from your MP3s before scanning them.
 
 ## What is the difference between Confidence Score and Top Ranked identification?
 
-When Confidence Score is selected, a percentage for how certain the model is that it identified a particular sound is used. The sound file is scanned from start to end. At the timestamps where the score is greater than the Confidence Score percentage given for any of the selected classes, the timestamp is output. The result is a list of timestamps, like this example.
+When using Confidence Score identification, the output is determined by a percentage, representing how certain the model is that it identified a particular sound. The sound file is scanned from start to end. At any point in time where the score is greater than the Confidence Score percentage given for any of the selected classes, the timestamp is recorded. The result is a list of timestamps, like this example.
 
 Speech: 0:10, 0:20 - 0:35, 0:40, 0:45 - 1:00
 
 This output would indicate that there is is one second of speech (maybe a single word or exclamation) at ten seconds into the sound file, then 15 seconds of speech starting at 20 seconds into the sound file, and so on.
 
-In contrast, the Top Ranked mode will create a transcript of the sounds that it thinks are the most likely to be in the sound file at any given time, ignoring any sound classes that you don't have selected. The result is a list of classes over time.
+In contrast, using Top Ranked identification will create a transcript of the sounds that it thinks are the most likely to be in the sound file at any given time, ignoring any sound classes that you don't have selected. The result is a list of classes over time.
 
 0:00 - 0:10: Music
 0:10: Speech
@@ -115,23 +117,29 @@ In contrast, the Top Ranked mode will create a transcript of the sounds that it 
 
 As you can see, the timestamps are now in the left column, with the right column being the sounds that are playing at those times.
 
+## Why are there gaps/missing time periods in Top Ranked mode?
+
+Sounds that are quieter than the Background Noise Volume (on the Advanced tab) are skipped, which is most clearly visible in the Top Ranked mode where some timestamps will be missing. You can set the Background Noise Volume to 0% to scan everything, though the missing time periods will probably just be silence.
+
 ## Can YAMosse identify words and phrases?
 
 No, YAMosse does not convert speech into text. It can only identify the 521 sound classes that are included in the YAMNet model. Speech recognition can already be done with other models like [Whisper,](https://github.com/openai/whisper) so this is out of scope for YAMosse.
 
 ## I get an error saying "could not find TaskbarLib.tlb," why?
 
-This file is a requirement of PyTaskbar, one of the dependencies used by YAMosse. It is included in the root folder of the project, along with this README. The TaskbarLib.tlb file must be in your current working directory when you run YAMosse. If you run the YAMosse module from outside the project directory, you need to make sure the TaskbarLib.tlb is there. Alternatively, you can uninstall PyTaskbar, because it is optional and YAMosse will work without it (but then you won't be able to see the progress of running scans in the taskbar.)
+The TaskbarLib.tlb file is a requirement of PyTaskbar, one of the dependencies used by YAMosse. It is included in the root folder of the project, along with this README. The TaskbarLib.tlb file must be in your current working directory when you run YAMosse. If you run the YAMosse module from outside the project directory, you need to make sure the TaskbarLib.tlb is there. Alternatively, you can uninstall PyTaskbar, because it is optional and YAMosse will work without it (but then you won't be able to see the progress of running scans in the taskbar.)
 
 ## When I run YAMosse, instead of a GUI I get a command line prompt asking "please enter the output file name," why?
 
-If the GUI fails to load because of a missing dependency, YAMosse will fallback into the command line interface. Because in this case no arguments are specified, it will ask for an output filename so it can perform a YAMScan. If this is not what you want, it is possible that your download is incomplete (there should be a "gui" folder within the yamosse module) or that your Python install is not properly configured for Tkinter.
+If the GUI fails to load because of a missing dependency, YAMosse will fallback into the command line interface. Because no arguments are specified in this case, it will ask for an output filename so it can perform a YAMScan. If this is not what you want, it is possible that your download is incomplete (there should be a "gui" folder within the yamosse module) or that your Python install is not properly configured for Tkinter.
 
 ## How do I enable GPU Acceleration?
 
-To use GPU Acceleration, you will need to [install NVIDIA CUDA Toolkit and cuDNN.](https://www.digitalocean.com/community/tutorials/install-cuda-cudnn-for-gpu) Note that if you are on Windows, the last version of Tensorflow to support GPU Acceleration is 2.10.0. Otherwise, you will need to use Linux or WSL2 in order to get GPU Acceleration. I have tested and confirmed that YAMosse is compatible with Tensorflow 2.8.0 and Keras 2.8.0, which will work for this purpose if you want to avoid setting up virtualization, though do note that in this case you will need to install the legacy `keras` module rather than `tf-keras`.
+To use GPU Acceleration, you will need to [install NVIDIA CUDA Toolkit and cuDNN.](https://www.digitalocean.com/community/tutorials/install-cuda-cudnn-for-gpu) Note that if you are on Windows, the last version of Tensorflow to support GPU Acceleration is 2.10.0. Otherwise, you will need to use Linux or WSL2 in order to get GPU Acceleration.
 
-You will know when GPU Acceleration is enabled because "GPU Acceleration Enabled" will appear in the Log textbox whenever you perform a YAMScan. If you still can't get GPU Acceleration to be enabled, try running YAMosse with a console using `yamosse_console.py`. Then you will be able to see Tensorflow's more verbose log output, which could reveal the problem.
+I have tested and confirmed that YAMosse is compatible with Tensorflow 2.8.0 and Keras 2.8.0, which will work for this purpose if you want to avoid setting up virtualization, though do note that in this case you will need to install the legacy `keras` package rather than `tf-keras`.
+
+You will know when GPU Acceleration is enabled and working correctly because "GPU Acceleration Enabled" will appear in the Log textbox whenever you perform a YAMScan. If you still can't get GPU Acceleration to work, try running YAMosse with a console by opening `yamosse_console.py`. Then you will be able to see Tensorflow's more verbose error logs, which could reveal the problem.
 
 ## Why does Silence still appear in the results, even though the Background Noise Volume is not set to zero?
 
@@ -147,25 +155,29 @@ This is particularly useful for the Confidence Scores mode, if you want to find 
 
 If you just want to get one guess for what sound is contained in a short sound clip, use the Top Ranked identification (set to identify only 1 class,) then set the Timespan to zero on the Advanced tab.
 
-Alternatively, you can check the Span All box and then, any sound that ever appears in the Top Ranked at any point throughout the sound file will be listed, which will provide a bit more nuanced detail while still collapsing everything to one result.
+Alternatively, under Timespan you can check the Span All box. Then, any sound that ever appears in the Top Ranked at any point throughout the sound file will be listed, which will provide a bit more nuanced detail while still collapsing everything to one result.
 
 ## Why do scans appear to start slow, then get faster over time?
 
 Because YAMosse uses multiple workers, the ideal for performance is to scan the longest files first, and the smallest files last. The reason for this is to minimize the amount of time where everything is waiting on one worker to finish scanning the last file.
 
-Imagine that there are four workers, seven short sound files, and one long sound file. If you start with the longest sound file, the remaining seven files can be scanned simultaneously, so they finish around the same time. If you do the seven short files first and the one long file last, then you'll spend most of the time just waiting for the one longest file to finish while the other workers sit idle.
+Imagine that there are four workers, seven short sound files, and one long sound file. If you start with the longest sound file, one worker can handle the long file, and the remaining seven files can be split amongst the other three workers, so they scan simultaneously and finish around the same time. If you do the seven short files first and the one long file last, then you'll spend most of the time just waiting for the one longest file to finish while the other workers sit idle.
 
-In order to prevent this scenario, YAMosse will scan the files with the largest filesize first. While filesize does not necessarily correspond to length, especially when scanning sounds of multiple different formats, it is a "good enough" heuristic that can be retrieved faster than opening each individual file in advance of scanning it to measure its length.
+In order to prevent this scenario, YAMosse will scan the files with the largest filesize first. While filesize does not necessarily correspond to sound length, especially when scanning sounds of multiple different formats, it is a "good enough" heuristic that can be retrieved faster than opening each individual file in advance of scanning it to measure its length.
 
-However, the progress bar in YAMosse measures number of files done - not a percentage of the length of the combined sounds. In effect this means that progress will appear to start slow and go more quickly over time, even though in actual reality the scan is occurring at the same rate throughout.
+However, the progress bar in YAMosse measures in terms of the number of files done - not a percentage of the length of the combined sounds. In effect this means that progress will appear to start slow and go more quickly over time, even though in actual reality the scan is occurring at the same rate throughout.
 
 ## Why do scans occur in batches?
 
-Scans occur in batches of up to 1024 files at a time. This is tied to the reason why scans appear to start slow, then get faster over time. Determining the size of a large group of files can, in and of itself, take some time. If you right click a large folder in Explorer and click Properties, it can take anywhere from a few seconds to several minutes to discover the folder's size. In order to prevent this from stalling YAMosse, files are scanned in batches, where each individual batch should only take a short amount of time to determine the sizes of. This keeps things snappy and responsive, and also reduces memory usage by queueing less tasks at a time.
+Scans occur in batches of up to 1024 files at a time. This is tied to the reason why scans appear to start slow, then get faster over time. Determining the size of a large group of files can, in and of itself, take some time. If you right click a large folder in Explorer and click Properties, it can take anywhere from a few seconds to several minutes to discover the folder's size.
+
+In order to prevent this from stalling YAMosse, files are scanned in batches, where each individual batch should only take a short amount of time to determine the sizes of. This keeps things snappy and responsive, and also reduces memory usage by queueing less tasks at a time.
 
 ## Why is YAMosse under the Apache License?
 
-For the majority of the software that I create on GitHub, I use the MIT License, which I am a fan of for its simplicity. However, for this particular project I decided to use the Apache License, because the YAMNet model itself is under the Apache License. While I would still be able to use the MIT License if I wanted, the idea is that this way, YAMosse can be a drop in replacement for anywhere the YAMNet model is currently directly used, in case you want something a little higher level. Because they use the same license, if you would like to replace YAMNet with YAMosse, you shouldn't need to worry about licensing differences at all.
+For the majority of the software that I create on GitHub, I use the MIT License, which I am a fan of for its simplicity. However, for this particular project I decided to use the Apache License, because the YAMNet model itself is under the Apache License.
+
+While I would still be able to use the MIT License if I wanted, the idea is that this way, YAMosse can be a drop in replacement for anywhere the YAMNet model is currently directly used, in case you want something a little higher level. Because they use the same license, if you would like to replace YAMNet with YAMosse, you shouldn't need to worry about licensing differences at all.
 
 # Credits
 
