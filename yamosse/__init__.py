@@ -71,7 +71,7 @@ def sf_input_filetypes():
   return input_filetypes
 
 
-def yamosse(**kwargs):
+def _mainloop(**kwargs):
   window = None
   subsystem = None
   
@@ -277,6 +277,10 @@ def yamosse(**kwargs):
     options.dump()
   
   return window.children
+
+
+def yamosse(**kwargs):
+  while _mainloop(**kwargs): pass
 
 
 # "All I need, is for someone to catch my smoke signal, and rescue me, from myself."

@@ -63,7 +63,7 @@ def main(argc, argv):
   yamosse_worker.tfhub_cache()
   
   try:
-    while yamosse.yamosse(**kwargs): pass
+    yamosse.yamosse(**kwargs)
   except yamosse_subsystem.SubsystemWarning as ex:
     print(ex)
     return 1
