@@ -45,7 +45,9 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     defaults[scale] = DEFAULT_SCALE_VALUE
     oldvalues[scale] = scale.get()
     
-    scale.bindtags((bindtag,) + scale.bindtags())
+    # this bindtag must be on the end
+    # so that we don't swallow all events before the text gets them
+    scale.bindtags(scale.bindtags() + (bindtag,))
   
   def data(e):
     widget = e.widget
