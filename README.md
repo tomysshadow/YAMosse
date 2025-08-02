@@ -15,7 +15,7 @@ To use YAMosse, use pip to install the following Python packages:
  - [`numpy`](http://www.numpy.org/)
  - [`tf-keras`](https://github.com/keras-team/tf-keras) or [`keras`](https://keras.io) (`tf-keras` is recommended)
  - [`tensorflow`](http://www.tensorflow.org/)
- - [`resampy`](http://resampy.readthedocs.io/en/latest/)
+ - [`resampy`](https://resampy.readthedocs.io/en/stable/)
  - [`soundfile`](https://github.com/bastibe/python-soundfile)
  - [`psutil`](https://github.com/giampaolo/psutil) (only required on Windows)
  - [`tkinterdnd2`](https://github.com/Eliav2/tkinterdnd2) (optional, for drag and drop support)
@@ -100,6 +100,10 @@ To scan the audio from a video file with YAMosse, you first need to convert it t
 
 This is due to a bug in libsoundfile where it misreports the length of MP3s that have album art in them. It is a problem with the soundfile package and cannot be fixed by YAMosse. For now, you can use an ID3 editor like [The GodFather](https://www.jtclipper.eu/thegodfather/) to remove the album art from your MP3s before scanning them.
 
+## Can YAMosse identify words and phrases?
+
+No, YAMosse does not convert speech into text. It can only identify the 521 sound classes that are included in the YAMNet model. Speech recognition can already be done with other models like [Whisper,](https://github.com/openai/whisper) so this is out of scope for YAMosse.
+
 ## What is the difference between Confidence Score and Top Ranked identification?
 
 When using Confidence Score identification, the output is determined by a percentage, representing how certain the model is that it identified a particular sound. The sound file is scanned from start to end. At any point in time where the score is greater than the Confidence Score percentage given for any of the selected classes, the timestamp is recorded. The result is a list of timestamps, like this example.
@@ -121,9 +125,9 @@ As you can see, the timestamps are now in the left column, with the right column
 
 Sounds that are quieter than the Background Noise Volume (on the Advanced tab) are skipped, which is most clearly visible in the Top Ranked mode where some timestamps will be missing. You can set the Background Noise Volume to 0% to scan everything, though the missing time periods will probably just be silence.
 
-## Can YAMosse identify words and phrases?
+## Why does Silence still appear in the results, even though the Background Noise Volume is not set to zero?
 
-No, YAMosse does not convert speech into text. It can only identify the 521 sound classes that are included in the YAMNet model. Speech recognition can already be done with other models like [Whisper,](https://github.com/openai/whisper) so this is out of scope for YAMosse.
+Silence is just one of the classes of sound that the YAMNet model can recognize like any other, and it is technically independent of the current volume level. In practice, if you're seeing Silence a lot but don't want to, you should either raise the Background Noise Volume more or just deselect it from the Classes list so it'll never be used (it's class #440 in the list.)
 
 ## I get an error saying "could not find TaskbarLib.tlb," why?
 
@@ -133,6 +137,12 @@ The TaskbarLib.tlb file is a requirement of PyTaskbar, one of the dependencies u
 
 If the GUI fails to load because of a missing dependency, YAMosse will fallback into the command line interface. Because no arguments are specified in this case, it will ask for an output filename so it can perform a YAMScan. If this is not what you want, it is possible that your download is incomplete (there should be a "gui" folder within the yamosse module) or that your Python install is not properly configured for Tkinter.
 
+## How do I get a single guess for an entire file?
+
+If you just want to get one guess for what sound is contained in a short sound clip, use the Top Ranked identification (set to identify only 1 class,) then set the Timespan to zero on the Advanced tab.
+
+Alternatively, under Timespan you can check the Span All box. Then, any sound that ever appears in the Top Ranked at any point throughout the sound file will be listed, which will provide a bit more nuanced detail while still collapsing everything to one result.
+
 ## How do I enable GPU Acceleration?
 
 To use GPU Acceleration, you will need to [install NVIDIA CUDA Toolkit and cuDNN.](https://www.digitalocean.com/community/tutorials/install-cuda-cudnn-for-gpu) Note that if you are on Windows, the last version of Tensorflow to support GPU Acceleration is 2.10.0. Otherwise, you will need to use Linux or WSL2 in order to get GPU Acceleration.
@@ -141,21 +151,11 @@ I have tested and confirmed that YAMosse is compatible with Tensorflow 2.8.0 and
 
 You will know when GPU Acceleration is enabled and working correctly because "GPU Acceleration Enabled" will appear in the Log textbox whenever you perform a YAMScan. If you still can't get GPU Acceleration to work, try running YAMosse with a console by opening `yamosse_console.py`. Then you will be able to see Tensorflow's more verbose error logs, which could reveal the problem.
 
-## Why does Silence still appear in the results, even though the Background Noise Volume is not set to zero?
-
-Silence is just one of the classes of sound that the YAMNet model can recognize like any other, and it is technically independent of the current volume level. In practice, if you're seeing Silence a lot but don't want to, you should either raise the Background Noise Volume more or just deselect it from the Classes list so it'll never be used (it's class #440 in the list.)
-
 ## What does Calibration do?
 
 The YAMNet model's scores are [not calibrated,](https://groups.google.com/g/audioset-users/c/pRDX6AkaM1s/m/jUYXb4JvAQAJ) meaning that when comparing directly between the scores for one class or another, it may appear to be overconfident about particular sounds or underconfident about others. By clicking the Calibrate button near the Classes list, you can set a percentage to multiply all scores by for a particular class. This allows you to make the model more or less confident about particular sounds. For example, if you turn up the setting for Animal to 200%, then when the model identifies a sound as an animal sound, it will be two times more confident that it is an animal than usual.
 
 This is particularly useful for the Confidence Scores mode, if you want to find multiple sound classes but are getting a lot of false positives for one particular class.
-
-## How do I get a single guess for an entire file?
-
-If you just want to get one guess for what sound is contained in a short sound clip, use the Top Ranked identification (set to identify only 1 class,) then set the Timespan to zero on the Advanced tab.
-
-Alternatively, under Timespan you can check the Span All box. Then, any sound that ever appears in the Top Ranked at any point throughout the sound file will be listed, which will provide a bit more nuanced detail while still collapsing everything to one result.
 
 ## Why do scans appear to start slow, then get faster over time?
 
