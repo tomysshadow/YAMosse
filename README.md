@@ -24,7 +24,7 @@ Use pip to install the following Python packages:
 
 To use YAMosse, you must install the YAMNet model. If the YAMNet model is not installed, an import error will occur and any YAMScan will be cancelled.
 
-There are two installation methods you can use: installing via Tensorflow Hub, or via Tensorflow Model Garden.
+There are two methods you can use to install the YAMNet model: installing via Tensorflow Hub, or via Tensorflow Model Garden.
 
 ## Method 1: Tensorflow Hub
 
