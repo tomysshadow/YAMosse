@@ -40,7 +40,7 @@ To run YAMosse in a window, open the `yamosse_window.pyw` file. Alternatively, y
 
 To run YAMosse with a console, open the `yamosse_console.py` file. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see Tensorflow's error logs, which is useful for troubleshooting GPU Acceleration.
 
-![Usage](usage.jpg)
+![Usage Steps](usage_steps.jpg)
 
 The first step to using YAMosse is to select an input file or folders (1). Click the Browse Folder or Browse Files buttons to select the sound files you'd like to scan. If you select a folder and the Recursive option is checked, then subfolders will also be included in the scan. If you have the `tkinterdnd2` package installed, you can also select files or folders by clicking and dragging them.
 
