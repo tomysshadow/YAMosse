@@ -66,12 +66,13 @@ def treeview_sorted(treeview):
     
     if key is _key_value:
       image = sort_up_small if reverse else sort_down_small
+      reverse = not reverse
       
       # reverse sort next time
       treeview.heading(
         cid,
         image=image,
-        command=lambda: show(cid=None if reverse else cid, reverse=not reverse)
+        command=lambda: show(cid=cid if reverse else None, reverse=reverse)
       )
   
   show()
