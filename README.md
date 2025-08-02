@@ -10,7 +10,7 @@ YAMosse has been tested on Windows 10 and on Ubuntu 24.04 LTS. It is recommended
 
 # Installation
 
-To use YAMosse, use pip to install the following Python packages:
+Use pip to install the following Python packages:
 
  - [`numpy`](http://www.numpy.org/)
  - [`tf-keras`](https://github.com/keras-team/tf-keras) or [`keras`](https://keras.io) (`tf-keras` is recommended)
