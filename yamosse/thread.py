@@ -215,7 +215,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
           file_names_pos += 1
           next_ = file_names_pos & BATCH_MASK
           
-          log = f'{log}{status} {file_names_pos}/{file_names_len}: {file_name!r}\n'
+          log = f'{log}{status} {file_names_pos}/{file_names_len}: "{file_name}"\n'
         
         log = log.rstrip()
         
