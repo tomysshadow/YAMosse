@@ -67,7 +67,6 @@ def subsystem(window, title, variables):
         title=title,
         message=message
       )
-      return
     
     def ask_yes_no(self, message, default=None, parent=None):
       if not default is None:
@@ -100,13 +99,11 @@ def subsystem(window, title, variables):
     def start(target, *args, **kwargs):
       target(*args, **kwargs)
     
-    @staticmethod
-    def show(values=None):
+    def show(self, values=None):
       if values and 'log' in values:
         print(yamosse_utils.ascii_backslashreplace(values['log']))
     
-    @staticmethod
-    def ask_yes_no(message, default=None, parent=None):
+    def ask_yes_no(self, message, default=None, parent=None):
       YES = 'Y'
       NO = 'N'
       
@@ -135,11 +132,13 @@ def subsystem(window, title, variables):
         if result:
           result = result[0].upper()
           
-          if result != YES and result != NO:
+          if result not in (YES, NO):
             result = ''
         elif default_has_value: return default
       
       return result == YES
   
-  if window: return WindowSubsystem(window, title, variables)
+  if window:
+    return WindowSubsystem(window, title, variables)
+  
   return ConsoleSubsystem()

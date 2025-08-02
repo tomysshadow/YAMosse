@@ -103,18 +103,18 @@ def _init_report_callback_exception():
   
   tk_report_callback_exception = tk.Tk.report_callback_exception
   
-  def report_callback_exception(tk, exc, val, tb):
+  def report_callback_exception(tk_, exc, val, tb):
     nonlocal reported
     nonlocal reported_lock
     
-    tk_report_callback_exception(tk, exc, val, tb)
+    tk_report_callback_exception(tk_, exc, val, tb)
     
     with reported_lock:
       if reported: return
       reported = True
     
     try:
-      with open('traceback.txt', 'w') as file:
+      with open('traceback.txt', 'w', encoding='utf8') as file:
         traceback.print_exception(exc, val, tb, file=file)
     except OSError: pass
     
@@ -161,7 +161,7 @@ def test_widget(widget):
   # give a widget a "vibe check" to test it's still alive
   try: widget.winfo_name()
   except tk.TclError: return False
-  else: return True
+  return True
 
 
 def after_invalidcommand_widget(widget, validate):
@@ -284,7 +284,7 @@ def make_widgets(frame, make_widget, names,
   orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING, **kwargs):
   ORIENTS = (tk.HORIZONTAL, tk.VERTICAL)
   
-  if not orient in ORIENTS: raise ValueError('orient must be in %r' % (ORIENTS,))
+  if orient not in ORIENTS: raise ValueError('orient must be in %r' % (ORIENTS,))
   
   widgets = []
   if not names: return widgets
@@ -356,7 +356,7 @@ def link_radiobuttons(radiobuttons, variable):
     for w, widget in enumerate(radiobuttons.values()):
       if not widget: continue
       
-      enabled = (w == variable.get())
+      enabled = w == variable.get()
       enable_widget(widget, enabled=enabled)
   
   for r, radiobutton in enumerate(radiobuttons.keys()):
@@ -880,7 +880,7 @@ def make_filedialog(frame, name='', textvariable=None,
   
   if not textvariable: textvariable = tk.StringVar()
   
-  if asks == None: asks = ('openfilename',)
+  if asks is None: asks = ('openfilename',)
   
   asks_file = yamosse_utils.intersects(asks, ASKS_FILES)
   asks_dir = 'directory' in asks
@@ -934,7 +934,7 @@ def make_filedialog(frame, name='', textvariable=None,
   buttons = []
   
   for ask in asks:
-    if not ask in ASKS_ALL: raise ValueError('ask must be in %r' % (ASKS_ALL,))
+    if ask not in ASKS_ALL: raise ValueError('ask must be in %r' % (ASKS_ALL,))
     
     text = 'Browse...'
     

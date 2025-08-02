@@ -257,7 +257,8 @@ def text_embed(text):
     raise ValueError('text must have class %r' % CLASS_TEXT)
   
   # setdefault is not used here - it's probably not worth the cost of creating a frame
-  if text in _texts: raise RuntimeError('text_embed is single shot per-text')
+  if text in _texts:
+    raise RuntimeError('text_embed is single shot per-text')
   
   # placeholder to prevent text selection
   frame = ttk.Frame(text)
@@ -319,7 +320,7 @@ def text_embed(text):
   # then they'd become out of date on future calls
   # this doesn't need to go through name_sequence
   # these are already names
-  names = set([str(s) for s in bind(CLASS_TEXT)])
+  names = {str(s) for s in bind(CLASS_TEXT)}
   
   # need to ensure the views are bound at least once
   for name in VIEWS:

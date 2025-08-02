@@ -37,20 +37,20 @@ def main(argc, argv):
   for a in range(argc):
     arg = args[a]
     
-    if arg == '-h' or arg == '--help':
+    if arg in ('-h', '--help'):
       help_()
       return 1
-    if arg == '-rd' or arg == '--restore_defaults':
+    if arg in ('-rd', '--restore_defaults'):
       kwargs['restore_defaults'] = True
     if a < argc2:
-      if arg == '-ip' or arg == '--import-preset':
+      if arg in ('-ip', '--import-preset'):
         kwargs['import_preset_file_name'] = args[a := a + 1]
-      elif arg == '-ep' or arg == '--export-preset':
+      elif arg in ('-ep', '--export-preset'):
         kwargs['export_preset_file_name'] = args[a := a + 1]
-      elif arg == '-y' or arg == '--yamscan':
+      elif arg in ('-y', '--yamscan'):
         kwargs['output_file_name'] = args[a := a + 1]
       elif a < argc3:
-        if arg == '-o' or arg == '--option':
+        if arg in ('-o',  '--option'):
           key = args[a := a + 1]
           
           try: options_attrs[key] = yamosse_options.json.loads(args[a := a + 1])

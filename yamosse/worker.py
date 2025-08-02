@@ -89,7 +89,7 @@ def class_names(class_map_csv=''):
       class_map_csv = os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
   
   # alternate method that does not depend on Tensorflow
-  with open(class_map_csv) as csv_file:
+  with open(class_map_csv, 'r', encoding='utf8') as csv_file:
     reader = csv.reader(csv_file)
     next(reader) # skip header
     return [display_name for (_, _, display_name) in reader]
@@ -113,7 +113,7 @@ def tfhub_cache(dir_='tfhub_modules'):
   return root_tfhub_cache_dir
 
 
-def initializer(worker, step, steps, receiver, sender, shutdown, options,
+def initializer(number, step, steps, receiver, sender, shutdown, options,
   model_yamnet_class_names, tfhub_enabled):
   global _initializer_ex
   
@@ -203,9 +203,9 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
     
     yamnet = None
     
-    with worker.get_lock():
+    with number.get_lock():
       if tfhub_enabled:
-        if not worker.value:
+        if not number.value:
           # the first time YAMNet is downloaded it may have to download and extract
           # so print a message then so the user knows what's going on
           # consequent loads should be faster
@@ -213,7 +213,7 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
             'log': 'Loading YAMNet, please wait...'
           })
         
-        # this is done under the worker lock because
+        # this is done under the number lock because
         # the docs don't clarify if this is safe to call
         # from multiple processes at the same time
         # from a cursory look at the source code, it looks like there are
@@ -223,10 +223,10 @@ def initializer(worker, step, steps, receiver, sender, shutdown, options,
         # either way docs don't mention any of this, so I'm slapping my own lock on it
         yamnet = tfhub.load(TFHUB_YAMNET_MODEL_URL)
       
-      worker.value += 1
+      number.value += 1
       
       sender.send({
-        'log': 'Worker #%d: GPU Acceleration %s' % (worker.value,
+        'log': 'Worker #%d: GPU Acceleration %s' % (number.value,
           'Enabled' if gpus else 'Disabled')
       })
     

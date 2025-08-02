@@ -4,7 +4,7 @@ from collections import OrderedDict
 import yamosse.utils as yamosse_utils
 
 
-def identification(option):
+def identification(option=None):
   IDENTIFICATION_CONFIDENCE_SCORE = 0
   IDENTIFICATION_TOP_RANKED = 1
   
@@ -40,8 +40,10 @@ def identification(option):
       # this function can operate on either dictionaries or other iterables
       # if operating on a dictionary, it replaces the keys
       # (because the timestamps are always keys)
-      try: values = timestamps.values()
-      except: values = None
+      values = None
+      
+      if isinstance(timestamps, dict):
+        values = timestamps.values()
       
       for timestamp in timestamps:
         if timestamp == TIMESTAMP_ALL:
@@ -147,15 +149,14 @@ def identification(option):
       # super call is done out here to avoid the overhead of doing it every loop
       identification = super()
       
-      for file_name, class_timestamps in results.items():
+      for class_timestamps in results.values():
         for class_, timestamps in class_timestamps.items():
           timestamps = identification.hms(timestamps)
           
           # if Output Scores is checked, timestamps will be a dictionary
           # for JSON that won't preserve insertion order, so we need to make it a list
-          try: timestamps = timestamps.items()
-          except: pass
-          else: timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps]
+          if isinstance(timestamps, dict):
+            timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps.items()]
           
           class_timestamps[class_] = timestamps
       
@@ -452,7 +453,8 @@ def identification(option):
   
   if option == IDENTIFICATION_CONFIDENCE_SCORE:
     return IdentificationConfidenceScore
-  elif option == IDENTIFICATION_TOP_RANKED:
+  
+  if option == IDENTIFICATION_TOP_RANKED:
     return IdentificationTopRanked
   
   return Identification

@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 
-from .. import gui
-
 import yamosse.progress as yamosse_progress
+
+from .. import gui
 
 
 def _is_determinate_progressbar(progressbar):
@@ -14,7 +14,7 @@ def configure_progressbar(widgets, variable, type_):
   progressbar, taskbar = widgets
   variable_set = False
   
-  if not type_ in yamosse_progress.types:
+  if type_ not in yamosse_progress.types:
     variable.set(int(type_))
     return True
   
@@ -69,7 +69,7 @@ def make_progressbar(frame, name='', variable=None,
   
   value = 0
   
-  def show(name='', index='', mode=''):
+  def show(*args):
     nonlocal value
     
     # only update the percent label in determinate mode

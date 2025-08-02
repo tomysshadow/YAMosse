@@ -19,7 +19,7 @@ class Options:
       super().__init__('version mismatch')
     
     def __reduce__(self):
-      return (VersionError, (self,))
+      return type(self), (self,)
   
   def __init__(
     self,
@@ -35,8 +35,8 @@ class Options:
     output_options=True, output_scores=False,
     memory_limit=256, max_workers=4, high_priority=True
   ):
-    if classes == None: classes = []
-    if calibration == None: calibration = []
+    if classes is None: classes = []
+    if calibration is None: calibration = []
     
     self.version = VERSION
     
@@ -142,7 +142,7 @@ class Options:
   
   @classmethod
   def import_preset(cls, file_name):
-    with open(file_name, 'r') as f:
+    with open(file_name, 'r', encoding='utf8') as f:
       options = Options()
       
       # cast JSON types to Python types
@@ -155,7 +155,7 @@ class Options:
       return options
   
   def export_preset(self, file_name):
-    with open(file_name, 'w') as f:
+    with open(file_name, 'w', encoding='utf8') as f:
       json.dump(vars(self), f, indent=True)
   
   def worker(self, np, class_names):
@@ -186,4 +186,5 @@ class Options:
     self.confidence_score /= 100.0
     
     # identification options
-    self.identification = yamosse_identification.identification(self.identification)(self, np)
+    self.identification = yamosse_identification.identification(
+      option=self.identification)(self, np)

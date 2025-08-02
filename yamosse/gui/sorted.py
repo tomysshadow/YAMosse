@@ -1,11 +1,14 @@
 import re
+from weakref import WeakKeyDictionary
 from os import fsencode as fsenc
-
-from .. import gui
 
 import yamosse.utils as yamosse_utils
 
+from .. import gui
+
 RE_NATURAL = re.compile(r'(\d+)')
+
+_treeviews = WeakKeyDictionary()
 
 
 # uses "natural" sorting - the values being sorted here are often numbers
@@ -23,11 +26,8 @@ def _key_value(item):
 
 
 def treeview_sorted(treeview):
-  try:
-    if treeview.sorted: raise RuntimeError('treeview_sorted is single shot per-treeview')
-  except AttributeError: pass
-  
-  treeview.sorted = True
+  if not yamosse_utils.dict_once(_treeviews, treeview):
+    raise RuntimeError('treeview_sorted is single shot per-treeview')
   
   table_sort_icons = gui.get_root_images()[gui.FSENC_BITMAP][fsenc('table sort icons')]
   sort_both_small = table_sort_icons[fsenc('sort_both_small.xbm')]

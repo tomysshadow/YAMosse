@@ -3,11 +3,11 @@ from tkinter import ttk
 import webbrowser
 from os import fsencode as fsenc
 
+import yamosse.output as yamosse_output
+
 from .. import gui
 from . import sorted as gui_sorted
 from . import calibrate as gui_calibrate
-
-import yamosse.output as yamosse_output
 
 RESIZABLE = True
 SIZE = (600, 580)
@@ -520,11 +520,15 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
 def make_options(notebook, variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset):
-  general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, style='Borderless.TNotebook > .TFrame')
+  general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
+    style='Borderless.TNotebook > .TFrame')
+  
   make_general(general_frame, variables, input_filetypes, class_names,
     import_preset, export_preset)
   
-  advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW, style='Borderless.TNotebook > .TFrame')
+  advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
+    style='Borderless.TNotebook > .TFrame')
+  
   make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)

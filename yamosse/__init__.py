@@ -55,9 +55,11 @@ MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
 
 
 def open_file(path):
-  try: os.startfile(path)
-  except AttributeError:
-    Popen(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
+  if os.name == 'nt':
+    os.startfile(path)
+    return
+  
+  Popen(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
 
 
 def sf_input_filetypes():

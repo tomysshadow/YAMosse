@@ -42,9 +42,9 @@ def output(file_name, *args, **kwargs):
       self.top_ranked_output_timestamps = True
       
       self.model_yamnet_class_names = model_yamnet_class_names
-      self.identification = yamosse_identification.identification(identification)
+      self.identification = yamosse_identification.identification(option=identification)
       
-      self.file = open(file_name, 'w')
+      self.file = open(file_name, 'w', encoding='ascii')
     
     def __enter__(self):
       return self
@@ -124,7 +124,7 @@ def output(file_name, *args, **kwargs):
       return True
     
     def results(self, results):
-      if not results: return
+      if not results: return None
       results = super().results(results)
       
       file = self.file
@@ -137,7 +137,7 @@ def output(file_name, *args, **kwargs):
       return results
     
     def errors(self, errors):
-      if not errors: return
+      if not errors: return None
       errors = super().errors(errors)
       
       file = self.file

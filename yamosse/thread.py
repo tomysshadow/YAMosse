@@ -145,7 +145,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
   next_ = NEXT_SUBMITTING
   batch = 0
   
-  worker = Value('i', 0)
+  number = Value('i', 0)
   step = Value('i', 0)
   steps = file_names_len * yamosse_worker.PROGRESSBAR_MAXIMUM
   
@@ -158,7 +158,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
     process_pool_executor = ProcessPoolExecutor(
       max_workers=options.max_workers,
       initializer=yamosse_worker.initializer,
-      initargs=(worker, step, steps, receiver, sender, shutdown, options,
+      initargs=(number, step, steps, receiver, sender, shutdown, options,
         model_yamnet_class_names, yamosse_worker.tfhub_enabled())
     )
     
@@ -239,7 +239,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         nonlocal clear_done
         
         # we're just reading an int here, not writing it so we don't need to lock this (I think?)
-        normal = worker.value
+        normal = number.value
         
         if not normal:
           with done_lock:

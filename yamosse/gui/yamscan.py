@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from os import fsencode as fsenc
 
+import yamosse.progress as yamosse_progress
+
 from .. import gui
 from . import progressbar as gui_progressbar
-
-import yamosse.progress as yamosse_progress
 
 TITLE = 'YAMScan'
 RESIZABLE = True
@@ -33,6 +33,12 @@ def make_footer(frame, log_text, open_output_file, done):
   copied_to_clipboard_label = ttk.Label(frame, text='Copied to clipboard.')
   copied_to_clipboard_after = None
   
+  def copied_to_clipboard():
+    nonlocal copied_to_clipboard_after
+    
+    copied_to_clipboard_label.grid_remove()
+    copied_to_clipboard_after = None
+  
   def copy_to_clipboard():
     nonlocal copied_to_clipboard_after
     
@@ -42,10 +48,6 @@ def make_footer(frame, log_text, open_output_file, done):
     
     if copied_to_clipboard_after:
       copied_to_clipboard_label.after_cancel(copied_to_clipboard_after)
-    
-    def copied_to_clipboard():
-      copied_to_clipboard_label.grid_remove()
-      copied_to_clipboard_after = None
     
     copied_to_clipboard_after = copied_to_clipboard_label.after(
       COPIED_TO_CLIPBOARD_DELAY_MS,
@@ -100,14 +102,16 @@ def show_yamscan(widgets, values=None):
       
       try:
         gui.delete_lines_text(log_text)
-        log_text.insert(tk.END, '%s\n' % values['log'])
+        
+        log_text.insert(tk.END, values['log'])
+        log_text.insert(tk.END, '\n')
         log_text.see(tk.END)
       finally: log_text['state'] = tk.DISABLED
     
     value = values.get('done')
     
     if not value is None:
-      if not value in DONE_VALUES: raise ValueError('value must be in %r' % (DONE_VALUES,))
+      if value not in DONE_VALUES: raise ValueError('value must be in %r' % (DONE_VALUES,))
       
       open_output_file_button, done_button = footer_widgets
       

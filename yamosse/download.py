@@ -6,9 +6,9 @@ from shutil import copyfileobj
 class DownloadError(URLError): pass
 
 
-def download(url, path, mode='w+b'):
+def download(url, path, *args, mode='w+b', **kwargs):
   # we don't use a with statement here, since we want to return this file out
-  file = open(path, mode)
+  file = open(path, *args, mode=mode, **kwargs)
   
   try:
     try:
@@ -18,9 +18,9 @@ def download(url, path, mode='w+b'):
       code = ex.code
       
       raise DownloadError('The server couldn\'t fulfill the request.\nError code: %d\n\n%r' % (
-        code, ': '.join(BaseHTTPRequestHandler.responses[code])))
+        code, ': '.join(BaseHTTPRequestHandler.responses[code]))) from ex
     except URLError as ex:
-      raise DownloadError(''.join(('We failed to reach a server.\nReason: ', ex.reason)))
+      raise DownloadError(''.join(('We failed to reach a server.\nReason: ', ex.reason))) from ex
   except:
     file.close()
     raise

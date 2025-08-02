@@ -110,14 +110,17 @@ def make_calibrate(frame, variables, class_names):
   calibration_variable = variables['calibration']
   calibration_variable += [DEFAULT_SCALE_VALUE] * (len(class_names) - len(calibration_variable))
   
-  num = 0
+  number = 0
   scales = []
   
   for class_name, calibration in zip(class_names, calibration_variable):
     scale_frame = ttk.Frame(calibration_text)
     
-    scale = gui.make_scale(scale_frame, name='%d. %s' % (num := num + 1, class_name),
-      to=200)[1]
+    scale = gui.make_scale(
+      scale_frame,
+      name='%d. %s' % (number := number + 1, class_name),
+      to=200
+    )[1]
     
     scale.set(int(calibration))
     scales.append(scale)
