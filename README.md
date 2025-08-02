@@ -124,9 +124,9 @@ In contrast, using Top Ranked identification will create a transcript of the sou
 
 As you can see, the timestamps are now in the left column, with the right column being the sounds that are playing at those times.
 
-## Why are there gaps/missing time periods in Top Ranked mode?
+## Why are there gaps/missing time periods when using Top Ranked identification?
 
-Sounds that are quieter than the Background Noise Volume (on the Advanced tab) are skipped, which is most clearly visible in the Top Ranked mode where some timestamps will be missing. You can set the Background Noise Volume to 0% to scan everything, though the missing time periods will probably just be silence.
+Sounds that are quieter than the Background Noise Volume (on the Advanced tab) are skipped, which is most obvious when using Top Ranked identification where some timestamps will be missing. You can set the Background Noise Volume to 0% to scan everything, though the missing time periods will probably just be silence.
 
 ## Why does Silence still appear in the results, even though the Background Noise Volume is not set to zero?
 
