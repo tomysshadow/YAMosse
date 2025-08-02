@@ -156,7 +156,9 @@ You will know when GPU Acceleration is enabled and working correctly because "GP
 
 ## What does Calibration do?
 
-The YAMNet model's scores are [not calibrated,](https://groups.google.com/g/audioset-users/c/pRDX6AkaM1s/m/jUYXb4JvAQAJ) meaning that when comparing directly between the scores for one class or another, it may appear to be overconfident about particular sounds or underconfident about others. By clicking the Calibrate button near the Classes list, you can set a percentage to multiply all scores by for a particular class. This allows you to make the model more or less confident about particular sounds. For example, if you turn up the setting for Animal to 200%, then when the model identifies a sound as an animal sound, it will be two times more confident that it is an animal than usual.
+The YAMNet model's scores are [not calibrated,](https://groups.google.com/g/audioset-users/c/pRDX6AkaM1s/m/jUYXb4JvAQAJ) meaning that when comparing directly between the scores for one class or another, it may appear to be overconfident about particular sounds or underconfident about others. By clicking the Calibrate button near the Classes list, you can set a percentage to multiply all scores by for a particular class.
+
+This allows you to make the model more or less confident about particular sounds. For example, if you turn up the setting for Animal to 200%, then when the model identifies a sound as an animal sound, it will be two times more confident that it is an animal than usual.
 
 This is particularly useful for the Confidence Scores mode, if you want to find multiple sound classes but are getting a lot of false positives for one particular class.
 
