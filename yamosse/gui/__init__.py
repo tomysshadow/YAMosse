@@ -742,7 +742,11 @@ def configure_widths_treeview(treeview, *args, **kwargs):
 def make_treeview(frame, name='', columns=None, items=None, show=None,
   selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
   columns = yamosse_utils.dict_enumerate(columns) if columns else {}
-  show = ('tree', 'headings') if show is None else [str(s) for s in yamosse_utils.try_split(show)]
+  
+  if show is None:
+    show = ('tree', 'headings')
+  else:
+    show = [str(s) for s in yamosse_utils.try_split(show)]
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
