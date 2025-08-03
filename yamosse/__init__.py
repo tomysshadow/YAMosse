@@ -37,7 +37,7 @@ PRESET_FILETYPES = (
 )
 
 PRESET_INITIALDIR = 'My Presets'
-PRESET_INITIALFILE = 'preset'
+PRESET_INITIALFILE = 'Preset'
 PRESET_DEFAULTEXTENSION = '.json'
 
 MESSAGE_IMPORT_PRESET_VERSION = 'The imported preset is not compatible with this YAMosse version.'
