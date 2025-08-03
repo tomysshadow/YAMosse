@@ -265,7 +265,8 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     
     _options = options
     _yamnet = yamnet
-  except: _initializer_ex = exc_info()
+  except:
+    _initializer_ex = exc_info()
 
 
 def worker(file_name):
