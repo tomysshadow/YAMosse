@@ -174,11 +174,11 @@ class Options:
       np.ones(class_names_len - calibration.size, dtype=np.float32)))
     
     # make background noise volume logarithmic if requested
-    background_noise_volume = np.array(np.divide(
-      self.background_noise_volume, 100.0, dtype=np.float32))
+    background_noise_volume = np.divide(self.background_noise_volume, 100.0, dtype=np.float32)
     
     if not self.background_noise_volume_loglinear:
-      np.power(background_noise_volume, BACKGROUND_NOISE_VOLUME_LOG, out=background_noise_volume)
+      background_noise_volume = np.power(
+        background_noise_volume, BACKGROUND_NOISE_VOLUME_LOG, dtype=np.float32)
     
     # create a numpy array of this so it can be used with fancy indexing
     self.classes = np.unique(self.classes)

@@ -263,7 +263,7 @@ def identification(option=None):
       # we will be able to get them back later by indexing into the classes array
       if prediction_score:
         prediction, score = prediction_score
-        score = np.minimum(score.take(classes) * self.calibration, 1.0)
+        score = np.minimum(score.take(classes) * self.calibration, 1.0, dtype=np.float32)
         
         # in the span all case, we actually just want to list
         # every class that is ever in the top ranked as one big summary
