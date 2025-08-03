@@ -300,7 +300,7 @@ def identification(option=None):
         class_scores = top_scores[TIMESTAMP_ALL]
         
         for class_, scores in class_scores.items():
-          class_scores[class_] = float(np.mean(scores, axis=0))
+          class_scores[class_] = float(np.mean(scores, axis=0, dtype=np.float32))
         
         # normally numpy's argsort function handles the sorting directly on the arrays
         # but now we've averaged the scores so it's all outta whack
@@ -319,7 +319,7 @@ def identification(option=None):
       # that we are now ready to find the top scores in
       # here, we use "fancy indexing" in order to get the list of top ranked classes
       if default is score:
-        scores = np.mean(scores, axis=0)
+        scores = np.mean(scores, axis=0, dtype=np.float32)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
         top_scores[top] = OrderedDict(zip(classes[class_indices].tolist(),
           scores[class_indices]))
@@ -370,7 +370,7 @@ def identification(option=None):
             # these should not compare equal if the keys are in a different order
             if prediction != predictions_len and score_begin == score_end:
               if class_scores_begin.keys() == class_scores_end.keys():
-                scores.append(np.fromiter(class_scores_end.values(), dtype=float))
+                scores.append(np.fromiter(class_scores_end.values(), dtype=np.float32))
                 continue
             
             end = score_begin
@@ -380,7 +380,7 @@ def identification(option=None):
             # for the order to change as the result of averaging here, because
             # we are only joining timestamps where the keys are in the same order
             results[timestamp] = dict(zip(class_scores_begin.keys(),
-              np.mean(scores, axis=0).tolist()))
+              np.mean(scores, axis=0, dtype=np.float32).tolist()))
         finally:
           score_begin = score_end
         
@@ -389,7 +389,7 @@ def identification(option=None):
         # to work correctly for one-shot sounds not part of a contiguous range
         if prediction != predictions_len:
           begin = score_end
-          scores = [np.fromiter(class_scores_end.values(), dtype=float)]
+          scores = [np.fromiter(class_scores_end.values(), dtype=np.float32)]
       
       return results
     

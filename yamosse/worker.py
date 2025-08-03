@@ -351,7 +351,7 @@ def worker(file_name):
         
         # Predict YAMNet classes.
         for score in yamnet(waveform)[0]:
-          identification.predict(result, (int(seconds), np.array(score)))
+          identification.predict(result, (int(seconds), np.array(score, dtype=float32)))
           seconds += patch_hop_seconds
   finally:
     _step_progress(worker_step)

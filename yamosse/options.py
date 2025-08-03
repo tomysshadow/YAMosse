@@ -168,16 +168,17 @@ class Options:
     
     # cast calibration from percentages to floats and ensure it is the right length
     class_names_len = len(class_names)
-    calibration = np.divide(self.calibration[:class_names_len], 100.0)
+    calibration = np.divide(self.calibration[:class_names_len], 100.0, dtype=np.float32)
     
     calibration = np.concatenate((calibration,
-      np.ones(class_names_len - calibration.size)))
+      np.ones(class_names_len - calibration.size, dtype=np.float32)))
     
     # make background noise volume logarithmic if requested
-    background_noise_volume = np.divide(self.background_noise_volume, 100.0)
+    background_noise_volume = np.array(np.divide(
+      self.background_noise_volume, 100.0, dtype=np.float32))
     
     if not self.background_noise_volume_loglinear:
-      np.pow(background_noise_volume, BACKGROUND_NOISE_VOLUME_LOG, out=background_noise_volume)
+      np.power(background_noise_volume, BACKGROUND_NOISE_VOLUME_LOG, out=background_noise_volume)
     
     # create a numpy array of this so it can be used with fancy indexing
     self.classes = np.unique(self.classes)
