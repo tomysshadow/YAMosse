@@ -127,6 +127,8 @@ def show_yamscan(widgets, values=None):
         ok_button=done_button if ok else None,
         cancel_button=done_button if not ok else None
       )
+      
+      if ok: window.bell()
   
   return gui.after_idle_window(window, callback)
 
