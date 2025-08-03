@@ -287,7 +287,7 @@ def text_embed(text):
         inset = widget['borderwidth'] + widget['highlightthickness'] + widget['padx']
         child['width'] = e.width - (inset * 2)
     
-    text.bind('<Configure>', configure)
+    text.bind('<Configure>', configure, add=True)
     
     def enter(e):
       widget = e.widget
@@ -295,13 +295,13 @@ def text_embed(text):
       if _stack and _stack[-1] == widget: return
       _stack.append(widget)
     
-    text.bind('<Enter>', enter)
+    text.bind('<Enter>', enter, add=True)
     
     def leave(e):
       if not _stack: return
       _stack.pop()
     
-    text.bind('<Leave>', leave)
+    text.bind('<Leave>', leave, add=True)
     
     # delete anything that might've been typed in before the text was passed to us
     # then create the placeholder frame

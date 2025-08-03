@@ -30,7 +30,8 @@ def key_file_name(item):
 
 def output(file_name, *args, **kwargs):
   class Output(ABC):
-    def __init__(self, file_name, model_yamnet_class_names, identification, subsystem=None):
+    def __init__(self, file_name, model_yamnet_class_names, identification,
+      subsystem=None, encoding='utf8'):
       if subsystem: self.seconds = time()
       self.subsystem = subsystem
       
@@ -44,7 +45,7 @@ def output(file_name, *args, **kwargs):
       self.model_yamnet_class_names = model_yamnet_class_names
       self.identification = yamosse_identification.identification(option=identification)
       
-      self.file = open(file_name, 'w', encoding='ascii')
+      self.file = open(file_name, 'w', encoding=encoding)
     
     def __enter__(self):
       return self
@@ -112,6 +113,9 @@ def output(file_name, *args, **kwargs):
       return errors
   
   class OutputText(Output):
+    def __init__(self, *args, encoding='ascii', **kwargs):
+      super().__init__(*args, encoding=encoding, **kwargs)
+    
     def options(self, options):
       if not super().options(options): return False
       

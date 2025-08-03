@@ -104,17 +104,17 @@ def subsystem(window, title, variables):
         print(yamosse_utils.ascii_backslashreplace(values['log']))
     
     def ask_yes_no(self, message, default=None, parent=None):
-      YES = 'Y'
-      NO = 'N'
+      YES = 'y'
+      NO = 'n'
       
-      yes = 'y'
-      no = 'n'
+      yes = YES
+      no = NO
       
       default_has_value = not default is None
       
       if default_has_value:
-        if default: yes = YES
-        else: no = NO
+        if default: yes = yes.upper()
+        else: no = no.upper()
       
       result = ''
       
@@ -130,7 +130,7 @@ def subsystem(window, title, variables):
         result = input(prompt).strip()
         
         if result:
-          result = result[0].upper()
+          result = result[0].casefold()
           
           if result not in (YES, NO):
             result = ''

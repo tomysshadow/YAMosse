@@ -437,8 +437,8 @@ def _link_tips(text, tips):
       text['state'] = tk.DISABLED
   
   for widget, tip in tips.items():
-    widget.bind('<Enter>', lambda e, tip=tip: show(e, tip))
-    widget.bind('<Leave>', show)
+    widget.bind('<Enter>', lambda e, tip=tip: show(e, tip), add=True)
+    widget.bind('<Leave>', show, add=True)
 
 
 def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
