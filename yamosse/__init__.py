@@ -59,7 +59,7 @@ def open_file(path):
     os.startfile(path)
     return
   
-  Popen(['open' if platform.system() == 'Darwin' else 'xdg-open', path])
+  Popen(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
 
 
 def sf_input_filetypes():
