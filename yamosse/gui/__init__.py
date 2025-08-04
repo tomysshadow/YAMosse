@@ -116,7 +116,8 @@ def _init_report_callback_exception():
     try:
       with open('traceback.txt', 'w', encoding='utf8') as file:
         traceback.print_exception(exc, val, tb, file=file)
-    except OSError: pass
+    except OSError:
+      pass
     
     messagebox.showerror(title='Exception in Tkinter callback',
       message=''.join(traceback.format_exception(exc, val, tb)))
