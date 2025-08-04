@@ -5,6 +5,7 @@ from shlex import quote
 
 import yamosse.output as output
 import yamosse.options as options
+import yamosse.utils as utils
 
 MODEL_YAMNET_CLASS_NAMES = ['Class A', 'Class B', 'Class C', 'Class D', 'Class E']
 
@@ -28,8 +29,6 @@ class TestOutput:
   
   def _output_file(self, identification=0):
     file = self.file
-    file.seek(0)
-    file.truncate()
     
     return output.output(
       file.name,
@@ -49,7 +48,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self.assertEqual(f.readline(), '# Options\n')
     self.assertTrue(f.read().endswith('\n\n'))
   
-  def test_output_results(self):
+  def test_output_results_cs(self):
     CLASS_TIMESTAMPS = {
       0: {0: 75.0, 3: 50.0, 6: 25.0},
       1: {0: 75.0, 3: 50.0, 6: 25.0},
@@ -61,7 +60,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
       'File Name 2.wav': CLASS_TIMESTAMPS
     }
     
-    o, f = self._output_file()
+    o, f = self._output_file(0)
     
     with o: o.results(RESULTS)
     
@@ -74,6 +73,36 @@ class TestOutputText(TestOutput, unittest.TestCase):
       for class_ in CLASS_TIMESTAMPS.keys():
         self.assertEqual(f.readline(), ''.join(('\t', MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
         self.assertEqual(f.readline(), ''.join(('\t\t', '0:00 0:03 0:06', '\n')))
+      
+      self.assertEqual(f.readline(), '\n')
+    
+    self.assertEqual(f.readline(), '\n')
+  
+  def test_output_results_tr(self):
+    TIMESTAMP_CLASSES = {
+      0: {0: 75.0, 1: 50.0, 2: 25.0},
+      3: {0: 75.0, 1: 50.0, 2: 25.0},
+      6: {0: 75.0, 1: 50.0, 2: 25.0}
+    }
+    
+    RESULTS = {
+      'File Name.wav': TIMESTAMP_CLASSES,
+      'File Name 2.wav': TIMESTAMP_CLASSES
+    }
+    
+    o, f = self._output_file(1)
+    
+    with o: o.results(RESULTS)
+    
+    self.assertEqual(f.readline(), '# Results\n')
+    self.assertEqual(f.readline(), '\n')
+    
+    for file_name in RESULTS.keys():
+      self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+      
+      for timestamp, classes_scores in TIMESTAMP_CLASSES.items():
+        self.assertEqual(f.readline(), ''.join(('\t', utils.hours_minutes(timestamp), ': ',
+          ' '.join([MODEL_YAMNET_CLASS_NAMES[c] for c in classes_scores.keys()]), '\n')))
       
       self.assertEqual(f.readline(), '\n')
     
