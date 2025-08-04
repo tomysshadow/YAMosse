@@ -43,6 +43,7 @@ class TestOutput(unittest.TestCase):
     with o: o.options(self.options)
     
     self.assertEqual(f.readline(), '# Options\n')
+    self.assertTrue(f.read().endswith('\n\n'))
   
   def test_output_results(self):
     CLASS_TIMESTAMPS = {
@@ -70,6 +71,26 @@ class TestOutput(unittest.TestCase):
         self.assertEqual(f.readline(), ''.join(('\t', MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
         self.assertEqual(f.readline(), ''.join(('\t\t', '0:00 0:03 0:06', '\n')))
       
+      self.assertEqual(f.readline(), '\n')
+    
+    self.assertEqual(f.readline(), '\n')
+  
+  def test_output_errors(self):
+    ERRORS = {
+      'File Name.wav': 'message',
+      'File Name 2.wav': 'message'
+    }
+    
+    o, f = self._output_file()
+    
+    with o: o.errors(ERRORS)
+    
+    self.assertEqual(f.readline(), '# Errors\n')
+    self.assertEqual(f.readline(), '\n')
+    
+    for file_name, message in ERRORS.items():
+      self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+      self.assertEqual(f.readline(), ''.join(('\t', quote(message), '\n')))
       self.assertEqual(f.readline(), '\n')
     
     self.assertEqual(f.readline(), '\n')
