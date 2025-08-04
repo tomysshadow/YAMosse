@@ -50,7 +50,8 @@ def _high_priority(psutil=None):
   try:
     for priority in range(os.getpriority(os.PRIO_PROCESS, 0) - 1, MIN_NICE - 1, -1):
       os.setpriority(os.PRIO_PROCESS, 0, priority)
-  except OSError: pass
+  except OSError:
+    pass
 
 
 def _step_progress(worker_step, current_worker_step=1.0):

@@ -20,7 +20,8 @@ try:
   from . import gui
   from .gui import yamscan as gui_yamscan
   from .gui import yamosse as gui_yamosse
-except ImportError: gui = None
+except ImportError:
+  gui = None
 
 NAME = 'YAMosse'
 VERSION = '1.0.0'
