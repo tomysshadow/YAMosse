@@ -75,8 +75,8 @@ def output(file_name, *args, **kwargs):
       self.sort_reverse = options.sort_reverse
       
       # this will take any escape characters like \n or \t and make them real characters
-      item_delimiter = yamosse_utils.ascii_backslashreplace(
-        yamosse_utils.latin1_unescape(options.item_delimiter))
+      item_delimiter = yamosse_utils.latin1_unescape(options.item_delimiter)
+      item_delimiter = item_delimiter.encode(self.file.encoding, 'backslashreplace').decode()
       
       self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
       self.output_scores = options.output_scores
