@@ -64,8 +64,21 @@ def identification(option=None):
       raise NotImplementedError
     
     @classmethod
-    @staticmethod
-    def key_result(item):
+    def key_number_of_sounds(cls, item):
+      result = 0
+      
+      # the number of sounds, with timespans at the end
+      for timestamps in item:
+        result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
+      
+      return result
+    
+    @classmethod
+    def key_file_name(cls, item):
+      return item[0]
+    
+    @classmethod
+    def key_result(cls, item):
       # this function is used from Output
       # to sort the column of results that's tabbed in once (one column to the right of file names)
       # that is, classes in Confidence Score mode, or timestamps in Top Ranked mode
@@ -219,6 +232,10 @@ def identification(option=None):
             print('\t', item_delimiter.join(all_timestamps), sep='', file=file)
         finally:
           print('', file=file)
+    
+    @classmethod
+    def key_number_of_sounds(cls, item):
+      return super().key_number_of_sounds(item[1].values())
     
     @staticmethod
     def _min(calibrated_score, confidence_score):
@@ -443,9 +460,12 @@ def identification(option=None):
           print('', file=file)
     
     @classmethod
-    @staticmethod
-    def key_result(item):
-      begin = item[0]
+    def key_number_of_sounds(cls, item):
+      return super().key_number_of_sounds((item[1].keys(),))
+    
+    @classmethod
+    def key_result(cls, item):
+      begin = super().key_result(item)
       
       try: begin, end = begin
       except TypeError: return begin, 0

@@ -14,20 +14,6 @@ DEFAULT_ITEM_DELIMITER = ' '
 EXT_JSON = '.json'.casefold()
 
 
-def key_number_of_sounds(item):
-  result = 0
-  
-  # the number of sounds, with timespans at the end
-  for timestamps in item[1].values():
-    result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
-  
-  return result
-
-
-def key_file_name(item):
-  return item[0]
-
-
 def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, identification,
@@ -35,7 +21,9 @@ def output(file_name, *args, **kwargs):
       if subsystem: self.seconds = time()
       self.subsystem = subsystem
       
-      self.sort_by = key_number_of_sounds
+      identification = yamosse_identification.identification(option=identification)
+      
+      self.sort_by = identification.key_number_of_sounds
       self.sort_reverse = False
       self.item_delimiter = DEFAULT_ITEM_DELIMITER
       self.output_scores = False
@@ -43,7 +31,7 @@ def output(file_name, *args, **kwargs):
       self.top_ranked_output_timestamps = True
       
       self.model_yamnet_class_names = model_yamnet_class_names
-      self.identification = yamosse_identification.identification(option=identification)
+      self.identification = identification
       
       self.file = open(file_name, 'w', encoding=encoding)
     
@@ -68,9 +56,9 @@ def output(file_name, *args, **kwargs):
       sort_by = options.sort_by
       
       if sort_by == NUMBER_OF_SOUNDS:
-        self.sort_by = key_number_of_sounds
+        self.sort_by = self.identification.key_number_of_sounds
       elif sort_by == FILE_NAME:
-        self.sort_by = key_file_name
+        self.sort_by = self.identification.key_file_name
       
       self.sort_reverse = options.sort_reverse
       
