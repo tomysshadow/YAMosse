@@ -11,12 +11,12 @@ MODEL_YAMNET_CLASS_NAMES = ['Class A', 'Class B', 'Class C', 'Class D', 'Class E
 SUFFIX_TXT = '.txt'
 SUFFIX_JSON = '.json'
 
-class TestOutput(unittest.TestCase):
-  def setUp(self):
+class TestOutput:
+  def setUp(self, mode='w+b'):
     self.options = options.Options()
     
     self.file = tempfile.NamedTemporaryFile(
-      'w+',
+      mode=mode,
       suffix=SUFFIX_TXT,
       delete=False
     )
@@ -36,6 +36,10 @@ class TestOutput(unittest.TestCase):
       MODEL_YAMNET_CLASS_NAMES,
       identification
     ), file
+
+class TestOutputText(TestOutput, unittest.TestCase):
+  def setUp(self):
+    super().setUp(mode='w+')
   
   def test_output_options(self):
     o, f = self._output_file()
