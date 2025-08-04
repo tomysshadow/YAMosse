@@ -168,5 +168,4 @@ class TestUtils(unittest.TestCase):
     b = utils.batched(list(range(200)), 10)
     self.assertEqual(len(list(b)), 20)
 
-
 if __name__ == '__main__': unittest.main()
