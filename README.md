@@ -98,7 +98,7 @@ To scan the audio from a video file with YAMosse, you first need to convert it t
 
 ## When scanning MP3s, sometimes there are a lot of timestamps past the end of the file. Why?
 
-This is due to a bug in libsoundfile where it misreports the length of MP3s that have album art in them. It is a problem with the soundfile package and cannot be fixed by YAMosse. For now, you can use an ID3 editor like [The GodFather](https://www.jtclipper.eu/thegodfather/) to remove the album art from your MP3s before scanning them.
+This is due to a bug in libsoundfile where it misreports the length of MP3s that have album art in them. It is a problem with the `soundfile` package and cannot be fixed by YAMosse. For now, you can use an ID3 editor like [The GodFather](https://www.jtclipper.eu/thegodfather/) to remove the album art from your MP3s before scanning them.
 
 ## Can YAMosse identify words and phrases?
 
