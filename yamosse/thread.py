@@ -30,7 +30,8 @@ def connection_flush(connection):
   # (they expect that sent messages WILL be delivered, else cause an exception)
   try:
     while True: connection.recv()
-  except EOFError: pass
+  except EOFError:
+    pass
 
 
 def real_relpath(path, start=os.curdir):
