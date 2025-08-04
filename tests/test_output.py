@@ -18,10 +18,22 @@ CONFIDENCE_SCORES_STANDARD = {
   2: {0: 75.0, 3: 50.0, 6: 25.0}
 }
 
+CONFIDENCE_SCORES_TIMESPANS = {
+  0: {
+    (1, 3): 75.0, 3: 50.0, 6: 25.0,
+    (4, 8): 75.0, 3: 50.0, 6: 25.0
+  }
+}
+
 TOP_RANKED_STANDARD = {
   0: {0: 75.0, 1: 50.0, 2: 25.0},
   3: {0: 75.0, 1: 50.0, 2: 25.0},
   6: {0: 75.0, 1: 50.0, 2: 25.0}
+}
+
+TOP_RANKED_TIMESPANS = {
+  (1, 3): {0: 75.0, 1: 50.0, 2: 25.0},
+  (4, 8): {0: 75.0, 1: 50.0, 2: 25.0}
 }
 
 class TestOutput:
@@ -103,14 +115,45 @@ class TestOutputText(TestOutput, unittest.TestCase):
     
     self.assertEqual(f.readline(), '\n')
   
-  def test_output_results_cs(self):
-    self._output_results_cs(CONFIDENCE_SCORES_STANDARD)
+  def test_output_results_cs_nos(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=False)
   
-  def test_output_results_cs_item_delimiter(self):
-    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, item_delimiter=' . ')
+  def test_output_results_cs_nos_item_delimiter(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      item_delimiter=' . ')
   
-  def test_output_results_cs_output_scores(self):
-    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, output_scores=True)
+  def test_output_results_cs_nos_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=True)
+  
+  def test_output_results_cs_nos_timespans(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_cs_nos_timespans_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=True)
+  
+  def test_output_results_cs_fn(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=False)
+  
+  def test_output_results_cs_fn_item_delimiter(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      item_delimiter=' . ')
+  
+  def test_output_results_cs_fn_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=True)
+  
+  def test_output_results_cs_fn_timespans(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_cs_fn_timespans_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=True)
   
   def _output_results_tr(self, timestamp_classes, **kwargs):
     results = self._file_name_keys(timestamp_classes)
@@ -147,14 +190,45 @@ class TestOutputText(TestOutput, unittest.TestCase):
     
     self.assertEqual(f.readline(), '\n')
   
-  def test_output_results_tr(self):
-    self._output_results_tr(TOP_RANKED_STANDARD)
+  def test_output_results_tr_nos(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=False)
   
-  def test_output_results_tr_item_delimiter(self):
-    self._output_results_tr(TOP_RANKED_STANDARD, item_delimiter=' . ')
+  def test_output_results_tr_nos_item_delimiter(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      item_delimiter=' . ')
   
-  def test_output_results_tr_output_scores(self):
-    self._output_results_tr(TOP_RANKED_STANDARD, output_scores=True)
+  def test_output_results_tr_nos_output_scores(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=True)
+  
+  def test_output_results_tr_nos_timespans(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_tr_nos_timespans_output_scores(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=True)
+  
+  def test_output_results_tr_fn(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=False)
+  
+  def test_output_results_tr_fn_item_delimiter(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      item_delimiter=' . ')
+  
+  def test_output_results_tr_fn_output_scores(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=True)
+  
+  def test_output_results_tr_fn_timespans(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_tr_fn_timespans_output_scores(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=True)
   
   def test_output_errors(self):
     errors = self._file_name_keys('message')
