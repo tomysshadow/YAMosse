@@ -12,6 +12,18 @@ MODEL_YAMNET_CLASS_NAMES = ['Class A', 'Class B', 'Class C', 'Class D', 'Class E
 SUFFIX_TXT = '.txt'
 SUFFIX_JSON = '.json'
 
+CONFIDENCE_SCORES_STANDARD = {
+  0: {0: 75.0, 3: 50.0, 6: 25.0},
+  1: {0: 75.0, 3: 50.0, 6: 25.0},
+  2: {0: 75.0, 3: 50.0, 6: 25.0}
+}
+
+TOP_RANKED_STANDARD = {
+  0: {0: 75.0, 1: 50.0, 2: 25.0},
+  3: {0: 75.0, 1: 50.0, 2: 25.0},
+  6: {0: 75.0, 1: 50.0, 2: 25.0}
+}
+
 class TestOutput:
   def setUp(self, mode='w+b'):
     self.file = tempfile.NamedTemporaryFile(
@@ -24,6 +36,14 @@ class TestOutput:
     file = self.file
     file.close()
     unlink(file.name)
+  
+  @staticmethod
+  def _file_name_keys(result):
+    return {
+      'File Name.wav': result,
+      'File Name 2.wav': result,
+      'File Name 3.wav': result
+    }
   
   def _set_options(self, **kwargs):
     o = options.Options()
@@ -52,14 +72,11 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self.assertTrue(f.read().endswith('\n\n'))
   
   def _output_results_cs(self, class_timestamps, **kwargs):
+    results = self._file_name_keys(class_timestamps)
+    
     options = self._set_options(output_options=False, **kwargs)
     item_delimiter = options.item_delimiter
     output_scores = options.output_scores
-    
-    results = {
-      'File Name.wav': class_timestamps,
-      'File Name 2.wav': class_timestamps
-    }
     
     o, f = self._output_file(0)
     
@@ -88,21 +105,20 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self.assertEqual(f.readline(), '\n')
   
   def test_output_results_cs(self):
-    self._output_results_cs({
-      0: {0: 75.0, 3: 50.0, 6: 25.0},
-      1: {0: 75.0, 3: 50.0, 6: 25.0},
-      2: {0: 75.0, 3: 50.0, 6: 25.0}
-    })
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD)
+  
+  def test_output_results_cs_item_delimiter(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, item_delimiter=' . ')
+  
+  def test_output_results_cs_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, output_scores=True)
   
   def _output_results_tr(self, timestamp_classes, **kwargs):
+    results = self._file_name_keys(timestamp_classes)
+    
     options = self._set_options(output_options=False, **kwargs)
     item_delimiter = options.item_delimiter
     output_scores = options.output_scores
-    
-    results = {
-      'File Name.wav': timestamp_classes,
-      'File Name 2.wav': timestamp_classes
-    }
     
     o, f = self._output_file(1)
     
@@ -120,7 +136,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
         if output_scores:
           classes = [f'{MODEL_YAMNET_CLASS_NAMES[c]} ({s:.0%})' for c, s in classes.items()]
         else:
-          classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes.keys()]
+          classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
         
         self.assertEqual(f.readline(), ''.join(('\t', utils.hours_minutes(timestamp), ': ',
           item_delimiter.join(classes), '\n')))
@@ -130,26 +146,24 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self.assertEqual(f.readline(), '\n')
   
   def test_output_results_tr(self):
-    self._output_results_tr({
-      0: {0: 75.0, 1: 50.0, 2: 25.0},
-      3: {0: 75.0, 1: 50.0, 2: 25.0},
-      6: {0: 75.0, 1: 50.0, 2: 25.0}
-    })
+    self._output_results_tr(TOP_RANKED_STANDARD)
+  
+  def test_output_results_tr_item_delimiter(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, item_delimiter=' . ')
+  
+  def test_output_results_tr_output_scores(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, output_scores=True)
   
   def test_output_errors(self):
-    ERRORS = {
-      'File Name.wav': 'message',
-      'File Name 2.wav': 'message'
-    }
-    
+    errors = self._file_name_keys('message')
     o, f = self._output_file()
     
-    with o: o.errors(ERRORS)
+    with o: o.errors(errors)
     
     self.assertEqual(f.readline(), '# Errors\n')
     self.assertEqual(f.readline(), '\n')
     
-    for file_name, message in ERRORS.items():
+    for file_name, message in errors.items():
       self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
       self.assertEqual(f.readline(), ''.join(('\t', quote(message), '\n')))
       self.assertEqual(f.readline(), '\n')
