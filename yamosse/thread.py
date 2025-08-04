@@ -43,7 +43,8 @@ def real_relpath(path, start=os.curdir):
   try:
     if os.path.commonpath((real_path, real_start)) != real_start:
       return real_path
-  except ValueError: return real_path
+  except ValueError:
+    return real_path
   
   return os.path.relpath(real_path, start=real_start)
 
