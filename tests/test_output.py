@@ -73,6 +73,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
   
   def _output_results_cs(self, class_timestamps, **kwargs):
     results = self._file_name_keys(class_timestamps)
+    results_output = None
     
     options = self._set_options(output_options=False, **kwargs)
     item_delimiter = options.item_delimiter
@@ -81,22 +82,20 @@ class TestOutputText(TestOutput, unittest.TestCase):
     o, f = self._output_file(0)
     
     with o:
-      o.options(options)
-      o.results(results)
+      self.assertFalse(o.options(options))
+      results_output = o.results(results)
     
     self.assertEqual(f.readline(), '# Results\n')
     self.assertEqual(f.readline(), '\n')
     
-    for file_name in results.keys():
+    for file_name, class_timestamps in results_output.items():
       self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
       
       for class_, timestamps in class_timestamps.items():
         self.assertEqual(f.readline(), ''.join(('\t', MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
         
         if output_scores:
-          timestamps = [f'{utils.hours_minutes(ts)} ({s:.0%})' for ts, s in timestamps.items()]
-        else:
-          timestamps = [utils.hours_minutes(ts) for ts in timestamps]
+          timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
         
         self.assertEqual(f.readline(), ''.join(('\t\t', item_delimiter.join(timestamps), '\n')))
       
@@ -115,6 +114,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
   
   def _output_results_tr(self, timestamp_classes, **kwargs):
     results = self._file_name_keys(timestamp_classes)
+    results_output = None
     
     options = self._set_options(output_options=False, **kwargs)
     item_delimiter = options.item_delimiter
@@ -123,22 +123,24 @@ class TestOutputText(TestOutput, unittest.TestCase):
     o, f = self._output_file(1)
     
     with o:
-      o.options(options)
-      o.results(results)
+      self.assertFalse(o.options(options))
+      results_output = o.results(results)
     
     self.assertEqual(f.readline(), '# Results\n')
     self.assertEqual(f.readline(), '\n')
     
-    for file_name in results.keys():
+    for file_name, top_scores in results_output.items():
       self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
       
-      for timestamp, classes in timestamp_classes.items():
+      for top_score in top_scores:
+        classes = top_score['classes']
+        
         if output_scores:
           classes = [f'{MODEL_YAMNET_CLASS_NAMES[c]} ({s:.0%})' for c, s in classes.items()]
         else:
           classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
         
-        self.assertEqual(f.readline(), ''.join(('\t', utils.hours_minutes(timestamp), ': ',
+        self.assertEqual(f.readline(), ''.join(('\t', top_score['timestamp'], ': ',
           item_delimiter.join(classes), '\n')))
       
       self.assertEqual(f.readline(), '\n')
