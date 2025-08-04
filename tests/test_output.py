@@ -1,4 +1,5 @@
 import unittest
+from abc import ABC
 import tempfile
 from os import unlink
 from shlex import quote
@@ -38,7 +39,7 @@ TOP_RANKED_TIMESPANS = {
   (7, 12): {0: 75.0, 1: 50.0, 2: 25.0}
 }
 
-class TestOutput:
+class TestOutput(ABC):
   def setUp(self, mode='w+b'):
     self.file = tempfile.NamedTemporaryFile(
       mode=mode,
