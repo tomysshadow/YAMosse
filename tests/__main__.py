@@ -1,3 +1,3 @@
-import tests.run as tests_run
+import tests
 
-tests_run.run(__file__)
+tests.tests(__file__)
