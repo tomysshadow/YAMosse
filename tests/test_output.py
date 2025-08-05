@@ -398,5 +398,16 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
   def test_output_results_tr_fn_timespans_output_scores(self):
     self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.FILE_NAME,
       timespan=3, output_scores=True)
+  
+  def test_output_errors(self):
+    errors = self._file_name_keys('message')
+    o, f = self._output_file()
+    
+    with o: o.errors(errors)
+    
+    d = json.loads(f.read())
+    
+    for message in d['errors'].values():
+      self.assertEqual(message, 'message')
 
 if __name__ == '__main__': unittest.main()
