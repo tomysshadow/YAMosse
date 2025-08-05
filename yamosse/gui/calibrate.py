@@ -49,10 +49,11 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
+  dragging = False
+  
   def revert(widget, newvalue):
-    # don't Undo if the value of the widget changed
-    # and hasn't been "committed" by a key/button release
-    if data(widget): raise gui.UndoError
+    # don't Undo if we're in the middle of a click and drag
+    if dragging: raise gui.UndoError
     
     text.see(widget.master)
     widget.focus_set()
@@ -60,26 +61,22 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     widget.set(newvalue)
     oldvalues[widget] = newvalue
   
-  def save(widget, oldvalue, newvalue):
+  def data(widget):
+    # don't do anything if the value hasn't changed
+    oldvalue = oldvalues[widget]
+    newvalue = widget.get()
+    if oldvalue == newvalue: return
+    
     print(f'Undo scale save {widget} {newvalue} {oldvalue}')
     
     undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
     oldvalues[widget] = newvalue
   
-  dragging = False
-  
-  def data(widget):
+  def key_release(e):
     # ignore any keys if we're in the middle of a click and drag
-    if dragging: return True
+    if dragging: return
     
-    # don't do anything if the value hasn't changed
-    oldvalue = oldvalues[widget]
-    newvalue = widget.get()
-    if oldvalue == newvalue: return False
-    
-    # use after_idle so we'll never save the undo options *during* an undo event
-    widget.after_idle(lambda: save(widget, oldvalue, newvalue))
-    return True
+    data(e.widget)
   
   def button_press(e):
     nonlocal dragging
@@ -95,46 +92,35 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     dragging = False
     data(e.widget)
   
-  gui.bind_truekey_widget(text, class_=bindtag, release=lambda e: data(e.widget))
+  # focus out is caught in case a widget gets a key press then loses focus before key release
+  gui.bind_truekey_widget(text, class_=bindtag, release=key_release)
+  text.bind_class(bindtag, '<FocusOut>', key_release)
   text.bind_class(bindtag, '<ButtonPress>', button_press)
   text.bind_class(bindtag, '<ButtonRelease>', button_release)
   
   def reset():
+    # possible if the user uses Alt + R and Space to hit the button
+    if dragging: return
+    
     # it's okay to use a dictionary as a default here
     # because we won't ever be mutating it
-    def revert(newvalues=defaults, undo=True):
-      # save any "uncommitted" changes
-      error = False
+    def revert(newvalues=defaults):
+      nonlocal oldvalues
       
-      for scale in oldvalues.keys():
-        if data(scale): error = True
+      # don't Undo if we're in the middle of a click and drag
+      if dragging: raise gui.UndoError
       
-      # don't Undo if the value of a widget changed
-      # and hasn't been "committed" by a key/button release
-      # but do allow pressing the Reset button
-      if undo and error: raise gui.UndoError
+      for scale, newvalue in newvalues.items():
+        scale.set(newvalue)
       
-      def save():
-        nonlocal oldvalues
-        
-        # save the undo options
-        # the oldvalues must be copied when turned into an undooption
-        # because they get changed as the scales are set
-        # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
-        if not undo:
-          undooptions((revert, oldvalues.copy()), (revert,))
-        
-        for scale, newvalue in newvalues.items():
-          scale.set(newvalue)
-        
-        # we must copy this here so we don't mutate a redo state
-        oldvalues = newvalues.copy()
-      
-      # use after_idle so we'll never save the undo options *during* an undo event
-      # and, so that we save the undo options after "committing" any other changes
-      reset_button.after_idle(save)
+      # we must copy this here so we don't mutate a redo state
+      oldvalues = newvalues.copy()
     
-    revert(undo=False)
+    # the oldvalues must be copied when turned into an undooption
+    # because they get changed as the scales are set
+    # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
+    undooptions((revert, oldvalues.copy()), (revert,))
+    revert()
   
   reset_button['command'] = reset
 
