@@ -53,7 +53,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   
   def revert(widget, newvalue):
     # don't Undo if the user is doing something
-    if doing(): raise gui.UndoError
+    if doing(widget): raise gui.UndoError
     
     text.see(widget.master)
     widget.focus_set()
@@ -190,16 +190,21 @@ def _states():
   
   navigating = None
   
-  def get_navigating():
-    return navigating
+  def get_navigating(widget=None):
+    # these checks prevent Ctrl+Z on a currently navigating widget
+    # from undoing some other widget
+    # and prevents the Undo button from having an effect
+    # if you click it while a key is still held down
+    if widget and not widget is navigating: return navigating
+    if navigating and not 'focus' in navigating.state(): return navigating
+    return None
   
   def set_navigating(widget):
     nonlocal navigating
     
     navigating = widget
   
-  def doing():
-    if dragging: return True
-    return navigating and not 'focus' in navigating.state()
+  def doing(widget=None):
+    return get_dragging() or get_navigating(widget=widget)
   
   return get_dragging, set_dragging, get_navigating, set_navigating, doing
