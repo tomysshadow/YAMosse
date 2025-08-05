@@ -36,6 +36,18 @@ def make_footer(frame, ok, cancel):
 
 
 def _undoable_scales(scales, text, reset_button, undooptions):
+  # There are a couple known issues with this:
+  # -hitting Ctrl+Z while clicking and dragging a widget undoes other widgets
+  #   while still editing the current one. The ideal is that undo is disabled
+  #   when you're in the middle of a click and drag.
+  # -if you focus into one of the scales and hold the up/down arrow keys to edit it
+  #   then simultaneously press Ctrl+Z, you can edit the current/past widgets while the
+  #   current one is still navigating, clobbering the Redo stack in the process. The ideal would
+  #   be that if you have any key held on a focused scale, you can't undo, but the problem is
+  #   this should obviously not apply to Ctrl+Z/Ctrl+Y itself, which needs to work
+  #   even if a scale is focused. Thing is I don't want to make the assumption in this code
+  #   that the arrow keys are the only editing hotkeys, nor do I want to assume
+  #   that Ctrl+Z/Ctrl+Y are the only undo hotkeys. So really it should only undo if... when???
   bindtag = gui.bindtag_for_object(text)
   
   defaults = {}
@@ -49,12 +61,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
-  get_dragging, set_dragging, get_navigating, set_navigating, doing = _states()
-  
   def revert(widget, newvalue):
-    # don't Undo if the user is doing something
-    if doing(widget): raise gui.UndoError
-    
     # look at and focus the widget so the user notices what's just changed
     text.see(widget.master)
     widget.focus_set()
@@ -63,10 +70,6 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     oldvalues[widget] = newvalue
   
   def data(e):
-    # don't do anything in the middle of a click and drag
-    # (i.e. if Ctrl+Z is hit during a click and drag)
-    if get_dragging(): return
-    
     widget = e.widget
     
     # don't do anything if the value hasn't changed
@@ -80,34 +83,15 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     oldvalues[widget] = newvalue
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
-  text.bind_class(bindtag, '<ButtonPress>', lambda e: set_dragging(True))
-  text.bind_class(bindtag, '<ButtonRelease>', lambda e: set_dragging(False))
-  text.bind_class(bindtag, '<ButtonRelease>', data, add=True)
+  gui.bind_truekey_widget(text, class_=bindtag, release=data)
   text.bind_class(bindtag, '<FocusOut>', data)
-  
-  gui.bind_truekey_widget(text, class_=bindtag,
-    press=lambda e: set_navigating(e.widget), release=data)
-  
-  # need to bind to all in case the key release is on a different widget than the key press
-  # (because a button was clicked and the focus changed while the key is still held)
-  gui.bind_truekey_widget(text, class_='all',
-    release=lambda e: set_navigating(None), add=True)
+  text.bind_class(bindtag, '<ButtonRelease>', data)
   
   def reset():
-    # don't do anything in the middle of a click and drag
-    # possible to be in a drag if the user uses Alt + R and Space to hit the button
-    # we're not worried about navigating here, because
-    # it'd be impossible to cause a reset without focusing out
-    # which will "commit" the undo state correctly before the reset
-    if get_dragging(): return
-    
     # it's okay to use a dictionary as a default here
     # because we won't ever be mutating it
-    def revert(newvalues=defaults, undo=True):
+    def revert(newvalues=defaults):
       nonlocal oldvalues
-      
-      # don't Undo if the user is doing something
-      if undo and doing(): raise gui.UndoError
       
       for scale, newvalue in newvalues.items():
         scale.set(newvalue)
@@ -119,7 +103,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # because they get changed as the scales are set
     # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
     undooptions((revert, oldvalues.copy()), (revert,))
-    revert(undo=False)
+    revert()
   
   reset_button['command'] = reset
 
@@ -180,39 +164,3 @@ def make_calibrate(frame, variables, class_names):
   _undoable_scales(scales, calibration_text, reset_button, undooptions)
   
   gui.set_modal_window(window)
-
-
-def _states():
-  # represents whether we're currently clicking and dragging any widget
-  dragging = False
-  
-  def get_dragging():
-    return dragging
-  
-  def set_dragging(state):
-    nonlocal dragging
-    
-    dragging = state
-  
-  # represents whether we are holding a key (like up and down arrow keys) on a widget
-  navigating = None
-  
-  def get_navigating(widget=None):
-    # these checks prevent Ctrl+Z on a currently navigating widget
-    # from undoing some other widget
-    # and prevents the Undo button from having an effect
-    # if you click it while a key is still held down
-    # (so the widget won't take focus and immediately start moving again, clobbering any Redo's)
-    if widget and not widget is navigating: return navigating
-    if navigating and not 'focus' in navigating.state(): return navigating
-    return None
-  
-  def set_navigating(widget):
-    nonlocal navigating
-    
-    navigating = widget
-  
-  def doing(widget=None):
-    return get_dragging() or get_navigating(widget=widget)
-  
-  return get_dragging, set_dragging, get_navigating, set_navigating, doing
