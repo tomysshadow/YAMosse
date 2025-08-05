@@ -84,8 +84,8 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
   gui.bind_truekey_widget(text, class_=bindtag, release=data)
-  text.bind_class(bindtag, '<FocusOut>', data)
   text.bind_class(bindtag, '<ButtonRelease>', data)
+  text.bind_class(bindtag, '<FocusOut>', data)
   
   def reset():
     # it's okay to use a dictionary as a default here
