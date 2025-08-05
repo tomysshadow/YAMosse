@@ -41,8 +41,8 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   #   while still editing the current one. The ideal is that undo is disabled
   #   when you're in the middle of a click and drag.
   # -if you focus into one of the scales and hold the up/down arrow keys to edit it
-  #   then simultaneously press Ctrl+Z, you can edit the current/past widgets while the
-  #   current one is still navigating, clobbering the Redo stack in the process. The ideal would
+  #   then simultaneously click the Undo button, you can undo the current widget while
+  #   it's still navigating, clobbering the Redo stack in the process. The ideal would
   #   be that if you have any key held on a focused scale, you can't undo, but the problem is
   #   this should obviously not apply to Ctrl+Z/Ctrl+Y itself, which needs to work
   #   even if a scale is focused. Thing is I don't want to make the assumption in this code

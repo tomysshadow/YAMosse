@@ -96,8 +96,6 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
-class UndoError(Exception): pass
-
 
 def _init_report_callback_exception():
   reported = False
@@ -1045,13 +1043,10 @@ def make_undoable(frame):
       print('No more undoable events')
       return
     
-    try:
-      undothis = undoings[-1]
-      undo(undothis[0])
-    except UndoError:
-      return
+    undothis = undoings.pop()
+    undo(undothis[0])
     
-    redoings.append(undoings.pop())
+    redoings.append(undothis)
     
     enable()
   
@@ -1059,14 +1054,11 @@ def make_undoable(frame):
     if not redoings:
       return
     
-    try:
-      redothis = redoings[-1]
-      undo(redothis[1])
+    redothis = redoings.pop()
+    undo(redothis[1])
     #frame.update_idletasks()
-    except UndoError:
-      return
     
-    undoings.append(redoings.pop())
+    undoings.append(redothis)
     
     enable()
   
