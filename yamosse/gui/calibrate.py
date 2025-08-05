@@ -37,7 +37,7 @@ def make_footer(frame, ok, cancel):
 
 def _undoable_scales(scales, text, reset_button, undooptions):
   # There are a couple known issues with this:
-  # -hitting Ctrl+Z while clicking and dragging a widget undoes other widgets
+  # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
   #   while still editing the current one. The ideal is that undo is disabled
   #   when you're in the middle of a click and drag.
   # -if you tab into one of the scales and hold the up/down arrow keys to edit it
