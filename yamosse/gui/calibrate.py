@@ -55,6 +55,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # don't Undo if the user is doing something
     if doing(widget): raise gui.UndoError
     
+    # look at and focus the widget so the user notices what's just changed
     text.see(widget.master)
     widget.focus_set()
     
@@ -63,6 +64,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   
   def data(e):
     # don't do anything in the middle of a click and drag
+    # (i.e. if Ctrl+Z is hit during a click and drag)
     if get_dragging(): return
     
     widget = e.widget
@@ -86,11 +88,14 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   gui.bind_truekey_widget(text, class_=bindtag,
     press=lambda e: set_navigating(e.widget), release=data)
   
+  # need to bind to all in case the key release is on a different widget than the key press
+  # (because a button was clicked and the focus changed while the key is still held)
   gui.bind_truekey_widget(text, class_='all',
-    release=lambda e: set_navigating(None))
+    release=lambda e: set_navigating(None), add=True)
   
   def reset():
-    # possible if the user uses Alt + R and Space to hit the button
+    # don't do anything in the middle of a click and drag
+    # possible to be in a drag if the user uses Alt + R and Space to hit the button
     # we're not worried about navigating here, because
     # it'd be impossible to cause a reset without focusing out
     # which will "commit" the undo state correctly before the reset
@@ -178,6 +183,7 @@ def make_calibrate(frame, variables, class_names):
 
 
 def _states():
+  # represents whether we're currently clicking and dragging any widget
   dragging = False
   
   def get_dragging():
@@ -188,6 +194,7 @@ def _states():
     
     dragging = state
   
+  # represents whether we are holding a key (like up and down arrow keys) on a widget
   navigating = None
   
   def get_navigating(widget=None):
@@ -195,6 +202,7 @@ def _states():
     # from undoing some other widget
     # and prevents the Undo button from having an effect
     # if you click it while a key is still held down
+    # (so the widget won't take focus and immediately start moving again, clobbering any Redo's)
     if widget and not widget is navigating: return navigating
     if navigating and not 'focus' in navigating.state(): return navigating
     return None
