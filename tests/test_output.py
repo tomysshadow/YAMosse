@@ -3,6 +3,7 @@ from abc import ABC
 import tempfile
 from os import unlink
 from shlex import quote
+import json
 
 import yamosse.output as output
 import yamosse.options as options
@@ -47,10 +48,10 @@ TOP_RANKED_TIMESPANS = {
 }
 
 class TestOutput(ABC):
-  def setUp(self, mode='w+b'):
+  def setUp(self, suffix):
     self.file = tempfile.NamedTemporaryFile(
-      mode=mode,
-      suffix=SUFFIX_TXT,
+      mode='w+',
+      suffix=suffix,
       delete=False
     )
   
@@ -83,7 +84,7 @@ class TestOutput(ABC):
 
 class TestOutputText(TestOutput, unittest.TestCase):
   def setUp(self):
-    super().setUp(mode='w+')
+    super().setUp(SUFFIX_TXT)
   
   def test_output_options(self):
     o, f = self._output_file()
@@ -255,5 +256,147 @@ class TestOutputText(TestOutput, unittest.TestCase):
       self.assertEqual(f.readline(), '\n')
     
     self.assertEqual(f.readline(), '\n')
+
+class TestOutputJSON(TestOutput, unittest.TestCase):
+  def setUp(self):
+    super().setUp(SUFFIX_JSON)
+  
+  def test_output_options(self):
+    o, f = self._output_file()
+    
+    with o: o.options(self._set_options())
+    
+    d = json.loads(f.read())
+    self.assertIn('options', d)
+  
+  def _output_results_cs(self, class_timestamps, **kwargs):
+    results = self._file_name_keys(class_timestamps)
+    results_output = None
+    
+    options = self._set_options(output_options=False, **kwargs)
+    item_delimiter = options.item_delimiter
+    output_scores = options.output_scores
+    
+    o, f = self._output_file(0)
+    
+    with o:
+      self.assertFalse(o.options(options))
+      results_output = o.results(results)
+    
+    d = json.loads(f.read())
+    
+    for file_name, classes_timestamps in results_output.items():
+      results_output[file_name] = dict(zip([str(c) for c in classes_timestamps.keys()],
+        classes_timestamps.values()))
+    
+    self.assertEqual(d['results'], results_output)
+    return results_output
+  
+  def test_output_results_cs_nos(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=False)
+  
+  def test_output_results_cs_nos_item_delimiter(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      item_delimiter=' . ')
+  
+  def test_output_results_cs_nos_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=True)
+  
+  def test_output_results_cs_nos_timespans(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_cs_nos_timespans_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=True)
+  
+  def test_output_results_cs_fn(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=False)
+  
+  def test_output_results_cs_fn_item_delimiter(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      item_delimiter=' . ')
+  
+  def test_output_results_cs_fn_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=True)
+  
+  def test_output_results_cs_fn_timespans(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_cs_fn_timespans_output_scores(self):
+    self._output_results_cs(CONFIDENCE_SCORES_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=True)
+  
+  def _output_results_tr(self, timestamp_classes, **kwargs):
+    results = self._file_name_keys(timestamp_classes)
+    results_output = None
+    
+    options = self._set_options(output_options=False, **kwargs)
+    item_delimiter = options.item_delimiter
+    output_scores = options.output_scores
+    
+    o, f = self._output_file(1)
+    
+    with o:
+      self.assertFalse(o.options(options))
+      results_output = o.results(results)
+    
+    d = json.loads(f.read())
+    
+    if output_scores:
+      for top_scores in results_output.values():
+        for top_score in top_scores:
+          classes = top_score['classes']
+          
+          top_score['classes'] = dict(zip([str(c) for c in classes.keys()],
+            classes.values()))
+    
+    self.assertEqual(d['results'], results_output)
+    return results_output
+  
+  def test_output_results_tr_nos(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=False)
+  
+  def test_output_results_tr_nos_item_delimiter(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      item_delimiter=' . ')
+  
+  def test_output_results_tr_nos_output_scores(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      output_scores=True)
+  
+  def test_output_results_tr_nos_timespans(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_tr_nos_timespans_output_scores(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.NUMBER_OF_SOUNDS,
+      timespan=3, output_scores=True)
+  
+  def test_output_results_tr_fn(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=False)
+  
+  def test_output_results_tr_fn_item_delimiter(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      item_delimiter=' . ')
+  
+  def test_output_results_tr_fn_output_scores(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      output_scores=True)
+  
+  def test_output_results_tr_fn_timespans(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=False)
+  
+  def test_output_results_tr_fn_timespans_output_scores(self):
+    self._output_results_tr(TOP_RANKED_TIMESPANS, sort_by=output.FILE_NAME,
+      timespan=3, output_scores=True)
 
 if __name__ == '__main__': unittest.main()
