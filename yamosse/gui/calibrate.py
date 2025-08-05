@@ -48,6 +48,12 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   #   even if a scale is focused. Thing is I don't want to make the assumption in this code
   #   that the arrow keys are the only editing hotkeys, nor do I want to assume
   #   that Ctrl+Z/Ctrl+Y are the only undo hotkeys. So really it should only undo if... when???
+  # I anticipate that both of these problems could be solved in the same way/with the same
+  # simple solution, which I just can't think of at the moment. It will obviously involve
+  # capturing ButtonPress/KeyPress events to know when you're "clicked in," but it's the
+  # exceptions to the rule that make things difficult. I did think of using variable tracing,
+  # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
+  # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
   bindtag = gui.bindtag_for_object(text)
   
   defaults = {}
