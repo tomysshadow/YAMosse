@@ -49,11 +49,23 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
-  dragging = False
+  dragging_button = None
+  dragging_key = None
+  
+  def dragging():
+    # the focus is checked for keys because
+    # the only problem state here is when the scale has lost focus, but
+    # you haven't let go of the key
+    # in that case, we want to prevent an Undo because
+    # the focus will get set back onto the scale, and start registering keypresses again
+    # but we do want to allow, say, pressing Ctrl+Z on a scale that has focus
+    if dragging_button: return True
+    if dragging_key and not 'focus' in dragging_key.state(): return True
+    return False
   
   def revert(widget, newvalue):
-    # don't Undo if we're in the middle of a click and drag
-    if dragging: raise gui.UndoError
+    # don't Undo if we're in the middle of a drag
+    if dragging(): raise gui.UndoError
     
     text.see(widget.master)
     widget.focus_set()
@@ -72,43 +84,58 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
     oldvalues[widget] = newvalue
   
-  def key_release(e):
-    # ignore any keys if we're in the middle of a click and drag
-    if dragging: return
-    
-    data(e.widget)
-  
   def button_press(e):
-    nonlocal dragging
+    nonlocal dragging_button
     
-    dragging = True
+    dragging_button = e.widget
   
   def button_release(e):
-    nonlocal dragging
+    nonlocal dragging_button
     
     # we don't need to track which button it is
     # any button release causes us to let go
     # even if it's not the same button that started the drag
-    dragging = False
+    dragging_button = None
+    
     data(e.widget)
   
+  def key_press(e):
+    nonlocal dragging_key
+    
+    dragging_key = e.widget
+  
+  def key_release(e):
+    # ignore any keys if we're in the middle of a click and drag
+    if dragging_button: return
+    
+    data(e.widget)
+  
+  def key_release_all(e):
+    nonlocal dragging_key
+    
+    dragging_key = None
+  
   # focus out is caught in case a widget gets a key press then loses focus before key release
-  gui.bind_truekey_widget(text, class_=bindtag, release=key_release)
-  text.bind_class(bindtag, '<FocusOut>', key_release)
   text.bind_class(bindtag, '<ButtonPress>', button_press)
   text.bind_class(bindtag, '<ButtonRelease>', button_release)
+  text.bind_class(bindtag, '<FocusOut>', key_release)
+  gui.bind_truekey_widget(text, class_=bindtag, press=key_press, release=key_release)
+  gui.bind_truekey_widget(text, class_='all', release=key_release_all)
   
   def reset():
     # possible if the user uses Alt + R and Space to hit the button
-    if dragging: return
+    # we're not worried about keys here, because
+    # it'd be impossible to cause a reset without focusing out
+    # which will "commit" the undo state correctly before the reset
+    if dragging_button: return
     
     # it's okay to use a dictionary as a default here
     # because we won't ever be mutating it
-    def revert(newvalues=defaults):
+    def revert(newvalues=defaults, undo=True):
       nonlocal oldvalues
       
       # don't Undo if we're in the middle of a click and drag
-      if dragging: raise gui.UndoError
+      if undo and dragging(): raise gui.UndoError
       
       for scale, newvalue in newvalues.items():
         scale.set(newvalue)
@@ -120,7 +147,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # because they get changed as the scales are set
     # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
     undooptions((revert, oldvalues.copy()), (revert,))
-    revert()
+    revert(undo=False)
   
   reset_button['command'] = reset
 
