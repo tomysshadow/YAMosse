@@ -179,7 +179,7 @@ def identification(option=None):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
-      indent = '\t' if output.indent else ''
+      indent = output.indent
       output_scores = output.output_scores
       
       for file_name, class_timestamps in results.items():
@@ -426,7 +426,7 @@ def identification(option=None):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
-      indent = '\t' if output.indent else ''
+      indent = output.indent
       output_scores = output.output_scores
       output_timestamps = output.top_ranked_output_timestamps
       
