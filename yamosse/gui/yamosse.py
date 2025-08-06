@@ -42,6 +42,8 @@ TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSE = 'If checked, results will be sorted in re
 TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Separator inbetween each timestamp or class. ',
   'Escape characters are supported. This option is ignored if the output is a JSON file.'))
 
+TIP_OUTPUT_FILE_OPTIONS_INDENT = 'If checked, the items will be indented.'
+
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage along with each ',
@@ -325,21 +327,11 @@ def make_sort(frame, variables):
   return sort_by_frame, sort_reverse_checkbutton
 
 
-def make_spacer(frame):
-  frame.rowconfigure(0, weight=1) # make label vertically centered
-  
-  ttk.Label(frame).grid()
-
-
-def make_output_file_options(frame, variables):
-  frame.columnconfigure(0, weight=1) # one column layout
-  
-  sort_frame = ttk.Frame(frame)
-  sort_frame.grid(row=0, sticky=tk.EW)
-  sort_by_frame, sort_reverse_checkbutton = make_sort(sort_frame, variables)
+def make_items(frame, variables):
+  frame.columnconfigure(0, weight=1) # make item delimiter frame horizontally resizable
   
   item_delimiter_frame = ttk.Frame(frame)
-  item_delimiter_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
+  item_delimiter_frame.grid(row=0, column=0, sticky=tk.EW)
   item_delimiter_variable = variables['item_delimiter']
   
   def invalid_item_delimiter(W, v):
@@ -358,6 +350,30 @@ def make_output_file_options(frame, variables):
   
   item_delimiter_entry.validate()
   
+  indent_checkbutton = ttk.Checkbutton(frame,
+    text='Indent', variable=variables['indent'])
+  
+  indent_checkbutton.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
+  return item_delimiter_frame, indent_checkbutton
+
+
+def make_spacer(frame):
+  frame.rowconfigure(0, weight=1) # make label vertically centered
+  
+  ttk.Label(frame).grid()
+
+
+def make_output_file_options(frame, variables):
+  frame.columnconfigure(0, weight=1) # one column layout
+  
+  sort_frame = ttk.Frame(frame)
+  sort_frame.grid(row=0, sticky=tk.EW)
+  sort_by_frame, sort_reverse_checkbutton = make_sort(sort_frame, variables)
+  
+  items_frame = ttk.Frame(frame)
+  items_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_QN)
+  item_delimiter_frame, indent_checkbutton = make_items(items_frame, variables)
+  
   output_options_checkbutton = ttk.Checkbutton(frame,
     text='Output Options', variable=variables['output_options'])
   
@@ -373,8 +389,11 @@ def make_output_file_options(frame, variables):
   frame.rowconfigure(tuple(range(frame_rows)), weight=1,
     uniform='output_worker_options_row') # make the rows uniform
   
-  return (sort_by_frame, sort_reverse_checkbutton, item_delimiter_frame,
-    output_options_checkbutton, output_scores_checkbutton)
+  return (
+    sort_by_frame, sort_reverse_checkbutton,
+    item_delimiter_frame, indent_checkbutton,
+    output_options_checkbutton, output_scores_checkbutton
+  )
 
 
 def make_worker_options(frame, variables):
@@ -508,8 +527,9 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     output_file_options_widgets[0]: TIP_OUTPUT_FILE_OPTIONS_SORT_BY,
     output_file_options_widgets[1]: TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSE,
     output_file_options_widgets[2]: TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER,
-    output_file_options_widgets[3]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS,
-    output_file_options_widgets[4]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE,
+    output_file_options_widgets[3]: TIP_OUTPUT_FILE_OPTIONS_INDENT,
+    output_file_options_widgets[4]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS,
+    output_file_options_widgets[5]: TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE,
     
     worker_options_widgets[0]: TIP_WORKER_OPTIONS_MEMORY_LIMIT,
     worker_options_widgets[1]: TIP_WORKER_OPTIONS_MAX_WORKERS,

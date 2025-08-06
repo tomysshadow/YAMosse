@@ -10,6 +10,7 @@ import yamosse.identification as yamosse_identification
 NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
 DEFAULT_ITEM_DELIMITER = ' '
+DEFAULT_INDENT = '\t'
 
 EXT_JSON = '.json'.casefold()
 
@@ -26,6 +27,7 @@ def output(file_name, *args, **kwargs):
       self.sort_by = identification.key_number_of_sounds
       self.sort_reverse = False
       self.item_delimiter = DEFAULT_ITEM_DELIMITER
+      self.indent = DEFAULT_INDENT
       self.output_scores = False
       
       self.top_ranked_output_timestamps = True
@@ -67,6 +69,7 @@ def output(file_name, *args, **kwargs):
         self.file.encoding, 'backslashreplace').decode()
       
       self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
+      self.indent = DEFAULT_INDENT if options.indent else ''
       self.output_scores = options.output_scores
       
       self.top_ranked_output_timestamps = options.top_ranked_output_timestamps
@@ -133,6 +136,7 @@ def output(file_name, *args, **kwargs):
       errors = super().errors(errors)
       
       file = self.file
+      indent = self.indent
       
       # print errors
       self.print_section('Errors')
@@ -141,7 +145,7 @@ def output(file_name, *args, **kwargs):
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
         self.print_file(file_name)
-        print('\t', yamosse_utils.ascii_backslashreplace(quote(str(ex))), sep='', file=file)
+        print(indent, yamosse_utils.ascii_backslashreplace(quote(str(ex))), sep='', file=file)
         print('', file=file)
       
       print('', file=file)
@@ -172,7 +176,8 @@ def output(file_name, *args, **kwargs):
       }
       
       # dump anything that is non-empty
-      json.dump({key: value for key, value in d.items() if value}, self.file, indent=True)
+      json.dump({key: value for key, value in d.items() if value},
+        self.file, indent=len(self.indent))
       
       super().__exit__(*args, **kwargs)
     

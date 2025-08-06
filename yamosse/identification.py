@@ -179,6 +179,7 @@ def identification(option=None):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
+      indent = '\t' if output.indent else ''
       output_scores = output.output_scores
       
       for file_name, class_timestamps in results.items():
@@ -188,7 +189,7 @@ def identification(option=None):
         try:
           # if no timestamps were found for this file, then print None for this file
           if not class_timestamps:
-            print('\t', None, sep='', file=file)
+            print(indent, None, sep='', file=file)
             continue
           
           # a list of classes with 'All' timestamps, including the associated scores if available
@@ -220,7 +221,7 @@ def identification(option=None):
             if output_scores:
               timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
             
-            print('\t', class_name, ':\n\t\t',
+            print(indent, class_name, ':\n', indent, indent,
               item_delimiter.join(timestamps), sep='', file=file)
           
           if all_timestamps:
@@ -228,7 +229,7 @@ def identification(option=None):
             if output_scores:
               all_timestamps = [f'{c} ({t["score"]:.0%})' for c, t in all_timestamps]
             
-            print('\t', item_delimiter.join(all_timestamps), sep='', file=file)
+            print(indent, item_delimiter.join(all_timestamps), sep='', file=file)
         finally:
           print('', file=file)
     
@@ -425,6 +426,7 @@ def identification(option=None):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
+      indent = '\t' if output.indent else ''
       output_scores = output.output_scores
       output_timestamps = output.top_ranked_output_timestamps
       
@@ -433,7 +435,7 @@ def identification(option=None):
         
         try:
           if not top_scores:
-            print('\t', None, sep='', file=file)
+            print(indent, None, sep='', file=file)
             continue
           
           # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
@@ -449,7 +451,7 @@ def identification(option=None):
             else:
               classes = item_delimiter.join([model_yamnet_class_names[c] for c in classes])
             
-            print('\t', end='', file=file)
+            print(indent, end='', file=file)
             
             if output_timestamps:
               print(top_score['timestamp'], end=': ', sep='', file=file)

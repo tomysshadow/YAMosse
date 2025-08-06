@@ -31,7 +31,8 @@ class Options:
     identification=0,
     confidence_score=50, confidence_score_minmax=False,
     top_ranked=5, top_ranked_output_timestamps=True,
-    sort_by='Number of Sounds', sort_reverse=False, item_delimiter=', ',
+    sort_by='Number of Sounds', sort_reverse=False,
+    item_delimiter=', ', indent=True,
     output_options=True, output_scores=False,
     memory_limit=256, max_workers=4, high_priority=True
   ):
@@ -65,6 +66,7 @@ class Options:
     self.sort_by = sort_by
     self.sort_reverse = sort_reverse
     self.item_delimiter = item_delimiter
+    self.indent = indent
     self.output_options = output_options
     self.output_scores = output_scores
     
@@ -101,6 +103,7 @@ class Options:
     option('Sort By', repr(self.sort_by))
     option('Sort Reverse', repr(self.sort_reverse))
     option('Item Delimiter', yamosse_utils.ascii_backslashreplace(repr(self.item_delimiter)))
+    option('Indent', repr(self.indent))
     option('Output Options', repr(self.output_options))
     option('Output Scores', repr(self.output_scores))
     option('Memory Limit', str(self.memory_limit), end=' MB\n')
