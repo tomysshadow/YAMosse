@@ -279,7 +279,7 @@ def worker(file_name):
   if shutdown.is_set(): return None
   
   result = {}
-  worker_step = 0
+  step = 0
   
   options = _options
   identification = options.identification
@@ -307,7 +307,7 @@ def worker(file_name):
       # this should truncate to int, don't round the number
       # otherwise YAMNet may get confused and think it's two patches when it's meant to be one
       sr = f.samplerate
-      seconds_worker_steps = f.frames / sr
+      seconds_steps = f.frames / sr
       overlap = int(sr * patch_hop_seconds)
       blocksize = int(sr * patch_window_seconds) + overlap
       
@@ -326,7 +326,7 @@ def worker(file_name):
         # should I check this every loop? Would a variable to keep track actually save time...?
         if shutdown.is_set(): return None
         
-        worker_step = _step_progress(worker_step, seconds / seconds_worker_steps)
+        step = _step_progress(step, seconds / seconds_steps)
         
         assert waveform.dtype == int16, 'Bad sample type: %r' % waveform.dtype
         
@@ -354,6 +354,6 @@ def worker(file_name):
           identification.predict(result, (int(seconds), np.array(score, dtype=float32)))
           seconds += patch_hop_seconds
   finally:
-    _step_progress(worker_step)
+    _step_progress(step)
   
   return identification.timestamps(result, shutdown)
