@@ -1,4 +1,4 @@
-from sys import exc_info
+import sys
 import atexit
 import os
 import csv
@@ -147,8 +147,6 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     # seperated out because loading the worker dependencies (mainly Tensorflow) in
     # the main process consumes a non-trivial amount of memory for no benefit
     # and causes startup to take significantly longer
-    import sys
-    
     try: import tf_keras
     except ImportError:
       # for Windows, where we can't use tf_keras with GPU Acceleration
@@ -267,7 +265,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     _options = options
     _yamnet = yamnet
   except:
-    _initializer_ex = exc_info()
+    _initializer_ex = sys.exc_info()
 
 
 def worker(file_name):
