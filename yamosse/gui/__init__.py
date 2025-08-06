@@ -105,7 +105,6 @@ def _init_report_callback_exception():
   
   def report_callback_exception(tk_, exc, val, tb):
     nonlocal reported
-    nonlocal reported_lock
     
     tk_report_callback_exception(tk_, exc, val, tb)
     
