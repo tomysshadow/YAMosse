@@ -16,16 +16,16 @@ import yamosse.output as yamosse_output
 import yamosse.subsystem as yamosse_subsystem
 
 
-def key_getsize(file_name):
+def _key_getsize(file_name):
   try: return os.path.getsize(file_name)
   except OSError: return 0
 
 
-def file_names_sorted_next(file_names):
-  return sorted(next(file_names), key=key_getsize, reverse=True)
+def _file_names_sorted_next(file_names):
+  return sorted(next(file_names), key=_key_getsize, reverse=True)
 
 
-def connection_flush(connection):
+def _connection_flush(connection):
   # prevents BrokenPipeError exceptions in workers
   # (they expect that sent messages WILL be delivered, else cause an exception)
   try:
@@ -34,7 +34,7 @@ def connection_flush(connection):
     pass
 
 
-def real_relpath(path, start=os.curdir):
+def _real_relpath(path, start=os.curdir):
   # make path relative if it's within our current directory
   # (just looks nicer in the output)
   real_path = os.path.realpath(path)
@@ -49,14 +49,14 @@ def real_relpath(path, start=os.curdir):
   return os.path.relpath(real_path, start=real_start)
 
 
-def input_file_names(input_, recursive=True):
+def _input_file_names(input_, recursive=True):
   if not input_: raise ValueError('input must not be empty')
   
   if not isinstance(input_, str):
     try: input_, = input_
     except ValueError: return set(input_)
   
-  path = real_relpath(input_)
+  path = _real_relpath(input_)
   file_names = set()
   
   # assume path is a directory path, and if it turns out it isn't, then assume it is a file path
@@ -82,7 +82,7 @@ def input_file_names(input_, recursive=True):
   return file_names
 
 
-def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, options=None):
+def _download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, options=None):
   if options:
     weights = options.weights
     if weights: return open(weights, 'rb')
@@ -120,7 +120,7 @@ def download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, o
   raise IOError('The weights file %r could not be created uniquely.' % path)
 
 
-def files(input_, model_yamnet_class_names, subsystem, options):
+def _files(input_, model_yamnet_class_names, subsystem, options):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -141,7 +141,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
   done = {}
   done_lock = Lock()
   
-  file_names = list(input_file_names(input_, recursive=options.input_recursive))
+  file_names = list(_input_file_names(input_, recursive=options.input_recursive))
   file_names_pos = 0
   file_names_len = len(file_names)
   
@@ -267,7 +267,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
       })
       
       file_names_batched = yamosse_utils.batched(file_names, BATCH_SIZE)
-      file_names_sorted = file_names_sorted_next(file_names_batched)
+      file_names_sorted = _file_names_sorted_next(file_names_batched)
       
       while file_names_batched:
         for file_name in file_names_sorted:
@@ -277,7 +277,7 @@ def files(input_, model_yamnet_class_names, subsystem, options):
         # while the workers are booting up, sort the next batch
         # this allows both tasks to be done at once
         # although any individual batch should not take longer than a few seconds to sort
-        try: file_names_sorted = file_names_sorted_next(file_names_batched)
+        try: file_names_sorted = _file_names_sorted_next(file_names_batched)
         except StopIteration: file_names_batched = None
         
         while next_ and file_names_pos < file_names_len:
@@ -306,12 +306,12 @@ def files(input_, model_yamnet_class_names, subsystem, options):
       process_pool_executor.shutdown(wait=False, cancel_futures=True)
       shutdown.set()
       sender.close()
-      connection_flush(receiver)
+      _connection_flush(receiver)
   
   return results, errors
 
 
-def report_thread_exception(subsystem, exc, val, tb):
+def _report_thread_exception(subsystem, exc, val, tb):
   try:
     subsystem.show(values={
       'progressbar': yamosse_progress.ERROR,
@@ -332,7 +332,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
     with (
-      download_weights_file_unique(
+      _download_weights_file_unique(
         yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
         yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
         subsystem=subsystem,
@@ -346,7 +346,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
         subsystem=subsystem
       ) as output
     ):
-      results, errors = files(input_, model_yamnet_class_names, subsystem, options)
+      results, errors = _files(input_, model_yamnet_class_names, subsystem, options)
       
       subsystem.show(values={
         'progressbar': yamosse_progress.DONE,
@@ -357,7 +357,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
       output.results(results)
       output.errors(errors)
   except yamosse_subsystem.SubsystemExit: pass
-  except: report_thread_exception(subsystem, *exc_info())
+  except: _report_thread_exception(subsystem, *exc_info())
   finally:
     try:
       subsystem.show(values={
