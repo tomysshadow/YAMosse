@@ -13,7 +13,6 @@ def identification(option=None):
   HMS_ALL = 'All'
   HMS_TIMESPAN = ' - '
   
-  # general TODO: this whole contraption is in desperate need of unit tests
   class Identification(ABC):
     def __init__(self, options, np):
       self.options = options
