@@ -179,7 +179,10 @@ def identification(option=None):
       file = output.file
       model_yamnet_class_names = output.model_yamnet_class_names
       item_delimiter = output.item_delimiter
+      
       indent = output.indent
+      indent2 = indent * 2
+      
       output_scores = output.output_scores
       
       for file_name, class_timestamps in results.items():
@@ -221,7 +224,7 @@ def identification(option=None):
             if output_scores:
               timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
             
-            print(indent, class_name, ':\n', indent * 2,
+            print(indent, class_name, ':\n', indent2,
               item_delimiter.join(timestamps), sep='', file=file)
           
           if all_timestamps:
