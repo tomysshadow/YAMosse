@@ -175,9 +175,11 @@ def output(file_name, *args, **kwargs):
         'errors': self._errors
       }
       
+      indent = self.indent
+      
       # dump anything that is non-empty
       json.dump({key: value for key, value in d.items() if value},
-        self.file, indent=len(self.indent))
+        self.file, indent=indent if indent else None)
       
       super().__exit__(*args, **kwargs)
     
