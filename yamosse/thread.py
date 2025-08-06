@@ -175,18 +175,12 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
       # we don't get the future's results here because
       # if an exception occurs, we want it to occur in the YAMScan thread
       def insert_done(future, file_name):
-        nonlocal done
-        nonlocal done_lock
-        
         with done_lock:
           done[future] = file_name
       
       # show any value received by the receiver
       # then show progress and logs for the futures that are done
       def clear_done_normal():
-        nonlocal done
-        nonlocal done_lock
-        
         nonlocal file_names_pos
         nonlocal file_names_len
         
@@ -237,9 +231,6 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
       # or if there is a future that is done
       # then change into the normal state so we don't have to continually check this
       def clear_done_loading():
-        nonlocal done
-        nonlocal done_lock
-        
         nonlocal clear_done
         
         # we're just reading an int here, not writing it so we don't need to lock this (I think?)
