@@ -221,7 +221,7 @@ def identification(option=None):
             if output_scores:
               timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
             
-            print(indent, class_name, ':\n', indent, indent,
+            print(indent, class_name, ':\n', indent * 2,
               item_delimiter.join(timestamps), sep='', file=file)
           
           if all_timestamps:
