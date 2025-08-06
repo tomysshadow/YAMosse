@@ -438,7 +438,7 @@ def _link_tips(text, tips):
         # it is possible to recieve more than one Enter event before Leave event
         # (on comboboxes)
         # so we must check if this is the same widget as the one on top of the stack
-        if stack and widget == stack[-1]:
+        if stack and widget is stack[-1]:
           return
         
         text.delete('1.0', tk.END)

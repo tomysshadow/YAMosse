@@ -69,7 +69,7 @@ def subsystem(window, title, variables):
       )
     
     def ask_yes_no(self, message, default=None, parent=None):
-      if not default is None:
+      if default is not None:
         default = gui.messagebox.YES if default else gui.messagebox.NO
       
       return gui.messagebox.askyesno(
@@ -110,7 +110,7 @@ def subsystem(window, title, variables):
       yes = YES
       no = NO
       
-      default_has_value = not default is None
+      default_has_value = default is not None
       
       if default_has_value:
         if default: yes = yes.upper()

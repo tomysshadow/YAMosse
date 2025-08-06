@@ -91,13 +91,13 @@ def show_yamscan(widgets, values=None):
     
     value = values.get('progressbar')
     
-    if not value is None:
+    if value is not None:
       gui_progressbar.configure_progressbar(
         progressbar_widgets, progressbar_variable, value)
     
     value = values.get('log')
     
-    if not value is None:
+    if value is not None:
       log_text['state'] = tk.NORMAL
       
       try:
@@ -110,7 +110,7 @@ def show_yamscan(widgets, values=None):
     
     value = values.get('done')
     
-    if not value is None:
+    if value is not None:
       if value not in DONE_VALUES: raise ValueError('value must be in %r' % (DONE_VALUES,))
       
       open_output_file_button, done_button = footer_widgets

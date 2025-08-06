@@ -292,7 +292,7 @@ def text_embed(text):
     def enter(e):
       widget = e.widget
       
-      if _stack and _stack[-1] == widget: return
+      if _stack and _stack[-1] is widget: return
       _stack.append(widget)
     
     text.bind('<Enter>', enter, add=True)

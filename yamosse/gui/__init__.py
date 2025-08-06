@@ -1114,12 +1114,12 @@ def bind_buttons_window(window, ok_button=None, cancel_button=None):
   window.unbind(('<Return>', '<Escape>'))
   
   if ok_button:
-    assert window == ok_button.winfo_toplevel(), 'ok_button window mismatch'
+    assert window is ok_button.winfo_toplevel(), 'ok_button window mismatch'
     ok_button['default'] = tk.ACTIVE
     window.bind('<Return>', lambda e: ok_button.invoke())
   
   if cancel_button:
-    assert window == cancel_button.winfo_toplevel(), 'cancel_button window mismatch'
+    assert window is cancel_button.winfo_toplevel(), 'cancel_button window mismatch'
     cancel_button['default'] = tk.NORMAL
     window.bind('<Escape>', lambda e: cancel_button.invoke())
 
@@ -1193,7 +1193,7 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
   window.show_sizegrip(resizable)
   
   if iconphotos:
-    if window == get_root_window():
+    if window is get_root_window():
       # in this case make this the default icon
       # note that it is still necessary to call iconphoto before this
       # because Windows has a bug where you need to call iconphoto with default off first
