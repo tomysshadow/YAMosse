@@ -55,7 +55,7 @@ TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The Tensorflow logical device memory
   'workers and the number of GPUs available. This option is ignored if GPU Acceleration is not ',
   'enabled.'))
 
-TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers may make scans ',
+TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers will make scans ',
   'faster, unless it is set too high - then you might run out of memory (workers cost memory, ',
   'though lowering the memory limit will make them cost less.)'))
 
