@@ -57,7 +57,7 @@ TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The Tensorflow logical device memory
 
 TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers may make scans ',
   'faster, unless it is set too high - then you might run out of memory (workers cost memory, ',
-  'though adjusting the memory limit will make them cost less.)'))
+  'though lowering the memory limit will make them cost less.)'))
 
 TIP_WORKER_OPTIONS_HIGH_PRIORITY = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
   'at the expense of other programs running slower.'))
