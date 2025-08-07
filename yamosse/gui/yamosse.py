@@ -89,7 +89,7 @@ def make_classes(frame, variables, class_names):
   treeview_widgets = gui.make_treeview(
     frame,
     columns=gui.heading_text_columns(('#', 'Class Names')),
-    items=gui.values_items(zip(range(1, len(class_names) + 1), class_names)),
+    items=gui.values_items(enumerate(class_names, start=1)),
     show='headings',
     selectmode=tk.EXTENDED
   )
@@ -191,8 +191,10 @@ def make_identification_options(frame, variables, class_names):
   radiobuttons = gui.make_widgets(frame, ttk.Radiobutton,
     ('Confidence Score', 'Top Ranked'), sticky=tk.EW, cell=0)
   
-  gui.link_radiobuttons(zip(radiobuttons, (confidence_score_frame, top_ranked_frame)),
-    variables['identification'])
+  gui.link_radiobuttons(
+    zip(radiobuttons, (confidence_score_frame, top_ranked_frame), strict=True),
+    variables['identification']
+  )
   
   # fix tab order
   confidence_score_frame.lift()

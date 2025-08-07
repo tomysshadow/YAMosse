@@ -55,7 +55,7 @@ def identification(option=None):
         
         keys.append(timestamp)
       
-      return keys if values is None else dict(zip(keys, values))
+      return keys if values is None else dict(zip(keys, values, strict=True))
     
     @classmethod
     @abstractmethod
@@ -342,7 +342,7 @@ def identification(option=None):
         scores = np.mean(scores, axis=0, dtype=np.float32)
         class_indices = scores.argsort()[::-1][:options.top_ranked]
         top_scores[top] = OrderedDict(zip(classes[class_indices].tolist(),
-          scores[class_indices]))
+          scores[class_indices], strict=True))
         
         return
       
@@ -400,7 +400,7 @@ def identification(option=None):
             # for the order to change as the result of averaging here, because
             # we are only joining timestamps where the keys are in the same order
             results[timestamp] = dict(zip(class_scores_begin.keys(),
-              np.mean(scores, axis=0, dtype=np.float32).tolist()))
+              np.mean(scores, axis=0, dtype=np.float32).tolist(), strict=True))
         finally:
           score_begin = score_end
         
