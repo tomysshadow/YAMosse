@@ -22,7 +22,7 @@ Use Git to clone this repository, then use pip to install the following Python p
  - [`PyTaskbar`](https://github.com/N3RDIUM/PyTaskbar) (optional, to show taskbar progress, Windows only)
  - [`tensorflow-hub`](https://github.com/tensorflow/hub) (optional, see below)
 
-In addition to the above packages, to use YAMosse, you must install the YAMNet model. If the YAMNet model is not installed, the application will run, but when you perform a YAMScan an import error will occur and the scan will be cancelled.
+In addition to the above packages, you must install the YAMNet model to use YAMosse. If the YAMNet model is not installed, the application will run, but when you perform a YAMScan an import error will occur and the scan will be cancelled.
 
 There are two methods you can use to install the YAMNet model: installing via Tensorflow Hub, or via Tensorflow Model Garden.
 
