@@ -142,7 +142,7 @@ If the GUI fails to load because of a missing dependency, YAMosse will fallback 
 
 ## How do I get a single guess for an entire file?
 
-If you just want to get one guess for what sound is contained in a short sound clip, use the Top Ranked identification (set to identify only 1 class,) then set the Timespan to zero on the Advanced tab.
+If you just want to get one guess for what sound is contained in a short sound clip, use the Top Ranked identification (set to identify only one class,) then set the Timespan to zero on the Advanced tab.
 
 Alternatively, under Timespan you can check the Span All box. Then, any sound that ever appears in the Top Ranked at any point throughout the sound file will be listed, which will provide a bit more nuanced detail while still collapsing everything to one result.
 
