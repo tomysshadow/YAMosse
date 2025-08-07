@@ -245,8 +245,8 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
       patch_hop_seconds = params.patch_hop_seconds
       
       assert patch_hop_seconds > 0.0, 'patch_hop_seconds must be greater than zero'
-      assert patch_hop_seconds <= patch_window_seconds, ''.join(('patch_hop_seconds must be less ',
-        'than or equal to patch_window_seconds'))
+      assert patch_hop_seconds <= patch_window_seconds, ('patch_hop_seconds must be less than or '
+        'equal to patch_window_seconds')
       
       _patch_window_seconds = patch_window_seconds
       _patch_hop_seconds = patch_hop_seconds
