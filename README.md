@@ -28,7 +28,7 @@ There are two methods you can use to install the YAMNet model: installing via Te
 
 ## Method 1: Tensorflow Hub
 
-The easiest way to install the YAMNet model is by using Tensorflow Hub. All you need to do is use pip to install the `tensorflow-hub` package. The YAMNet model will be automatically loaded the first time you perform a YAMScan. However, installing the `tensorflow-hub` package will also update your Tensorflow version. If you would like to stay on an older version of Tensorflow, you should use Method 2 instead.
+The easiest way to install the YAMNet model is by using Tensorflow Hub. All you need to do is use pip to install the `tensorflow-hub` package. The YAMNet model will be automatically loaded the first time you perform a YAMScan. However, installing the `tensorflow-hub` package *will also update your Tensorflow version.* If you would like to stay on an older version of Tensorflow, you should use Method 2 instead.
 
 ## Method 2: Tensorflow Model Garden
 
