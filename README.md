@@ -134,7 +134,7 @@ Silence is just one of the classes of sound that the YAMNet model can recognize 
 
 ## Why do I get an error saying "could not find TaskbarLib.tlb?"
 
-The TaskbarLib.tlb file is a requirement of PyTaskbar, one of the dependencies used by YAMosse. It is included in the root folder of the project, along with this README. The TaskbarLib.tlb file must be in your current working directory when you run YAMosse. If you run the YAMosse module from outside the project directory, you need to make sure the TaskbarLib.tlb is there. Alternatively, you can uninstall PyTaskbar, because it is optional and YAMosse will work without it (but then you won't be able to see the progress of running scans in the taskbar.)
+The TaskbarLib.tlb file is a requirement of PyTaskbar, one of the dependencies used by YAMosse. It is included in the root folder of the project, along with this README. The TaskbarLib.tlb file must be in your current working directory when you run YAMosse. If you run the YAMosse module from outside the project directory, you need to make sure the TaskbarLib.tlb file is there. Alternatively, you can uninstall PyTaskbar, because it is optional and YAMosse will work without it (but then you won't be able to see the progress of running scans in the taskbar.)
 
 ## When I run YAMosse, instead of a GUI I get a command line prompt asking "please enter the output file name." Why?
 
