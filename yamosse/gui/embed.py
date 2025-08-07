@@ -288,7 +288,7 @@ def text_embed(text):
         + widget.winfo_fpixels(widget['padx'])
       )
       
-      width = widget.winfo_fpixels(e.width) - (inset * 2)
+      width = max(0, widget.winfo_fpixels(e.width) - (inset * 2))
       
       # set the width of the children to fill the available space
       for child in widget.winfo_children():
