@@ -53,7 +53,7 @@ TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage alo
 TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The Tensorflow logical device memory limit, in ',
   'megabytes. This is both per-worker and per-device, so will be multiplied by the number of ',
   'workers and the number of GPUs available. This option is ignored if GPU Acceleration is not ',
-  'enabled.'))
+  'enabled. If set too low, an out of memory error may occur.'))
 
 TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers will make scans ',
   'faster, unless it is set too high - then you might run out of memory (workers cost memory, ',
