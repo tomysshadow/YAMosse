@@ -71,8 +71,7 @@ class TestOptions(unittest.TestCase):
     self.assertFalse(o.background_noise_volume == 0.5)
     self.assertTrue(o.confidence_score < 1.0)
     
-    try:
-      o.worker(np, ['Class A', 'Class B', 'Class C', 'Class D', 'Class E'])
+    try: o.worker(np, ['Class A', 'Class B', 'Class C', 'Class D', 'Class E'])
     except RuntimeError: return
     
     raise Exception('worker should be single shot')
