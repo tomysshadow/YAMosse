@@ -69,7 +69,7 @@ def output(file_name, *args, **kwargs):
         self.file.encoding, 'backslashreplace').decode()
       
       self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
-      self.indent = DEFAULT_INDENT if options.indent else ''
+      self.indent = DEFAULT_INDENT * options.indent
       self.output_scores = options.output_scores
       
       self.top_ranked_output_timestamps = options.top_ranked_output_timestamps
