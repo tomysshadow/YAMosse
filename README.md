@@ -174,7 +174,9 @@ However, the progress bar in YAMosse measures in terms of the number of files do
 
 ## Why do scans occur in batches?
 
-Scans occur in batches of up to 1024 files at a time. This is tied to the reason why scans appear to start slow, then get faster over time. Determining the size of a large group of files can, in and of itself, take some time. If you right click a large folder in Explorer and click Properties, it can take anywhere from a few seconds to several minutes to discover the folder's size.
+Scans occur in batches of up to 1024 files at a time. This is tied to the reason why scans appear to start slow, then get faster over time.
+
+Determining the size of a large group of files can, in and of itself, take a while. If you right click a large folder in Explorer and click Properties, it can take anywhere from a few seconds to several minutes to discover the folder's size.
 
 In order to prevent this from stalling YAMosse, files are scanned in batches, where each individual batch should only take a short amount of time to determine the sizes of. This keeps things snappy and responsive, and also reduces memory usage by queueing less tasks at a time.
 
