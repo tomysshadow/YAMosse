@@ -173,6 +173,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
       output_scores=False)
   
+  def test_output_results_cs_nos_reverse(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      sort_reverse=True, output_scores=False)
+  
   def test_output_results_cs_nos_item_delimiter(self):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
       item_delimiter=' . ')
@@ -192,6 +196,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
   def test_output_results_cs_fn(self):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
       output_scores=False)
+  
+  def test_output_results_cs_fn_reverse(self):
+    self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      sort_reverse=True, output_scores=False)
   
   def test_output_results_cs_fn_item_delimiter(self):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
@@ -248,6 +256,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
       output_scores=False)
   
+  def test_output_results_tr_nos_reverse(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      sort_reverse=True, output_scores=False)
+  
   def test_output_results_tr_nos_item_delimiter(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
       item_delimiter=' . ')
@@ -267,6 +279,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
   def test_output_results_tr_fn(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
       output_scores=False)
+  
+  def test_output_results_tr_fn_reverse(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      sort_reverse=True, output_scores=False)
   
   def test_output_results_tr_fn_item_delimiter(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
@@ -355,6 +371,27 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     self.assertEqual(classes[0], ['0:00'])
     self.assertEqual(classes[1], ['0:00', '0:03'])
     self.assertEqual(classes[2], ['0:00', '0:03', '0:06'])
+  
+  def test_output_results_cs_nos_reverse(self):
+    r = self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      sort_reverse=True, output_scores=False)
+    
+    i = iter(r.values())
+    
+    classes = next(i)
+    
+    self.assertEqual(classes[0], ['0:00'])
+    self.assertEqual(classes[1], ['0:00', '0:03'])
+    self.assertEqual(classes[2], ['0:00', '0:03', '0:06'])
+    
+    classes = next(i)
+    
+    self.assertEqual(classes[0], ['0:00'])
+    self.assertEqual(classes[1], ['0:00', '0:03'])
+    
+    classes = next(i)
+    
+    self.assertEqual(classes[0], ['0:00'])
   
   def test_output_results_cs_nos_item_delimiter(self):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
@@ -450,6 +487,27 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     classes = next(i)
     
     self.assertEqual(classes[0], ['0:00'])
+  
+  def test_output_results_cs_fn_reverse(self):
+    r = self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
+      sort_reverse=True, output_scores=False)
+    
+    i = iter(r.values())
+    
+    classes = next(i)
+    
+    self.assertEqual(classes[0], ['0:00'])
+    
+    classes = next(i)
+    
+    self.assertEqual(classes[0], ['0:00'])
+    self.assertEqual(classes[1], ['0:00', '0:03'])
+    
+    classes = next(i)
+    
+    self.assertEqual(classes[0], ['0:00'])
+    self.assertEqual(classes[1], ['0:00', '0:03'])
+    self.assertEqual(classes[2], ['0:00', '0:03', '0:06'])
   
   def test_output_results_cs_fn_item_delimiter(self):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.FILE_NAME,
@@ -581,6 +639,27 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': [1, 2, 3]})
     self.assertEqual(timestamps[2], {'timestamp': '0:06', 'classes': [2, 3, 4]})
   
+  def test_output_results_tr_nos_reverse(self):
+    r = self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      sort_reverse=True, output_scores=False)
+    
+    i = iter(r.values())
+    
+    timestamps = next(i)
+    
+    self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+    self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': [1, 2, 3]})
+    self.assertEqual(timestamps[2], {'timestamp': '0:06', 'classes': [2, 3, 4]})
+    
+    timestamps = next(i)
+    
+    self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+    self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': [1, 2, 3]})
+    
+    timestamps = next(i)
+    
+    self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+  
   def test_output_results_tr_nos_item_delimiter(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
       item_delimiter=' . ')
@@ -685,6 +764,27 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+  
+  def test_output_results_tr_fn_reverse(self):
+    r = self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      sort_reverse=True, output_scores=False)
+    
+    i = iter(r.values())
+    
+    timestamps = next(i)
+    
+    self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+    
+    timestamps = next(i)
+    
+    self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+    self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': [1, 2, 3]})
+    
+    timestamps = next(i)
+    
+    self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': [0, 1, 2]})
+    self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': [1, 2, 3]})
+    self.assertEqual(timestamps[2], {'timestamp': '0:06', 'classes': [2, 3, 4]})
   
   def test_output_results_tr_fn_item_delimiter(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
