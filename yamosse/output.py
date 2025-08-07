@@ -105,10 +105,15 @@ def output(file_name, *args, **kwargs):
   
   class OutputText(Output):
     def __init__(self, *args, encoding='ascii', **kwargs):
+      self._d = {}
+      
       super().__init__(*args, encoding=encoding, **kwargs)
     
     def options(self, options):
-      if not super().options(options): return False
+      if not yamosse_utils.dict_once(self._d, 'options'): return False
+      
+      if not super().options(options):
+        return False
       
       file = self.file
       
@@ -119,6 +124,8 @@ def output(file_name, *args, **kwargs):
       return True
     
     def results(self, results):
+      if not yamosse_utils.dict_once(self._d, 'results'): return None
+      
       if not results: return None
       results = super().results(results)
       
@@ -132,6 +139,8 @@ def output(file_name, *args, **kwargs):
       return results
     
     def errors(self, errors):
+      if not yamosse_utils.dict_once(self._d, 'errors'): return None
+      
       if not errors: return None
       errors = super().errors(errors)
       
@@ -161,24 +170,16 @@ def output(file_name, *args, **kwargs):
   
   class OutputJSON(Output):
     def __init__(self, *args, **kwargs):
-      self._options = None
-      self._results = None
-      self._errors = None
+      self._d = {}
       
       # should be called last so file is opened as last step
       super().__init__(*args, **kwargs)
     
     def __exit__(self, *args, **kwargs):
-      d = {
-        'options': self._options,
-        'results': self._results,
-        'errors': self._errors
-      }
-      
       indent = self.indent
       
       # dump anything that is non-empty
-      json.dump({key: value for key, value in d.items() if value},
+      json.dump({key: value for key, value in self._d.items() if value},
         self.file, indent=indent if indent else None)
       
       super().__exit__(*args, **kwargs)
@@ -187,19 +188,15 @@ def output(file_name, *args, **kwargs):
       output_options = super().options(options)
       
       if output_options:
-        self._options = vars(options)
+        self._d.setdefault('options', vars(options))
       
       return output_options
     
     def results(self, results):
-      results = super().results(results)
-      self._results = results
-      return results
+      return self._d.setdefault('results', super().results(results))
     
     def errors(self, errors):
-      errors = super().errors(errors)
-      self._errors = errors
-      return errors
+      return self._d.setdefault('errors', super().errors(errors))
   
   ext = splitext(file_name)[1]
   
