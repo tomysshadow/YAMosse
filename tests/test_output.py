@@ -346,7 +346,7 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     
     for file_name, classes_timestamps in results_output_str.items():
       results_output_str[file_name] = dict(zip([str(c) for c in classes_timestamps.keys()],
-        classes_timestamps.values()))
+        classes_timestamps.values(), strict=True))
     
     self.assertEqual(d['results'], results_output_str)
     return results_output
@@ -613,7 +613,7 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
           classes = top_score['classes']
           
           top_score['classes'] = dict(zip([str(c) for c in classes.keys()],
-            classes.values()))
+            classes.values(), strict=True))
     
     self.assertEqual(d['results'], results_output_copy)
     return results_output

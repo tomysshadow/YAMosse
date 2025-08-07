@@ -112,7 +112,7 @@ class TestUtils(unittest.TestCase):
     for index, key in enumerate(d.keys()):
       self.assertEqual(key, index)
     
-    for index, value in zip(('c', 'b', 'a'), d.values()):
+    for index, value in zip(('c', 'b', 'a'), d.values(), strict=True):
       self.assertEqual(index, value)
   
   def test_dict_sorted_reverse(self):
@@ -123,7 +123,7 @@ class TestUtils(unittest.TestCase):
     for index, key in enumerate(reversed(d.keys())):
       self.assertEqual(key, index)
     
-    for index, value in zip(('a', 'b', 'c'), d.values()):
+    for index, value in zip(('a', 'b', 'c'), d.values(), strict=True):
       self.assertEqual(index, value)
   
   def test_dict_sorted_value(self):
@@ -134,7 +134,7 @@ class TestUtils(unittest.TestCase):
     for index, key in enumerate(reversed(d.keys())):
       self.assertEqual(key, index)
     
-    for index, value in zip(('a', 'b', 'c'), d.values()):
+    for index, value in zip(('a', 'b', 'c'), d.values(), strict=True):
       self.assertEqual(index, value)
   
   def test_dict_enumerate(self):
