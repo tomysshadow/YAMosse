@@ -15,52 +15,51 @@ SIZE = (600, 580)
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
-TIP_WEIGHTS = ''.join(('The weights file for the YAMNet model. This option will be disabled if ',
-  'you are using the Tensorflow Hub release of YAMNet.'))
+TIP_WEIGHTS = ('The weights file for the YAMNet model. This option will be disabled if you are '
+  'using the Tensorflow Hub release of YAMNet.')
 
-TIP_TIMESPAN = ''.join(('If a sound is less than this length in seconds, it will be combined ',
-  'into one timestamp. Otherwise, it will be output as a timespan: two timestamps with a dash ',
-  'inbetween. To never use timespans, set this to zero.'))
+TIP_TIMESPAN = ('If a sound is less than this length in seconds, it will be combined into one '
+  'timestamp. Otherwise, it will be output as a timespan: two timestamps with a dash inbetween. '
+  'To never use timespans, set this to zero.')
 
-TIP_TIMESPAN_SPAN_ALL = ''.join(('If checked, timestamps are not used. Instead, one prediction ',
-  'is made, spanning the entire sound file.'))
+TIP_TIMESPAN_SPAN_ALL = ('If checked, timestamps are not used. Instead, one prediction is made, '
+  'spanning the entire sound file.')
 
-TIP_BACKGROUND_NOISE_VOLUME = ''.join(('The volume below which all sounds are ignored. Setting ',
-  'this to at least 1% will make scans significantly faster during silent parts of the sound ',
-  'file. Set this to 0% to scan everything.'))
+TIP_BACKGROUND_NOISE_VOLUME = ('The volume below which all sounds are ignored. Setting this to '
+  'at least 1% will make scans significantly faster during silent parts of the sound file. Set '
+  'this to 0% to scan everything.')
 
-TIP_BACKGROUND_NOISE_VOLUME_LOG = ''.join(('Logarithmic volume scale (with a 60 dB range.) This ',
-  'is the volume scale you should use in most cases.'))
+TIP_BACKGROUND_NOISE_VOLUME_LOG = ('Logarithmic volume scale (with a 60 dB range.) This is the '
+  'volume scale you should use in most cases.')
 
 TIP_BACKGROUND_NOISE_VOLUME_LINEAR = 'Linear volume scale.'
 
-TIP_OUTPUT_FILE_OPTIONS_SORT_BY = ''.join(('Whether to sort results by the number of sounds ',
-  'identified, or alphabetically by file name.'))
+TIP_OUTPUT_FILE_OPTIONS_SORT_BY = ('Whether to sort results by the number of sounds identified, '
+  'or alphabetically by file name.')
 
 TIP_OUTPUT_FILE_OPTIONS_SORT_REVERSE = 'If checked, results will be sorted in reverse.'
 
-TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ''.join(('Separator inbetween each timestamp or class. ',
-  'Escape characters are supported. This option is ignored if the output is a JSON file.'))
+TIP_OUTPUT_FILE_OPTIONS_ITEM_DELIMITER = ('Separator inbetween each timestamp or class. Escape '
+  'characters are supported. This option is ignored if the output is a JSON file.')
 
 TIP_OUTPUT_FILE_OPTIONS_INDENT = 'If checked, the items will be indented.'
 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for the YAMScan.'
 
-TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ''.join(('Output the score percentage along with each ',
-  'timestamp, so you can see how certain the model is that it identified a sound at that ',
-  'timestamp.'))
+TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ('Output the score percentage along with each timestamp, '
+  'so you can see how certain the model is that it identified a sound at that timestamp.')
 
-TIP_WORKER_OPTIONS_MEMORY_LIMIT = ''.join(('The Tensorflow logical device memory limit, in ',
-  'megabytes. This is both per-worker and per-device, so will be multiplied by the number of ',
-  'workers and the number of GPUs available. This option is ignored if GPU Acceleration is not ',
-  'enabled. If set too low, an out of memory error may occur.'))
+TIP_WORKER_OPTIONS_MEMORY_LIMIT = ('The Tensorflow logical device memory limit, in megabytes. '
+  'This is both per-worker and per-device, so will be multiplied by the number of workers and the '
+  'number of GPUs available. This option is ignored if GPU Acceleration is not enabled. If set '
+  'too low, an out of memory error may occur.')
 
-TIP_WORKER_OPTIONS_MAX_WORKERS = ''.join(('Increasing the max number of workers will make scans ',
-  'faster, unless it is set too high - then you might run out of memory (workers cost memory, ',
-  'though lowering the memory limit will make them cost less.)'))
+TIP_WORKER_OPTIONS_MAX_WORKERS = ('Increasing the max number of workers will make scans faster, '
+  'unless it is set too high - then you might run out of memory (workers cost memory, though '
+  'lowering the memory limit will make them cost less.)')
 
-TIP_WORKER_OPTIONS_HIGH_PRIORITY = ''.join(('Mark YAMosse as High Priority to make scans faster, ',
-  'at the expense of other programs running slower.'))
+TIP_WORKER_OPTIONS_HIGH_PRIORITY = ('Mark YAMosse as High Priority to make scans faster, at the '
+  'expense of other programs running slower.')
 
 URL_ONLINE_HELP = 'https://github.com/tomysshadow/YAMosse/blob/main/README.md'
 
