@@ -290,7 +290,7 @@ def text_embed(text):
           + widget.winfo_fpixels(widget['padx'])
         )
         
-        child['width'] = e.width - (inset * 2)
+        child['width'] = widget.winfo_fpixels(e.width) - (inset * 2)
     
     text.bind('<Configure>', configure, add=True)
     
