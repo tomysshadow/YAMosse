@@ -282,15 +282,17 @@ def text_embed(text):
     def configure(e):
       widget = e.widget
       
+      inset = (
+        widget.winfo_fpixels(widget['borderwidth'])
+        + widget.winfo_fpixels(widget['highlightthickness'])
+        + widget.winfo_fpixels(widget['padx'])
+      )
+      
+      width = widget.winfo_fpixels(e.width) - (inset * 2)
+      
       # set the width of the children to fill the available space
       for child in widget.winfo_children():
-        inset = (
-          widget.winfo_fpixels(widget['borderwidth'])
-          + widget.winfo_fpixels(widget['highlightthickness'])
-          + widget.winfo_fpixels(widget['padx'])
-        )
-        
-        child['width'] = widget.winfo_fpixels(e.width) - (inset * 2)
+        child['width'] = width
     
     text.bind('<Configure>', configure, add=True)
     
