@@ -124,6 +124,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
     
     options = self._set_options(output_options=False, **kwargs)
     item_delimiter = options.item_delimiter
+    
+    indent = '\t' * options.indent
+    indent2 = indent * 2
+    
     output_scores = options.output_scores
     
     o, f = self._output_file(0)
@@ -139,12 +143,12 @@ class TestOutputText(TestOutput, unittest.TestCase):
       self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
       
       for class_, timestamps in class_timestamps.items():
-        self.assertEqual(f.readline(), ''.join(('\t', MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
+        self.assertEqual(f.readline(), ''.join((indent, MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
         
         if output_scores:
           timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
         
-        self.assertEqual(f.readline(), ''.join(('\t\t', item_delimiter.join(timestamps), '\n')))
+        self.assertEqual(f.readline(), ''.join((indent2, item_delimiter.join(timestamps), '\n')))
       
       self.assertEqual(f.readline(), '\n')
     
@@ -195,6 +199,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
     
     options = self._set_options(output_options=False, **kwargs)
     item_delimiter = options.item_delimiter
+    indent = '\t' * options.indent
     output_scores = options.output_scores
     
     o, f = self._output_file(1)
@@ -217,7 +222,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
         else:
           classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
         
-        self.assertEqual(f.readline(), ''.join(('\t', top_score['timestamp'], ': ',
+        self.assertEqual(f.readline(), ''.join((indent, top_score['timestamp'], ': ',
           item_delimiter.join(classes), '\n')))
       
       self.assertEqual(f.readline(), '\n')
