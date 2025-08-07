@@ -185,13 +185,10 @@ def output(file_name, *args, **kwargs):
       super().__exit__(*args, **kwargs)
     
     def options(self, options):
-      output_options = super().options(options)
+      if not super().options(options): return False
       
-      if output_options:
-        options_vars = vars(options)
-        return self._d.setdefault('options', options_vars) is options_vars
-      
-      return False
+      options = vars(options)
+      return self._d.setdefault('options', options) is options
     
     def results(self, results):
       return self._d.setdefault('results', super().results(results))
