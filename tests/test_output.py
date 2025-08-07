@@ -15,60 +15,75 @@ SUFFIX_TXT = '.txt'
 SUFFIX_JSON = '.json'
 
 FILE_NAMES = ('File Name A.wav', 'File Name B.wav', 'File Name C.wav')
+FILE_NAME = 'File Name.wav'
 
 CONFIDENCE_SCORES_STANDARD = {
   'File Name A.wav': {
-    0: {0: 75.0},
-    1: {0: 75.0, 3: 50.0},
-    2: {0: 75.0, 3: 50.0, 6: 25.0}
+    0: {0: 0.75},
+    1: {0: 0.75, 3: 0.50},
+    2: {0: 0.75, 3: 0.50, 6: 0.25}
   },
   
   'File Name B.wav': {
-    0: {0: 75.0},
-    1: {0: 75.0, 3: 50.0}
+    0: {0: 0.75},
+    1: {0: 0.75, 3: 0.50}
   },
   
   'File Name C.wav': {
-    0: {0: 75.0}
+    0: {0: 0.75}
   }
 }
 
 CONFIDENCE_SCORES_TIMESPANS = {
   0: {
-    (1, 5): 75.0
+    (1, 5): 0.75
   },
   1: {
-    (1, 5): 75.0,
-    7: 50.0
+    (1, 5): 0.75,
+    7: 0.50
   },
   2: {
-    (1, 5): 75.0,
-    7: 50.0,
-    (9, 12): 25.0
+    (1, 5): 0.75,
+    7: 0.50,
+    (9, 12): 0.25
+  }
+}
+
+CONFIDENCE_SCORES_SPAN_ALL = {
+  'File Name.wav': {
+    0: {
+      -1: 0.75
+    }
   }
 }
 
 TOP_RANKED_STANDARD = {
   'File Name A.wav': {
-    0: {0: 75.0, 1: 50.0, 2: 25.0},
-    3: {1: 75.0, 2: 50.0, 3: 25.0},
-    6: {2: 75.0, 3: 50.0, 4: 25.0}
+    0: {0: 0.75, 1: 0.50, 2: 0.25},
+    3: {1: 0.75, 2: 0.50, 3: 0.25},
+    6: {2: 0.75, 3: 0.50, 4: 0.25}
   },
   
   'File Name B.wav': {
-    0: {0: 75.0, 1: 50.0, 2: 25.0},
-    3: {1: 75.0, 2: 50.0, 3: 25.0}
+    0: {0: 0.75, 1: 0.50, 2: 0.25},
+    3: {1: 0.75, 2: 0.50, 3: 0.25}
   },
   
   'File Name C.wav': {
-    0: {0: 75.0, 1: 50.0, 2: 25.0}
+    0: {0: 0.75, 1: 0.50, 2: 0.25}
   }
 }
 
 TOP_RANKED_TIMESPANS = {
-  (1, 5): {0: 75.0, 1: 50.0, 2: 25.0},
-  7: {1: 75.0, 2: 50.0, 3: 25.0},
-  (9, 12): {2: 75.0, 3: 50.0, 4: 25.0}
+  (1, 5): {0: 0.75, 1: 0.50, 2: 0.25},
+  7: {1: 0.75, 2: 0.50, 3: 0.25},
+  (9, 12): {2: 0.75, 3: 0.50, 4: 0.25}
+}
+
+TOP_RANKED_SPAN_ALL = {
+  'File Name.wav': {
+    -1: {0: 0.75, 1: 0.50, 2: 0.25}
+  }
 }
 
 class TestOutput(ABC):
@@ -354,35 +369,35 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     classes = next(i)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:00', 'score': 75.0}
+      {'timestamp': '0:00', 'score': 0.75}
     ])
     
     classes = next(i)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:00', 'score': 75.0}
+      {'timestamp': '0:00', 'score': 0.75}
     ])
     
     self.assertEqual(classes[1], [
-      {'timestamp': '0:00', 'score': 75.0},
-      {'timestamp': '0:03', 'score': 50.0}
+      {'timestamp': '0:00', 'score': 0.75},
+      {'timestamp': '0:03', 'score': 0.50}
     ])
     
     classes = next(i)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:00', 'score': 75.0}
+      {'timestamp': '0:00', 'score': 0.75}
     ])
     
     self.assertEqual(classes[1], [
-      {'timestamp': '0:00', 'score': 75.0},
-      {'timestamp': '0:03', 'score': 50.0}
+      {'timestamp': '0:00', 'score': 0.75},
+      {'timestamp': '0:03', 'score': 0.50}
     ])
     
     self.assertEqual(classes[2], [
-      {'timestamp': '0:00', 'score': 75.0},
-      {'timestamp': '0:03', 'score': 50.0},
-      {'timestamp': '0:06', 'score': 25.0}
+      {'timestamp': '0:00', 'score': 0.75},
+      {'timestamp': '0:03', 'score': 0.50},
+      {'timestamp': '0:06', 'score': 0.25}
     ])
   
   def test_output_results_cs_nos_timespans(self):
@@ -401,18 +416,18 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     file_name, classes = utils.dict_peekitem(r)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:01 - 0:05', 'score': 75.0}
+      {'timestamp': '0:01 - 0:05', 'score': 0.75}
     ])
     
     self.assertEqual(classes[1], [
-      {'timestamp': '0:01 - 0:05', 'score': 75.0},
-      {'timestamp': '0:07', 'score': 50.0}
+      {'timestamp': '0:01 - 0:05', 'score': 0.75},
+      {'timestamp': '0:07', 'score': 0.50}
     ])
     
     self.assertEqual(classes[2], [
-      {'timestamp': '0:01 - 0:05', 'score': 75.0},
-      {'timestamp': '0:07', 'score': 50.0},
-      {'timestamp': '0:09 - 0:12', 'score': 25.0}
+      {'timestamp': '0:01 - 0:05', 'score': 0.75},
+      {'timestamp': '0:07', 'score': 0.50},
+      {'timestamp': '0:09 - 0:12', 'score': 0.25}
     ])
   
   def test_output_results_cs_fn(self):
@@ -449,35 +464,35 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     classes = next(i)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:00', 'score': 75.0}
+      {'timestamp': '0:00', 'score': 0.75}
     ])
     
     self.assertEqual(classes[1], [
-      {'timestamp': '0:00', 'score': 75.0},
-      {'timestamp': '0:03', 'score': 50.0}
+      {'timestamp': '0:00', 'score': 0.75},
+      {'timestamp': '0:03', 'score': 0.50}
     ])
     
     self.assertEqual(classes[2], [
-      {'timestamp': '0:00', 'score': 75.0},
-      {'timestamp': '0:03', 'score': 50.0},
-      {'timestamp': '0:06', 'score': 25.0}
+      {'timestamp': '0:00', 'score': 0.75},
+      {'timestamp': '0:03', 'score': 0.50},
+      {'timestamp': '0:06', 'score': 0.25}
     ])
     
     classes = next(i)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:00', 'score': 75.0}
+      {'timestamp': '0:00', 'score': 0.75}
     ])
     
     self.assertEqual(classes[1], [
-      {'timestamp': '0:00', 'score': 75.0},
-      {'timestamp': '0:03', 'score': 50.0}
+      {'timestamp': '0:00', 'score': 0.75},
+      {'timestamp': '0:03', 'score': 0.50}
     ])
     
     classes = next(i)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:00', 'score': 75.0}
+      {'timestamp': '0:00', 'score': 0.75}
     ])
   
   def test_output_results_cs_fn_timespans(self):
@@ -496,19 +511,27 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     file_name, classes = utils.dict_peekitem(r)
     
     self.assertEqual(classes[0], [
-      {'timestamp': '0:01 - 0:05', 'score': 75.0}
+      {'timestamp': '0:01 - 0:05', 'score': 0.75}
     ])
     
     self.assertEqual(classes[1], [
-      {'timestamp': '0:01 - 0:05', 'score': 75.0},
-      {'timestamp': '0:07', 'score': 50.0}
+      {'timestamp': '0:01 - 0:05', 'score': 0.75},
+      {'timestamp': '0:07', 'score': 0.50}
     ])
     
     self.assertEqual(classes[2], [
-      {'timestamp': '0:01 - 0:05', 'score': 75.0},
-      {'timestamp': '0:07', 'score': 50.0},
-      {'timestamp': '0:09 - 0:12', 'score': 25.0}
+      {'timestamp': '0:01 - 0:05', 'score': 0.75},
+      {'timestamp': '0:07', 'score': 0.50},
+      {'timestamp': '0:09 - 0:12', 'score': 0.25}
     ])
+  
+  def test_output_results_cs_span_all(self):
+    r = self._output_results_cs(CONFIDENCE_SCORES_SPAN_ALL, output_scores=False)
+    self.assertIn('All', r[FILE_NAME][0])
+  
+  def test_output_results_cs_span_all_output_scores(self):
+    r = self._output_results_cs(CONFIDENCE_SCORES_SPAN_ALL, output_scores=True)
+    self.assertEqual('All', r[FILE_NAME][0][0]['timestamp'])
   
   def _output_results_tr(self, results, **kwargs):
     results_output = None
@@ -571,43 +594,43 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': {
-      '0': 75.0,
-      '1': 50.0,
-      '2': 25.0
+      '0': 0.75,
+      '1': 0.50,
+      '2': 0.25
     }})
     
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': {
-      '0': 75.0,
-      '1': 50.0,
-      '2': 25.0
+      '0': 0.75,
+      '1': 0.50,
+      '2': 0.25
     }})
     
     self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': {
-      '1': 75.0,
-      '2': 50.0,
-      '3': 25.0
+      '1': 0.75,
+      '2': 0.50,
+      '3': 0.25
     }})
     
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': {
-      '0': 75.0,
-      '1': 50.0,
-      '2': 25.0
+      '0': 0.75,
+      '1': 0.50,
+      '2': 0.25
     }})
     
     self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': {
-      '1': 75.0,
-      '2': 50.0,
-      '3': 25.0
+      '1': 0.75,
+      '2': 0.50,
+      '3': 0.25
     }})
     
     self.assertEqual(timestamps[2], {'timestamp': '0:06', 'classes': {
-      '2': 75.0,
-      '3': 50.0,
-      '4': 25.0
+      '2': 0.75,
+      '3': 0.50,
+      '4': 0.25
     }})
   
   def test_output_results_tr_nos_timespans(self):
@@ -625,21 +648,21 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     
     for timestamps in r.values():
       self.assertEqual(timestamps[0], {'timestamp': '0:01 - 0:05', 'classes': {
-        '0': 75.0,
-        '1': 50.0,
-        '2': 25.0
+        '0': 0.75,
+        '1': 0.50,
+        '2': 0.25
       }})
       
       self.assertEqual(timestamps[1], {'timestamp': '0:07', 'classes': {
-        '1': 75.0,
-        '2': 50.0,
-        '3': 25.0
+        '1': 0.75,
+        '2': 0.50,
+        '3': 0.25
       }})
       
       self.assertEqual(timestamps[2], {'timestamp': '0:09 - 0:12', 'classes': {
-        '2': 75.0,
-        '3': 50.0,
-        '4': 25.0
+        '2': 0.75,
+        '3': 0.50,
+        '4': 0.25
       }})
   
   def test_output_results_tr_fn(self):
@@ -676,43 +699,43 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': {
-      '0': 75.0,
-      '1': 50.0,
-      '2': 25.0
+      '0': 0.75,
+      '1': 0.50,
+      '2': 0.25
     }})
     
     self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': {
-      '1': 75.0,
-      '2': 50.0,
-      '3': 25.0
+      '1': 0.75,
+      '2': 0.50,
+      '3': 0.25
     }})
     
     self.assertEqual(timestamps[2], {'timestamp': '0:06', 'classes': {
-      '2': 75.0,
-      '3': 50.0,
-      '4': 25.0
+      '2': 0.75,
+      '3': 0.50,
+      '4': 0.25
     }})
     
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': {
-      '0': 75.0,
-      '1': 50.0,
-      '2': 25.0
+      '0': 0.75,
+      '1': 0.50,
+      '2': 0.25
     }})
     
     self.assertEqual(timestamps[1], {'timestamp': '0:03', 'classes': {
-      '1': 75.0,
-      '2': 50.0,
-      '3': 25.0
+      '1': 0.75,
+      '2': 0.50,
+      '3': 0.25
     }})
     
     timestamps = next(i)
     
     self.assertEqual(timestamps[0], {'timestamp': '0:00', 'classes': {
-      '0': 75.0,
-      '1': 50.0,
-      '2': 25.0
+      '0': 0.75,
+      '1': 0.50,
+      '2': 0.25
     }})
   
   def test_output_results_tr_fn_timespans(self):
@@ -730,22 +753,30 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     
     for timestamps in r.values():
       self.assertEqual(timestamps[0], {'timestamp': '0:01 - 0:05', 'classes': {
-        '0': 75.0,
-        '1': 50.0,
-        '2': 25.0
+        '0': 0.75,
+        '1': 0.50,
+        '2': 0.25
       }})
       
       self.assertEqual(timestamps[1], {'timestamp': '0:07', 'classes': {
-        '1': 75.0,
-        '2': 50.0,
-        '3': 25.0
+        '1': 0.75,
+        '2': 0.50,
+        '3': 0.25
       }})
       
       self.assertEqual(timestamps[2], {'timestamp': '0:09 - 0:12', 'classes': {
-        '2': 75.0,
-        '3': 50.0,
-        '4': 25.0
+        '2': 0.75,
+        '3': 0.50,
+        '4': 0.25
       }})
+  
+  def test_output_results_tr_span_all(self):
+    r = self._output_results_tr(TOP_RANKED_SPAN_ALL, output_scores=False)
+    self.assertEqual('All', r[FILE_NAME][0]['timestamp'])
+  
+  def test_output_results_tr_span_all_output_scores(self):
+    r = self._output_results_tr(TOP_RANKED_SPAN_ALL, output_scores=True)
+    self.assertEqual('All', r[FILE_NAME][0]['timestamp'])
   
   def test_output_errors(self):
     errors = self._file_name_keys('message')
