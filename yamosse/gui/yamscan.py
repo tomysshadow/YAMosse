@@ -194,5 +194,5 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
     lambda: done(window)
   )
   
-  gui.set_modal_window(window, done)
+  gui.set_modal_window(window, delete_window=done)
   return window, progressbar_widgets, progressbar_variable, log_text, footer_widgets
