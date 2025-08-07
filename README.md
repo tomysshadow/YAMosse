@@ -83,7 +83,7 @@ All of the keyword arguments are optional. If no keyword arguments are specified
  - `restore_defaults`: True or False. If True, restores the defaults.
  - `import_preset_file_name`: A string containing the file name to import a preset from (in JSON format.)
  - `export_preset_file_name`: A string containing the file name to export a preset to (in JSON format.)
- - `output_file_name`: A string containing the file name for the YAMScan to output to.
+ - `output_file_name`: A string containing the output file name for a YAMScan.
  - `options_attrs`: A dictionary where the keys are option names and the values are their corresponding literal Python values.
 
 # FAQ
