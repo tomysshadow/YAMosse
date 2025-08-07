@@ -36,9 +36,9 @@ After using Git to clone the YAMosse repository, run a submodule update. The sub
 
 # Usage
 
-To run YAMosse in a window, open the `yamosse_window.pyw` file. Alternatively, you can run the command `pythonw -m yamosse` in a command prompt.
+To run YAMosse in a window, open the `yamosse_window.pyw` file by double clicking on it. Alternatively, you can run the command `pythonw -m yamosse` in a command prompt.
 
-To run YAMosse with a console, open the `yamosse_console.py` file. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see Tensorflow's error logs, which is useful for troubleshooting GPU Acceleration.
+To run YAMosse with a console, open the `yamosse_console.py` file by double clicking on it. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see Tensorflow's error logs, which is useful for troubleshooting GPU Acceleration.
 
 ![Usage Steps](usage_steps.jpg)
 
