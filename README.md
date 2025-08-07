@@ -130,7 +130,7 @@ Sounds that are quieter than the Background Noise Volume (on the Advanced tab) a
 
 ## Why does Silence still appear in the results, even though the Background Noise Volume is not set to zero?
 
-Silence is just one of the classes of sound that the YAMNet model can recognize like any other, and it is technically independent of the current volume level. In practice, if you're seeing Silence a lot but don't want to, you should either raise the Background Noise Volume more or just deselect it from the Classes list so it'll never be used (it's class #440 in the list.)
+Silence is just one of the classes of sound that the YAMNet model can recognize like any other, and it is technically independent of the current volume level. In practice, if you're seeing Silence a lot but don't want to, you should either raise the Background Noise Volume more or just deselect it from the Classes list so it'll never be used (it's class #495 in the list.)
 
 ## Why do I get an error saying "could not find TaskbarLib.tlb?"
 
