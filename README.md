@@ -60,7 +60,7 @@ YAMosse also has a command line interface. If any of the command line arguments 
  - `-ip import_preset_file_name` or `--import-preset import_preset_file_name`: imports a preset file (in JSON format.)
  - `-ep export_preset_file_name` or `--export-preset export_preset_file_name`: exports a preset file (in JSON format.)
  - `-y output_file_name` or `--yamscan output_file_name`: performs a YAMScan.
- - `-o key value` or `--option key value`: sets the option with the specified key to the specified value. The keys and values are the same format as they appear in the JSON preset files. For example, `-o "input" "\"File1.wav File2.wav\""` would set the "input" option (corresponding to the Input file selection) to the "Sound Files" folder. Note the extra pair of escaped quotes around the filename, because the value is expected to be a valid JSON literal.
+ - `-o key value` or `--option key value`: sets the option with the specified key to the specified value. The keys and values are the same format as they appear in the JSON preset files. For example, `-o "input" "\"File1.wav File2.wav\""` would set the "input" option (corresponding to the Input file selection) to "File1.wav File2.wav" (which would scan both files, because multiple file selection is allowed.) Note the extra pair of escaped quotes around the filename, because the value is expected to be a valid JSON literal.
 
 Just like in the GUI, any options that you specify will be remembered for next time. Pass the `-rd` command line argument if you want to start from a clean slate.
 
