@@ -461,7 +461,7 @@ def _init_validationoptions_spinbox():
     
     return frame.register(command), '%W', '%P'
   
-  def validate(*args):
+  def validate(*args, **kwargs):
     return VALIDATE
   
   return {
