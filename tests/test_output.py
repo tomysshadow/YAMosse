@@ -224,6 +224,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
     item_delimiter = options.item_delimiter
     indent = '\t' * options.indent
     output_scores = options.output_scores
+    output_timestamps = options.top_ranked_output_timestamps
     
     o, f = self._output_file(1)
     
@@ -245,8 +246,11 @@ class TestOutputText(TestOutput, unittest.TestCase):
         else:
           classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
         
-        self.assertEqual(f.readline(), ''.join((indent, top_score['timestamp'], ': ',
-          item_delimiter.join(classes), '\n')))
+        if output_timestamps:
+          self.assertEqual(f.readline(), ''.join((indent, top_score['timestamp'], ': ',
+            item_delimiter.join(classes), '\n')))
+        else:
+          self.assertEqual(f.readline(), ''.join((indent, item_delimiter.join(classes), '\n')))
       
       self.assertEqual(f.readline(), '\n')
     
@@ -276,6 +280,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self._output_results_tr(self._file_name_keys(TOP_RANKED_TIMESPANS),
       sort_by=output.NUMBER_OF_SOUNDS, timespan=3, output_scores=True)
   
+  def test_output_results_tr_nos_output_timestamps(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      top_ranked_output_timestamps=False)
+  
   def test_output_results_tr_fn(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
       output_scores=False)
@@ -299,6 +307,10 @@ class TestOutputText(TestOutput, unittest.TestCase):
   def test_output_results_tr_fn_timespans_output_scores(self):
     self._output_results_tr(self._file_name_keys(TOP_RANKED_TIMESPANS),
       sort_by=output.FILE_NAME, timespan=3, output_scores=True)
+  
+  def test_output_results_tr_fn_output_timestamps(self):
+    self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      top_ranked_output_timestamps=False)
   
   def test_output_errors(self):
     errors = self._file_name_keys('message')
@@ -744,6 +756,14 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
         '4': 0.25
       }})
   
+  def test_output_results_tr_nos_output_timestamps(self):
+    r = self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
+      top_ranked_output_timestamps=False)
+    
+    for top_scores in r.values():
+      for top_score in top_scores:
+        self.assertNotIn('timestamp', top_score)
+  
   def test_output_results_tr_fn(self):
     r = self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
       output_scores=False)
@@ -869,6 +889,14 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
         '3': 0.50,
         '4': 0.25
       }})
+  
+  def test_output_results_tr_fn_output_timestamps(self):
+    r = self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.FILE_NAME,
+      top_ranked_output_timestamps=False)
+    
+    for top_scores in r.values():
+      for top_score in top_scores:
+        self.assertNotIn('timestamp', top_score)
   
   def test_output_results_tr_span_all(self):
     r = self._output_results_tr(TOP_RANKED_SPAN_ALL, output_scores=False)
