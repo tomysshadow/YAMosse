@@ -69,7 +69,7 @@ def make_progressbar(frame, name='', variable=None,
   
   value = 0
   
-  def show(*args):
+  def show(*args, **kwargs):
     nonlocal value
     
     # only update the percent label in determinate mode

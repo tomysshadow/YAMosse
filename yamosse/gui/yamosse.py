@@ -188,7 +188,7 @@ def make_identification_options(frame, variables, class_names):
   make_top_ranked(top_ranked_frame, variables, class_names)
   
   radiobuttons = gui.make_widgets(frame, ttk.Radiobutton,
-    ('Confidence Score', 'Top Ranked'), sticky=tk.EW, cell=0)
+    ('Confidence Score', 'Top Ranked'), cell=0, sticky=tk.EW)
   
   gui.link_radiobuttons(
     zip(radiobuttons, (confidence_score_frame, top_ranked_frame), strict=True),
@@ -201,12 +201,11 @@ def make_identification_options(frame, variables, class_names):
 
 
 def make_presets(frame, import_, export):
-  frame.rowconfigure((0, 1), weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  frame.rowconfigure((0, 1), weight=1) # make buttons vertically centered
+  frame.columnconfigure(0, weight=1) # make buttons horizontally resizable
   
-  import_button, export_button = gui.make_widgets(
-    frame, ttk.Button, ('Import...', 'Export...'),
-    orient=tk.VERTICAL, padding=gui.PADDING_Q)
+  import_button, export_button = gui.make_widgets(frame, ttk.Button,
+    ('Import...', 'Export...'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
   
   import_button['command'] = import_
   export_button['command'] = export
