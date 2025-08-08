@@ -28,7 +28,7 @@ VERSION = '1.0.0'
 TITLE = ' '.join((NAME, VERSION))
 
 WEIGHTS_FILETYPES = (
-  ('HDF5', '*.h5;*.hdf5'),
+  ('HDF5', '*.h5 *.hdf5'),
   ('All Files', '*.*')
 )
 
@@ -65,7 +65,7 @@ def open_file(path):
 
 def sf_input_filetypes():
   available_formats = sf.available_formats()
-  input_filetypes = [('Supported Files', '.'.join(('*', ';*.'.join(available_formats.keys()))))]
+  input_filetypes = [('Supported Files', '.'.join(('*', ' *.'.join(available_formats.keys()))))]
   
   for format_, name in available_formats.items():
     input_filetypes.append((name, '.'.join(('*', format_))))
