@@ -49,10 +49,9 @@ TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ('Output the score percentage along with each timestamp, '
   'so you can see how certain the model is that it identified a sound at that timestamp.')
 
-TIP_WORKER_OPTIONS_MEMORY_LIMIT = ('The Tensorflow logical device memory limit, in megabytes. '
-  'This is both per-worker and per-device, so will be multiplied by the number of workers and the '
-  'number of GPUs available. This option is ignored if GPU Acceleration is not enabled. If set '
-  'too low, an out of memory error may occur.')
+TIP_WORKER_OPTIONS_MEMORY_LIMIT = ('The Tensorflow logical device memory limit, in megabytes. It '
+  'will be multiplied by the number of workers and the number of GPUs. This option is ignored if '
+  'GPU Acceleration is disabled. Errors may occur if it is too high or low.')
 
 TIP_WORKER_OPTIONS_MAX_WORKERS = ('Increasing the max number of workers will make scans faster, '
   'unless it is set too high - then you might run out of memory (workers cost memory, though '
