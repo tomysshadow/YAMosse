@@ -721,8 +721,12 @@ def measure_widths_treeview(treeview, widths, item=None):
     text_width = 0
     
     if cid == '#0':
-      space_width += item_padding_width + max(item_image_width, heading_image_width) + minwidth + (
-        indent * indents_treeview(treeview, item=item))
+      space_width += (
+        item_padding_width
+        + max(item_image_width, heading_image_width)
+        + minwidth
+        + (indent * indents_treeview(treeview, item=item))
+      )
     else:
       space_width += cell_padding_width + heading_image_width
       text_width = max(text_width, minwidth - space_width)
