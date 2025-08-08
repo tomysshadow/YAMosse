@@ -8,7 +8,7 @@ import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
 
-VERSION = 0
+VERSION = 1
 FILE_NAME = 'options.pickle'
 
 _root_file_name = yamosse_root.root(FILE_NAME)
