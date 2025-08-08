@@ -1341,8 +1341,8 @@ def _style():
   if windowingsystem() == 'x11':
     style.configure('Treeview.Heading', padding=(2, 0))
   
-  style.layout('Borderless.TNotebook', [])
-  style.configure('Borderless.TNotebook > .TFrame', relief=tk.RAISED)
+  style.layout('Raised.TNotebook', [])
+  style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
 
 
 def windowingsystem():

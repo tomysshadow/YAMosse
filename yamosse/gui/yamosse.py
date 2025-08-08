@@ -201,7 +201,7 @@ def make_identification_options(frame, variables, class_names):
 
 def make_presets(frame, import_, export):
   frame.rowconfigure((0, 1), weight=1) # make buttons vertically centered
-  frame.columnconfigure(0, weight=1) # make buttons horizontally resizable
+  frame.columnconfigure(0, weight=1) # one column layout
   
   import_button, export_button = gui.make_widgets(frame, ttk.Button,
     ('Import...', 'Export...'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
@@ -540,13 +540,13 @@ def make_options(notebook, variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset):
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
-    style='Borderless.TNotebook > .TFrame')
+    style='Raised.TNotebook > .TFrame')
   
   make_general(general_frame, variables, input_filetypes, class_names,
     import_preset, export_preset)
   
   advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
-    style='Borderless.TNotebook > .TFrame')
+    style='Raised.TNotebook > .TFrame')
   
   make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
   
@@ -596,7 +596,7 @@ def make_yamosse(frame, title, options_variables,
   header_frame.grid(row=0, sticky=tk.EW)
   make_header(header_frame, title)
   
-  options_notebook = ttk.Notebook(frame, style='Borderless.TNotebook')
+  options_notebook = ttk.Notebook(frame, style='Raised.TNotebook')
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   make_options(options_notebook, options_variables,
     input_filetypes, class_names, weights_filetypes, tfhub_enabled,
