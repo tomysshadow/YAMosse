@@ -327,6 +327,21 @@ class TestOutputText(TestOutput, unittest.TestCase):
       self.assertEqual(f.readline(), '\n')
     
     self.assertEqual(f.readline(), '\n')
+  
+  def test_output_results_errors(self):
+    results = self._file_name_keys({})
+    errors = self._file_name_keys('message')
+    o, f = self._output_file()
+    
+    with o:
+      o.results(results)
+      o.errors(errors)
+    
+    self.assertEqual(f.readline(), '# Results\n')
+    
+    for i in range(11): f.readline()
+    
+    self.assertEqual(f.readline(), '# Errors\n')
 
 class TestOutputJSON(TestOutput, unittest.TestCase):
   def setUp(self):
@@ -916,5 +931,19 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     
     for message in d['errors'].values():
       self.assertEqual(message, 'message')
+  
+  def test_output_results_errors(self):
+    results = self._file_name_keys({})
+    errors = self._file_name_keys('message')
+    o, f = self._output_file()
+    
+    with o:
+      o.results(results)
+      o.errors(errors)
+    
+    d = json.loads(f.read())
+    
+    self.assertIn('results', d)
+    self.assertIn('errors', d)
 
 if __name__ == '__main__': unittest.main()
