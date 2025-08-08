@@ -108,19 +108,20 @@ No, YAMosse does not convert speech into text. It can only identify the 521 soun
 
 When using Confidence Score identification, the output is determined by a percentage, representing how certain the model is that it identified a particular sound. The sound file is scanned from start to end. At any point in time where the score is greater than the Confidence Score percentage given for any of the selected classes, the timestamp is recorded. The result is a list of timestamps, like this example.
 
+```
 Speech: 0:10, 0:20 - 0:35, 0:40, 0:45 - 1:00
+```
 
 This output would indicate that there is is one second of speech (maybe a single word or exclamation) at ten seconds into the sound file, then 15 seconds of speech starting at 20 seconds into the sound file, and so on.
 
 In contrast, using Top Ranked identification will create a transcript of the sounds that it thinks are the most likely to be in the sound file at any given time, ignoring any sound classes that you don't have selected. The result is a list of classes over time.
 
+```
 0:00 - 0:10: Music
-
 0:10: Speech
-
 0:11 - 0:20: Vehicle
-
 0:20 - 0:35: Speech
+```
 
 As you can see, the timestamps are now in the left column, with the right column being the sounds that are playing at those times.
 
