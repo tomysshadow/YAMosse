@@ -1,8 +1,6 @@
 # YAMosse
 # Get timestamps for sound files by harnessing the power of pristine quality yams.
 
-from __future__ import division, print_function
-
 import os
 import shlex
 import platform
@@ -18,8 +16,8 @@ import yamosse.worker as yamosse_worker
 
 try:
   from . import gui
-  from .gui import yamscan as gui_yamscan
   from .gui import yamosse as gui_yamosse
+  from .gui import yamscan as gui_yamscan
 except ImportError:
   gui = None
 
