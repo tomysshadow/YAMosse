@@ -7,7 +7,7 @@ try: from . import gui
 except ImportError: gui = None
 
 class SubsystemExit(Exception): pass
-class SubsystemWarning(Warning): pass
+class SubsystemError(Exception): pass
 
 
 def subsystem(window, title, variables):
@@ -21,11 +21,11 @@ def subsystem(window, title, variables):
     def show(self, values=None):
       pass
     
-    def show_warning(self, message, parent=None):
-      raise SubsystemWarning(message)
+    def error(self, message, *args, **kwargs):
+      raise SubsystemError(message)
     
     @abstractmethod
-    def ask_yes_no(self, message, default=None, parent=None):
+    def ask_yes_no(self, message, *args, **kwargs):
       pass
     
     def variables_from_object(self, object_):
@@ -61,14 +61,14 @@ def subsystem(window, title, variables):
     def show(self, values=None):
       if not self.show_callback(self.widgets, values=values): raise SubsystemExit
     
-    def show_warning(self, message, parent=None):
+    def error(self, message, *args, parent=None, **kwargs):
       gui.messagebox.showwarning(
         parent=parent if parent else self.window,
         title=title,
         message=message
       )
     
-    def ask_yes_no(self, message, default=None, parent=None):
+    def ask_yes_no(self, message, *args, default=None, parent=None, **kwargs):
       if default is not None:
         default = gui.messagebox.YES if default else gui.messagebox.NO
       
@@ -103,7 +103,7 @@ def subsystem(window, title, variables):
       if values and 'log' in values:
         print(yamosse_utils.ascii_backslashreplace(values['log']))
     
-    def ask_yes_no(self, message, default=None, parent=None):
+    def ask_yes_no(self, message, *args, default=None, **kwargs):
       YES = 'y'
       NO = 'n'
       

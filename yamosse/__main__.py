@@ -64,7 +64,7 @@ def main(argc, argv):
   
   try:
     yamosse.yamosse(**kwargs)
-  except yamosse_subsystem.SubsystemWarning as ex:
+  except yamosse_subsystem.SubsystemError as ex:
     print(ex)
     return 1
   

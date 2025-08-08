@@ -66,7 +66,7 @@ Just like in the GUI, any options that you specify will be remembered for next t
 
 ## Module Interface
 
-You can import YAMosse to use it in your own module. It will throw `SubsystemWarning` (from the subsystem module) if there is a reason the YAMScan can't be performed.
+You can import YAMosse to use it in your own module. It will throw `SubsystemError` (from the subsystem module) if there is a reason the YAMScan can't be performed.
 
 ```
 import yamosse
@@ -74,7 +74,7 @@ import yamosse.subsystem
 
 try:
   yamosse.yamosse(output_file_name="Output.txt")
-except yamosse.subsystem.SubsystemWarning as ex:
+except yamosse.subsystem.SubsystemError as ex:
   print(ex)
 ```
 

@@ -97,13 +97,13 @@ def _mainloop(**kwargs):
     try:
       options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
-      subsystem.show_warning(MESSAGE_IMPORT_PRESET_VERSION)
+      subsystem.error(MESSAGE_IMPORT_PRESET_VERSION)
       return
     except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
-      subsystem.show_warning(MESSAGE_IMPORT_PRESET_NOT_JSON)
+      subsystem.error(MESSAGE_IMPORT_PRESET_NOT_JSON)
       return
     except (KeyError, TypeError):
-      subsystem.show_warning(MESSAGE_IMPORT_PRESET_INVALID)
+      subsystem.error(MESSAGE_IMPORT_PRESET_INVALID)
       return
     
     subsystem.variables_from_object(options)
@@ -141,11 +141,11 @@ def _mainloop(**kwargs):
     input_ = shlex.split(options.input)
     
     if not input_:
-      subsystem.show_warning(MESSAGE_INPUT_NONE)
+      subsystem.error(MESSAGE_INPUT_NONE)
       return
     
     if not options.classes:
-      subsystem.show_warning(MESSAGE_CLASSES_NONE)
+      subsystem.error(MESSAGE_CLASSES_NONE)
       return
     
     child = None
