@@ -10,7 +10,7 @@ from . import sorted as gui_sorted
 from . import calibrate as gui_calibrate
 
 RESIZABLE = True
-SIZE = (600, 580)
+SIZE = (600, 585)
 
 UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
