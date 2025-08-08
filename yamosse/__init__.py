@@ -98,16 +98,13 @@ def _mainloop(**kwargs):
       options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
       subsystem.error(MESSAGE_IMPORT_PRESET_VERSION)
-      return
     except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
       subsystem.error(MESSAGE_IMPORT_PRESET_NOT_JSON)
-      return
     except (KeyError, TypeError):
       subsystem.error(MESSAGE_IMPORT_PRESET_INVALID)
-      return
-    
-    subsystem.variables_from_object(options)
-    subsystem.quit()
+    else:
+      subsystem.variables_from_object(options)
+      subsystem.quit()
   
   def export_preset(file_name=''):
     if not file_name:
