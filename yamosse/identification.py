@@ -453,7 +453,8 @@ def identification(option=None):
             continue
           
           # top_scores is a list of dictionaries with 'timestamp' and 'classes' keys
-          # (it's stored this way for JSON conversion where dictionaries don't preserve their order)
+          # it's stored this way for JSON conversion
+          # where dictionaries don't preserve their order
           for top_score in top_scores:
             classes = top_score['classes']
             
