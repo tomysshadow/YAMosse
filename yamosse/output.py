@@ -97,7 +97,7 @@ def output(file_name, *args, **kwargs):
         results[file_name] = yamosse_utils.dict_sorted(result,
           key=self.identification.key_result)
       
-      return self.identification.hms(results)
+      return self.identification.hms(results, self)
     
     @abstractmethod
     def errors(self, errors):

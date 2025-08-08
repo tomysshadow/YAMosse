@@ -31,7 +31,7 @@ def identification(option=None):
       return (begin, end) if timespan and begin + timespan < end else begin
     
     @classmethod
-    def hms(cls, timestamps):
+    def hms(cls, timestamps, output):
       # timestamps doesn't need to be a list, just an iterable
       # but we want a list at the end
       keys = []
@@ -161,13 +161,13 @@ def identification(option=None):
       return results
     
     @classmethod
-    def hms(cls, results):
+    def hms(cls, results, output):
       # super call is done out here to avoid the overhead of doing it every loop
       identification = super()
       
       for class_timestamps in results.values():
         for class_, timestamps in class_timestamps.items():
-          timestamps = identification.hms(timestamps)
+          timestamps = identification.hms(timestamps, output)
           
           # if Output Scores is checked, timestamps will be a dictionary
           # for JSON that won't preserve insertion order, so we need to make it a list
@@ -418,13 +418,20 @@ def identification(option=None):
       return results
     
     @classmethod
-    def hms(cls, results):
+    def hms(cls, results, output):
       # super call must be done out here because it doesn't work in list comprehensions
       identification = super()
       
+      output_timestamps = output.top_ranked_output_timestamps
+      
       for file_name, top_scores in results.items():
-        results[file_name] = [{'timestamp': t, 'classes': cs} for t, cs in identification.hms(
-          top_scores).items()]
+        top_scores = identification.hms(top_scores, output)
+        
+        if output_timestamps:
+          results[file_name] = [{'timestamp': t, 'classes': cs} for t, cs in top_scores.items()]
+          continue
+        
+        results[file_name] = [{'classes': cs} for cs in top_scores.values()]
       
       return results
     
