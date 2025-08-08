@@ -132,7 +132,11 @@ def make_calibrate(frame, variables, class_names):
   
   # put in 100% as defaults if the calibration is empty/too short
   calibration_variable = variables['calibration']
-  calibration_variable += [DEFAULT_SCALE_VALUE] * (len(class_names) - len(calibration_variable))
+  
+  calibration_variable += (
+    [DEFAULT_SCALE_VALUE]
+    * (len(class_names) - len(calibration_variable))
+  )
   
   number = 0
   scales = []

@@ -68,7 +68,11 @@ def identification(option=None):
       
       # the number of sounds, with timespans at the end
       for timestamps in item:
-        result += (len(timestamps) ** 2) - sum(isinstance(ts, int) for ts in timestamps) + 1
+        result += (
+          (len(timestamps) ** 2)
+          - sum(isinstance(ts, int) for ts in timestamps)
+          + 1
+        )
       
       return result
     
