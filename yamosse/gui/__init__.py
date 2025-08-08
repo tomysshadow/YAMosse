@@ -84,10 +84,15 @@ DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
 WINDOWS_ICONPHOTO_BUGFIX = True
 
-IMAGES_DIR = 'images'
-
 FSENC_BITMAP = fsenc('Bitmap')
 FSENC_PHOTO = fsenc('Photo')
+
+IMAGES_DIR = 'images'
+
+IMAGE_EXTS = {
+  FSENC_BITMAP: fsenc('.xbm'),
+  FSENC_PHOTO: fsenc('.gif')
+}
 
 VARIABLE_TYPES = {
   bool: tk.BooleanVar,
@@ -1248,19 +1253,22 @@ def _root_images():
         with os.scandir(path) as scandir:
           for scandir_entry in scandir:
             item = callback(scandir_entry)
+            if not item: continue
             
-            if item:
-              key, value = item
-              result[key] = value
+            key, value = item
+            result[key] = value
         
         return result
       
-      def callback_image(entry, make_image):
+      def callback_image(entry, make_image, ext):
         name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
         
         if entry.is_dir():
           return (name, scandir(entry.path, lambda image_entry: callback_image(
-            image_entry, make_image)))
+            image_entry, make_image, ext)))
+        
+        # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
+        if os.path.splitext(name)[1] != ext: return None
         
         try: return (name, make_image(file=fsdec(entry.path)))
         except tk.TclError: return None
@@ -1270,8 +1278,11 @@ def _root_images():
         
         image = entry.name.title()
         
+        try: ext = IMAGE_EXTS[image]
+        except KeyError: return None
+        
         return (image, scandir(entry.path, lambda image_entry: callback_image(
-          image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))))))
+          image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), ext)))
       
       # all names/paths here are encoded with fsenc so that they will be compared by ordinal
       root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
