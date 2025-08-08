@@ -807,12 +807,8 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   buttons = ()
   
   def get_items(item=''):
-    items = treeview.get_children(item=item)
-    
-    for item in items:
-      items += get_items(item=item)
-    
-    return items
+    items = list(treeview.get_children(item=item))
+    return items + [get_items(item=item) for item in items]
   
   if 'tree' in show:
     def expand_all():
