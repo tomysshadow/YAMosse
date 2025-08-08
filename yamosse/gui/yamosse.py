@@ -16,7 +16,7 @@ UNIT_CLASSES = 'classes'
 UNIT_SECONDS = 'seconds'
 
 TIP_WEIGHTS = ('The weights file for the YAMNet model. This option will be disabled if you are '
-  'using the Tensorflow Hub release of YAMNet.')
+  'using the TensorFlow Hub release of YAMNet.')
 
 TIP_TIMESPAN = ('If a sound is less than this length in seconds, it will be combined into one '
   'timestamp. Otherwise, it will be output as a timespan: two timestamps with a dash inbetween. '
@@ -49,7 +49,7 @@ TIP_OUTPUT_FILE_OPTIONS_OUTPUT_OPTIONS = 'Output the options that were used for 
 TIP_OUTPUT_FILE_OPTIONS_OUTPUT_SCORE = ('Output the score percentage along with each timestamp, '
   'so you can see how certain the model is that it identified a sound at that timestamp.')
 
-TIP_WORKER_OPTIONS_MEMORY_LIMIT = ('The Tensorflow logical device memory limit, in megabytes. It '
+TIP_WORKER_OPTIONS_MEMORY_LIMIT = ('The TensorFlow logical device memory limit, in megabytes. It '
   'will be multiplied by the number of workers and the number of GPUs. This option is ignored if '
   'GPU Acceleration is disabled. Errors may occur if it is too high or low.')
 

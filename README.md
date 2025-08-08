@@ -4,7 +4,7 @@ Get timestamps for sound files by harnessing the power of pristine quality yams.
 
 **IMPORTANT:** this application requires Python 3.10 64-bit or newer.
 
-YAMosse is an easy to use interface for Tensorflow's [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model, written in Python. It can be used to identify the timestamps of specific sounds, or create a transcript of the sounds in a sound file. For example, you could use it to tell which parts of a sound file contain music, or which parts contain speech. It could be used to annotate a collection of sounds, or as part of an automatically generated caption system. You can use it as a GUI or use it on the command line.
+YAMosse is an easy to use interface for TensorFlow's [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model, written in Python. It can be used to identify the timestamps of specific sounds, or create a transcript of the sounds in a sound file. For example, you could use it to tell which parts of a sound file contain music, or which parts contain speech. It could be used to annotate a collection of sounds, or as part of an automatically generated caption system. You can use it as a GUI or use it on the command line.
 
 YAMosse has been tested on Windows 10 and on Ubuntu 24.04 LTS. It is recommended that you have at least 8 GB of RAM.
 
@@ -24,21 +24,21 @@ Use Git to clone this repository, then use pip to install the following Python p
 
 In addition to the above packages, you must install the YAMNet model to use YAMosse. If the YAMNet model is not installed, the application will run, but when you perform a YAMScan an import error will occur and the scan will be cancelled.
 
-There are two methods you can use to install the YAMNet model: installing via Tensorflow Hub, or via Tensorflow Model Garden.
+There are two methods you can use to install the YAMNet model: installing via TensorFlow Hub, or via TensorFlow Model Garden.
 
-## Method 1: Tensorflow Hub
+## Method 1: TensorFlow Hub
 
-The easiest way to install the YAMNet model is by using Tensorflow Hub. All you need to do is use pip to install the `tensorflow-hub` package. The YAMNet model will be automatically loaded the first time you perform a YAMScan. However, installing the `tensorflow-hub` package *will also update your Tensorflow version.* If you would like to stay on an older version of Tensorflow, you should use Method 2 instead.
+The easiest way to install the YAMNet model is by using TensorFlow Hub. All you need to do is use pip to install the `tensorflow-hub` package. The YAMNet model will be automatically loaded the first time you perform a YAMScan. However, installing the `tensorflow-hub` package *will also update your TensorFlow version.* If you would like to stay on an older version of TensorFlow, you should use Method 2 instead.
 
-## Method 2: Tensorflow Model Garden
+## Method 2: TensorFlow Model Garden
 
-After using Git to clone the YAMosse repository, run a submodule update. The submodule update will clone the [Tensorflow Model Garden](https://github.com/tensorflow/models/) repository. Then you can run YAMosse and it will be able to load the YAMNet model from that repository. The weights file, which is not included in the Tensorflow Model Garden, will be downloaded separately the first time you perform a YAMScan.
+After using Git to clone the YAMosse repository, run a submodule update. The submodule update will clone the [TensorFlow Model Garden](https://github.com/tensorflow/models/) repository. Then you can run YAMosse and it will be able to load the YAMNet model from that repository. The weights file, which is not included in the TensorFlow Model Garden, will be downloaded separately the first time you perform a YAMScan.
 
 # Usage
 
 To run YAMosse in a window, open the `yamosse_window.pyw` file by double clicking on it. Alternatively, you can run the command `pythonw -m yamosse` in a command prompt.
 
-To run YAMosse with a console, open the `yamosse_console.py` file by double clicking on it. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see Tensorflow's error logs, which is useful for troubleshooting GPU Acceleration.
+To run YAMosse with a console, open the `yamosse_console.py` file by double clicking on it. Alternatively, you can run the command `python -m yamosse` in a command prompt. Running YAMosse with a console will allow you to see TensorFlow's error logs, which is useful for troubleshooting GPU Acceleration.
 
 ![Usage Steps](usage_steps.jpg)
 
@@ -148,11 +148,11 @@ Alternatively, under Timespan you can check the Span All box. Then, any sound th
 
 ## How do I enable GPU Acceleration?
 
-To use GPU Acceleration, you will need to [install NVIDIA CUDA Toolkit and cuDNN.](https://www.digitalocean.com/community/tutorials/install-cuda-cudnn-for-gpu) Note that if you are on Windows, the last version of Tensorflow to support GPU Acceleration is 2.10.0. Otherwise, you will need to use Linux or WSL2 in order to get GPU Acceleration.
+To use GPU Acceleration, you will need to [install NVIDIA CUDA Toolkit and cuDNN.](https://www.digitalocean.com/community/tutorials/install-cuda-cudnn-for-gpu) Note that if you are on Windows, the last version of TensorFlow to support GPU Acceleration is 2.10.0. Otherwise, you will need to use Linux or WSL2 in order to get GPU Acceleration.
 
-I have tested and confirmed that YAMosse is compatible with Tensorflow 2.8.0 and Keras 2.8.0, which will work for this purpose if you want to avoid setting up virtualization, though do note that in this case you will need to install the legacy `keras` package rather than `tf-keras`.
+I have tested and confirmed that YAMosse is compatible with TensorFlow 2.8.0 and Keras 2.8.0, which will work for this purpose if you want to avoid setting up virtualization, though do note that in this case you will need to install the legacy `keras` package rather than `tf-keras`.
 
-You will know when GPU Acceleration is enabled and working correctly because "GPU Acceleration Enabled" will appear in the Log textbox whenever you perform a YAMScan. If you still can't get GPU Acceleration to work, try running YAMosse with a console by opening `yamosse_console.py`. Then you will be able to see Tensorflow's more verbose error logs, which could reveal the problem.
+You will know when GPU Acceleration is enabled and working correctly because "GPU Acceleration Enabled" will appear in the Log textbox whenever you perform a YAMScan. If you still can't get GPU Acceleration to work, try running YAMosse with a console by opening `yamosse_console.py`. Then you will be able to see TensorFlow's more verbose error logs, which could reveal the problem.
 
 ## What does Calibration do?
 
@@ -192,7 +192,7 @@ Thanks to [Tcler's Wiki,](https://wiki.tcl-lang.org) which is a great resource I
 
 Special thanks to nosamu for the additional design advice.
 
-YAMosse uses the [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model by Tensorflow.
+YAMosse uses the [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model by TensorFlow.
 
 Application Icons by [www.aha-soft.com.](https://www.aha-soft.com)
 

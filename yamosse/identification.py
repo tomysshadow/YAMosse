@@ -145,7 +145,7 @@ def identification(option=None):
           if prediction == predictions_len or end < predictions[prediction]:
             begin = predictions[score_begin]
             
-            # the cast to float here is to convert a potential Tensorflow or Numpy dtype
+            # the cast to float here is to convert a potential TensorFlow or Numpy dtype
             # into a Python native type, because we want to pickle this result
             # into the main process which does not have those modules loaded
             timestamp = self._range_timestamp(begin, end, timespan)

@@ -89,7 +89,7 @@ def class_names(class_map_csv=''):
     else:
       class_map_csv = os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
   
-  # alternate method that does not depend on Tensorflow
+  # alternate method that does not depend on TensorFlow
   with open(class_map_csv, 'r', encoding='utf8') as csv_file:
     reader = csv.reader(csv_file)
     next(reader) # skip header
@@ -144,7 +144,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     
     assert _tfhub_enabled == tfhub_enabled, 'tfhub_enabled mismatch'
     
-    # seperated out because loading the worker dependencies (mainly Tensorflow) in
+    # seperated out because loading the worker dependencies (mainly TensorFlow) in
     # the main process consumes a non-trivial amount of memory for no benefit
     # and causes startup to take significantly longer
     try: import tf_keras
@@ -172,7 +172,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     
     if options.high_priority: _high_priority(psutil=psutil)
     
-    # currently, setting a per-CPU memory limit isn't supported by Tensorflow
+    # currently, setting a per-CPU memory limit isn't supported by TensorFlow
     # however in future the 'GPU' argument could be removed if it does ever become supported
     # (then error handling/logging would need to be added here for compatibility with old versions)
     gpus = tf.config.list_physical_devices('GPU')
