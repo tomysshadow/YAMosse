@@ -75,7 +75,7 @@ import yamosse
 import yamosse.subsystem
 
 try:
-  yamosse.yamosse(output_file_name="Output.txt")
+  yamosse.yamosse(output_file_name='Output.txt')
 except yamosse.subsystem.SubsystemError as ex:
   print(ex)
 ```
