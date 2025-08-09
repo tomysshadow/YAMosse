@@ -812,7 +812,12 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   
   def get_items(item=''):
     items = list(treeview.get_children(item=item))
-    return items + [get_items(item=item) for item in items]
+    children = []
+    
+    for item in items:
+      children += get_items(item=item)
+    
+    return items + children
   
   if 'tree' in show:
     def expand_all():
