@@ -1091,6 +1091,25 @@ def make_undoable(frame):
   return undooptions, (undo_button, redo_button)
 
 
+def _init_sizegrip_window():
+  sizegrips = WeakKeyDictionary()
+  
+  def sizegrip_window(window, sizegrip=None, resizable=True):
+    if sizegrip:
+      sizegrips[window] = sizegrip
+    else:
+      sizegrip = sizegrips[window]
+    
+    if resizable:
+      sizegrip.grid(row=2, column=2, sticky=tk.SE)
+    else:
+      sizegrip.grid_remove()
+  
+  return sizegrip_window
+
+sizegrip_window = _init_sizegrip_window()
+
+
 def _root_window():
   root_window = None
   
@@ -1200,7 +1219,7 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
       window.minsize(*size)
   
   # should be done after setting new window geometry
-  window.show_sizegrip(resizable)
+  sizegrip_window(window, resizable=resizable)
   
   if iconphotos:
     if window is get_root_window():
@@ -1228,14 +1247,7 @@ def make_window(window, make_frame, *args, **kwargs):
   window.rowconfigure((0, 2), minsize=minsize)
   window.columnconfigure((0, 2), minsize=minsize)
   
-  def show_sizegrip(resizable=True):
-    if resizable:
-      sizegrip.grid(row=2, column=2, sticky=tk.SE)
-    else:
-      sizegrip.grid_remove()
-  
-  window.show_sizegrip = show_sizegrip
-  show_sizegrip()
+  sizegrip_window(window, sizegrip=sizegrip)
   
   frame = ttk.Frame(window)
   frame.grid(row=1, column=1, sticky=tk.NSEW)
