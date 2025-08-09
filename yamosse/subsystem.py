@@ -25,7 +25,7 @@ def subsystem(window, title, variables):
       raise SubsystemError(message)
     
     @abstractmethod
-    def ask_yes_no(self, message, *args, **kwargs):
+    def confirm(self, message, *args, **kwargs):
       pass
     
     def variables_from_object(self, object_):
@@ -68,7 +68,7 @@ def subsystem(window, title, variables):
         message=message
       )
     
-    def ask_yes_no(self, message, *args, default=None, parent=None, **kwargs):
+    def confirm(self, message, *args, default=None, parent=None, **kwargs):
       if default is not None:
         default = gui.messagebox.YES if default else gui.messagebox.NO
       
@@ -103,7 +103,7 @@ def subsystem(window, title, variables):
       if values and 'log' in values:
         print(yamosse_utils.ascii_backslashreplace(values['log']))
     
-    def ask_yes_no(self, message, *args, default=None, **kwargs):
+    def confirm(self, message, *args, default=None, **kwargs):
       YES = 'y'
       NO = 'n'
       

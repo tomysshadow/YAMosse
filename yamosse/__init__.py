@@ -171,7 +171,7 @@ def _mainloop(**kwargs):
       subsystem.widgets = widgets
     
     if not options.weights:
-      if not subsystem.ask_yes_no(
+      if not subsystem.confirm(
         MESSAGE_WEIGHTS_NONE,
         default=True,
         parent=child
@@ -195,7 +195,7 @@ def _mainloop(**kwargs):
   def restore_defaults():
     nonlocal options
     
-    if not subsystem.ask_yes_no(
+    if not subsystem.confirm(
       MESSAGE_ASK_RESTORE_DEFAULTS,
       default=False
     ): return

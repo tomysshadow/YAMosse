@@ -24,7 +24,7 @@ def main(argc, argv):
   
   if argc < MIN_ARGC:
     help_()
-    return 1
+    return 2
   
   args = argv[MIN_ARGC:]
   argc = len(args)
@@ -39,7 +39,7 @@ def main(argc, argv):
     
     if arg in ('-h', '--help'):
       help_()
-      return 1
+      return 2
     if arg in ('-rd', '--restore_defaults'):
       kwargs['restore_defaults'] = True
     if a < argc2:
@@ -56,7 +56,7 @@ def main(argc, argv):
           try: options_attrs[key] = yamosse_options.json.loads(args[a := a + 1])
           except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
             help_()
-            return 1
+            return 2
   
   if options_attrs: kwargs['options_attrs'] = options_attrs
   

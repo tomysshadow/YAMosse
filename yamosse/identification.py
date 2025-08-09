@@ -120,7 +120,7 @@ def identification(option=None):
     
     def timestamps(self, class_predictions, shutdown):
       # create timestamps from predictions/scores
-      results = {}
+      result = {}
       timespan = self.options.timespan
       
       for class_, prediction_scores in class_predictions.items():
@@ -156,9 +156,9 @@ def identification(option=None):
           score_end = prediction
         
         # class is cast to int for same reason as above (it might come from a numpy array)
-        results[int(class_)] = timestamp_scores
+        result[int(class_)] = timestamp_scores
       
-      return results
+      return result
     
     @classmethod
     def hms(cls, results, output):
@@ -356,7 +356,7 @@ def identification(option=None):
     def timestamps(self, top_scores, shutdown):
       self.predict(top_scores)
       
-      results = {}
+      result = {}
       timespan = self.options.timespan
       np = self.np
       
@@ -403,7 +403,7 @@ def identification(option=None):
             # it is not necessary to sort here again, as it would be impossible
             # for the order to change as the result of averaging here, because
             # we are only joining timestamps where the keys are in the same order
-            results[timestamp] = dict(zip(class_scores_begin.keys(),
+            result[timestamp] = dict(zip(class_scores_begin.keys(),
               np.mean(scores, axis=0, dtype=np.float32).tolist(), strict=True))
         finally:
           score_begin = score_end
@@ -415,7 +415,7 @@ def identification(option=None):
           begin = score_end
           scores = [np.fromiter(class_scores_end.values(), dtype=np.float32)]
       
-      return results
+      return result
     
     @classmethod
     def hms(cls, results, output):
