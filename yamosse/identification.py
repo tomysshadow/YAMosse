@@ -219,7 +219,7 @@ def identification(option=None):
               except ValueError: pass
               else: all_timestamp = class_name
             
-            if not all_timestamp is None:
+            if all_timestamp is not None:
               assert not timestamps, 'timestamps must be empty if Span All is checked'
               
               all_timestamps.append(all_timestamp)
