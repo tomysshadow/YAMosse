@@ -215,17 +215,19 @@ def make_presets(frame, import_, export):
   frame.rowconfigure((0, 1), weight=1) # make buttons vertically centered
   frame.columnconfigure(0, weight=1) # one column layout
   
-  import_button, export_button = gui.make_widgets(
+  gui.make_widgets(
     frame,
     ttk.Button,
-    items=gui.text_widgets_items(('Import...', 'Export...')),
+    
+    items=[
+      {'text': 'Import...', 'command': import_},
+      {'text': 'Export...', 'command': export}
+    ],
+    
     orient=tk.VERTICAL,
     cell=0,
     padding=gui.PADDING_Q
   )
-  
-  import_button['command'] = import_
-  export_button['command'] = export
 
 
 def make_general(frame, variables, input_filetypes, class_names, import_preset, export_preset):
