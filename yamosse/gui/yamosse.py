@@ -568,8 +568,8 @@ def make_options(notebook, variables,
     style='Raised.TNotebook > .TFrame')
   
   make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
-  
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
+  
   notebook.enable_traversal()
 
 
