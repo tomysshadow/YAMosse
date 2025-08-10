@@ -86,8 +86,8 @@ def make_input(frame, variables, filetypes):
 def make_classes(frame, variables, class_names):
   treeview_widgets = gui.make_treeview(
     frame,
-    columns=gui.heading_text_columns(('#', 'Class Names')),
-    items=gui.values_items(enumerate(class_names, start=1)),
+    columns=gui.heading_text_treeview_columns(('#', 'Class Names')),
+    items=gui.values_treeview_items(enumerate(class_names, start=1)),
     show='headings',
     selectmode=tk.EXTENDED
   )
@@ -146,8 +146,15 @@ def make_confidence_score(frame, variables):
   
   radiobuttons_frame = ttk.Frame(cell_frame)
   radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
-  radiobuttons = gui.make_widgets(radiobuttons_frame, ttk.Radiobutton,
-    ('Min', 'Max'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
+  
+  radiobuttons = gui.make_widgets(
+    radiobuttons_frame,
+    ttk.Radiobutton,
+    items=gui.text_widgets_items(('Min', 'Max')),
+    orient=tk.VERTICAL,
+    cell=0,
+    padding=gui.PADDING_Q
+  )
   
   gui.link_radiobuttons(dict.fromkeys(radiobuttons),
     variables['confidence_score_minmax'])
@@ -186,8 +193,13 @@ def make_identification_options(frame, variables, class_names):
   top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui.PADX_HW)
   make_top_ranked(top_ranked_frame, variables, class_names)
   
-  radiobuttons = gui.make_widgets(frame, ttk.Radiobutton,
-    ('Confidence Score', 'Top Ranked'), cell=0, sticky=tk.EW)
+  radiobuttons = gui.make_widgets(
+    frame,
+    ttk.Radiobutton,
+    items=gui.text_widgets_items(('Confidence Score', 'Top Ranked')),
+    cell=0,
+    sticky=tk.EW
+  )
   
   gui.link_radiobuttons(
     zip(radiobuttons, (confidence_score_frame, top_ranked_frame), strict=True),
@@ -203,8 +215,14 @@ def make_presets(frame, import_, export):
   frame.rowconfigure((0, 1), weight=1) # make buttons vertically centered
   frame.columnconfigure(0, weight=1) # one column layout
   
-  import_button, export_button = gui.make_widgets(frame, ttk.Button,
-    ('Import...', 'Export...'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
+  import_button, export_button = gui.make_widgets(
+    frame,
+    ttk.Button,
+    items=gui.text_widgets_items(('Import...', 'Export...')),
+    orient=tk.VERTICAL,
+    cell=0,
+    padding=gui.PADDING_Q
+  )
   
   import_button['command'] = import_
   export_button['command'] = export
@@ -291,8 +309,15 @@ def make_background_noise_volume(frame, variables):
   
   radiobuttons_frame = ttk.Frame(cell_frame)
   radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
-  radiobuttons = gui.make_widgets(radiobuttons_frame, ttk.Radiobutton,
-    ('Log', 'Linear'), orient=tk.VERTICAL, cell=0, padding=gui.PADDING_Q)
+  
+  radiobuttons = gui.make_widgets(
+    radiobuttons_frame,
+    ttk.Radiobutton,
+    items=gui.text_widgets_items(('Log', 'Linear')),
+    orient=tk.VERTICAL,
+    cell=0,
+    padding=gui.PADDING_Q
+  )
   
   gui.link_radiobuttons(dict.fromkeys(radiobuttons),
     variables['background_noise_volume_loglinear'])

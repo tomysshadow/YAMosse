@@ -285,16 +285,16 @@ def measure_text_width_widget(widget, width, font):
   return width * font.measure('0', displayof=widget)
 
 
-def make_widgets(frame, make_widget, names,
-  orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING, **kwargs):
+def make_widgets(frame, make_widget, items=None,
+  orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING):
   ORIENTS = (tk.HORIZONTAL, tk.VERTICAL)
   
   if orient not in ORIENTS: raise ValueError('orient must be in %r' % (ORIENTS,))
   
   widgets = []
-  if not names: return widgets
+  if not items: return widgets
   
-  last = len(names) - 1
+  last = len(items) - 1
   
   x = 'row'
   y = 'column'
@@ -309,7 +309,7 @@ def make_widgets(frame, make_widget, names,
   padding = padding / 2 if last != 0 else 0
   
   # first widget
-  widget = make_widget(frame, text=names[0], **kwargs)
+  widget = make_widget(frame, **items[0])
   widget.grid(sticky=sticky, **{x: cell, y: 0, pad: (0, padding)})
   widgets.append(widget)
   
@@ -318,15 +318,19 @@ def make_widgets(frame, make_widget, names,
   
   # middle widgets
   for middle in range(last - 1):
-    widget = make_widget(frame, text=names[middle], **kwargs)
+    widget = make_widget(frame, **items[middle])
     widget.grid(sticky=sticky, **{x: cell, y: middle, pad: padding})
     widgets.append(widget)
   
   # last widget
-  widget = make_widget(frame, text=names[last], **kwargs)
+  widget = make_widget(frame, **items[last])
   widget.grid(sticky=sticky, **{x: cell, y: last, pad: (padding, 0)})
   widgets.append(widget)
   return widgets
+
+
+def text_widgets_items(i):
+  return [{'text': t} for t in i]
 
 
 def _traversal_button():
@@ -879,11 +883,11 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     ), (buttons_frame, buttons)
 
 
-def heading_text_columns(c):
+def heading_text_treeview_columns(c):
   return {cid: {'heading': {'text': t}} for cid, t in yamosse_utils.dict_enumerate(c).items()}
 
 
-def values_items(i):
+def values_treeview_items(i):
   return {cid: {'values': v} for cid, v in yamosse_utils.dict_enumerate(i).items()}
 
 
