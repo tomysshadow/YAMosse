@@ -201,14 +201,14 @@ def make_identification_options(frame, variables, class_names):
     sticky=tk.EW
   )
   
-  gui.link_radiobuttons(
-    zip(radiobuttons, (confidence_score_frame, top_ranked_frame), strict=True),
-    variables['identification']
-  )
+  frames = (confidence_score_frame, top_ranked_frame)
+  
+  gui.link_radiobuttons(zip(radiobuttons, frames, strict=True),
+    variables['identification'])
   
   # fix tab order
-  confidence_score_frame.lift()
-  top_ranked_frame.lift()
+  for f in frames:
+    f.lift()
 
 
 def make_presets(frame, import_, export):
