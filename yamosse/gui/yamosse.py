@@ -564,6 +564,8 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
 def make_options(notebook, variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
   import_preset, export_preset):
+  notebook['style'] = 'Raised.TNotebook'
+  
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
@@ -621,7 +623,7 @@ def make_yamosse(frame, title, options_variables,
   header_frame.grid(row=0, sticky=tk.EW)
   make_header(header_frame, title)
   
-  options_notebook = ttk.Notebook(frame, style='Raised.TNotebook')
+  options_notebook = ttk.Notebook(frame)
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   make_options(options_notebook, options_variables,
     input_filetypes, class_names, weights_filetypes, tfhub_enabled,
