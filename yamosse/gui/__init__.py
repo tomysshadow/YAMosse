@@ -1370,11 +1370,11 @@ def threaded():
   assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
 
 
-def gui(make_frame, *args, child=False, **kwargs):
-  root_window = get_root_window()
+def gui(make_frame, *args, window=None, child=False, **kwargs):
+  if not window: window = get_root_window()
   
   return make_window(
-    root_window if not child else tk.Toplevel(root_window),
+    window if not child else tk.Toplevel(window),
     make_frame,
     *args,
     **kwargs
