@@ -46,7 +46,7 @@ To run YAMosse with a console, open the `yamosse_console.py` file by double clic
 
 The first step to using YAMosse is to select an input file or folders (1). Click the Browse Folder or Browse Files buttons to select the sound files you'd like to scan. If you select a folder and the Recursive option is checked, then subfolders will also be included in the scan. If you have the `tkinterdnd2` package installed, you can also select files or folders by clicking and dragging them.
 
-The next step is to select the classes of sound you'd like to scan for (2). There are 521 classes to choose from, including speech, music, various animals, instruments, forms of transportation, and lots more. If you'd like to scan for everything, use the Select All button to select every class.
+The next step is to select the classes of sound you'd like to scan for (2). There are [521 classes to choose from](https://github.com/tensorflow/models/blob/master/research/audioset/yamnet/yamnet_class_map.csv), including speech, music, various animals, instruments, forms of transportation, and lots more. If you'd like to scan for everything, use the Select All button to select every class.
 
 The last step is to choose whether you'd like to use Confidence Score or Top Ranked identification (3). When Confidence Score identification is used, the results will be a list of the timestamps of the specific sound classes you've selected in the sound file (or the absence of those sounds, if you click the Max button instead of Min.) In contrast, when Top Ranked identification is used, the result is a transcript - or play by play of events - of the sounds that the model thinks are in the sound file, ignoring the classes that you have not selected.
 
