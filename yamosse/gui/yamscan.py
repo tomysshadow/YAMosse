@@ -120,8 +120,11 @@ def show_yamscan(widgets, values=None):
       gui.enable_widget(open_output_file_button, enabled=ok)
       
       gui.disable_traversal_button(done_button)
-      done_button['text'] = value
-      gui.enable_traversal_button(done_button)
+      
+      try:
+        done_button['text'] = value
+      finally:
+        gui.enable_traversal_button(done_button)
       
       gui.bind_buttons_window(
         window,

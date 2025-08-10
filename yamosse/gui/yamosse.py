@@ -127,24 +127,13 @@ def make_classes(frame, variables, class_names):
 
 
 def make_confidence_score(frame, variables):
-  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
   
-  # the frame passed in sticks to NSEW
-  # so that the Help Text is shown for the entire cell
-  # but we want to be vertically centered
-  # (only stick to EW)
-  # so we create this cell frame
-  cell_frame = ttk.Frame(frame)
-  cell_frame.grid(sticky=tk.EW)
-  
-  cell_frame.columnconfigure(0, weight=1) # make scale frame horizontally resizable
-  
-  scale_frame = ttk.Frame(cell_frame)
+  scale_frame = ttk.Frame(frame)
   scale_frame.grid(row=0, column=0, sticky=tk.EW)
   gui.make_scale(scale_frame, variable=variables['confidence_score'])
   
-  radiobuttons_frame = ttk.Frame(cell_frame)
+  radiobuttons_frame = ttk.Frame(frame)
   radiobuttons_frame.grid(row=0, column=1, sticky=tk.E, padx=gui.PADX_QW)
   
   radiobuttons = gui.make_widgets(
@@ -161,20 +150,14 @@ def make_confidence_score(frame, variables):
 
 
 def make_top_ranked(frame, variables, class_names):
-  frame.rowconfigure(0, weight=1) # make cell frame vertically centered
-  frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
+  frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
   
-  cell_frame = ttk.Frame(frame)
-  cell_frame.grid(sticky=tk.EW)
-  
-  cell_frame.columnconfigure(0, weight=1) # make spinbox frame horizontally resizable
-  
-  spinbox_frame = ttk.Frame(cell_frame)
+  spinbox_frame = ttk.Frame(frame)
   spinbox_frame.grid(row=0, sticky=tk.EW)
   gui.make_spinbox(spinbox_frame, textvariable=variables['top_ranked'],
     from_=1, to=len(class_names), unit=UNIT_CLASSES)
   
-  ttk.Checkbutton(cell_frame,
+  ttk.Checkbutton(frame,
     text='Output Timestamps', variable=variables['top_ranked_output_timestamps']).grid(
     row=1, sticky=tk.W, pady=gui.PADY_QN)
 
@@ -186,11 +169,11 @@ def make_identification_options(frame, variables, class_names):
     uniform='identification_options_column') # make the columns uniform
   
   confidence_score_frame = ttk.Frame(frame)
-  confidence_score_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=gui.PADX_HE)
+  confidence_score_frame.grid(row=1, column=0, sticky=tk.EW, padx=gui.PADX_HE)
   make_confidence_score(confidence_score_frame, variables)
   
   top_ranked_frame = ttk.Frame(frame)
-  top_ranked_frame.grid(row=1, column=1, sticky=tk.NSEW, padx=gui.PADX_HW)
+  top_ranked_frame.grid(row=1, column=1, sticky=tk.EW, padx=gui.PADX_HW)
   make_top_ranked(top_ranked_frame, variables, class_names)
   
   radiobuttons = gui.make_widgets(
@@ -207,8 +190,8 @@ def make_identification_options(frame, variables, class_names):
     variables['identification'])
   
   # fix tab order
-  for f in frames:
-    f.lift()
+  for frame in frames:
+    frame.lift()
 
 
 def make_presets(frame, import_, export):
@@ -268,6 +251,11 @@ def make_timespan(frame, variables):
   frame.rowconfigure(0, weight=1) # make cell frame vertically centered
   frame.columnconfigure(0, weight=1) # make cell frame horizontally resizable
   
+  # the frame passed in sticks to NSEW
+  # so that the Tips are shown for the entire cell
+  # but we want to be vertically centered
+  # (only stick to EW)
+  # so we create this cell frame
   cell_frame = ttk.Frame(frame)
   cell_frame.grid(sticky=tk.EW)
   
@@ -574,12 +562,13 @@ def make_options(notebook, variables,
   make_general(general_frame, variables, input_filetypes, class_names,
     import_preset, export_preset)
   
+  notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
+  
   advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
   make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
   
-  notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
   notebook.enable_traversal()
 
