@@ -1320,7 +1320,7 @@ def elements_layout(layout, name):
   elements = []
   
   for child, options in layout:
-    if str(child) == name: elements += [options]
+    if str(child) == name: elements.append(options)
     
     try: children = options['children']
     except KeyError: continue
