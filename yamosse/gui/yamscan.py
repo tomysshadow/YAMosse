@@ -75,6 +75,7 @@ def make_footer(frame, log_text, open_output_file, done):
   gui.bind_buttons_window(done_button.winfo_toplevel(), cancel_button=done_button)
   
   for button in (open_output_file_button, done_button):
+    gui.align_button(button)
     gui.enable_traversal_button(button)
   
   return open_output_file_button, done_button

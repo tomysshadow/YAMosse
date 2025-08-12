@@ -333,6 +333,24 @@ def text_widgets_items(i):
   return [{'text': t} for t in i]
 
 
+def _init_align_button():
+  align_image = None
+  
+  def align_button(button):
+    nonlocal align_image
+    
+    if button['image']: return
+    
+    if not align_image:
+      align_image = get_root_images()[FSENC_PHOTO][fsenc('align.gif')]
+    
+    button.configure(image=align_image, compound=tk.CENTER)
+  
+  return align_button
+
+align_button = _init_align_button()
+
+
 def _traversal_button():
   def sequence(button, underline):
     assert underline >= 0, 'underline must be greater than or equal to zero'
@@ -878,6 +896,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     ]
   
   for button in reversed(buttons):
+    align_button(button)
     button.pack(side=tk.RIGHT, padx=PADX_QW)
   
   return make_name(name_frame, name), (treeview, make_scrollbar(treeview, xscroll, yscroll)
@@ -972,6 +991,7 @@ def make_filedialog(frame, name='', textvariable=None,
   
   # must be done in a separate loop to button creation so tab order is correct
   for button in reversed(buttons):
+    align_button(button)
     button.pack(side=tk.RIGHT, padx=PADX_QW)
   
   # drag and drop
