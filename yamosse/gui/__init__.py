@@ -1316,19 +1316,17 @@ def _root_images():
 get_root_images = _root_images()
 
 
-def children_layout(layout, names):
-  children = layout
+def children_layout(layout, name):
+  for child, options in layout:
+    try: children = options['children']
+    except KeyError: continue
+    
+    if child == name: return children
+    
+    children = children_layout(children, name)
+    if children is not None: return children
   
-  for name in names:
-    for child, options in children:
-      if child != name: continue
-      
-      children = options['children']
-      break
-    else:
-      return None
-  
-  return children
+  return None
 
 
 def bindtag_for_object(object_):
@@ -1386,10 +1384,11 @@ def _style():
   
   layout = style.layout('TButton')
   
-  children = children_layout(layout, ('Button.button', 'Button.focus', 'Button.padding'))
-  assert children is not None, 'children must not be None'
+  children = children_layout(layout, 'Button.padding')
   
-  children.append(('align', {}))
+  if children is not None:
+    children.append(('align', {}))
+  
   style.layout('TButton', layout)
 
 
