@@ -147,7 +147,9 @@ def make_classes(frame, variables, class_names):
   
   erase_button = ttk.Button(
     find_frame,
+    width=0, # hack to fix button height on Linux
     image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('erase.gif')],
+    compound=tk.CENTER,
     command=lambda: find_entry.delete(0, tk.END)
   )
   
