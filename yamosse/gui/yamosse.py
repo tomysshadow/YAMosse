@@ -133,12 +133,12 @@ def make_classes(frame, variables, class_names):
   def find_validatecommand(P):
     P = P.casefold()
     
-    for item in items:
-      if any(P in value.casefold() for value in treeview.item(item, option='values')):
-        treeview.move(item, '', item) # TODO: this breaks sorting
+    for cid, item in items.items():
+      if any(P in str(value).casefold() for value in item['values']):
+        treeview.move(cid, '', cid) # TODO: this breaks sorting
         continue
       
-      treeview.detach(item)
+      treeview.detach(cid)
     
     return True
   
