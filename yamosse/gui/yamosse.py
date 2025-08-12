@@ -145,6 +145,8 @@ def make_classes(frame, variables, class_names):
   find_entry = gui.make_entry(find_frame, name='Find:',
     validate='key', validatecommand=(find_frame.register(find_validatecommand), '%P'))[1]
   
+  find_entry.grid(sticky=tk.NSEW, pady=(2, 2)) # fix misalignment with row
+  
   erase_button = ttk.Button(
     find_frame,
     width=0, # hack to fix button height on Linux
