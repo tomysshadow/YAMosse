@@ -1381,7 +1381,7 @@ def _style():
   style.layout('Raised.TNotebook', [])
   style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
   
-  style.element_create('Button.align', 'image',
+  style.element_create('align', 'image',
     get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
   
   layout = style.layout('TButton')
@@ -1389,7 +1389,7 @@ def _style():
   children = children_layout(layout, ('Button.button', 'Button.focus', 'Button.padding'))
   assert children is not None, 'children must not be None'
   
-  children.append(('Button.align', {}))
+  children.append(('align', {}))
   style.layout('TButton', layout)
 
 
