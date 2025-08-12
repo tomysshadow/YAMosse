@@ -128,7 +128,7 @@ def make_classes(frame, variables, class_names):
   calibrate_button.pack(side=tk.LEFT)
   
   find_frame = ttk.Frame(buttons_frame)
-  find_frame.pack(side=tk.LEFT, padx=gui.PADX_HEW)
+  find_frame.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=gui.PADX_HEW)
   
   def find_validatecommand(P):
     P = P.casefold()
