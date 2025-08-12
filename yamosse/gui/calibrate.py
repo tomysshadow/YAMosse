@@ -19,13 +19,13 @@ def make_footer(frame, ok, cancel):
   undooptions = gui.make_undoable(undoable_frame)[0]
   
   ok_button = ttk.Button(frame, text='OK', underline=0, command=ok, default=tk.ACTIVE)
-  ok_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
+  ok_button.grid(row=0, column=2, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
   
   cancel_button = ttk.Button(frame, text='Cancel', underline=0, command=cancel)
-  cancel_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
+  cancel_button.grid(row=0, column=3, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
   
   reset_button = ttk.Button(frame, text='Reset', underline=0)
-  reset_button.grid(row=0, column=4, sticky=tk.E, padx=gui.PADX_QW)
+  reset_button.grid(row=0, column=4, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
   
   gui.bind_buttons_window(frame.winfo_toplevel(), ok_button=ok_button, cancel_button=cancel_button)
   

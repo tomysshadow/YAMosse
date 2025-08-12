@@ -60,18 +60,18 @@ def make_footer(frame, log_text, open_output_file, done):
     image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('copy.gif')], compound=tk.LEFT,
     command=copy_to_clipboard)
   
-  copy_to_clipboard_button.grid(row=0, column=0, sticky=tk.W)
+  copy_to_clipboard_button.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W))
   
   open_output_file_button = ttk.Button(frame, text='Open Output File', underline=1,
     command=open_output_file)
   
-  open_output_file_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
+  open_output_file_button.grid(row=0, column=2, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
   gui.enable_widget(open_output_file_button, enabled=False)
   
   done_button = ttk.Button(frame, text='Cancel', underline=0,
     command=done, default=tk.ACTIVE)
   
-  done_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
+  done_button.grid(row=0, column=3, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
   gui.bind_buttons_window(done_button.winfo_toplevel(), cancel_button=done_button)
   
   for button in (open_output_file_button, done_button):

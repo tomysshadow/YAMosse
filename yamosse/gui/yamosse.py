@@ -3,6 +3,7 @@ from tkinter import ttk
 import webbrowser
 from os import fsencode as fsenc
 
+import yamosse.utils as yamosse_utils
 import yamosse.output as yamosse_output
 
 from .. import gui
@@ -84,10 +85,12 @@ def make_input(frame, variables, filetypes):
 
 
 def make_classes(frame, variables, class_names):
+  items = yamosse_utils.dict_enumerate(gui.values_treeview_items(enumerate(class_names, start=1)))
+  
   treeview_widgets = gui.make_treeview(
     frame,
     columns=gui.heading_text_treeview_columns(('#', 'Class Names')),
-    items=gui.values_treeview_items(enumerate(class_names, start=1)),
+    items=items,
     show='headings',
     selectmode=tk.EXTENDED
   )
@@ -123,7 +126,37 @@ def make_classes(frame, variables, class_names):
   )
   
   calibrate_button.pack(side=tk.LEFT)
-  calibrate_button.lower() # fix tab order
+  
+  find_frame = ttk.Frame(buttons_frame)
+  find_frame.pack(side=tk.LEFT, padx=gui.PADX_HEW)
+  
+  def find_validatecommand(P):
+    P = P.casefold()
+    
+    for item in items:
+      if any(P in value.casefold() for value in treeview.item(item, option='values')):
+        treeview.move(item, '', item) # TODO: this breaks sorting
+        continue
+      
+      treeview.detach(item)
+    
+    return True
+  
+  find_entry = gui.make_entry(find_frame, name='Find:',
+    validate='key', validatecommand=(find_frame.register(find_validatecommand), '%P'))[1]
+  
+  # TODO: this is misaligned by one pixel in terms of height which looks really ugly
+  erase_button = ttk.Button(
+    find_frame,
+    image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('erase.gif')],
+    command=lambda: find_entry.delete(0, tk.END)
+  )
+  
+  erase_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
+  
+  # fix tab order
+  for widget in (find_frame, calibrate_button):
+    widget.lower()
 
 
 def make_confidence_score(frame, variables):
@@ -583,18 +616,18 @@ def make_footer(frame, yamscan, restore_defaults):
     image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('help symbol.gif')], compound=tk.LEFT,
     command=open_online_help)
   
-  open_online_help_button.grid(row=0, column=0, sticky=tk.W)
+  open_online_help_button.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W))
   open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help())
   
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)
   
-  yamscan_button.grid(row=0, column=2, sticky=tk.E)
+  yamscan_button.grid(row=0, column=2, sticky=(tk.N, tk.S, tk.E))
   
   restore_defaults_button = ttk.Button(frame, text='Restore Defaults', underline=0,
     command=restore_defaults)
   
-  restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
+  restore_defaults_button.grid(row=0, column=3, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
   
   for button in (yamscan_button, restore_defaults_button):
     gui.enable_traversal_button(button)

@@ -752,6 +752,16 @@ def configure_widths_treeview(treeview, *args, **kwargs):
     treeview.column(cid, width=width, minwidth=width, stretch=False)
 
 
+def get_items_treeview(treeview, item=''):
+  items = list(treeview.get_children(item=item))
+  children = []
+  
+  for item in items:
+    children += get_items_treeview(treeview, item=item)
+  
+  return items + children
+
+
 def make_treeview(frame, name='', columns=None, items=None, show=None,
   selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
   columns = yamosse_utils.dict_enumerate(columns) if columns else {}
@@ -814,22 +824,13 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   buttons = ()
   
-  def get_items(item=''):
-    items = list(treeview.get_children(item=item))
-    children = []
-    
-    for item in items:
-      children += get_items(item=item)
-    
-    return items + children
-  
   if 'tree' in show:
     def expand_all():
-      for item in get_items():
+      for item in get_items_treeview(treeview):
         treeview.item(item, open=True)
     
     def collapse_all():
-      for item in get_items():
+      for item in get_items_treeview(treeview):
         treeview.item(item, open=False)
     
     buttons += (
@@ -848,13 +849,13 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   
   if selectmode == tk.EXTENDED:
     def select_all():
-      treeview.selection_set(get_items())
+      treeview.selection_set(get_items_treeview(treeview))
     
     def select_none():
       treeview.selection_set(())
     
     def invert_selection():
-      treeview.selection_toggle(get_items())
+      treeview.selection_toggle(get_items_treeview(treeview))
     
     buttons += (
       ttk.Button(
