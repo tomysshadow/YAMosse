@@ -1387,10 +1387,9 @@ def _style():
   layout = style.layout('TButton')
   
   children = children_layout(layout, ('Button.button', 'Button.focus', 'Button.padding'))
-  assert children, 'children must not be empty'
+  assert children is not None, 'children must not be None'
   
   children.append(('Button.align', {}))
-  
   style.layout('TButton', layout)
 
 
