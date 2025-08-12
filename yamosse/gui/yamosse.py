@@ -616,18 +616,18 @@ def make_footer(frame, yamscan, restore_defaults):
     image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('help symbol.gif')], compound=tk.LEFT,
     command=open_online_help)
   
-  open_online_help_button.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.W))
+  open_online_help_button.grid(row=0, column=0, sticky=tk.W)
   open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help())
   
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
     command=yamscan)
   
-  yamscan_button.grid(row=0, column=2, sticky=(tk.N, tk.S, tk.E))
+  yamscan_button.grid(row=0, column=2, sticky=tk.E)
   
   restore_defaults_button = ttk.Button(frame, text='Restore Defaults', underline=0,
     command=restore_defaults)
   
-  restore_defaults_button.grid(row=0, column=3, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_QW)
+  restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   
   for button in (yamscan_button, restore_defaults_button):
     gui.enable_traversal_button(button)
