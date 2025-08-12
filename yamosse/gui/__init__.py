@@ -336,13 +336,14 @@ def text_widgets_items(i):
 def _init_align_button():
   align_image = None
   
+  # TODO: this approach doesn't work for disabled buttons
   def align_button(button):
     nonlocal align_image
     
     if button['image']: return
     
     if not align_image:
-      align_image = get_root_images()[FSENC_PHOTO][fsenc('align.gif')]
+      align_image = get_root_images()[FSENC_BITMAP][fsenc('align.xbm')]
     
     button.configure(image=align_image, compound=tk.CENTER)
   
