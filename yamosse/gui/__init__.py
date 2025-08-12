@@ -333,25 +333,6 @@ def text_widgets_items(i):
   return [{'text': t} for t in i]
 
 
-def _init_align_button():
-  align_image = None
-  
-  # TODO: this approach doesn't work for disabled buttons
-  def align_button(button):
-    nonlocal align_image
-    
-    if button['image']: return
-    
-    if not align_image:
-      align_image = get_root_images()[FSENC_BITMAP][fsenc('align.xbm')]
-    
-    button.configure(image=align_image, compound=tk.CENTER)
-  
-  return align_button
-
-align_button = _init_align_button()
-
-
 def _traversal_button():
   def sequence(button, underline):
     assert underline >= 0, 'underline must be greater than or equal to zero'
@@ -897,7 +878,6 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     ]
   
   for button in reversed(buttons):
-    align_button(button)
     button.pack(side=tk.RIGHT, padx=PADX_QW)
   
   return make_name(name_frame, name), (treeview, make_scrollbar(treeview, xscroll, yscroll)
@@ -992,7 +972,6 @@ def make_filedialog(frame, name='', textvariable=None,
   
   # must be done in a separate loop to button creation so tab order is correct
   for button in reversed(buttons):
-    align_button(button)
     button.pack(side=tk.RIGHT, padx=PADX_QW)
   
   # drag and drop
@@ -1337,6 +1316,21 @@ def _root_images():
 get_root_images = _root_images()
 
 
+def children_layout(layout, names):
+  children = layout
+  
+  for name in names:
+    for child, options in children:
+      if child != name: continue
+      
+      children = options['children']
+      break
+    else:
+      return None
+  
+  return children
+
+
 def bindtag_for_object(object_):
   # this is prefixed to ensure the string doesn't start with a period (.) character
   # which would indicate this is a widget, not a bindtag
@@ -1386,6 +1380,18 @@ def _style():
   
   style.layout('Raised.TNotebook', [])
   style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
+  
+  style.element_create('Button.align', 'image',
+    get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
+  
+  layout = style.layout('TButton')
+  
+  children = children_layout(layout, ('Button.button', 'Button.focus', 'Button.padding'))
+  assert children, 'children must not be empty'
+  
+  children.append(('Button.align', {}))
+  
+  style.layout('TButton', layout)
 
 
 def windowingsystem():

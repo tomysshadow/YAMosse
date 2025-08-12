@@ -125,7 +125,6 @@ def make_classes(frame, variables, class_names):
     )
   )
   
-  gui.align_button(calibrate_button)
   calibrate_button.pack(side=tk.LEFT)
   
   find_frame = ttk.Frame(buttons_frame)
@@ -630,7 +629,6 @@ def make_footer(frame, yamscan, restore_defaults):
   restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   
   for button in (yamscan_button, restore_defaults_button):
-    gui.align_button(button)
     gui.enable_traversal_button(button)
 
 

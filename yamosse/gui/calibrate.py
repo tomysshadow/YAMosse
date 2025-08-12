@@ -30,7 +30,6 @@ def make_footer(frame, ok, cancel):
   gui.bind_buttons_window(frame.winfo_toplevel(), ok_button=ok_button, cancel_button=cancel_button)
   
   for button in (ok_button, cancel_button, reset_button):
-    gui.align_button(button)
     gui.enable_traversal_button(button)
   
   return undooptions, reset_button
