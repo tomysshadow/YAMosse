@@ -1316,17 +1316,18 @@ def _root_images():
 get_root_images = _root_images()
 
 
-def children_layout(layout, name):
+def elements_layout(layout, name):
+  elements = []
+  
   for child, options in layout:
+    if str(child) == name: elements += [options]
+    
     try: children = options['children']
     except KeyError: continue
     
-    if child == name: return children
-    
-    children = children_layout(children, name)
-    if children is not None: return children
+    elements += elements_layout(children, name)
   
-  return None
+  return elements
 
 
 def bindtag_for_object(object_):
@@ -1383,10 +1384,10 @@ def _style():
     get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
   
   layout = style.layout('TButton')
+  elements = elements_layout(layout, 'Button.padding')
   
-  children = children_layout(layout, 'Button.padding')
-  
-  if children is not None:
+  for element in elements:
+    children = element.setdefault('children', [])
     children.append(('align', {}))
   
   style.layout('TButton', layout)
