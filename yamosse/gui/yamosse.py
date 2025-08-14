@@ -137,15 +137,20 @@ def make_classes(frame, variables, class_names):
     erase_button['state'] = tk.NORMAL if P else tk.DISABLED
     
     P = P.casefold()
+    show = False
     
     for cid, item in items.items():
+      attached = any(P in str(value).casefold() for value in item['values'])
+      
       treeview.move(
         cid,
-        ATTACHED if any(P in str(value).casefold() for value in item['values']) else DETACHED,
+        ATTACHED if attached else DETACHED,
         cid
       )
+      
+      show |= attached
     
-    treeview.event_generate('<<SortedTreeviewShow>>')
+    if show: treeview.event_generate('<<SortedTreeviewShow>>')
     return True
   
   find_entry['validatecommand'] = (find_entry.register(find_validatecommand), '%P')
