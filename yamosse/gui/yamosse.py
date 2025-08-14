@@ -85,34 +85,18 @@ def make_input(frame, variables, filetypes):
 
 
 def make_classes(frame, variables, class_names):
+  ATTACHED = ''
+  DETACHED = 'detached'
+  
   items = yamosse_utils.dict_enumerate(gui.values_treeview_items(enumerate(class_names, start=1)))
   
   treeview_widgets = gui.make_treeview(
     frame,
     columns=gui.heading_text_treeview_columns(('#', 'Class Names')),
-    items=items,
+    items=items | {DETACHED: {}},
     show='headings',
     selectmode=tk.EXTENDED
   )
-  
-  treeview = treeview_widgets[1][0]
-  
-  # load and dump the classes variable to and from the treeview
-  # classes isn't guaranteed to be sorted (it usually doesn't matter)
-  # we sort it just to get the first class for display purposes
-  classes_variable = variables['classes']
-  treeview.selection_set(classes_variable)
-  if classes_variable: treeview.see(sorted(classes_variable)[0])
-  
-  detached = set()
-  
-  def select_treeview(e):
-    selection = {int(s) for s in e.widget.selection()}
-    variables['classes'] = list(set(variables['classes']) & detached | selection)
-  
-  treeview.bind('<<TreeviewSelect>>', select_treeview)
-  gui_sorted.treeview_sorted(treeview)
-  gui.configure_widths_treeview(treeview, {0: 3})
   
   buttons_frame = treeview_widgets[2][0]
   
@@ -147,30 +131,45 @@ def make_classes(frame, variables, class_names):
   
   erase_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
   
+  treeview = treeview_widgets[1][0]
+  
   def find_validatecommand(P):
     erase_button['state'] = tk.NORMAL if P else tk.DISABLED
     
     P = P.casefold()
-    show = False
     
     for cid, item in items.items():
-      if not any(P in str(value).casefold() for value in item['values']):
-        treeview.detach(cid)
-        detached.add(cid)
-        continue
-      
-      try: detached.remove(cid)
-      except KeyError: pass
-      else:
-        treeview.move(cid, '', cid)
-        show = True
+      treeview.move(
+        cid,
+        ATTACHED if any(P in str(value).casefold() for value in item['values']) else DETACHED,
+        cid
+      )
     
-    if show: treeview.event_generate('<<SortedTreeviewShow>>')
+    treeview.event_generate('<<SortedTreeviewShow>>')
     return True
   
   find_entry['validatecommand'] = (find_entry.register(find_validatecommand), '%P')
   
+  treeview.detach(DETACHED)
+  
+  # load and dump the classes variable to and from the treeview
+  # classes isn't guaranteed to be sorted (it usually doesn't matter)
+  # we sort it just to get the first class for display purposes
+  classes_variable = variables['classes']
+  treeview.selection_set(classes_variable)
+  if classes_variable: treeview.see(sorted(classes_variable)[0])
+  
+  def select_treeview(e):
+    widget = e.widget
+    
+    detached = {int(c) for c in widget.get_children(DETACHED)}
+    selection = {int(s) for s in widget.selection()}
+    variables['classes'] = list(set(variables['classes']) & detached | selection)
+  
+  treeview.bind('<<TreeviewSelect>>', select_treeview)
   treeview.bind('<Control-f>', lambda e: find_entry.focus_set())
+  gui_sorted.treeview_sorted(treeview)
+  gui.configure_widths_treeview(treeview, {0: 3})
   
   # fix tab order
   for widget in (find_frame, calibrate_button):
