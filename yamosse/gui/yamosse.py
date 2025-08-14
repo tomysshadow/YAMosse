@@ -162,7 +162,7 @@ def make_classes(frame, variables, class_names):
   def select_treeview(e):
     widget = e.widget
     
-    detached = {int(c) for c in widget.get_children(DETACHED)}
+    detached = {int(d) for d in widget.get_children(DETACHED)}
     selection = {int(s) for s in widget.selection()}
     variables['classes'] = list(set(variables['classes']) & detached | selection)
   
