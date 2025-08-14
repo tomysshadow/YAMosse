@@ -67,6 +67,11 @@ def treeview_sorted(treeview):
         command=lambda column=column: show(cid=column)
       )
     
+    treeview.bind(
+      '<<SortedTreeviewShow>>',
+      lambda e, reverse=reverse: show(cid=cid, reverse=reverse)
+    )
+    
     if key is _key_value:
       image = sort_up_small if reverse else sort_down_small
       reverse = not reverse

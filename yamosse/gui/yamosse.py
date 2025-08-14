@@ -104,8 +104,11 @@ def make_classes(frame, variables, class_names):
   treeview.selection_set(classes_variable)
   if classes_variable: treeview.see(sorted(classes_variable)[0])
   
+  detached = set()
+  
   def select_treeview(e):
-    variables['classes'] = [int(s) for s in e.widget.selection()]
+    selection = {int(s) for s in e.widget.selection()}
+    variables['classes'] = list(set(variables['classes']) & detached | selection)
   
   treeview.bind('<<TreeviewSelect>>', select_treeview)
   gui_sorted.treeview_sorted(treeview)
@@ -130,21 +133,7 @@ def make_classes(frame, variables, class_names):
   find_frame = ttk.Frame(buttons_frame)
   find_frame.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=gui.PADX_HEW)
   
-  def find_validatecommand(P):
-    P = P.casefold()
-    
-    for cid, item in items.items():
-      if any(P in str(value).casefold() for value in item['values']):
-        treeview.move(cid, '', cid) # TODO: this breaks sorting
-        continue
-      
-      treeview.detach(cid)
-    
-    return True
-  
-  find_entry = gui.make_entry(find_frame, name='Find:',
-    validate='key', validatecommand=(find_frame.register(find_validatecommand), '%P'))[1]
-  
+  find_entry = gui.make_entry(find_frame, name='Find:', validate='key')[1]
   find_entry.grid(sticky=tk.NSEW, pady=(2, 2)) # fix misalignment with row
   
   erase_button = ttk.Button(
@@ -152,10 +141,36 @@ def make_classes(frame, variables, class_names):
     width=0, # hack to fix button height on Linux
     image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('erase.gif')],
     compound=tk.CENTER,
-    command=lambda: find_entry.delete(0, tk.END)
+    command=lambda: find_entry.delete(0, tk.END),
+    state=tk.DISABLED
   )
   
   erase_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
+  
+  def find_validatecommand(P):
+    erase_button['state'] = tk.NORMAL if P else tk.DISABLED
+    
+    P = P.casefold()
+    show = False
+    
+    for cid, item in items.items():
+      if not any(P in str(value).casefold() for value in item['values']):
+        treeview.detach(cid)
+        detached.add(cid)
+        continue
+      
+      try: detached.remove(cid)
+      except KeyError: pass
+      else:
+        treeview.move(cid, '', cid)
+        show = True
+    
+    if show: treeview.event_generate('<<SortedTreeviewShow>>')
+    return True
+  
+  find_entry['validatecommand'] = (find_entry.register(find_validatecommand), '%P')
+  
+  treeview.bind('<Control-f>', lambda e: find_entry.focus_set())
   
   # fix tab order
   for widget in (find_frame, calibrate_button):
