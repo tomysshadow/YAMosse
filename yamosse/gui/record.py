@@ -57,6 +57,8 @@ def make_record(frame, variables, record):
   
   recording_button.grid(row=0, column=0, sticky=tk.W)
   
+  window.bind('<Control-c>', lambda e: recording())
+  
   progressbar_frame = ttk.Frame(row_frame)
   progressbar_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
   

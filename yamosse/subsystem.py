@@ -28,9 +28,14 @@ def subsystem(window, title, variables):
     def confirm(self, message, *args, **kwargs):
       pass
     
-    @abstractmethod
     def streaming(self, callback):
-      pass
+      try:
+        callback()
+        return not self._stopped()
+      except KeyboardInterrupt:
+        pass
+      
+      return False
     
     def variables_from_object(self, object_):
       return None
@@ -43,6 +48,9 @@ def subsystem(window, title, variables):
     
     def quit(self):
       pass
+    
+    def _stopped(self):
+      return False
   
   class WindowSubsystem(Subsystem):
     def __init__(self, window, title, variables):
@@ -84,17 +92,6 @@ def subsystem(window, title, variables):
         default=default
       )
     
-    def streaming(self, callback):
-      callback()
-      
-      stop_event = self.stop_event
-      
-      if stop_event.is_set():
-        stop_event.clear()
-        return False
-      
-      return True
-    
     def variables_from_object(self, object_):
       self.variables = gui.get_variables_from_object(object_)
     
@@ -109,6 +106,15 @@ def subsystem(window, title, variables):
     
     def quit(self):
       self.window.quit()
+    
+    def _stopped(self):
+      stop_event = self.stop_event
+      
+      if stop_event.is_set():
+        stop_event.clear()
+        return True
+      
+      return False
   
   class ConsoleSubsystem(Subsystem):
     @staticmethod
@@ -153,15 +159,6 @@ def subsystem(window, title, variables):
         elif default_has_value: return default
       
       return result == YES
-    
-    def streaming(self, callback):
-      try:
-        callback()
-        return True
-      except KeyboardInterrupt:
-        pass
-      
-      return False
   
   if window:
     return WindowSubsystem(window, title, variables)
