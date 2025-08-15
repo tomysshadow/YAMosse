@@ -32,10 +32,10 @@ def treeview_sorted(treeview):
   # this can't use dict_once because items may be removed from it over time
   _treeviews.add(treeview)
   
-  table_sort_icons = gui.get_root_images()[gui.FSENC_BITMAP][fsenc('table sort icons')]
-  sort_both_small = table_sort_icons[fsenc('sort_both_small.xbm')]
-  sort_up_small = table_sort_icons[fsenc('sort_up_small.xbm')]
-  sort_down_small = table_sort_icons[fsenc('sort_down_small.xbm')]
+  table_sort_icons_images = gui.get_root_images()[gui.FSENC_BITMAP][fsenc('table sort icons')]
+  sort_both_small_image = table_sort_icons_images[fsenc('sort_both_small.xbm')]
+  sort_up_small_image = table_sort_icons_images[fsenc('sort_up_small.xbm')]
+  sort_down_small_image = table_sort_icons_images[fsenc('sort_down_small.xbm')]
   
   # swaps between three sorting states for each heading: both, down, and up
   # in the both state (the default,) columns are sorted by their ID
@@ -63,7 +63,7 @@ def treeview_sorted(treeview):
     for column in treeview['columns']:
       treeview.heading(
         column,
-        image=sort_both_small,
+        image=sort_both_small_image,
         command=lambda column=column: show(cid=column)
       )
     
@@ -73,7 +73,7 @@ def treeview_sorted(treeview):
     )
     
     if key is _key_value:
-      image = sort_up_small if reverse else sort_down_small
+      image = sort_up_small_image if reverse else sort_down_small_image
       reverse = not reverse
       
       # reverse sort next time

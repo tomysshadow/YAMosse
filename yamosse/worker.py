@@ -16,6 +16,7 @@ MODEL_YAMNET_WEIGHTS_PATH = 'yamnet.h5'
 
 TFHUB_YAMNET_MODEL_URL = 'https://www.kaggle.com/models/google/yamnet/TensorFlow2/yamnet/1'
 
+SAMPLE_RATE = 16000
 MONO = 1
 
 _initializer_ex = None
@@ -27,7 +28,7 @@ _sender = None
 _shutdown = None
 _options = None
 
-_sample_rate = 16000.0
+_sample_rate = float(SAMPLE_RATE)
 _patch_window_seconds = 0.96
 _patch_hop_seconds = 0.48
 

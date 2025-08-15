@@ -83,6 +83,18 @@ def _mainloop(**kwargs):
   
   model_yamnet_class_names = yamosse_worker.class_names()
   
+  def record(stop_event=None):
+    import yamosse.record as yamosse_record
+    
+    if stop_event: subsystem.stop_event = stop_event
+    
+    subsystem.start(
+      yamosse_record.record,
+      subsystem.streaming,
+      subsystem,
+      options
+    )
+  
   def import_preset(file_name=''):
     nonlocal options
     
@@ -218,6 +230,7 @@ def _mainloop(**kwargs):
         model_yamnet_class_names,
         WEIGHTS_FILETYPES,
         yamosse_worker.tfhub_enabled(),
+        record,
         import_preset,
         export_preset,
         yamscan,
@@ -256,6 +269,11 @@ def _mainloop(**kwargs):
   options.print()
   
   if kwargs:
+    call(
+      lambda record_: record() if record_ else None,
+      'record'
+    )
+    
     call(export_preset, 'export_preset_file_name')
   
   if window: window.mainloop()

@@ -10,6 +10,7 @@ def help_():
   print(
     'Usage: python -m yamosse',
     '[-rd',
+    '-r',
     '-ip import_preset_file_name',
     '-ep export_preset_file_name',
     '-y output_file_name',
@@ -40,9 +41,11 @@ def main(argc, argv):
     if arg in ('-h', '--help'):
       help_()
       return 2
-    if arg in ('-rd', '--restore_defaults'):
+    elif arg in ('-rd', '--restore_defaults'):
       kwargs['restore_defaults'] = True
-    if a < argc2:
+    elif arg in ('-r', '--record'):
+      kwargs['record'] = True
+    elif a < argc2:
       if arg in ('-ip', '--import-preset'):
         kwargs['import_preset_file_name'] = args[a := a + 1]
       elif arg in ('-ep', '--export-preset'):

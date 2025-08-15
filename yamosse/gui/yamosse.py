@@ -7,6 +7,7 @@ import yamosse.utils as yamosse_utils
 import yamosse.output as yamosse_output
 
 from .. import gui
+from . import record as gui_record
 from . import sorted as gui_sorted
 from . import calibrate as gui_calibrate
 
@@ -68,7 +69,7 @@ def make_header(frame, title):
   ttk.Label(frame, text=title, style='Title.TLabel').grid()
 
 
-def make_input(frame, variables, filetypes):
+def make_input(frame, variables, filetypes, record):
   buttons_frame = gui.make_filedialog(
     frame,
     textvariable=variables['input'],
@@ -77,11 +78,29 @@ def make_input(frame, variables, filetypes):
     filetypes=filetypes
   )[2][0]
   
+  record_button = ttk.Button(
+    buttons_frame,
+    text='Record...',
+    
+    command=lambda: gui.gui(
+      gui_record.make_record,
+      variables,
+      record,
+      child=True
+    )
+  )
+  
+  try: import yamosse.record as yamosse_record
+  except ImportError: pass
+  else: record_button.pack(side=tk.LEFT)
+  
   recursive_checkbutton = ttk.Checkbutton(buttons_frame,
     text='Recursive', variable=variables['input_recursive'])
   
   recursive_checkbutton.pack(side=tk.RIGHT)
-  recursive_checkbutton.lower() # fix tab order
+  
+  for widget in (recursive_checkbutton, record_button):
+    widget.lower() # fix tab order
 
 
 def make_classes(frame, variables, class_names):
@@ -268,7 +287,8 @@ def make_presets(frame, import_, export):
   )
 
 
-def make_general(frame, variables, input_filetypes, class_names, import_preset, export_preset):
+def make_general(frame, variables, input_filetypes, class_names,
+  record, import_preset, export_preset):
   frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -276,7 +296,7 @@ def make_general(frame, variables, input_filetypes, class_names, import_preset, 
     padding=gui.PADDING_HNSEW)
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
-  make_input(input_labelframe, variables, input_filetypes)
+  make_input(input_labelframe, variables, input_filetypes, record)
   
   classes_labelframe = ttk.Labelframe(frame, text='Classes',
     padding=gui.PADDING_HNSEW)
@@ -608,14 +628,14 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
 
 def make_options(notebook, variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
-  import_preset, export_preset):
+  record, import_preset, export_preset):
   notebook['style'] = 'Raised.TNotebook'
   
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
   make_general(general_frame, variables, input_filetypes, class_names,
-    import_preset, export_preset)
+    record, import_preset, export_preset)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   
@@ -657,7 +677,7 @@ def make_footer(frame, yamscan, restore_defaults):
 
 def make_yamosse(frame, title, options_variables,
   input_filetypes, class_names, weights_filetypes, tfhub_enabled,
-  import_preset, export_preset, yamscan, restore_defaults):
+  record, import_preset, export_preset, yamscan, restore_defaults):
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
     iconphotos=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('emoji_u1f3a4')].values())
@@ -673,7 +693,7 @@ def make_yamosse(frame, title, options_variables,
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   make_options(options_notebook, options_variables,
     input_filetypes, class_names, weights_filetypes, tfhub_enabled,
-    import_preset, export_preset)
+    record, import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)

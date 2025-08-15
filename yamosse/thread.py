@@ -97,7 +97,7 @@ def _download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, 
   
   file = NamedTemporaryFile(
     delete=False, mode='wb',
-    prefix=root, suffix=ext, dir=''
+    prefix=''.join(root, '_'), suffix=ext, dir=''
   )
   
   try:

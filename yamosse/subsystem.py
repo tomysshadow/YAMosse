@@ -28,6 +28,10 @@ def subsystem(window, title, variables):
     def confirm(self, message, *args, **kwargs):
       pass
     
+    @abstractmethod
+    def streaming(self, callback):
+      pass
+    
     def variables_from_object(self, object_):
       return None
     
@@ -50,6 +54,7 @@ def subsystem(window, title, variables):
       
       self.show_callback = None
       self.widgets = None
+      self.stop_event = None
     
     @staticmethod
     def start(target, *args, **kwargs):
@@ -78,6 +83,17 @@ def subsystem(window, title, variables):
         message=message,
         default=default
       )
+    
+    def streaming(self, callback):
+      callback()
+      
+      stop_event = self.stop_event
+      
+      if stop_event.is_set():
+        stop_event.clear()
+        return False
+      
+      return True
     
     def variables_from_object(self, object_):
       self.variables = gui.get_variables_from_object(object_)
@@ -137,6 +153,15 @@ def subsystem(window, title, variables):
         elif default_has_value: return default
       
       return result == YES
+    
+    def streaming(self, callback):
+      try:
+        callback()
+        return True
+      except KeyboardInterrupt:
+        pass
+      
+      return False
   
   if window:
     return WindowSubsystem(window, title, variables)
