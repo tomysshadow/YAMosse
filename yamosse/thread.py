@@ -1,4 +1,5 @@
 import os
+from tempfile import NamedTemporaryFile
 from shlex import quote
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
@@ -92,32 +93,28 @@ def _download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, 
       'log': 'Downloading weights file, please wait...'
     })
   
-  path = os.path.join(os.path.realpath(os.curdir), path)
+  root, ext = os.path.splitext(os.path.join(os.path.realpath(os.curdir), path))
   
-  def increment_file_name():
-    root, ext = os.path.splitext(path)
+  file = NamedTemporaryFile(
+    delete=False, mode='wb',
+    prefix=root, suffix=ext, dir=''
+  )
+  
+  try:
+    yamosse_download.download(url, file)
     
-    return (path if num == min_ else '%s (%d)%s' % (root, num, ext
-      ) for num in range(min_, max_))
-  
-  for i in increment_file_name():
-    try: file = yamosse_download.download(url, i, mode='xb')
-    except FileExistsError: continue
+    name = file.name
+    assert name, 'name must not be empty'
     
-    try:
-      assert i, 'i must not be empty'
-      
-      if options:
-        options.weights = i
-        options.dump()
-      
-      if subsystem: subsystem.set_variable_after_idle('weights', i)
-      return file
-    except:
-      file.close()
-      raise
-  
-  raise IOError('The weights file %r could not be created uniquely.' % path)
+    if options:
+      options.weights = name
+      options.dump()
+    
+    if subsystem: subsystem.set_variable_after_idle('weights', name)
+    return file
+  except:
+    file.close()
+    raise
 
 
 def _files(input_, model_yamnet_class_names, subsystem, options):
