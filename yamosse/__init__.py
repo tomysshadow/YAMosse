@@ -83,7 +83,9 @@ def _mainloop(**kwargs):
   
   model_yamnet_class_names = yamosse_worker.class_names()
   
-  def record(stop=None):
+  def record(*args, **kwargs):
+    # this is an optional module
+    # so we only import it if we are going to attempt recording
     import yamosse.recording as yamosse_recording
     
     recording = yamosse_recording.Recording()
@@ -92,7 +94,8 @@ def _mainloop(**kwargs):
       recording.thread,
       subsystem,
       options,
-      stop=stop
+      *args,
+      **kwargs
     )
     return recording
   

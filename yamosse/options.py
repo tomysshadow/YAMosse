@@ -8,7 +8,7 @@ import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
 
-VERSION = 1
+VERSION = 2
 FILE_NAME = 'options.pickle'
 
 _root_file_name = yamosse_root.root(FILE_NAME)
@@ -23,7 +23,7 @@ class Options:
   
   def __init__(
     self,
-    input='', input_recursive=False,
+    input='', input_device='', input_recursive=False,
     weights='',
     classes=None, calibration=None,
     timespan=3, timespan_span_all=False,
@@ -42,6 +42,7 @@ class Options:
     self.version = VERSION
     
     self.input = input
+    self.input_device = input_device
     self.input_recursive = input_recursive
     
     self.weights = weights
@@ -87,6 +88,7 @@ class Options:
     option('Current Date/Time', yamosse_utils.ascii_backslashreplace(datetime.now()))
     option('Version', repr(self.version))
     option('Input', yamosse_utils.ascii_backslashreplace(self.input))
+    option('Input Device', yamosse_utils.ascii_backslashreplace(self.input_device))
     option('Input Recursive', repr(self.input_recursive))
     option('Weights', yamosse_utils.ascii_backslashreplace(self.weights))
     option('Classes', repr(self.classes))
@@ -161,9 +163,15 @@ class Options:
     with open(file_name, 'w', encoding='utf8') as f:
       json.dump(vars(self), f, indent=True)
   
-  def worker(self, np, class_names):
-    BACKGROUND_NOISE_VOLUME_LOG = 4 # 60 dB
+  def loglinear(self, np, volume):
+    VOLUME_LOG = 4 # 60 dB
     
+    if not self.background_noise_volume_loglinear:
+      volume = np.power(volume, VOLUME_LOG)
+    
+    return volume
+  
+  def worker(self, np, class_names):
     def single_shot(np, class_names):
       raise RuntimeError('worker is single shot')
     
@@ -177,11 +185,8 @@ class Options:
       np.ones(class_names_len - calibration.size, dtype=np.float32)))
     
     # make background noise volume logarithmic if requested
-    background_noise_volume = np.divide(self.background_noise_volume, 100.0, dtype=np.float32)
-    
-    if not self.background_noise_volume_loglinear:
-      background_noise_volume = np.power(
-        background_noise_volume, BACKGROUND_NOISE_VOLUME_LOG, dtype=np.float32)
+    background_noise_volume = self.loglinear(
+      np, np.divide(self.background_noise_volume, 100.0, dtype=np.float32))
     
     # create a numpy array of this so it can be used with fancy indexing
     self.classes = np.unique(self.classes)

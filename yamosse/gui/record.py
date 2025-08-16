@@ -3,6 +3,8 @@ from tkinter import ttk, messagebox
 from os import fsencode as fsenc
 from threading import Event
 
+import yamosse.recording as yamosse_recording
+
 from .. import gui
 from . import progressbar as gui_progressbar
 
@@ -25,6 +27,8 @@ def ask_save(window, stop, recording):
 
 
 def make_record(frame, variables, record):
+  VOLUME_MAXIMUM = 100
+  
   window = frame.master
   gui.customize_window(window, TITLE, resizable=RESIZABLE)
   
@@ -41,7 +45,46 @@ def make_record(frame, variables, record):
   
   stop = Event()
   recording = None
-  recording_button = None
+  
+  recording_button = ttk.Button(
+    row_frame,
+    text='Start Recording',
+    image=record_image,
+    compound=tk.LEFT
+  )
+  
+  recording_button.grid(row=0, column=0, sticky=tk.W)
+  
+  volume_variable = tk.IntVar()
+  volume_after = None
+  
+  volume_frame = ttk.Frame(row_frame)
+  volume_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
+  
+  gui_progressbar.make_progressbar(
+    volume_frame,
+    variable=volume_variable,
+    maximum=VOLUME_MAXIMUM,
+    task=False
+  )
+  
+  row_frame = ttk.Frame(frame)
+  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
+  
+  input_devices, input_default = yamosse_recording.input_devices()
+  input_device_variable = variables['input_device']
+  
+  if str(input_device_variable.get()) not in input_devices:
+    input_device_variable.set(input_default)
+  
+  gui.make_combobox(row_frame, name='Device:', textvariable=input_device_variable,
+    values=list(input_devices.keys()), width=72, state=('readonly',))
+  
+  def show_volume():
+    nonlocal volume_after
+    
+    volume_variable.set(int(recording.volume * VOLUME_MAXIMUM))
+    volume_after = volume_frame.after(yamosse_recording.MILLISECONDS, show_volume)
   
   def toggle_recording():
     nonlocal stop
@@ -50,33 +93,15 @@ def make_record(frame, variables, record):
     if not recording:
       recording_button.configure(text='Stop Recording', image=stop_image)
       stop.clear()
-      recording = record(stop)
+      recording = record(stop=stop, device=input_devices[str(input_device_variable.get())])
+      show_volume()
     else:
+      volume_frame.after_cancel(volume_after)
       stop.set()
       recording = None
       recording_button.configure(text='Start Recording', image=record_image)
   
-  recording_button = ttk.Button(
-    row_frame,
-    text='Start Recording',
-    image=record_image,
-    compound=tk.LEFT,
-    command=toggle_recording
-  )
-  
-  recording_button.grid(row=0, column=0, sticky=tk.W)
+  recording_button['command'] = toggle_recording
   
   window.bind('<Control-c>', lambda e: toggle_recording())
-  
-  progressbar_frame = ttk.Frame(row_frame)
-  progressbar_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
-  
-  gui_progressbar.make_progressbar(progressbar_frame, task=False)
-  
-  row_frame = ttk.Frame(frame)
-  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
-  
-  gui.make_combobox(row_frame, name='Device:',
-    values=('A', 'B', 'C'), state=('readonly',)) # TODO
-  
   window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, stop, recording))
