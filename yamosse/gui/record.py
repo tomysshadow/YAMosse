@@ -86,8 +86,13 @@ def make_record(frame, variables, record):
     volume_variable.set(int(recording.volume * VOLUME_MAXIMUM))
     volume_after = volume_frame.after(yamosse_recording.MILLISECONDS, show_volume)
   
+  def hide_volume():
+    nonlocal volume_after
+    
+    volume_variable.set(0)
+    volume_frame.after_cancel(volume_after)
+  
   def toggle_recording():
-    nonlocal stop
     nonlocal recording
     
     if not recording:
@@ -96,12 +101,12 @@ def make_record(frame, variables, record):
       recording = record(stop=stop, device=input_devices[str(input_device_variable.get())])
       show_volume()
     else:
-      volume_frame.after_cancel(volume_after)
+      hide_volume()
       stop.set()
       recording = None
       recording_button.configure(text='Start Recording', image=record_image)
   
   recording_button['command'] = toggle_recording
-  
   window.bind('<Control-c>', lambda e: toggle_recording())
+  
   window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, stop, recording))
