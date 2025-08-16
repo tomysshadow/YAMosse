@@ -75,7 +75,7 @@ def make_record(frame, variables, record):
   row_frame = ttk.Frame(frame)
   row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_HN)
   
-  input_devices, input_default_name = yamosse_recording.input_devices()
+  input_devices, input_default_name = yamosse_recording.Recording.input_devices()
   input_device_variable = variables['input_device']
   
   # set to the default if the device is not in the list
@@ -104,7 +104,7 @@ def make_record(frame, variables, record):
     if not recording:
       recording_button.configure(text='Stop Recording', image=stop_image)
       stop.clear()
-      recording = record(stop=stop, device=input_devices[str(input_device_variable.get())])
+      recording = record(stop=stop)
       show_volume()
     else:
       hide_volume()

@@ -22,11 +22,16 @@ class Recording:
     self.save = True
     self.volume = 0.0
   
-  def thread(self, subsystem, options, stop=None, device=None):
+  def thread(self, subsystem, options, stop=None):
     import numpy as np # Make sure NumPy is loaded before it is used in the callback
     
     if stop is None: stop = Event()
-    if device is None: device = sd.default.device[0]
+    
+    input_devices, input_default_name = Recording.input_devices()
+    subsystem.variables_to_object(options)
+    
+    try: device = input_devices[options.input_device]
+    except KeyError: device = input_devices[input_default_name]
     
     save = True
     indatas = Queue()
@@ -68,6 +73,8 @@ class Recording:
               queued = not indatas.empty()
             
             # only after we've definitely written something, set the new volume
+            # TODO: variables_to_object for just one variable? really?
+            subsystem.variables_to_object(options)
             self.volume = float(options.loglinear(np, np.abs(indata).max()))
         except KeyboardInterrupt:
           pass
@@ -98,21 +105,22 @@ class Recording:
     input_ = shlex.join(shlex.split(options.input) + [name])
     options.input = input_
     subsystem.set_variable_after_idle('input', input_)
-
-
-def input_devices():
-  input_default = sd.default.device[0]
   
-  hostapis = sd.query_hostapis()
-  devices = sd.query_devices()
-  
-  # by inserting an indicator for the default input device
-  # it will cause the option to automatically change if the default changes
-  # and the option was previously set to the default
-  names = ['%s%s - %s' % ('> ' if d['index'] == input_default else '', d['name'],
-    hostapis[d['hostapi']]['name']) for d in devices]
-  
-  return (
-    {names[index := d['index']]: index for d in devices if d['max_input_channels']},
-    names[input_default]
-  )
+  @classmethod
+  @staticmethod
+  def input_devices():
+    input_default = sd.default.device[0]
+    
+    hostapis = sd.query_hostapis()
+    devices = sd.query_devices()
+    
+    # by inserting an indicator for the default input device
+    # it will cause the option to automatically change if the default changes
+    # and the option was previously set to the default
+    names = ['%s%s - %s' % ('> ' if d['index'] == input_default else '', d['name'],
+      hostapis[d['hostapi']]['name']) for d in devices]
+    
+    return (
+      {names[index := d['index']]: index for d in devices if d['max_input_channels']},
+      names[input_default]
+    )
