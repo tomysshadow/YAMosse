@@ -84,14 +84,17 @@ def _mainloop(**kwargs):
   model_yamnet_class_names = yamosse_worker.class_names()
   
   def record(stop=None):
-    import yamosse.record as yamosse_record
+    import yamosse.recording as yamosse_recording
+    
+    recording = yamosse_recording.Recording()
     
     subsystem.start(
-      yamosse_record.record,
+      recording.thread,
       subsystem,
       options,
       stop=stop
     )
+    return recording
   
   def import_preset(file_name=''):
     nonlocal options

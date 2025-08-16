@@ -90,7 +90,7 @@ def make_input(frame, variables, filetypes, record):
     )
   )
   
-  try: import yamosse.record as yamosse_record
+  try: import yamosse.recording as yamosse_recording
   except ImportError: pass
   else: record_button.pack(side=tk.LEFT)
   

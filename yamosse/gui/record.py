@@ -9,14 +9,19 @@ from . import progressbar as gui_progressbar
 TITLE = 'Record'
 RESIZABLE = False
 
-ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the recording?'
+ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 
 
-def ask_cancel(window, recording_button):
-  if str(recording_button['text']) == 'Start Recording': return True
+def ask_save(window, stop, recording):
+  if recording:
+    save = messagebox.askyesnocancel(
+      parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
+    
+    if save is None: return
+    recording.save = save
   
-  return messagebox.askyesno(
-    parent=window, title=TITLE, message=ASK_CANCEL_MESSAGE, default=messagebox.NO)
+  stop.set()
+  window.destroy()
 
 
 def make_record(frame, variables, record):
@@ -34,17 +39,21 @@ def make_record(frame, variables, record):
   record_image = photo_images[fsenc('record.gif')]
   stop_image = photo_images[fsenc('stop.gif')]
   
-  recording_button = None
   stop = Event()
+  recording = None
+  recording_button = None
   
-  def recording():
-    text = str(recording_button['text'])
+  def toggle_recording():
+    nonlocal stop
+    nonlocal recording
     
-    if text == 'Start Recording':
+    if not recording:
       recording_button.configure(text='Stop Recording', image=stop_image)
-      record(stop)
-    elif text == 'Stop Recording':
+      stop.clear()
+      recording = record(stop)
+    else:
       stop.set()
+      recording = None
       recording_button.configure(text='Start Recording', image=record_image)
   
   recording_button = ttk.Button(
@@ -52,12 +61,12 @@ def make_record(frame, variables, record):
     text='Start Recording',
     image=record_image,
     compound=tk.LEFT,
-    command=recording
+    command=toggle_recording
   )
   
   recording_button.grid(row=0, column=0, sticky=tk.W)
   
-  window.bind('<Control-c>', lambda e: recording())
+  window.bind('<Control-c>', lambda e: toggle_recording())
   
   progressbar_frame = ttk.Frame(row_frame)
   progressbar_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
@@ -70,11 +79,4 @@ def make_record(frame, variables, record):
   gui.make_combobox(row_frame, name='Device:',
     values=('A', 'B', 'C'), state=('readonly',)) # TODO
   
-  def done():
-    # TODO: should be Yes/No/Cancel
-    if not ask_cancel(window, recording_button): return
-    
-    stop.set()
-    window.destroy()
-  
-  window.protocol('WM_DELETE_WINDOW', done)
+  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, stop, recording))
