@@ -66,7 +66,7 @@ class Recording:
               queued = not indatas.empty()
             
             # only after we've definitely written something, set the new volume
-            self.volume = float(options.loglinear(np, np.abs(indata.max())))
+            self.volume = float(options.loglinear(np, np.abs(indata).max()))
         except KeyboardInterrupt:
           pass
     except:
@@ -79,11 +79,13 @@ class Recording:
       if not save or not self.save:
         unlink(tmp.name)
     
+    name = tmp.name
+    
     print('')
-    print(f'Recording finished: {tmp.name!r}')
+    print(f'Recording finished: {name!r}')
     
     subsystem.variables_to_object(options)
-    input_ = shlex.join(shlex.split(options.input) + [tmp.name])
+    input_ = shlex.join(shlex.split(options.input) + [name])
     options.input = input_
     subsystem.set_variable_after_idle('input', input_)
 
