@@ -69,7 +69,7 @@ def make_record(frame, variables, record):
   )
   
   row_frame = ttk.Frame(frame)
-  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_QN)
+  row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_HN)
   
   input_devices, input_default = yamosse_recording.input_devices()
   input_device_variable = variables['input_device']
