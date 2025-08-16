@@ -14,11 +14,10 @@ DIR = 'My Recordings'
 LINE = '#' * 80
 
 
-def record(subsystem, options, stop=None, device=None):
+def record(subsystem, options, stop=Event(), device=None):
   import numpy # Make sure NumPy is loaded before it is used in the callback
   assert numpy # avoid "imported but unused" message (W0611)
   
-  if stop is None: stop = Event()
   if device is None: device = sd.default.device[0]
   
   indatas = Queue()
