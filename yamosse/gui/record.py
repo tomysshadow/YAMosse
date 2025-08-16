@@ -75,13 +75,13 @@ def make_record(frame, variables, record):
   row_frame = ttk.Frame(frame)
   row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_HN)
   
-  input_devices, input_default = yamosse_recording.input_devices()
+  input_devices, input_default_name = yamosse_recording.input_devices()
   input_device_variable = variables['input_device']
   
   # set to the default if the device is not in the list
   # (maybe changed from last time, maybe we were on the default and the default changed)
   if str(input_device_variable.get()) not in input_devices:
-    input_device_variable.set(input_default)
+    input_device_variable.set(input_default_name)
   
   gui.make_combobox(row_frame, name='Device:', textvariable=input_device_variable,
     values=list(input_devices.keys()), width=72, state=('readonly',))
