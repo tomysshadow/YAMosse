@@ -74,6 +74,8 @@ def make_record(frame, variables, record):
   input_devices, input_default = yamosse_recording.input_devices()
   input_device_variable = variables['input_device']
   
+  # set to the default if the device is not in the list
+  # (maybe changed from last time, maybe we were on the default and the default changed)
   if str(input_device_variable.get()) not in input_devices:
     input_device_variable.set(input_default)
   

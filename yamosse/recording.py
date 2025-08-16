@@ -15,20 +15,6 @@ DIR = 'My Recordings'
 MILLISECONDS = 100
 LINE = '#' * 80
 
-def input_devices():
-  input_default = sd.default.device[0]
-  
-  hostapis = sd.query_hostapis()
-  devices = sd.query_devices()
-  
-  names = ['%s%s - %s' % ('> ' if d['index'] == input_default else '', d['name'],
-    hostapis[d['hostapi']]['name']) for d in devices]
-  
-  return (
-    {names[index := d['index']]: index for d in devices if d['max_input_channels']},
-    names[input_default]
-  )
-
 class Recording:
   def __init__(self):
     self.save = True
@@ -63,13 +49,24 @@ class Recording:
           callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
         )
       ):
-        print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n')
-        
         try:
+          print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n')
+          
+          indata = None
+          
           while not stop.is_set():
-            indata = indatas.get()
-            if indata.size: self.volume = float(options.loglinear(np, np.abs(indata.max())))
-            f.write(indata)
+            queued = True
+            
+            while queued:
+              # this is done first so we block
+              indata = indatas.get()
+              f.write(indata)
+              
+              # ensure we get all input data if there are multiple queued things piled up
+              queued = not indatas.empty()
+            
+            # only after we've definitely written something, set the new volume
+            self.volume = float(options.loglinear(np, np.abs(indata.max())))
         except KeyboardInterrupt:
           pass
     except:
@@ -78,6 +75,7 @@ class Recording:
     finally:
       tmp.close()
       
+      # delete the file if the user opted not to save it
       if not save or not self.save:
         unlink(tmp.name)
     
@@ -88,3 +86,21 @@ class Recording:
     input_ = shlex.join(shlex.split(options.input) + [tmp.name])
     options.input = input_
     subsystem.set_variable_after_idle('input', input_)
+
+
+def input_devices():
+  input_default = sd.default.device[0]
+  
+  hostapis = sd.query_hostapis()
+  devices = sd.query_devices()
+  
+  # by inserting an indicator for the default input device
+  # it will cause the option to automatically change if the default changes
+  # and the option was previously set to the default
+  names = ['%s%s - %s' % ('> ' if d['index'] == input_default else '', d['name'],
+    hostapis[d['hostapi']]['name']) for d in devices]
+  
+  return (
+    {names[index := d['index']]: index for d in devices if d['max_input_channels']},
+    names[input_default]
+  )

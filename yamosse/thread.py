@@ -325,7 +325,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
         yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
         subsystem=subsystem,
         options=options
-      ) as weights_file,
+      ),
       
       yamosse_output.output(
         output_file_name,
