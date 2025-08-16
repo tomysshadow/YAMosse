@@ -110,3 +110,7 @@ def make_record(frame, variables, record):
   window.bind('<Control-c>', lambda e: toggle_recording())
   
   window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, stop, recording))
+  
+  # bring window to front and focus it
+  window.lift()
+  window.focus_set()
