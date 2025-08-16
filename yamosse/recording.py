@@ -72,14 +72,22 @@ class Recording:
         except KeyboardInterrupt:
           pass
     except:
+      # this must be a distinct variable to self.save because
+      # otherwise it might get set back to true by some other thread
+      # before it is used
       save = False
       raise
     finally:
       tmp.close()
       
       # delete the file if the user opted not to save it
-      if not save or not self.save:
-        unlink(tmp.name)
+      # or an exception occurred
+      save &= self.save
+      if not save: unlink(tmp.name)
+    
+    # this can't happen in the finally block
+    # because it might silence an exception
+    if not save: return
     
     name = tmp.name
     
