@@ -35,16 +35,16 @@ def make_record(frame, variables, record):
   stop_image = photo_images[fsenc('stop.gif')]
   
   recording_button = None
-  stop_event = Event()
+  stop = Event()
   
   def recording():
     text = str(recording_button['text'])
     
     if text == 'Start Recording':
       recording_button.configure(text='Stop Recording', image=stop_image)
-      record(stop_event)
+      record(stop)
     elif text == 'Stop Recording':
-      stop_event.set()
+      stop.set()
       recording_button.configure(text='Start Recording', image=record_image)
   
   recording_button = ttk.Button(
@@ -71,10 +71,10 @@ def make_record(frame, variables, record):
     values=('A', 'B', 'C'), state=('readonly',)) # TODO
   
   def done():
+    # TODO: should be Yes/No/Cancel
     if not ask_cancel(window, recording_button): return
     
-    # TODO: this does not delete the file (should it?)
-    stop_event.set()
+    stop.set()
     window.destroy()
   
   window.protocol('WM_DELETE_WINDOW', done)

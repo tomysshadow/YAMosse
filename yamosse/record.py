@@ -1,4 +1,5 @@
 import shlex
+from threading import Event
 from tempfile import NamedTemporaryFile
 from queue import Queue
 
@@ -13,10 +14,11 @@ DIR = 'My Recordings'
 LINE = '#' * 80
 
 
-def record(streaming, subsystem, options, device=None):
+def record(subsystem, options, stop=None, device=None):
   import numpy # Make sure NumPy is loaded before it is used in the callback
   assert numpy # avoid "imported but unused" message (W0611)
-      
+  
+  if stop is None: stop = Event()
   if device is None: device = sd.default.device[0]
   
   indatas = Queue()
@@ -42,7 +44,12 @@ def record(streaming, subsystem, options, device=None):
     name = tmp.name
     print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n')
     
-    while streaming(lambda: f.write(indatas.get())): pass
+    try:
+      while not stop.is_set(): f.write(indatas.get())
+    except KeyboardInterrupt:
+      pass
+    
+    stop.clear()
     
     subsystem.variables_to_object(options)
     input_ = shlex.join(shlex.split(options.input) + [name])

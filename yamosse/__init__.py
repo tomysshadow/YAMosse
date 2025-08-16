@@ -83,16 +83,14 @@ def _mainloop(**kwargs):
   
   model_yamnet_class_names = yamosse_worker.class_names()
   
-  def record(stop_event=None):
+  def record(stop=None):
     import yamosse.record as yamosse_record
-    
-    if stop_event: subsystem.stop_event = stop_event
     
     subsystem.start(
       yamosse_record.record,
-      subsystem.streaming,
       subsystem,
-      options
+      options,
+      stop=stop
     )
   
   def import_preset(file_name=''):
