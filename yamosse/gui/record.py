@@ -3,8 +3,6 @@ from tkinter import ttk, messagebox
 from os import fsencode as fsenc
 from threading import Event
 
-import yamosse.recording as yamosse_recording
-
 from .. import gui
 from . import progressbar as gui_progressbar
 
@@ -28,6 +26,10 @@ def ask_save(window, stop, recording):
 
 def make_record(frame, variables, record):
   VOLUME_MAXIMUM = 100
+  
+  # this is an optional module
+  # so we only import it if we are going to attempt recording
+  import yamosse.recording as yamosse_recording
   
   window = frame.master
   gui.customize_window(window, TITLE, resizable=RESIZABLE)
@@ -56,7 +58,9 @@ def make_record(frame, variables, record):
   recording_button.grid(row=0, column=0, sticky=tk.W)
   
   volume_variable = tk.IntVar()
+  
   volume_after = None
+  volume_after_ms = int(yamosse_recording.SECONDS * 1000)
   
   volume_frame = ttk.Frame(row_frame)
   volume_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
@@ -86,7 +90,7 @@ def make_record(frame, variables, record):
     nonlocal volume_after
     
     volume_variable.set(int(recording.volume * VOLUME_MAXIMUM))
-    volume_after = volume_frame.after(yamosse_recording.MILLISECONDS, show_volume)
+    volume_after = volume_frame.after(volume_after_ms, show_volume)
   
   def hide_volume():
     nonlocal volume_after
