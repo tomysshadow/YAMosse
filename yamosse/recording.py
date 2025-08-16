@@ -13,7 +13,7 @@ PREFIX = 'Recording_'
 SUFFIX = '.wav'
 DIR = 'My Recordings'
 
-SECONDS = 0.1
+BLOCKSIZE_SECONDS = 0.1
 
 LINE = '#' * 80
 
@@ -47,7 +47,7 @@ class Recording:
         sd.InputStream(
           device=device,
           samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
-          blocksize=int(yamosse_worker.SAMPLE_RATE * SECONDS),
+          blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
           callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
         )
       ):
