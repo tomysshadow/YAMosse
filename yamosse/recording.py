@@ -12,7 +12,9 @@ import yamosse.worker as yamosse_worker
 PREFIX = 'Recording_'
 SUFFIX = '.wav'
 DIR = 'My Recordings'
+
 MILLISECONDS = 100
+
 LINE = '#' * 80
 
 class Recording:
