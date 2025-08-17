@@ -22,7 +22,7 @@ except ImportError:
   gui = None
 
 NAME = 'YAMosse'
-VERSION = '1.0.1'
+VERSION = '1.1.0'
 TITLE = ' '.join((NAME, VERSION))
 
 WEIGHTS_FILETYPES = (

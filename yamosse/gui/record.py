@@ -12,7 +12,7 @@ RESIZABLE = False
 ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 
 
-def ask_save(window, stop, recording):
+def ask_save(window, recording, stop_recording):
   if recording:
     save = messagebox.askyesnocancel(
       parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
@@ -20,8 +20,8 @@ def ask_save(window, stop, recording):
     if save is None: return
     recording.save = save
   
-  stop.set()
-  window.destroy()
+  stop_recording()
+  window.withdraw()
 
 
 def make_record(frame, variables, record):
@@ -83,8 +83,9 @@ def make_record(frame, variables, record):
   if str(input_device_variable.get()) not in input_devices:
     input_device_variable.set(input_default_name)
   
-  gui.make_combobox(row_frame, name='Device:', textvariable=input_device_variable,
-    values=list(input_devices.keys()), width=72, state=('readonly',))
+  input_devices_combobox = gui.make_combobox(row_frame,
+    name='Device:', textvariable=input_device_variable,
+    values=list(input_devices.keys()), width=72, state=('readonly',))[1]
   
   def show_volume():
     nonlocal volume_after
@@ -96,27 +97,32 @@ def make_record(frame, variables, record):
     nonlocal volume_after
     
     volume_variable.set(0)
-    volume_frame.after_cancel(volume_after)
+    if volume_after: volume_frame.after_cancel(volume_after)
   
-  def toggle_recording():
+  def start_recording():
     nonlocal recording
     
-    if not recording:
-      recording_button.configure(text='Stop Recording', image=stop_image)
-      stop.clear()
-      recording = record(stop=stop)
-      show_volume()
-    else:
-      hide_volume()
-      stop.set()
-      recording = None
-      recording_button.configure(text='Start Recording', image=record_image)
+    recording_button.configure(text='Stop Recording', image=stop_image)
+    input_devices_combobox['state'] = ('disabled',)
+    stop.clear()
+    recording = record(stop=stop)
+    show_volume()
+  
+  def stop_recording():
+    nonlocal recording
+    
+    hide_volume()
+    stop.set()
+    recording = None
+    input_devices_combobox['state'] = ('readonly',)
+    recording_button.configure(text='Start Recording', image=record_image)
+  
+  def toggle_recording():
+    if not recording: start_recording()
+    else: stop_recording()
   
   recording_button['command'] = toggle_recording
   window.bind('<Control-c>', lambda e: toggle_recording())
   
-  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, stop, recording))
-  
-  # bring window to front and focus it
-  window.lift()
-  window.focus_set()
+  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording, stop_recording))
+  window.withdraw()
