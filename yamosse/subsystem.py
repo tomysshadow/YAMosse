@@ -28,16 +28,16 @@ def subsystem(window, title, variables):
     def confirm(self, message, *args, **kwargs):
       pass
     
-    def variables_from_object(self, object_):
+    def variables_from_attrs(self, object_):
       return None
     
-    def variables_to_object(self, object_):
+    def attrs_to_variables(self, object_):
       pass
     
-    def get_variable_or_object(self, object_, key):
+    def get_variable_or_attr(self, object_, key):
       return getattr(object_, key)
     
-    def set_variable_and_object(self, object_, key, value):
+    def set_variable_and_attr(self, object_, key, value):
       setattr(object_, key, value)
     
     def quit(self):
@@ -82,18 +82,18 @@ def subsystem(window, title, variables):
         default=default
       )
     
-    def variables_from_object(self, object_):
-      self.variables = gui.get_variables_from_object(object_)
+    def variables_from_attrs(self, object_):
+      self.variables = gui.get_variables_from_attrs(object_)
     
-    def variables_to_object(self, object_):
-      gui.set_variables_to_object(self.variables, object_)
+    def attrs_to_variables(self, object_):
+      gui.set_attrs_to_variables(self.variables, object_)
     
-    def get_variable_or_object(self, object_, key):
+    def get_variable_or_attr(self, object_, key):
       try: return self.variables[key].get()
-      except KeyError: return super().get_variable_or_object(object_, key)
+      except KeyError: return super().get_variable_or_attr(object_, key)
     
-    def set_variable_and_object(self, object_, key, value):
-      super().set_variable_and_object(object_, key, value)
+    def set_variable_and_attr(self, object_, key, value):
+      super().set_variable_and_attr(object_, key, value)
       
       def callback():
         self.variables[key].set(value)

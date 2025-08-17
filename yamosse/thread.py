@@ -107,7 +107,7 @@ def _download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, 
     assert name, 'name must not be empty'
     
     if subsystem and options:
-      subsystem.set_variable_and_object(options, 'weights', name)
+      subsystem.set_variable_and_attr(options, 'weights', name)
       options.dump()
     
     return file

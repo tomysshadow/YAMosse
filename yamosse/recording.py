@@ -28,7 +28,7 @@ class Recording:
     if stop is None: stop = Event()
     
     input_devices, input_default_name = Recording.input_devices()
-    input_device = subsystem.get_variable_or_object(options, 'input_device')
+    input_device = subsystem.get_variable_or_attr(options, 'input_device')
     
     try: device = input_devices[input_device]
     except KeyError: device = input_devices[input_default_name]
@@ -75,7 +75,7 @@ class Recording:
             # only after we've definitely written something, set the new volume
             volume = np.abs(indata).max()
             
-            if not subsystem.get_variable_or_object(options, 'background_noise_volume_loglinear'):
+            if not subsystem.get_variable_or_attr(options, 'background_noise_volume_loglinear'):
               volume = yamosse_worker.volume_log(np, volume)
             
             self.volume = float(volume)
@@ -104,9 +104,9 @@ class Recording:
     print('')
     print(f'Recording finished: {name!r}')
     
-    input_ = subsystem.get_variable_or_object(options, 'input')
+    input_ = subsystem.get_variable_or_attr(options, 'input')
     input_ = shlex.join(shlex.split(input_) + [name])
-    subsystem.set_variable_and_object(options, 'input', input_)
+    subsystem.set_variable_and_attr(options, 'input', input_)
   
   @classmethod
   @staticmethod

@@ -119,7 +119,7 @@ def _mainloop(**kwargs):
     except (KeyError, TypeError):
       subsystem.error(MESSAGE_IMPORT_PRESET_INVALID)
     else:
-      subsystem.variables_from_object(options)
+      subsystem.variables_from_attrs(options)
       subsystem.quit()
   
   def export_preset(file_name=''):
@@ -136,7 +136,7 @@ def _mainloop(**kwargs):
       
       if not file_name: return
     
-    subsystem.variables_to_object(options)
+    subsystem.attrs_to_variables(options)
     options.export_preset(file_name)
   
   def yamscan(output_file_name=''):
@@ -149,7 +149,7 @@ def _mainloop(**kwargs):
     INITIALDIR = 'My YAMScans'
     DEFAULTEXTENSION = '.txt' # must start with period on Linux
     
-    subsystem.variables_to_object(options)
+    subsystem.attrs_to_variables(options)
     
     input_ = shlex.split(options.input)
     
@@ -217,14 +217,14 @@ def _mainloop(**kwargs):
     ): return
     
     options = yamosse_options.Options()
-    subsystem.variables_from_object(options)
+    subsystem.variables_from_attrs(options)
     subsystem.quit()
   
   variables = None
   
   if not kwargs:
     if gui:
-      variables = gui.get_variables_from_object(options)
+      variables = gui.get_variables_from_attrs(options)
       
       window = gui.gui(
         gui_yamosse.make_yamosse,
@@ -293,7 +293,7 @@ def _mainloop(**kwargs):
       call(yamscan, 'output_file_name')
       return None
   finally:
-    subsystem.variables_to_object(options)
+    subsystem.attrs_to_variables(options)
     options.dump()
   
   return window.children

@@ -1336,7 +1336,7 @@ def bindtag_for_object(object_):
   return ''.join(('bindtag', repr(id(object_))))
 
 
-def get_variables_from_object(object_):
+def get_variables_from_attrs(object_):
   # this prevents Tkinter from popping an empty window if we haven't created the root window yet
   get_root_window()
   
@@ -1358,7 +1358,7 @@ def get_variables_from_object(object_):
   return variables
 
 
-def set_variables_to_object(variables, object_):
+def set_attrs_to_variables(variables, object_):
   for key, value in variables.items():
     if isinstance(value, tuple(VARIABLE_TYPES.values())):
       setattr(object_, key, value.get())
