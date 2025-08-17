@@ -29,7 +29,7 @@ def subsystem(window, title, variables):
       pass
     
     def variables_from_attrs(self, object_):
-      return None
+      pass
     
     def attrs_to_variables(self, object_):
       pass
