@@ -7,7 +7,6 @@ from queue import Queue
 import soundfile as sf
 import sounddevice as sd
 
-import yamosse.utils as yamosse_utils
 import yamosse.worker as yamosse_worker
 
 PREFIX = 'Recording_'
@@ -77,7 +76,7 @@ class Recording:
             volume = np.abs(indata).max()
             
             if not subsystem.get_variable_or_object(options, 'background_noise_volume_loglinear'):
-              volume = yamosse_utils.volume_log(np, volume)
+              volume = yamosse_worker.volume_log(np, volume)
             
             self.volume = float(volume)
         except KeyboardInterrupt:

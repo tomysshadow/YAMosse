@@ -6,6 +6,7 @@ from os import cpu_count
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
+import yamosse.worker as yamosse_worker
 import yamosse.identification as yamosse_identification
 
 VERSION = 2
@@ -180,7 +181,7 @@ class Options:
     
     # make background noise volume logarithmic if requested
     if not self.background_noise_volume_loglinear:
-      background_noise_volume = yamosse_utils.volume_log(np, background_noise_volume)
+      background_noise_volume = yamosse_worker.volume_log(np, background_noise_volume)
     
     # create a numpy array of this so it can be used with fancy indexing
     self.classes = np.unique(self.classes)
