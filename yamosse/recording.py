@@ -7,6 +7,7 @@ from queue import Queue
 import soundfile as sf
 import sounddevice as sd
 
+import yamosse.utils as yamosse_utils
 import yamosse.worker as yamosse_worker
 
 PREFIX = 'Recording_'
@@ -28,9 +29,9 @@ class Recording:
     if stop is None: stop = Event()
     
     input_devices, input_default_name = Recording.input_devices()
-    subsystem.variables_to_object(options)
+    input_device = subsystem.get_variable_or_object(options, 'input_device')
     
-    try: device = input_devices[options.input_device]
+    try: device = input_devices[input_device]
     except KeyError: device = input_devices[input_default_name]
     
     save = True
@@ -73,9 +74,12 @@ class Recording:
               queued = not indatas.empty()
             
             # only after we've definitely written something, set the new volume
-            # TODO: variables_to_object for just one variable? really?
-            subsystem.variables_to_object(options)
-            self.volume = float(options.loglinear(np, np.abs(indata).max()))
+            volume = np.abs(indata).max()
+            
+            if not subsystem.get_variable_or_object(options, 'background_noise_volume_loglinear'):
+              volume = yamosse_utils.volume_log(np, volume)
+            
+            self.volume = float(volume)
         except KeyboardInterrupt:
           pass
     except:
@@ -101,10 +105,9 @@ class Recording:
     print('')
     print(f'Recording finished: {name!r}')
     
-    subsystem.variables_to_object(options)
-    input_ = shlex.join(shlex.split(options.input) + [name])
-    options.input = input_
-    subsystem.set_variable_after_idle('input', input_)
+    input_ = subsystem.get_variable_or_object(options, 'input')
+    input_ = shlex.join(shlex.split(input_) + [name])
+    subsystem.set_variable_and_object(options, 'input', input_)
   
   @classmethod
   @staticmethod

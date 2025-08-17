@@ -34,8 +34,11 @@ def subsystem(window, title, variables):
     def variables_to_object(self, object_):
       pass
     
-    def set_variable_after_idle(self, key, value):
-      pass
+    def get_variable_or_object(self, object_, key):
+      return getattr(object_, key)
+    
+    def set_variable_and_object(self, object_, key, value):
+      setattr(object_, key, value)
     
     def quit(self):
       pass
@@ -85,7 +88,13 @@ def subsystem(window, title, variables):
     def variables_to_object(self, object_):
       gui.set_variables_to_object(self.variables, object_)
     
-    def set_variable_after_idle(self, key, value):
+    def get_variable_or_object(self, object_, key):
+      try: return self.variables[key].get()
+      except KeyError: return super().get_variable_or_object(object_, key)
+    
+    def set_variable_and_object(self, object_, key, value):
+      super().set_variable_and_object(object_, key, value)
+      
       def callback():
         self.variables[key].set(value)
       

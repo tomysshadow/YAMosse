@@ -16,6 +16,11 @@ def latin1_unescape(value):
   return str(value).encode('latin1', 'backslashreplace').decode('unicode_escape')
 
 
+def volume_log(np, volume):
+  VOLUME_LOG = 4 # 60 dB
+  return np.power(volume, VOLUME_LOG)
+
+
 def clamp(number, min_, max_):
   return min(max_, max(min_, number))
 

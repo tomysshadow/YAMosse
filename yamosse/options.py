@@ -163,14 +163,6 @@ class Options:
     with open(file_name, 'w', encoding='utf8') as f:
       json.dump(vars(self), f, indent=True)
   
-  def loglinear(self, np, volume):
-    VOLUME_LOG = 4 # 60 dB
-    
-    if not self.background_noise_volume_loglinear:
-      volume = np.power(volume, VOLUME_LOG)
-    
-    return volume
-  
   def worker(self, np, class_names):
     def single_shot(np, class_names):
       raise RuntimeError('worker is single shot')
@@ -184,9 +176,11 @@ class Options:
     calibration = np.concatenate((calibration,
       np.ones(class_names_len - calibration.size, dtype=np.float32)))
     
+    background_noise_volume = np.divide(self.background_noise_volume, 100.0, dtype=np.float32)
+    
     # make background noise volume logarithmic if requested
-    background_noise_volume = self.loglinear(
-      np, np.divide(self.background_noise_volume, 100.0, dtype=np.float32))
+    if not self.background_noise_volume_loglinear:
+      background_noise_volume = yamosse_utils.volume_log(np, background_noise_volume)
     
     # create a numpy array of this so it can be used with fancy indexing
     self.classes = np.unique(self.classes)
