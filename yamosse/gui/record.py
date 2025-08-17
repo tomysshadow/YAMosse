@@ -19,8 +19,9 @@ def ask_save(window, recording, stop_recording):
     
     if save is None: return
     recording.save = save
+    
+    stop_recording()
   
-  stop_recording()
   window.withdraw()
 
 
@@ -102,7 +103,7 @@ def make_record(frame, variables, record):
   def start_recording():
     nonlocal recording
     
-    recording_button.configure(text='Stop Recording', image=stop_image)
+    recording_button.configure(text='Stop Recording', image=stop_image, command=stop_recording)
     input_devices_combobox['state'] = ('disabled',)
     stop.clear()
     recording = record(stop=stop)
@@ -115,14 +116,10 @@ def make_record(frame, variables, record):
     stop.set()
     recording = None
     input_devices_combobox['state'] = ('readonly',)
-    recording_button.configure(text='Start Recording', image=record_image)
+    recording_button.configure(text='Start Recording', image=record_image, command=start_recording)
   
-  def toggle_recording():
-    if not recording: start_recording()
-    else: stop_recording()
-  
-  recording_button['command'] = toggle_recording
-  window.bind('<Control-c>', lambda e: toggle_recording())
+  recording_button['command'] = start_recording
+  window.bind('<Control-c>', lambda e: recording_button.invoke())
   
   window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording, stop_recording))
   window.withdraw()
