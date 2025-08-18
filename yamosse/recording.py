@@ -37,6 +37,10 @@ class Recording:
     save = True
     indatas = Queue()
     
+    volume = 0.0
+    volume_str = VOLUME_SPEC.format(volume=volume)
+    volume_backspaces = '\b' * len(volume_str)
+    
     # Make sure the file is opened before recording anything:
     tmp = NamedTemporaryFile(
       delete=False, mode='wb',
@@ -59,15 +63,14 @@ class Recording:
       ):
         try:
           print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
-          
-          volume = 0.0
-          volume_str = VOLUME_SPEC.format(volume=volume)
-          volume_backspaces = '\b' * len(volume_str)
           print('Volume:', volume_str, end='', flush=True)
           
           indata = None
           
           while not stop.is_set():
+            print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
+              sep='', end='', flush=True)
+            
             queued = True
             
             while queued:
@@ -86,9 +89,6 @@ class Recording:
             
             volume = float(volume)
             self.volume = volume
-            
-            print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
-              sep='', end='', flush=True)
         except KeyboardInterrupt:
           pass
     except:
@@ -115,7 +115,7 @@ class Recording:
     if not save: return
     
     name = tmp.name
-    print('\nRecording finished:', shlex.quote(name))
+    print('\nRecording finished:', shlex.quote(name), end='\n\n')
     
     input_ = subsystem.get_variable_or_attr(options, 'input')
     input_ = shlex.join(shlex.split(input_) + [name])

@@ -19,7 +19,7 @@ def help_():
 
 
 def main(argc, argv):
-  print(yamosse.TITLE, end='\n\n')
+  print(yamosse.TITLE)
   
   MIN_ARGC = 1
   

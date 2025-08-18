@@ -270,6 +270,7 @@ def _mainloop(**kwargs):
       'options_attrs'
     )
   
+  print('')
   options.print()
   
   if kwargs:

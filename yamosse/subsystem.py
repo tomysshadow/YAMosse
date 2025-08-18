@@ -89,8 +89,10 @@ def subsystem(window, title, variables):
       gui.set_attrs_to_variables(self.variables, object_)
     
     def get_variable_or_attr(self, object_, key):
-      try: return self.variables[key].get()
-      except KeyError: return super().get_variable_or_attr(object_, key)
+      try:
+        return self.variables[key].get()
+      except (gui.tk.TclError, KeyError):
+        return super().get_variable_or_attr(object_, key)
     
     def set_variable_and_attr(self, object_, key, value):
       super().set_variable_and_attr(object_, key, value)
