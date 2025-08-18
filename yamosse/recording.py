@@ -110,7 +110,6 @@ class Recording:
     if not save: return
     
     name = tmp.name
-    
     print(f'\nRecording finished: {shlex.quote(name)}')
     
     input_ = subsystem.get_variable_or_attr(options, 'input')
