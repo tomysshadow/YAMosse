@@ -17,7 +17,7 @@ def ask_save(window, recording):
     save = messagebox.askyesnocancel(
       parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
     
-    if save is None: return
+    if save is None: return 'break'
     recording.save = save
   
   window.withdraw()
@@ -129,7 +129,9 @@ def make_record(frame, variables, record):
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
-  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording))
+  window.protocol('WM_SAVE_YOURSELF', stop_recording)
+  window.protocol('WM_DELETE_WINDOW', window.withdraw)
+  gui.set_master_delete_window(window, lambda: ask_save(window, recording))
   
   for name in ('<Unmap>', '<Destroy>'):
     window.bind(name, stop_recording)

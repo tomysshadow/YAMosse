@@ -334,7 +334,7 @@ def text_widgets_items(i):
 
 
 def _traversal_button():
-  def sequence(button, underline):
+  def name(button, underline):
     assert underline >= 0, 'underline must be greater than or equal to zero'
     return '<Alt-%c>' % str(button['text'])[underline].lower()
   
@@ -343,7 +343,7 @@ def _traversal_button():
     if underline < 0: return
     
     button.winfo_toplevel().bind(
-      sequence(button, underline),
+      name(button, underline),
       lambda e: button.focus_set()
     )
   
@@ -351,7 +351,7 @@ def _traversal_button():
     underline = int(button['underline'])
     if underline < 0: return
     
-    button.winfo_toplevel().unbind(sequence(button, underline))
+    button.winfo_toplevel().unbind(name(button, underline))
   
   return enable, disable
 
@@ -1127,6 +1127,65 @@ def _root_window():
 get_root_window = _root_window()
 
 
+def _master_delete_window():
+  # TODO: need to alias protocol in case it's changed later (will change master_scripts)
+  master_scripts = WeakKeyDictionary()
+  window_bindings = WeakKeyDictionary()
+  
+  def bind(master, scripts):
+    master_script = master.register(lambda: master.event_generate('<<DeleteMaster>>'))
+    
+    master.unbind('<<Delete>>')
+    
+    for script in list(scripts.values()) + [master_script]:
+      master.bind('<<Delete>>', '+%s' % script)
+  
+  def set_(window, delete):
+    script = ('if {"[%s]" == "break"} break' % window.register(delete)
+      ) if callable(delete) else delete
+    
+    master = window
+    
+    while master:
+      scripts = window_bindings.setdefault(master, WeakKeyDictionary())
+      
+      scripts[window] = script
+      bind(master, scripts)
+      
+      if not master in master_scripts:
+        master_script = master.protocol('WM_DELETE_WINDOW')
+        master.bind('<<DeleteMaster>>', master_script if master_script else master.destroy)
+        master_scripts[master] = master_script
+      
+      master.protocol(
+        'WM_DELETE_WINDOW',
+        lambda master=master: master.event_generate('<<Delete>>')
+      )
+      
+      master = master.master
+  
+  def release(window):
+    master = window
+    
+    while master:
+      scripts = window_bindings.get(master, WeakKeyDictionary())
+      
+      try: del scripts[window]
+      except KeyError: pass
+      else: bind(master, scripts)
+      
+      if not scripts:
+        try: master_script = master_scripts[master]
+        except KeyError: pass
+        else: master.protocol('WM_DELETE_WINDOW', master_script)
+      
+      master = master.master
+  
+  return set_, release
+
+set_master_delete_window, release_master_delete_window = _master_delete_window()
+
+
 def after_idle_window(window, callback):
   # for thread safety
   # it's not safe to have a non-GUI thread interact directly with widgets
@@ -1140,7 +1199,8 @@ def after_idle_window(window, callback):
 
 
 def bind_buttons_window(window, ok_button=None, cancel_button=None):
-  window.unbind(('<Return>', '<Escape>'))
+  for name in ('<Return>', '<Escape>'):
+    window.unbind(name)
   
   if ok_button:
     assert window is ok_button.winfo_toplevel(), 'ok_button window mismatch'
