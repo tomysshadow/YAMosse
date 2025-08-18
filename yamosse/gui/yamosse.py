@@ -88,7 +88,7 @@ def make_input(frame, variables, filetypes, record):
   record_button = ttk.Button(
     buttons_frame,
     text='Record...',
-    command=lambda: record_window.deiconify()
+    command=record_window.deiconify
   )
   
   try: import yamosse.recording as yamosse_recording
