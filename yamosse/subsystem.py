@@ -91,7 +91,7 @@ def subsystem(window, title, variables):
     def get_variable_or_attr(self, object_, key):
       try:
         return self.variables[key].get()
-      except RuntimeError:
+      except (gui.tk.TclError, RuntimeError):
         raise SubsystemExit
       except KeyError:
         return super().get_variable_or_attr(object_, key)
