@@ -55,11 +55,11 @@ def subsystem(window, title, variables):
       self.widgets = None
     
     @staticmethod
-    def start(target, *args, **kwargs):
+    def start(target, *args, daemon=False, **kwargs):
       gui.threaded()
       
       # start a thread so the GUI isn't blocked
-      Thread(target=target, args=args, kwargs=kwargs).start()
+      Thread(target=target, args=args, daemon=daemon, kwargs=kwargs).start()
     
     def show(self, values=None):
       if not self.show_callback(self.widgets, values=values): raise SubsystemExit
@@ -122,7 +122,7 @@ def subsystem(window, title, variables):
   
   class ConsoleSubsystem(Subsystem):
     @staticmethod
-    def start(target, *args, **kwargs):
+    def start(target, *args, daemon=False, **kwargs):
       target(*args, **kwargs)
     
     def show(self, values=None):

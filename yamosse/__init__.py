@@ -95,6 +95,7 @@ def _mainloop(**kwargs):
       subsystem,
       options,
       *args,
+      daemon=True,
       **kwargs
     )
     return recording
