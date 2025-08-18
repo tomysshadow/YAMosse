@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from threading import Thread
+from threading import Thread, Event
 
 import yamosse.utils as yamosse_utils
 
@@ -89,20 +89,33 @@ def subsystem(window, title, variables):
       gui.set_attrs_to_variables(self.variables, object_)
     
     def get_variable_or_attr(self, object_, key):
-      try:
-        return self.variables[key].get()
-      except (gui.tk.TclError, RuntimeError):
-        raise SubsystemExit
-      except KeyError:
-        return super().get_variable_or_attr(object_, key)
+      # it is expected this function will not be called from the GUI thread
+      # (because otherwise, you'd just get the variable directly)
+      # so here we automate getting the variable on the other thread n' waiting...
+      value = super().get_variable_or_attr(object_, key)
+      event = Event()
+      
+      def callback():
+        nonlocal value
+        
+        value = self.variables[key].get()
+        event.set()
+      
+      if gui.after_idle_window(self.window, callback):
+        event.wait()
+      
+      return value
     
     def set_variable_and_attr(self, object_, key, value):
       super().set_variable_and_attr(object_, key, value)
+      event = Event()
       
-      if not gui.after_idle_window(
-        self.window,
-        lambda: self.variables[key].set(value)
-      ): raise SubsystemExit
+      def callback():
+        self.variables[key].set(value)
+        event.set()
+      
+      if gui.after_idle_window(self.window, callback):
+        event.wait()
     
     def quit(self):
       self.window.quit()
