@@ -58,7 +58,7 @@ class Recording:
         )
       ):
         try:
-          print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n')
+          print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
           
           volume = 0.0
           volume_str = VOLUME_SPEC.format(volume=volume)
@@ -104,6 +104,11 @@ class Recording:
       # or an exception occurred
       save &= self.save
       if not save: unlink(tmp.name)
+      
+      # this is in the finally block so that
+      # there will always be a newline after the volume
+      # even in the exception case
+      print('')
     
     # this can't happen in the finally block
     # because it might silence an exception

@@ -12,15 +12,13 @@ RESIZABLE = False
 ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 
 
-def ask_save(window, recording, stop_recording):
+def ask_save(window, recording):
   if recording:
     save = messagebox.askyesnocancel(
       parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
     
     if save is None: return
     recording.save = save
-    
-    stop_recording()
   
   window.withdraw()
 
@@ -101,8 +99,10 @@ def make_record(frame, variables, record):
     volume_variable.set(0)
     if volume_after: volume_frame.after_cancel(volume_after)
   
-  def start_recording():
+  def start_recording(e=None):
     nonlocal recording
+    
+    if recording: return
     
     recording_button.configure(text='Stop Recording', image=stop_image, command=stop_recording)
     input_devices_combobox['state'] = ('disabled',)
@@ -110,8 +110,10 @@ def make_record(frame, variables, record):
     recording = record(stop=stop)
     show_volume()
   
-  def stop_recording():
+  def stop_recording(e=None):
     nonlocal recording
+    
+    if not recording: return
     
     hide_volume()
     stop.set()
@@ -122,4 +124,6 @@ def make_record(frame, variables, record):
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
-  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording, stop_recording))
+  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording))
+  window.bind('<Unmap>', stop_recording)
+  window.bind('<Destroy>', stop_recording)
