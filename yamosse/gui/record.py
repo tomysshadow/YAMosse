@@ -130,5 +130,6 @@ def make_record(frame, variables, record):
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
   window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording))
-  window.bind('<Unmap>', stop_recording)
-  window.bind('<Destroy>', stop_recording)
+  
+  for name in ('<Unmap>', '<Destroy>'):
+    window.bind(name, stop_recording)
