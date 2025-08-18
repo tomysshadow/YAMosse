@@ -33,6 +33,7 @@ def make_record(frame, variables, record):
   import yamosse.recording as yamosse_recording
   
   window = frame.master
+  window.withdraw()
   gui.customize_window(window, TITLE, resizable=RESIZABLE)
   
   frame.columnconfigure(0, weight=1) # one column layout
@@ -122,4 +123,3 @@ def make_record(frame, variables, record):
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
   window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window, recording, stop_recording))
-  window.withdraw()

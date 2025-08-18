@@ -95,10 +95,10 @@ def subsystem(window, title, variables):
     def set_variable_and_attr(self, object_, key, value):
       super().set_variable_and_attr(object_, key, value)
       
-      def callback():
-        self.variables[key].set(value)
-      
-      if not gui.after_idle_window(self.window, callback): raise SubsystemExit
+      if not gui.after_idle_window(
+        self.window,
+        lambda: self.variables[key].set(value)
+      ): raise SubsystemExit
     
     def quit(self):
       self.window.quit()

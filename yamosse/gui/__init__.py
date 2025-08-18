@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
-from weakref import WeakKeyDictionary
+from weakref import finalize, WeakKeyDictionary
 import traceback
 from threading import Lock
 from math import ceil
@@ -848,14 +848,9 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     ]
   
   if selectmode == tk.EXTENDED:
-    def select_all():
-      treeview.selection_set(get_items_treeview(treeview))
-    
-    def select_none():
-      treeview.selection_set(())
-    
-    def invert_selection():
-      treeview.selection_toggle(get_items_treeview(treeview))
+    def select_all(): treeview.selection_set(get_items_treeview(treeview))
+    def select_none(): treeview.selection_set(())
+    def invert_selection(): treeview.selection_toggle(get_items_treeview(treeview))
     
     buttons += [
       ttk.Button(
@@ -1265,9 +1260,6 @@ def _root_images():
   def get():
     nonlocal root_images
     
-    # this prevents Tkinter from popping an empty window if we haven't created the root window yet
-    get_root_window()
-    
     if not root_images:
       def scandir(path, callback):
         result = {}
@@ -1306,8 +1298,22 @@ def _root_images():
         return (image, scandir(entry.path, lambda image_entry: callback_image(
           image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), ext)))
       
+      # getting root window needs to be done first
+      # to avoid popping an empty window in some circumstances
       # all names/paths here are encoded with fsenc so that they will be compared by ordinal
+      root_window = get_root_window()
       root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
+      
+      # this is done to prevent exceptions
+      # in case the application dies on a thread that isn't the GUI thread
+      # normally the images would have their __del__ method called
+      # only to discover that the Tk interpreter isn't running
+      def del_():
+        nonlocal root_images
+        
+        del root_images
+      
+      finalize(root_window, del_)
     
     return root_images
   
