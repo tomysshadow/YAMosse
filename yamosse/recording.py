@@ -7,6 +7,7 @@ from queue import Queue
 import soundfile as sf
 import sounddevice as sd
 
+import yamosse.subsystem as yamosse_subsystem
 import yamosse.worker as yamosse_worker
 
 PREFIX = 'Recording_'
@@ -24,102 +25,105 @@ class Recording:
     self.volume = 0.0
   
   def thread(self, subsystem, options, stop=None):
-    import numpy as np # Make sure NumPy is loaded before it is used in the callback
-    
-    if stop is None: stop = Event()
-    
-    input_devices, input_default_name = Recording.input_devices()
-    input_device = subsystem.get_variable_or_attr(options, 'input_device')
-    
-    try: device = input_devices[input_device]
-    except KeyError: device = input_devices[input_default_name]
-    
-    save = True
-    indatas = Queue()
-    
-    volume = 0.0
-    volume_str = VOLUME_SPEC.format(volume=volume)
-    volume_backspaces = '\b' * len(volume_str)
-    
-    # Make sure the file is opened before recording anything:
-    tmp = NamedTemporaryFile(
-      delete=False, mode='wb',
-      prefix=PREFIX, suffix=SUFFIX, dir=DIR
-    )
-    
     try:
-      with (
-        sf.SoundFile(
-          tmp, mode='x',
-          samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO
-        ) as f,
-        
-        sd.InputStream(
-          device=device,
-          samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
-          blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
-          callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
-        )
-      ):
-        try:
-          print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
-          print('Volume:', volume_str, end='', flush=True)
+      import numpy as np # Make sure NumPy is loaded before it is used in the callback
+      
+      if stop is None: stop = Event()
+      
+      input_devices, input_default_name = Recording.input_devices()
+      input_device = subsystem.get_variable_or_attr(options, 'input_device')
+      
+      try: device = input_devices[input_device]
+      except KeyError: device = input_devices[input_default_name]
+      
+      save = True
+      indatas = Queue()
+      
+      volume = 0.0
+      volume_str = VOLUME_SPEC.format(volume=volume)
+      volume_backspaces = '\b' * len(volume_str)
+      
+      # Make sure the file is opened before recording anything:
+      tmp = NamedTemporaryFile(
+        delete=False, mode='wb',
+        prefix=PREFIX, suffix=SUFFIX, dir=DIR
+      )
+      
+      try:
+        with (
+          sf.SoundFile(
+            tmp, mode='x',
+            samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO
+          ) as f,
           
-          indata = None
-          
-          while not stop.is_set():
-            print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
-              sep='', end='', flush=True)
+          sd.InputStream(
+            device=device,
+            samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
+            blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
+            callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
+          )
+        ):
+          try:
+            print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
+            print('Volume:', volume_str, end='', flush=True)
             
-            queued = True
+            indata = None
             
-            while queued:
-              # this is done first so we block
-              indata = indatas.get()
-              f.write(indata)
+            while not stop.is_set():
+              print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
+                sep='', end='', flush=True)
               
-              # ensure we get all input data if there are multiple queued things piled up
-              queued = not indatas.empty()
-            
-            # only after we've definitely written something, set the new volume
-            volume = np.abs(indata).max()
-            
-            if not subsystem.get_variable_or_attr(options, 'background_noise_volume_loglinear'):
-              volume = yamosse_worker.volume_log(np, volume)
-            
-            volume = float(volume)
-            self.volume = volume
-        except KeyboardInterrupt:
-          pass
-    except:
-      # this must be a distinct variable to self.save because
-      # otherwise it might get set back to true by some other thread
-      # before it is used
-      save = False
-      raise
-    finally:
-      tmp.close()
+              queued = True
+              
+              while queued:
+                # this is done first so we block
+                indata = indatas.get()
+                f.write(indata)
+                
+                # ensure we get all input data if there are multiple queued things piled up
+                queued = not indatas.empty()
+              
+              # only after we've definitely written something, set the new volume
+              volume = np.abs(indata).max()
+              
+              if not subsystem.get_variable_or_attr(options, 'background_noise_volume_loglinear'):
+                volume = yamosse_worker.volume_log(np, volume)
+              
+              volume = float(volume)
+              self.volume = volume
+          except KeyboardInterrupt:
+            pass
+      except:
+        # this must be a distinct variable to self.save because
+        # otherwise it might get set back to true by some other thread
+        # before it is used
+        save = False
+        raise
+      finally:
+        tmp.close()
+        
+        # delete the file if the user opted not to save it
+        # or an exception occurred
+        save &= self.save
+        if not save: unlink(tmp.name)
+        
+        # this is in the finally block so that
+        # there will always be a newline after the volume
+        # even in the exception case
+        print('')
       
-      # delete the file if the user opted not to save it
-      # or an exception occurred
-      save &= self.save
-      if not save: unlink(tmp.name)
+      # this can't happen in the finally block
+      # because it might silence an exception
+      if not save: return
       
-      # this is in the finally block so that
-      # there will always be a newline after the volume
-      # even in the exception case
-      print('')
-    
-    # this can't happen in the finally block
-    # because it might silence an exception
-    if not save: return
-    
-    name = tmp.name
-    print('\nRecording finished:', shlex.quote(name), end='\n\n')
-    
-    input_ = subsystem.get_variable_or_attr(options, 'input')
-    input_ = shlex.join(shlex.split(input_) + [name])
-    subsystem.set_variable_and_attr(options, 'input', input_)
+      name = tmp.name
+      print('\nRecording finished:', shlex.quote(name), end='\n\n')
+      
+      input_ = subsystem.get_variable_or_attr(options, 'input')
+      input_ = shlex.join(shlex.split(input_) + [name])
+      
+      subsystem.set_variable_and_attr(options, 'input', input_)
+    except yamosse_subsystem.SubsystemExit: pass
   
   @classmethod
   @staticmethod
