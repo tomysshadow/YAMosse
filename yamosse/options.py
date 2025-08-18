@@ -16,7 +16,7 @@ _root_file_name = yamosse_root.root(FILE_NAME)
 
 class Options:
   class VersionError(ValueError):
-    def __init__(self):            
+    def __init__(self):
       super().__init__('version mismatch')
     
     def __reduce__(self):
@@ -164,6 +164,14 @@ class Options:
     with open(file_name, 'w', encoding='utf8') as f:
       json.dump(vars(self), f, indent=True)
   
+  def volume_loglinear(self, np, volume):
+    VOLUME_LOG = 4 # 60 dB
+    
+    if not self.background_noise_volume_loglinear:
+      return np.power(volume, VOLUME_LOG)
+    
+    return volume
+  
   def worker(self, np, class_names):
     def single_shot(np, class_names):
       raise RuntimeError('worker is single shot')
@@ -177,11 +185,9 @@ class Options:
     calibration = np.concatenate((calibration,
       np.ones(class_names_len - calibration.size, dtype=np.float32)))
     
-    background_noise_volume = np.divide(self.background_noise_volume, 100.0, dtype=np.float32)
-    
     # make background noise volume logarithmic if requested
-    if not self.background_noise_volume_loglinear:
-      background_noise_volume = yamosse_worker.volume_log(np, background_noise_volume)
+    background_noise_volume = self.volume_loglinear(np,
+      np.divide(self.background_noise_volume, 100.0, dtype=np.float32))
     
     # create a numpy array of this so it can be used with fancy indexing
     self.classes = np.unique(self.classes)

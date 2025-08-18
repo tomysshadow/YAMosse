@@ -83,11 +83,6 @@ def _step_progress(worker_step, current_worker_step=1.0):
   return worker_step
 
 
-def volume_log(np, volume):
-  VOLUME_LOG = 4 # 60 dB
-  return np.power(volume, VOLUME_LOG)
-
-
 def class_names(class_map_csv=''):
   if not class_map_csv:
     if _tfhub_enabled:

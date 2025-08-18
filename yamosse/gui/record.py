@@ -90,11 +90,15 @@ def make_record(frame, variables, record):
   def show_volume():
     nonlocal volume_after
     
-    volume_variable.set(int(recording.volume * VOLUME_MAXIMUM))
+    recording.after()
+    
+    volume_variable.set(int(recording.get_volume() * VOLUME_MAXIMUM))
     volume_after = volume_frame.after(volume_after_ms, show_volume)
   
   def hide_volume():
     nonlocal volume_after
+    
+    recording.after()
     
     volume_variable.set(0)
     if volume_after: volume_frame.after_cancel(volume_after)
