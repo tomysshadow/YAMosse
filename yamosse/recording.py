@@ -16,6 +16,7 @@ DIR = 'My Recordings'
 BLOCKSIZE_SECONDS = 0.1
 
 LINE = '#' * 80
+VOLUME_SPEC = '{volume:>4.0%}'
 
 class Recording:
   def __init__(self):
@@ -59,6 +60,11 @@ class Recording:
         try:
           print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n')
           
+          volume = 0.0
+          volume_str = VOLUME_SPEC.format(volume=volume)
+          volume_backspaces = '\b' * len(volume_str)
+          print('Volume:', volume_str, end='', flush=True)
+          
           indata = None
           
           while not stop.is_set():
@@ -78,7 +84,11 @@ class Recording:
             if not subsystem.get_variable_or_attr(options, 'background_noise_volume_loglinear'):
               volume = yamosse_worker.volume_log(np, volume)
             
-            self.volume = float(volume)
+            volume = float(volume)
+            self.volume = volume
+            
+            print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
+              sep='', end='', flush=True)
         except KeyboardInterrupt:
           pass
     except:
@@ -101,8 +111,7 @@ class Recording:
     
     name = tmp.name
     
-    print('')
-    print(f'Recording finished: {name!r}')
+    print(f'\nRecording finished: {shlex.quote(name)}')
     
     input_ = subsystem.get_variable_or_attr(options, 'input')
     input_ = shlex.join(shlex.split(input_) + [name])
