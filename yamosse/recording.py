@@ -20,12 +20,11 @@ VOLUME_SPEC = '{volume:>4.0%}'
 
 class Recording:
   def __init__(self, subsystem, options):
-    self.subsystem = subsystem
-    self.options = options
+    self._subsystem = subsystem
+    self._options = options
+    self._volume = 0.0
     
     self.save = True
-    
-    self._volume = 0.0
   
   def thread(self, stop=None):
     import numpy as np # Make sure NumPy is loaded before it is used in the callback
@@ -34,7 +33,7 @@ class Recording:
     
     input_devices, input_default_name = Recording.input_devices()
     
-    options = self.options
+    options = self._options
     input_device = options.input_device
     
     try: device = input_devices[input_device]
@@ -120,10 +119,10 @@ class Recording:
     print('\nRecording finished:', shlex.quote(name), end='\n\n')
     
     input_ = shlex.join(shlex.split(options.input) + [name])
-    self.subsystem.set_variable_and_attr(options, 'input', input_)
+    self._subsystem.set_variable_and_attr(options, 'input', input_)
   
-  def after(self):
-    self.subsystem.attrs_to_variables(self.options)
+  def attrs_to_variables(self):
+    self._subsystem.attrs_to_variables(self._options)
   
   def get_volume(self):
     return self._volume
