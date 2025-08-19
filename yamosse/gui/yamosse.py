@@ -705,3 +705,4 @@ def make_yamosse(frame, title, options_variables,
   make_footer(footer_frame, yamscan, restore_defaults)
   
   window.protocol('WM_DELETE_WINDOW', lambda: record_ask_save(window.destroy))
+  return record_ask_save
