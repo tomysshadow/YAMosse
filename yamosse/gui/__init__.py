@@ -230,32 +230,31 @@ def bind_truekey_widget(widget, class_='', keysym='',
   return [widget.bind(s, c, add) for s, c in KEYS.items()]
 
 
-def fpixels_widget(widget, lengths):
-  return [widget.winfo_fpixels(l) for l in lengths]
-
-
 def padding4_widget(widget, padding):
   padding = yamosse_utils.try_split(padding)
   if not padding: return [0.0, 0.0, 0.0, 0.0]
+  
+  def fpixels(*lengths):
+    return [widget.winfo_fpixels(l) for l in lengths]
   
   # should raise TypeError is padding is just an integer
   try:
     # should raise ValueError if too many values to unpack
     try: left, top, right, bottom = padding
     except ValueError: pass
-    else: return fpixels_widget(widget, (left, top, right, bottom))
+    else: return fpixels(left, top, right, bottom)
     
     try: left, vertical, right = padding
     except ValueError: pass
-    else: return fpixels_widget(widget, (left, vertical, right, vertical))
+    else: return fpixels(left, vertical, right, vertical)
     
     try: horizontal, vertical = padding
     except ValueError: pass
-    else: return fpixels_widget(widget, (horizontal, vertical, horizontal, vertical))
+    else: return fpixels(horizontal, vertical, horizontal, vertical)
     
     padding, = padding
   except TypeError: pass
-  return fpixels_widget(widget, (padding, padding, padding, padding))
+  return fpixels(padding, padding, padding, padding)
 
 
 def lookup_style_widget(widget, option, element='', state=None, **kwargs):
