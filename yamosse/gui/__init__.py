@@ -128,9 +128,9 @@ def _init_report_callback_exception():
     
     raise val
   
-  tk.Tk.report_callback_exception = report_callback_exception
+  return report_callback_exception
 
-_init_report_callback_exception()
+tk.Tk.report_callback_exception = _init_report_callback_exception()
 
 
 def _init_enable_widget():
