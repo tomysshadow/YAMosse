@@ -1337,12 +1337,6 @@ def elements_layout(layout, name):
   return elements
 
 
-def bindtag_for_object(obj):
-  # this is prefixed to ensure the string doesn't start with a period (.) character
-  # which would indicate this is a widget, not a bindtag
-  return ''.join(('bindtag', repr(id(obj))))
-
-
 def get_variables_from_attrs(attrs):
   # this prevents Tkinter from popping an empty window if we haven't created the root window yet
   get_root_window()
@@ -1415,6 +1409,12 @@ def windowingsystem():
 
 def threaded():
   assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
+
+
+def bindtag(obj):
+  # this is prefixed to ensure the string doesn't start with a period (.) character
+  # which would indicate this is a widget, not a bindtag
+  return ''.join(('bindtag', repr(id(obj))))
 
 
 def gui(make_frame, *args, window=None, child=False, **kwargs):

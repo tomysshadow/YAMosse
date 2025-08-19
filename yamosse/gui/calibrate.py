@@ -54,7 +54,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   # exceptions to the rule that make things difficult. I did think of using variable tracing,
   # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
   # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
-  bindtag = gui.bindtag_for_object(text)
+  bindtag = gui.bindtag(text)
   
   defaults = {}
   oldvalues = {}

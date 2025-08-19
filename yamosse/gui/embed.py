@@ -126,7 +126,7 @@ def _root_embed():
         finally: bind(bindtag, sequence, '')
         return str(name)
       
-      bindtag = gui.bindtag_for_object(name_sequence)
+      bindtag = gui.bindtag(name_sequence)
       
       def bind_window(window_bindings, name):
         window, bindings = window_bindings
