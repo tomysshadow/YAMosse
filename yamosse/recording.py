@@ -1,4 +1,4 @@
-from os import unlink
+from os import mkdir, unlink
 import shlex
 from threading import Lock, Event
 from queue import Queue
@@ -49,6 +49,10 @@ class Recording:
       
       save = True
       indatas = Queue()
+      
+      # try and ensure the directory exists
+      try: mkdir(DIR)
+      except FileExistsError: pass
       
       # Make sure the file is opened before recording anything:
       tmp = NamedTemporaryFile(
