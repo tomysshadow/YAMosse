@@ -12,17 +12,6 @@ RESIZABLE = False
 ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 
 
-def ask_save(window, recording):
-  if recording:
-    save = messagebox.askyesnocancel(
-      parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
-    
-    if save is None: return 'break'
-    recording.save = save
-  
-  window.withdraw()
-
-
 def make_record(frame, variables, record):
   VOLUME_MAXIMUM = 100
   
@@ -129,9 +118,20 @@ def make_record(frame, variables, record):
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
-  window.protocol('WM_SAVE_YOURSELF', stop_recording)
-  window.protocol('WM_DELETE_WINDOW', window.withdraw)
-  gui.set_master_delete_window(window, lambda: ask_save(window, recording))
-  
   for name in ('<Unmap>', '<Destroy>'):
     window.bind(name, stop_recording)
+  
+  window.protocol('WM_SAVE_YOURSELF', stop_recording)
+  
+  def ask_save(close):
+    if recording:
+      save = messagebox.askyesnocancel(
+        parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
+      
+      if save is None: return
+      recording.save = save
+    
+    close()
+  
+  window.protocol('WM_DELETE_WINDOW', lambda: ask_save(window.withdraw))
+  return ask_save

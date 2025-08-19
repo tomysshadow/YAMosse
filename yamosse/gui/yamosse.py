@@ -78,12 +78,12 @@ def make_input(frame, variables, filetypes, record):
     filetypes=filetypes
   )[2][0]
   
-  record_window = gui.gui(
+  record_window, record_ask_save = gui.gui(
     gui_record.make_record,
     variables,
     record,
     child=True
-  )[0]
+  )
   
   record_button = ttk.Button(
     buttons_frame,
@@ -102,6 +102,8 @@ def make_input(frame, variables, filetypes, record):
   
   for widget in (recursive_checkbutton, record_button):
     widget.lower() # fix tab order
+  
+  return record_ask_save
 
 
 def make_classes(frame, variables, class_names):
@@ -297,7 +299,7 @@ def make_general(frame, variables, input_filetypes, class_names,
     padding=gui.PADDING_HNSEW)
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
-  make_input(input_labelframe, variables, input_filetypes, record)
+  record_ask_save = make_input(input_labelframe, variables, input_filetypes, record)
   
   classes_labelframe = ttk.Labelframe(frame, text='Classes',
     padding=gui.PADDING_HNSEW)
@@ -321,6 +323,7 @@ def make_general(frame, variables, input_filetypes, class_names,
   
   presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_HW)
   make_presets(presets_labelframe, import_preset, export_preset)
+  return record_ask_save
 
 
 def make_timespan(frame, variables):
@@ -635,7 +638,7 @@ def make_options(notebook, variables,
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
-  make_general(general_frame, variables, input_filetypes, class_names,
+  record_ask_save = make_general(general_frame, variables, input_filetypes, class_names,
     record, import_preset, export_preset)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
@@ -647,6 +650,7 @@ def make_options(notebook, variables,
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
   
   notebook.enable_traversal()
+  return record_ask_save
 
 
 def make_footer(frame, yamscan, restore_defaults):
@@ -692,10 +696,12 @@ def make_yamosse(frame, title, options_variables,
   
   options_notebook = ttk.Notebook(frame)
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
-  make_options(options_notebook, options_variables,
+  record_ask_save = make_options(options_notebook, options_variables,
     input_filetypes, class_names, weights_filetypes, tfhub_enabled,
     record, import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   make_footer(footer_frame, yamscan, restore_defaults)
+  
+  window.protocol('WM_DELETE_WINDOW', lambda: record_ask_save(window.destroy))
