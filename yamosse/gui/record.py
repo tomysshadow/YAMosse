@@ -105,7 +105,7 @@ def make_record(frame, variables, record):
     
     with start:
       recording = record(start=start, stop=stop)
-      gui.set_attrs_to_variables(variables, recording.options())
+      gui.set_attrs_to_variables(variables, recording.options)
     
     show_volume()
   
@@ -119,7 +119,7 @@ def make_record(frame, variables, record):
     stop.set()
     
     with start:
-      gui.copy_attrs_to_variables(variables, recording.options())
+      gui.copy_attrs_to_variables(variables, recording.options)
       recording = None
     
     input_devices_combobox['state'] = ('readonly',)

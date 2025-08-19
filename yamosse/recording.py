@@ -20,29 +20,31 @@ VOLUME_SPEC = '{volume:>4.0%}'
 
 class Recording:
   def __init__(self, subsystem, options, start=None, stop=None):
-    self._subsystem = subsystem
-    self._options = options
+    self.save = True
+    
+    self.subsystem = subsystem
+    self.options = options
     
     self._start = Lock() if start is None else start
     self._stop = Event() if stop is None else stop
     
     self._volume = 0.0
-    
-    self.save = True
   
   def thread(self):
     import numpy as np # Make sure NumPy is loaded before it is used in the callback
     
     with self._start:
-      options = self._options
-      input_device = options.input_device
-      
+      options = self.options
       input_devices, input_default_name = Recording.input_devices()
       
-      try: device = input_devices[input_device]
+      input_device = options.input_device
+      
+      try:
+        device = input_devices[input_device]
       except KeyError:
-        options.input_device = input_default_name
-        device = input_devices[input_default_name]
+        device = input_devices[input_device := input_default_name]
+        
+        options.input_device = input_device
       
       volume = 0.0
       volume_str = VOLUME_SPEC.format(volume=volume)
@@ -131,13 +133,10 @@ class Recording:
       options.input = shlex.join(shlex.split(options.input) + [name])
   
   def heartbeat(self):
-    self._subsystem.attrs_to_variables(self._options)
+    self.subsystem.attrs_to_variables(self.options)
   
   def volume(self):
     return self._volume
-  
-  def options(self):
-    return self._options
   
   @classmethod
   @staticmethod
