@@ -1337,20 +1337,20 @@ def elements_layout(layout, name):
   return elements
 
 
-def bindtag_for_object(object_):
+def bindtag_for_object(obj):
   # this is prefixed to ensure the string doesn't start with a period (.) character
   # which would indicate this is a widget, not a bindtag
-  return ''.join(('bindtag', repr(id(object_))))
+  return ''.join(('bindtag', repr(id(obj))))
 
 
-def get_variables_from_attrs(object_):
+def get_variables_from_attrs(attrs):
   # this prevents Tkinter from popping an empty window if we haven't created the root window yet
   get_root_window()
   
   variable = None
   variables = {}
   
-  for key, value in vars(object_).items():
+  for key, value in vars(attrs).items():
     for object_type, variable_type in VARIABLE_TYPES.items():
       if isinstance(value, object_type):
         variable = variable_type()
@@ -1365,13 +1365,22 @@ def get_variables_from_attrs(object_):
   return variables
 
 
-def set_attrs_to_variables(variables, object_):
+def copy_attrs_to_variables(variables, attrs):
   for key, value in variables.items():
     if isinstance(value, tuple(VARIABLE_TYPES.values())):
-      setattr(object_, key, value.get())
+      value.set(getattr(attrs, key))
       continue
     
-    setattr(object_, key, value)
+    variables[key] = getattr(attrs, key)
+
+
+def set_attrs_to_variables(variables, attrs):
+  for key, value in variables.items():
+    if isinstance(value, tuple(VARIABLE_TYPES.values())):
+      setattr(attrs, key, value.get())
+      continue
+    
+    setattr(attrs, key, value)
 
 
 def _style():

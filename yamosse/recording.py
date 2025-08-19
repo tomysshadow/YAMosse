@@ -19,12 +19,11 @@ LINE = '#' * 80
 VOLUME_SPEC = '{volume:>4.0%}'
 
 class Recording:
-  def __init__(self, subsystem, options, stop=None):
+  def __init__(self, subsystem, options, start=None, stop=None):
     self._subsystem = subsystem
-    
-    self._options_lock = Lock()
     self._options = options
     
+    self._start = Lock() if start is None else start
     self._stop = Event() if stop is None else stop
     
     self._volume = 0.0
@@ -32,16 +31,18 @@ class Recording:
     self.save = True
   
   def thread(self):
-    with self._options_lock:
-      import numpy as np # Make sure NumPy is loaded before it is used in the callback
-      
-      input_devices, input_default_name = Recording.input_devices()
-      
+    import numpy as np # Make sure NumPy is loaded before it is used in the callback
+    
+    with self._start:
       options = self._options
       input_device = options.input_device
       
+      input_devices, input_default_name = Recording.input_devices()
+      
       try: device = input_devices[input_device]
-      except KeyError: device = input_devices[input_default_name]
+      except KeyError:
+        options.input_device = input_default_name
+        device = input_devices[input_default_name]
       
       volume = 0.0
       volume_str = VOLUME_SPEC.format(volume=volume)
@@ -136,8 +137,7 @@ class Recording:
     return self._volume
   
   def options(self):
-    with self._options_lock:
-      return self._options
+    return self._options
   
   @classmethod
   @staticmethod

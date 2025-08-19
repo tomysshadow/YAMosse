@@ -28,17 +28,17 @@ def subsystem(window, title, variables):
     def confirm(self, message, *args, **kwargs):
       pass
     
-    def variables_from_attrs(self, object_):
+    def variables_from_attrs(self, attrs):
       pass
     
-    def attrs_to_variables(self, object_):
+    def attrs_to_variables(self, attrs):
       pass
     
-    def get_variable_or_attr(self, object_, key):
-      return getattr(object_, key)
+    def get_variable_or_attr(self, attrs, key):
+      return getattr(attrs, key)
     
-    def set_variable_and_attr(self, object_, key, value):
-      setattr(object_, key, value)
+    def set_variable_and_attr(self, attrs, key, value):
+      setattr(attrs, key, value)
     
     def quit(self):
       pass
@@ -82,17 +82,20 @@ def subsystem(window, title, variables):
         default=default
       )
     
-    def variables_from_attrs(self, object_):
-      self.variables = gui.get_variables_from_attrs(object_)
+    def variables_from_attrs(self, attrs):
+      self.variables = gui.get_variables_from_attrs(attrs)
     
-    def attrs_to_variables(self, object_):
-      gui.set_attrs_to_variables(self.variables, object_)
+    def attrs_to_variables(self, attrs):
+      # we don't expose copy_attrs_to_variables which should only be used by the GUI
+      # because it does not handle for the scenario where
+      # attrs has a different variable type than the existing variable
+      gui.set_attrs_to_variables(self.variables, attrs)
     
-    def get_variable_or_attr(self, object_, key):
+    def get_variable_or_attr(self, attrs, key):
       # it is expected this function will not be called from the GUI thread
       # (because otherwise, you'd just get the variable directly)
       # so here we automate getting the variable on the other thread n' waiting...
-      value = super().get_variable_or_attr(object_, key)
+      value = super().get_variable_or_attr(attrs, key)
       event = Event()
       
       def callback():
@@ -106,8 +109,8 @@ def subsystem(window, title, variables):
       
       return value
     
-    def set_variable_and_attr(self, object_, key, value):
-      super().set_variable_and_attr(object_, key, value)
+    def set_variable_and_attr(self, attrs, key, value):
+      super().set_variable_and_attr(attrs, key, value)
       event = Event()
       
       def callback():

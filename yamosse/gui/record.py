@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from os import fsencode as fsenc
-from threading import Event
+from threading import Lock, Event
 
 from .. import gui
 from . import progressbar as gui_progressbar
@@ -34,6 +34,7 @@ def make_record(frame, variables, record):
   record_image = photo_images[fsenc('record.gif')]
   stop_image = photo_images[fsenc('stop.gif')]
   
+  start = Lock()
   stop = Event()
   recording = None
   
@@ -99,8 +100,13 @@ def make_record(frame, variables, record):
     
     recording_button.configure(text='Stop Recording', image=stop_image, command=stop_recording)
     input_devices_combobox['state'] = ('disabled',)
+    
     stop.clear()
-    recording = record(stop=stop)
+    
+    with start:
+      recording = record(start=start, stop=stop)
+      gui.set_attrs_to_variables(variables, recording.options())
+    
     show_volume()
   
   def stop_recording(e=None):
@@ -109,9 +115,13 @@ def make_record(frame, variables, record):
     if not recording: return
     
     hide_volume()
+    
     stop.set()
-    variables['input'].set(recording.options().input)
-    recording = None
+    
+    with start:
+      gui.copy_attrs_to_variables(variables, recording.options())
+      recording = None
+    
     input_devices_combobox['state'] = ('readonly',)
     recording_button.configure(text='Start Recording', image=record_image, command=start_recording)
   
