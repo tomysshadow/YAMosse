@@ -36,6 +36,12 @@ However, installing the `tensorflow-hub` package *will also update your TensorFl
 
 After using Git to clone the YAMosse repository, run a submodule update. The submodule update will clone the [TensorFlow Model Garden](https://github.com/tensorflow/models/) repository. Then you can run YAMosse and it will be able to load the YAMNet model from that repository. The weights file, which is not included in the TensorFlow Model Garden, will be downloaded separately the first time you perform a YAMScan.
 
+## Optional: Recording
+
+YAMosse has an optional feature that allows you to record sounds from an input device such as your microphone, directly within the application. To enable this feature, run the command `pip install sounddevice --user` in a command prompt. If you are on Linux, you will also need to manually install PortAudio.
+
+If you omit the `--user` argument, the [`sounddevice`](https://python-sounddevice.readthedocs.io/) package will be installed for all users, but this will require sufficient privileges. 
+
 # Usage
 
 To run YAMosse in a window, open the `yamosse_window.pyw` file by double clicking on it. Alternatively, you can run the command `pythonw -m yamosse` in a command prompt.
@@ -59,6 +65,7 @@ If the results are not satisfactory, you can tweak some more advanced options on
 YAMosse also has a command line interface. If any of the command line arguments are specified, the command line interface will be used instead of the GUI.
 
  - `-rd` or `--restore_defaults`: restores the defaults.
+ - `-r` or `--record`: records a new sound.
  - `-ip import_preset_file_name` or `--import-preset import_preset_file_name`: imports a preset file (in JSON format.)
  - `-ep export_preset_file_name` or `--export-preset export_preset_file_name`: exports a preset file (in JSON format.)
  - `-y output_file_name` or `--yamscan output_file_name`: performs a YAMScan.
@@ -83,6 +90,7 @@ except yamosse.subsystem.SubsystemError as ex:
 All of the keyword arguments are optional. If no keyword arguments are specified, calling the `yamosse` function will open the GUI. If any keyword arguments are specified, they will behave the same as the command line interface.
 
  - `restore_defaults`: True or False. If True, restores the defaults.
+ - `record`: True or False. If True, records a new sound.
  - `import_preset_file_name`: A string containing the file name to import a preset from (in JSON format.)
  - `export_preset_file_name`: A string containing the file name to export a preset to (in JSON format.)
  - `output_file_name`: A string containing the output file name for a YAMScan.
@@ -101,6 +109,10 @@ To scan the audio from a video file with YAMosse, you first need to convert it t
 ## When scanning MP3s, sometimes there are a lot of timestamps past the end of the file. Why?
 
 This is due to a bug in libsoundfile where it misreports the length of MP3s that have album art in them. It is a problem with the `soundfile` package and cannot be fixed by YAMosse. For now, you can use an ID3 editor like [The GodFather](https://www.jtclipper.eu/thegodfather/) to remove the album art from your MP3s before scanning them.
+
+## Can YAMosse scan for custom sounds? Is it possible to add more sound classes?
+
+No. YAMosse is only able to scan for the 521 classes available in YAMNet, the full list of which can be found [on their repo.](https://github.com/tensorflow/models/blob/master/research/audioset/yamnet/yamnet_class_map.csv)
 
 ## Can YAMosse identify words and phrases?
 
@@ -156,6 +168,10 @@ To use GPU Acceleration, you will need to [install NVIDIA CUDA Toolkit and cuDNN
 I have tested and confirmed that YAMosse is compatible with TensorFlow 2.8.0 and Keras 2.8.0, which will work for this purpose if you want to avoid setting up virtualization, though do note that in this case you will need to install the legacy `keras` package rather than `tf-keras`.
 
 You will know when GPU Acceleration is enabled and working correctly because "GPU Acceleration Enabled" will appear in the Log textbox whenever you perform a YAMScan. If you still can't get GPU Acceleration to work, try running YAMosse with a console by opening `yamosse_console.py`. Then you will be able to see TensorFlow's more verbose error logs, which could reveal the problem.
+
+## Can I change the sound quality of recordings?
+
+The recording feature of YAMosse records sounds in mono at 16000 Hz. This is because it is the sound format that the YAMNet model expects - so any sound at a different quality is resampled as part of the scanning process. In other words, the recording feature is intended for recording in the most optimal format for scans. If you would like to record in a different format, please use a different sound recording application.
 
 ## What does Calibration do?
 
