@@ -114,7 +114,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   reset_button['command'] = reset
 
 
-def make_calibrate(frame, variables, attached):
+def make_calibrate(frame, variables, class_names, attached):
   window = frame.master
   parent = window.master
   
@@ -135,7 +135,7 @@ def make_calibrate(frame, variables, attached):
   
   calibration_variable += (
     [DEFAULT_SCALE_VALUE]
-    * (len(attached) - len(calibration_variable))
+    * (len(class_names) - len(calibration_variable))
   )
   
   scales = {}

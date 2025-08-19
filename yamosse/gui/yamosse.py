@@ -132,6 +132,7 @@ def make_classes(frame, variables, class_names):
     command=lambda: gui.gui(
       gui_calibrate.make_calibrate,
       variables,
+      class_names,
       attached,
       child=True
     )
@@ -161,8 +162,7 @@ def make_classes(frame, variables, class_names):
   def attach():
     nonlocal attached
     
-    attached.clear()
-    attached |= {int(c): treeview.item(c, 'values') for c in treeview.get_children(item=ATTACHED)}
+    attached = {int(c): treeview.item(c, 'values') for c in treeview.get_children(item=ATTACHED)}
   
   treeview.bind('<<SortedTreeviewShown>>', lambda e: attach())
   
