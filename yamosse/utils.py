@@ -40,6 +40,10 @@ def str_ensureprefix(s, prefix):
   return ''.join((prefix, s.removeprefix(prefix)))
 
 
+def str_ensuresuffix(s, suffix):
+  return ''.join((s.removesuffix(suffix), suffix))
+
+
 def dict_peekitem(d, *args, **kwargs):
   return next(reversed(d.items()), *args, **kwargs)
 

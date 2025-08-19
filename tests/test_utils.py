@@ -87,6 +87,15 @@ class TestUtils(unittest.TestCase):
   def test_str_ensureprefix_multiple(self):
     self.assertEqual(utils.str_ensureprefix('..abc', '.'), '..abc')
   
+  def test_str_ensuresuffix(self):
+    self.assertEqual(utils.str_ensuresuffix('abc', '.'), 'abc.')
+  
+  def test_str_ensuresuffix_single(self):
+    self.assertEqual(utils.str_ensuresuffix('abc.', '.'), 'abc.')
+  
+  def test_str_ensuresuffix_multiple(self):
+    self.assertEqual(utils.str_ensuresuffix('abc..', '.'), 'abc..')
+  
   def test_dict_peekitem(self):
     d = {}
     d[0] = 'a'
