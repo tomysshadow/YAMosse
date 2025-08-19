@@ -158,13 +158,13 @@ def make_classes(frame, variables, class_names):
   
   treeview = treeview_widgets[1][0]
   
-  def sorted_treeview_shown(e):
+  def attach():
     nonlocal attached
     
     attached.clear()
     attached |= {int(c): treeview.item(c, 'values') for c in treeview.get_children(item=ATTACHED)}
   
-  treeview.bind('<<SortedTreeviewShown>>', sorted_treeview_shown)
+  treeview.bind('<<SortedTreeviewShown>>', lambda e: attach())
   
   def find_validatecommand(P):
     erase_button['state'] = tk.NORMAL if P else tk.DISABLED
@@ -184,6 +184,7 @@ def make_classes(frame, variables, class_names):
       show |= found
     
     if show: treeview.event_generate('<<SortedTreeviewShow>>')
+    else: attach()
     return True
   
   find_entry['validatecommand'] = (find_entry.register(find_validatecommand), '%P')
