@@ -109,8 +109,9 @@ def make_classes(frame, variables, class_names):
   ATTACHED = ''
   DETACHED = 'detached'
   
-  items = yamosse_utils.dict_enumerate(gui.values_treeview_items(enumerate(class_names, start=1)))
-  attached = {cid: item['values'] for cid, item in items.items()}
+  items = yamosse_utils.dict_enumerate(
+    gui.values_treeview_items(enumerate(class_names, start=1))
+  )
   
   treeview_widgets = gui.make_treeview(
     frame,
@@ -121,6 +122,8 @@ def make_classes(frame, variables, class_names):
   )
   
   buttons_frame = treeview_widgets[2][0]
+  
+  attached = {}
   
   calibrate_button = ttk.Button(
     buttons_frame,
@@ -155,16 +158,22 @@ def make_classes(frame, variables, class_names):
   
   treeview = treeview_widgets[1][0]
   
+  def sorted_treeview_shown(e):
+    nonlocal attached
+    
+    attached.clear()
+    attached |= {int(c): treeview.item(c, 'values') for c in treeview.get_children(item=ATTACHED)}
+  
+  treeview.bind('<<SortedTreeviewShown>>', sorted_treeview_shown)
+  
   def find_validatecommand(P):
     erase_button['state'] = tk.NORMAL if P else tk.DISABLED
     
     P = P.casefold()
-    attached.clear()
     show = False
     
     for cid, item in items.items():
-      values = item['values']
-      found = any(P in str(value).casefold() for value in values)
+      found = any(P in str(value).casefold() for value in item['values'])
       
       treeview.move(
         cid,
@@ -172,9 +181,7 @@ def make_classes(frame, variables, class_names):
         cid
       )
       
-      if found:
-        attached[cid] = values
-        show = True
+      show |= found
     
     if show: treeview.event_generate('<<SortedTreeviewShow>>')
     return True

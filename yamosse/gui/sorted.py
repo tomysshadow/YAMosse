@@ -82,5 +82,7 @@ def treeview_sorted(treeview):
         image=image,
         command=lambda: show(cid=cid if reverse else None, reverse=reverse)
       )
+    
+    treeview.event_generate('<<SortedTreeviewShown>>')
   
   show()
