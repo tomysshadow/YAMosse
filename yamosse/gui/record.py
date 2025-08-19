@@ -78,20 +78,26 @@ def make_record(frame, variables, record):
     values=list(input_devices.keys()), width=72, state=('readonly',))[1]
   
   def show_volume():
-    nonlocal volume_after
-    
-    recording.heartbeat()
+    gui.set_attrs_to_variables(variables, recording.options)
     
     volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
-    volume_after = volume_frame.after(volume_after_ms, show_volume)
+    start_volume()
   
   def hide_volume():
-    nonlocal volume_after
-    
-    recording.heartbeat()
+    gui.set_attrs_to_variables(variables, recording.options)
     
     volume_variable.set(0)
+  
+  def start_volume():
+    nonlocal volume_after
+    
+    volume_after = volume_frame.after(volume_after_ms, show_volume)
+  
+  def stop_volume():
+    nonlocal volume_after
+    
     volume_frame.after_cancel(volume_after)
+    hide_volume()
   
   def start_recording(e=None):
     nonlocal recording
@@ -107,14 +113,14 @@ def make_record(frame, variables, record):
       recording = record(start=start, stop=stop)
       gui.set_attrs_to_variables(variables, recording.options)
     
-    show_volume()
+    start_volume()
   
   def stop_recording(e=None):
     nonlocal recording
     
     if not recording: return
     
-    hide_volume()
+    stop_volume()
     
     stop.set()
     

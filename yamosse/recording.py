@@ -19,10 +19,8 @@ LINE = '#' * 80
 VOLUME_SPEC = '{volume:>4.0%}'
 
 class Recording:
-  def __init__(self, subsystem, options, start=None, stop=None):
+  def __init__(self, options, start=None, stop=None):
     self.save = True
-    
-    self.subsystem = subsystem
     self.options = options
     
     self._start = Lock() if start is None else start
@@ -131,9 +129,6 @@ class Recording:
       print('\nRecording finished:', shlex.quote(name), end='\n\n')
       
       options.input = shlex.join(shlex.split(options.input) + [name])
-  
-  def heartbeat(self):
-    self.subsystem.attrs_to_variables(self.options)
   
   def volume(self):
     return self._volume

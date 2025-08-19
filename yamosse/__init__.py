@@ -88,7 +88,7 @@ def _mainloop(**kwargs):
     # so we only import it if we are going to attempt recording
     import yamosse.recording as yamosse_recording
     
-    recording = yamosse_recording.Recording(subsystem, options, *args, **kwargs)
+    recording = yamosse_recording.Recording(options, *args, **kwargs)
     subsystem.start(recording.thread)
     return recording
   
