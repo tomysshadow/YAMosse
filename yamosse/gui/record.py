@@ -81,7 +81,7 @@ def make_record(frame, variables, record):
     
     recording.heartbeat()
     
-    volume_variable.set(int(recording.get_volume() * VOLUME_MAXIMUM))
+    volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
     volume_after = volume_frame.after(volume_after_ms, show_volume)
   
   def hide_volume():
@@ -110,7 +110,7 @@ def make_record(frame, variables, record):
     
     hide_volume()
     stop.set()
-    variables['input'].set(recording.get_options().input)
+    variables['input'].set(recording.options().input)
     recording = None
     input_devices_combobox['state'] = ('readonly',)
     recording_button.configure(text='Start Recording', image=record_image, command=start_recording)

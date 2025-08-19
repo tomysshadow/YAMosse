@@ -128,10 +128,10 @@ class Recording:
   def heartbeat(self):
     self._subsystem.attrs_to_variables(self._options)
   
-  def get_volume(self):
+  def volume(self):
     return self._volume
   
-  def get_options(self):
+  def options(self):
     with self._options_lock:
       return self._options
   
