@@ -91,9 +91,8 @@ def make_input(frame, variables, filetypes, record):
     command=record_window.deiconify
   )
   
-  try: import yamosse.recording as yamosse_recording
-  except ImportError: pass
-  else: record_button.pack(side=tk.LEFT)
+  if record_ask_save:
+    record_button.pack(side=tk.LEFT)
   
   recursive_checkbutton = ttk.Checkbutton(buttons_frame,
     text='Recursive', variable=variables['input_recursive'])
@@ -709,5 +708,7 @@ def make_yamosse(frame, title, options_variables,
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   make_footer(footer_frame, yamscan, restore_defaults)
   
-  window.protocol('WM_DELETE_WINDOW', lambda: record_ask_save(window.destroy))
+  if record_ask_save:
+    window.protocol('WM_DELETE_WINDOW', lambda: record_ask_save(window.destroy))
+  
   return record_ask_save

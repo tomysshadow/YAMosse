@@ -3,6 +3,9 @@ from tkinter import ttk, messagebox
 from os import fsencode as fsenc
 from threading import Lock, Event
 
+try: import yamosse.recording as yamosse_recording
+except ImportError: yamosse_recording = None
+
 from .. import gui
 from . import progressbar as gui_progressbar
 
@@ -15,13 +18,11 @@ ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 def make_record(frame, variables, record):
   VOLUME_MAXIMUM = 100
   
-  # this is an optional module
-  # so we only import it if we are going to attempt recording
-  import yamosse.recording as yamosse_recording
-  
   window = frame.master
   window.withdraw()
   gui.customize_window(window, TITLE, resizable=RESIZABLE)
+  
+  if not yamosse_recording: return None
   
   frame.columnconfigure(0, weight=1) # one column layout
   
