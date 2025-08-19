@@ -267,7 +267,7 @@ def lookup_style_widget(widget, option, element='', state=None, **kwargs):
     style = '.'.join((style, element))
   
   try:
-    if not state:
+    if state is None:
       state = widget.state()
   except tk.TclError: pass
   
