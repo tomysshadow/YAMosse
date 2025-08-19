@@ -59,7 +59,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   defaults = {}
   oldvalues = {}
   
-  for scale in scales:
+  for scale in scales.values():
     defaults[scale] = DEFAULT_SCALE_VALUE
     oldvalues[scale] = scale.get()
     
@@ -114,7 +114,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   reset_button['command'] = reset
 
 
-def make_calibrate(frame, variables, class_names):
+def make_calibrate(frame, variables, attached):
   window = frame.master
   parent = window.master
   
@@ -135,23 +135,24 @@ def make_calibrate(frame, variables, class_names):
   
   calibration_variable += (
     [DEFAULT_SCALE_VALUE]
-    * (len(class_names) - len(calibration_variable))
+    * (len(attached) - len(calibration_variable))
   )
   
-  number = 0
-  scales = []
+  scales = {}
   
-  for class_name, calibration in zip(class_names, calibration_variable):
+  for cid, values in attached.items():
+    number, class_name = values
+    
     scale_frame = ttk.Frame(calibration_text)
     
     scale = gui.make_scale(
       scale_frame,
-      name='%d. %s' % (number := number + 1, class_name),
+      name='%d. %s' % (number, class_name),
       to=200
     )[1]
     
-    scale.set(int(calibration))
-    scales.append(scale)
+    scale.set(int(calibration_variable[cid]))
+    scales[cid] = scale
     
     scale_frame.columnconfigure(0, weight=2, uniform='class_column')
     scale_frame.columnconfigure(1, weight=1, uniform='class_column')
@@ -162,7 +163,9 @@ def make_calibrate(frame, variables, class_names):
   footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)
   
   def ok():
-    variables['calibration'] = [int(s.get()) for s in scales]
+    for cid in attached:
+      calibration_variable[cid] = int(scales[cid].get())
+    
     gui.release_modal_window(window)
   
   undooptions, reset_button = make_footer(

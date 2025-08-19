@@ -111,6 +111,7 @@ def make_classes(frame, variables, class_names):
   DETACHED = 'detached'
   
   items = yamosse_utils.dict_enumerate(gui.values_treeview_items(enumerate(class_names, start=1)))
+  attached = {cid: item['values'] for cid, item in items.items()}
   
   treeview_widgets = gui.make_treeview(
     frame,
@@ -129,7 +130,7 @@ def make_classes(frame, variables, class_names):
     command=lambda: gui.gui(
       gui_calibrate.make_calibrate,
       variables,
-      class_names,
+      attached,
       child=True
     )
   )
@@ -159,18 +160,22 @@ def make_classes(frame, variables, class_names):
     erase_button['state'] = tk.NORMAL if P else tk.DISABLED
     
     P = P.casefold()
+    attached.clear()
     show = False
     
     for cid, item in items.items():
-      attached = any(P in str(value).casefold() for value in item['values'])
+      values = item['values']
+      found = any(P in str(value).casefold() for value in values)
       
       treeview.move(
         cid,
-        ATTACHED if attached else DETACHED,
+        ATTACHED if found else DETACHED,
         cid
       )
       
-      show |= attached
+      if found:
+        attached[cid] = values
+        show = True
     
     if show: treeview.event_generate('<<SortedTreeviewShow>>')
     return True
