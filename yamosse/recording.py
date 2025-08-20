@@ -1,5 +1,5 @@
 from os import mkdir, unlink
-import shlex
+from shlex import quote
 from threading import Lock, Event
 from queue import Queue
 from tempfile import NamedTemporaryFile
@@ -125,10 +125,14 @@ class Recording:
       # because it might silence an exception
       if not save: return
       
-      name = tmp.name
-      print('\nRecording finished:', shlex.quote(name), end='\n\n')
+      name = quote(tmp.name)
+      print('\nRecording finished:', name, end='\n\n')
       
-      options.input = shlex.join(shlex.split(options.input) + [name])
+      # a previous iteration of this appended the name instead of replacing it
+      # but it was broken because the input field can contain folder names
+      # in which case, there is only supposed to be one
+      # so now we just replace it
+      options.input = name
   
   def volume(self):
     return self._volume
