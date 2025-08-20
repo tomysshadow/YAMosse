@@ -223,15 +223,15 @@ def bind_truekey_widget(widget, class_='', keysym='',
   
   if keysym: keysym = '-%s' % keysym
   
-  KEYS = {
-    '<KeyPress%s>' % keysym: call_press,
-    '<KeyRelease%s>' % keysym: call_release
-  }
+  keys = (
+    ('<KeyPress%s>' % keysym, call_press),
+    ('<KeyRelease%s>' % keysym, call_release)
+  )
   
   if class_:
-    return [widget.bind_class(class_, s, c, add) for s, c in KEYS.items()]
+    return [widget.bind_class(class_, s, c, add) for s, c in keys]
   
-  return [widget.bind(s, c, add) for s, c in KEYS.items()]
+  return [widget.bind(s, c, add) for s, c in keys]
 
 
 def padding4_widget(widget, padding):
