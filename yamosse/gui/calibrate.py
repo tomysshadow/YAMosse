@@ -35,7 +35,7 @@ def make_footer(frame, ok, cancel):
   return undooptions, reset_button
 
 
-def _undoable_scales(scales, text, reset_button, undooptions):
+def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   # There are a couple known issues with this:
   # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
   #   while still editing the current one. The ideal is that undo is disabled
@@ -54,6 +54,8 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   # exceptions to the rule that make things difficult. I did think of using variable tracing,
   # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
   # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
+  NAMES = ('<ButtonRelease>', '<FocusOut>')
+  
   bindtag = gui.bindtag(text)
   
   defaults = {}
@@ -67,6 +69,8 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
+  mastervalues = oldvalues.copy()
+  
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
     text.see(widget.master)
@@ -74,6 +78,7 @@ def _undoable_scales(scales, text, reset_button, undooptions):
     
     widget.set(newvalue)
     oldvalues[widget] = newvalue
+    mastervalues[widget] = newvalue
   
   def data(e):
     widget = e.widget
@@ -90,20 +95,65 @@ def _undoable_scales(scales, text, reset_button, undooptions):
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
   gui.bind_truekey_widget(text, class_=bindtag, release=data)
-  text.bind_class(bindtag, '<ButtonRelease>', data)
-  text.bind_class(bindtag, '<FocusOut>', data)
+  
+  for name in NAMES:
+    text.bind_class(bindtag, name, data)
+  
+  def master():
+    variable = tk.Variable(name=str(master_scale['variable']))
+    
+    def variable_write(*args, **kwargs):
+      for scale, value in mastervalues.items():
+        scale.set(value * (variable.get() / 100.0))
+    
+    variable.trace('w', variable_write)
+    
+    oldvalue = master_scale.get()
+    
+    def revert(newvalues, newvalue):
+      nonlocal oldvalues
+      nonlocal oldvalue
+      
+      master_scale.set(newvalue)
+      oldvalue = newvalue
+      
+      for scale, newvalue in newvalues.items():
+        scale.set(newvalue)
+      
+      oldvalues = newvalues.copy()
+    
+    def data(e):
+      nonlocal oldvalue
+      
+      newvalue = master_scale.get()
+      if oldvalue == newvalue: return
+      
+      print(f'Undo scale save {master_scale} {newvalue} {oldvalue}')
+      
+      newvalues = {scale: scale.get() for scale in oldvalues.keys()}
+      undooptions((revert, oldvalues.copy(), oldvalue), (revert, newvalues, newvalue))
+      oldvalue = newvalue
+    
+    gui.bind_truekey_widget(master_scale, release=data)
+    
+    for name in NAMES:
+      master_scale.bind(name, data)
+  
+  master()
   
   def reset():
     # it's okay to use a dictionary as a default here
     # because we won't ever be mutating it
     def revert(newvalues=defaults):
       nonlocal oldvalues
+      nonlocal mastervalues
       
       for scale, newvalue in newvalues.items():
         scale.set(newvalue)
       
       # we must copy this here so we don't mutate a redo state
       oldvalues = newvalues.copy()
+      mastervalues = newvalues.copy()
     
     # the oldvalues must be copied when turned into an undooption
     # because they get changed as the scales are set
@@ -115,6 +165,8 @@ def _undoable_scales(scales, text, reset_button, undooptions):
 
 
 def make_calibrate(frame, variables, class_names, attached):
+  BORDERWIDTH = 4
+  
   window = frame.master
   parent = window.master
   
@@ -124,8 +176,22 @@ def make_calibrate(frame, variables, class_names, attached):
   frame.rowconfigure(0, weight=1) # make calibration frame vertically resizable
   frame.columnconfigure(0, weight=1) # make calibration frame horizontally resizable
   
-  calibration_frame = ttk.Frame(frame, relief=tk.SUNKEN, borderwidth=4)
-  calibration_frame.grid(row=0, sticky=tk.NSEW)
+  scale_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
+  scale_frame.grid(row=0, sticky=tk.NSEW)
+  
+  master_scale = gui.make_scale(
+    scale_frame,
+    name='Master',
+    to=200
+  )[1]
+  
+  master_scale.set(DEFAULT_SCALE_VALUE)
+  
+  scale_frame.columnconfigure(0, weight=2, uniform='class_column')
+  scale_frame.columnconfigure(1, weight=1, uniform='class_column')
+  
+  calibration_frame = ttk.Frame(frame, relief=tk.SUNKEN, borderwidth=BORDERWIDTH)
+  calibration_frame.grid(row=1, sticky=tk.NSEW)
   
   calibration_text = gui.make_text(calibration_frame, font=('TkDefaultFont', 24))[1][0]
   gui_embed.text_embed(calibration_text)
@@ -160,7 +226,7 @@ def make_calibrate(frame, variables, class_names, attached):
     gui_embed.insert_embed(calibration_text, scale_frame)
   
   footer_frame = ttk.Frame(frame)
-  footer_frame.grid(row=1, sticky=tk.EW, pady=gui.PADY_N)
+  footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   
   def ok():
     for cid in attached:
@@ -174,6 +240,6 @@ def make_calibrate(frame, variables, class_names, attached):
     lambda: gui.release_modal_window(window)
   )
   
-  _undoable_scales(scales, calibration_text, reset_button, undooptions)
+  _undoable_scales(scales, master_scale, calibration_text, reset_button, undooptions)
   
   gui.set_modal_window(window)

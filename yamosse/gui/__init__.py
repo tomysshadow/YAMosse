@@ -507,25 +507,35 @@ def make_combobox(frame, name='', state=None, **kwargs):
   return make_name(frame, name), combobox
 
 
-def make_scale(frame, name='', variable=None,
+def make_scale(frame, name='',
   from_=0, to=100, **kwargs):
-  if not variable: variable = tk.IntVar()
-  
   frame.rowconfigure(0, weight=1) # make scale vertically centered
   frame.columnconfigure(1, weight=1) # make scale horizontally resizable
   
   percent_label = make_percent(frame)
   
   # unused text argument is just so this will work as scale command
-  # note that here we use the scale command instead of a trace callback on the variable
-  # because this also sets the variable, so it would be recursive otherwise
-  def show(text=''):
-    value = variable.get()
-    variable.set(value) # increment in steps
-    text = '%d%%' % value
-    percent_label['text'] = text
+  # we're using the command here so that it'll continue to work
+  # even if the variable the scale is using changes
+  showing = False
+  scale = None
   
-  scale = ttk.Scale(frame, variable=variable,
+  def show(text=''):
+    nonlocal showing
+    
+    if showing: return
+    
+    showing = True
+    
+    try:
+      value = scale.get()
+      scale.set(int(value)) # increment in steps
+      text = '%d%%' % value
+      percent_label['text'] = text
+    finally:
+      showing = False
+  
+  scale = ttk.Scale(frame,
     from_=from_, to=to, orient=tk.HORIZONTAL, command=show, **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
