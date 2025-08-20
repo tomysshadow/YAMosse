@@ -229,9 +229,9 @@ def bind_truekey_widget(widget, class_='', keysym='',
   )
   
   if class_:
-    return [widget.bind_class(class_, s, c, add) for s, c in keys]
+    return [widget.bind_class(class_, s, c, add=add) for s, c in keys]
   
-  return [widget.bind(s, c, add) for s, c in keys]
+  return [widget.bind(s, c, add=add) for s, c in keys]
 
 
 def padding4_widget(widget, padding):
