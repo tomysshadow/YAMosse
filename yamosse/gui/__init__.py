@@ -169,6 +169,10 @@ def test_widget(widget):
   return True
 
 
+def variable_widget(widget):
+  return tk.Variable(name=str(widget['variable']))
+
+
 def after_invalidcommand_widget(widget, validate):
   # editing a variable from within an invalidcommand normally resets validate to none
   # this ensures it remains set to focusout

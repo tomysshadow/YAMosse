@@ -100,7 +100,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     text.bind_class(bindtag, name, data)
   
   def master():
-    variable = tk.Variable(name=str(master_scale['variable']))
+    variable = gui.variable_widget(master_scale)
     
     def variable_write(*args, **kwargs):
       for scale, value in mastervalues.items():
@@ -182,7 +182,8 @@ def make_calibrate(frame, variables, class_names, attached):
   master_scale = gui.make_scale(
     scale_frame,
     name='Master',
-    to=200
+    to=200,
+    variable=tk.IntVar()
   )[1]
   
   master_scale.set(DEFAULT_SCALE_VALUE)
