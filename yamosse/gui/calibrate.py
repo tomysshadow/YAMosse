@@ -147,7 +147,7 @@ def make_calibrate(frame, variables, class_names, attached):
     
     scale = gui.make_scale(
       scale_frame,
-      name='%d. %s' % (int(number), str(class_name)),
+      name='%d. %s' % (int(number), class_name),
       to=200
     )[1]
     
