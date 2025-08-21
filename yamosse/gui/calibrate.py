@@ -69,7 +69,13 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
-  mastervalues = oldvalues.copy()
+  master_oldvalues = oldvalues
+  
+  def mastervalue(widget, newvalue):
+    nonlocal master_oldvalues
+    
+    oldvalues[widget] = newvalue
+    master_oldvalues = oldvalues
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -77,8 +83,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     widget.focus_set()
     
     widget.set(newvalue)
-    oldvalues[widget] = newvalue
-    mastervalues[widget] = newvalue
+    mastervalue(widget, newvalue)
   
   def data(e):
     widget = e.widget
@@ -91,8 +96,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     print(f'Undo scale save {widget} {newvalue} {oldvalue}')
     
     undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
-    oldvalues[widget] = newvalue
-    mastervalues[widget] = newvalue
+    mastervalue(widget, newvalue)
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
   gui.bind_truekey_widget(text, class_=bindtag, release=data)
@@ -104,36 +108,42 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     variable = gui.variable_widget(master_scale)
     
     def variable_write(*args, **kwargs):
-      for scale, value in mastervalues.items():
+      for scale, value in master_oldvalues.items():
         scale.set(value * (variable.get() / 100.0))
     
     variable.trace('w', variable_write)
     
     oldvalue = master_scale.get()
     
-    def revert(newvalues, newvalue):
+    def revert(newvalues, master_newvalues, mastervalue):
       nonlocal oldvalues
       nonlocal oldvalue
       
-      master_scale.set(newvalue)
-      oldvalue = newvalue
+      master_scale.set(mastervalue)
+      oldvalue = mastervalue
       
-      for scale, newvalue in newvalues.items():
+      for scale, newvalue in master_newvalues.items():
         scale.set(newvalue)
       
       oldvalues = newvalues.copy()
+      master_oldvalues = master_newvalues.copy()
     
     def data(e):
       nonlocal oldvalue
+      nonlocal master_oldvalues
       
       newvalue = master_scale.get()
       if oldvalue == newvalue: return
       
       print(f'Undo scale save {master_scale} {newvalue} {oldvalue}')
       
-      newvalues = {scale: scale.get() for scale in oldvalues.keys()}
-      undooptions((revert, oldvalues.copy(), oldvalue), (revert, newvalues, newvalue))
+      master_newvalues = {scale: scale.get() for scale in oldvalues.keys()}
+      
+      undooptions((revert, oldvalues.copy(), master_oldvalues.copy(), oldvalue),
+        (revert, oldvalues.copy(), master_newvalues.copy(), newvalue))
+      
       oldvalue = newvalue
+      master_oldvalues = master_newvalues
     
     gui.bind_truekey_widget(master_scale, release=data)
     
@@ -141,28 +151,6 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       master_scale.bind(name, data)
   
   master()
-  
-  def reset():
-    # it's okay to use a dictionary as a default here
-    # because we won't ever be mutating it
-    def revert(newvalues=defaults):
-      nonlocal oldvalues
-      nonlocal mastervalues
-      
-      for scale, newvalue in newvalues.items():
-        scale.set(newvalue)
-      
-      # we must copy this here so we don't mutate a redo state
-      oldvalues = newvalues.copy()
-      mastervalues = newvalues.copy()
-    
-    # the oldvalues must be copied when turned into an undooption
-    # because they get changed as the scales are set
-    # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
-    undooptions((revert, oldvalues.copy()), (revert,))
-    revert()
-  
-  reset_button['command'] = reset
 
 
 def make_calibrate(frame, variables, class_names, attached):
