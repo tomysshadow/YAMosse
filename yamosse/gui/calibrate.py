@@ -115,14 +115,14 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     
     master_variable.trace('w', variable_write)
     
-    oldvalue = master_scale.get()
+    oldvalue = master_variable.get()
     
     def revert(newvalue, newvalues, master_newvalues):
       nonlocal oldvalue
       nonlocal oldvalues
       nonlocal master_oldvalues
       
-      master_scale.set(newvalue)
+      master_variable.set(newvalue)
       oldvalue = newvalue
       
       for scale, value in master_newvalues.items():
@@ -135,7 +135,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       nonlocal oldvalue
       nonlocal oldvalues
       
-      newvalue = master_scale.get()
+      newvalue = master_variable.get()
       if oldvalue == newvalue: return
       
       print(f'Undo master scale save {master_scale} {newvalue} {oldvalue}')
