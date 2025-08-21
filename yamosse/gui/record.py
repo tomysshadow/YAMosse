@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from os import fsencode as fsenc
 from threading import Lock, Event
+from os import fsencode as fsenc
 
 try: import yamosse.recording as yamosse_recording
 except ImportError: yamosse_recording = None
@@ -14,10 +14,10 @@ RESIZABLE = False
 
 ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 
+VOLUME_MAXIMUM = 100
+
 
 def make_record(frame, variables, record):
-  VOLUME_MAXIMUM = 100
-  
   window = frame.master
   window.withdraw()
   gui.customize_window(window, TITLE, resizable=RESIZABLE)

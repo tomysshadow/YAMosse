@@ -1,9 +1,39 @@
 import tkinter as tk
 from tkinter import ttk
+from weakref import WeakKeyDictionary
 
 import yamosse.progress as yamosse_progress
 
 from .. import gui
+
+
+def _init_show_progressbar():
+  values = WeakKeyDictionary()
+  
+  def show_progressbar(widgets, variable):
+    name_frame, progressbar_taskbar, percent_label = widgets
+    progressbar, taskbar = progressbar_taskbar
+    
+    assert str(variable) == str(progressbar['variable']), 'variable mismatch'
+    
+    value = 0
+    
+    # only update the percent label in determinate mode
+    if _is_determinate_progressbar(progressbar):
+      value = variable.get()
+      
+      if taskbar:
+        taskbar.set_progress(value, int(progressbar['maximum']))
+      
+      values[progressbar] = value
+    else:
+      value = values.setdefault(progressbar, 0)
+    
+    percent_label['text'] = '%d%%' % value
+  
+  return show_progressbar
+
+show_progressbar = _init_show_progressbar()
 
 
 def _is_determinate_progressbar(progressbar):
@@ -11,7 +41,10 @@ def _is_determinate_progressbar(progressbar):
 
 
 def configure_progressbar(widgets, variable, type_):
-  progressbar, taskbar = widgets
+  progressbar, taskbar = widgets[1]
+  
+  assert str(variable) == str(progressbar['variable']), 'variable mismatch'
+  
   variable_set = False
   
   if type_ not in yamosse_progress.types:
@@ -47,7 +80,29 @@ def configure_progressbar(widgets, variable, type_):
   return variable_set
 
 
-def make_progressbar(frame, name='', variable=None,
+def trace_add_progressbar(widgets, variable):
+  progressbar = widgets[1][0]
+  
+  assert str(variable) == str(progressbar['variable']), 'variable mismatch'
+  
+  return variable.trace_add(
+    'write',
+    lambda *args, **kwargs: show_progressbar(widgets, variable)
+  )
+
+
+def trace_remove_progressbar(widgets, variable):
+  progressbar = widgets[1][0]
+  
+  assert str(variable) == str(progressbar['variable']), 'variable mismatch'
+  
+  variable.trace_remove(
+    'write',
+    cbname
+  )
+
+
+def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
   type_=yamosse_progress.NORMAL, parent=None, task=False, **kwargs):
   if not variable: variable = tk.IntVar()
   
@@ -57,7 +112,7 @@ def make_progressbar(frame, name='', variable=None,
   percent_label = gui.make_percent(frame)
   
   progressbar = ttk.Progressbar(frame, variable=variable,
-    mode='determinate', orient=tk.HORIZONTAL, **kwargs)
+    mode='determinate', orient=orient, **kwargs)
   
   progressbar.grid(row=0, column=1, sticky=tk.EW)
   
@@ -67,23 +122,10 @@ def make_progressbar(frame, name='', variable=None,
     if not parent: parent = frame.winfo_toplevel()
     taskbar = yamosse_progress.PyTaskbar.Progress(hwnd=yamosse_progress.hwnd(parent))
   
-  value = 0
+  widgets = (gui.make_name(frame, name), (progressbar, taskbar), percent_label)
+  trace_add_progressbar(widgets, variable)
   
-  def show(*args, **kwargs):
-    nonlocal value
-    
-    # only update the percent label in determinate mode
-    if _is_determinate_progressbar(progressbar):
-      value = variable.get()
-      
-      if taskbar:
-        taskbar.set_progress(value, int(progressbar['maximum']))
-    
-    text = '%d%%' % value
-    percent_label['text'] = text
+  if not configure_progressbar(widgets, variable, type_):
+    show_progressbar(widgets, variable)
   
-  variable.trace('w', show)
-  
-  widgets = (progressbar, taskbar)
-  if not configure_progressbar(widgets, variable, type_): show()
-  return gui.make_name(frame, name), widgets, percent_label
+  return widgets

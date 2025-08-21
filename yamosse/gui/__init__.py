@@ -230,6 +230,16 @@ def bind_truekey_widget(widget, class_='', keysym='',
   return [widget.bind(s, c, add=add) for s, c in keys]
 
 
+def grid_configure_size_widget(widget, configure, **kwargs):
+  CONFIGURE = {
+    'column': 0,
+    'row': 1
+  }
+  
+  getattr(widget, ''.join((configure, 'configure')))(
+    tuple(range(widget.grid_size()[CONFIGURE[configure]])), **kwargs)
+
+
 def padding4_widget(widget, padding):
   padding = yamosse_utils.try_split(padding)
   if not padding: return [0.0, 0.0, 0.0, 0.0]
@@ -303,12 +313,9 @@ def make_widgets(frame, make_widget, items=None,
   widgets = []
   if not items: return widgets
   
+  # float divide is used for padding in case it is not even
   last = len(items) - 1
-  
-  try: x, y, pad = ORIENTS[orient]
-  except KeyError: raise ValueError('orient must be in %r' % tuple(ORIENTS.keys()))
-  
-  # float divide is used here in case padding is not even
+  x, y, pad = ORIENTS[orient]
   padding = padding / 2 if last != 0 else 0
   
   # first widget
@@ -963,12 +970,9 @@ def make_filedialog(frame, name='',
   buttons = []
   
   for ask in asks:
-    try: text = ASKS_ALL[ask]
-    except KeyError: raise ValueError('ask must be in %r' % tuple(ASKS_ALL.keys()))
-    
     button = ttk.Button(
       buttons_frame,
-      text=text,
+      text=ASKS_ALL[ask],
       command=lambda ask=ask: show(ask)
     )
     

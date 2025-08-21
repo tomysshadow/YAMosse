@@ -160,7 +160,7 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
     type_=yamosse_progress.LOADING,
     parent=parent,
     task=True
-  )[1]
+  )
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
@@ -175,7 +175,10 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
     log_text.tag_add(tk.SEL, '1.0', tk.END)
   
   # auto focus the log text when user hits Ctrl + A so they can select and copy the contents
-  log_text.winfo_toplevel().bind('<Control-a>', select_all_log_text)
+  window.bind('<Control-a>', select_all_log_text)
+  
+  footer_frame = ttk.Frame(frame)
+  footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   
   footer_widgets = None
   
@@ -186,9 +189,6 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
       progressbar_widgets, progressbar_variable, yamosse_progress.RESET)
     
     gui.release_modal_window(window)
-  
-  footer_frame = ttk.Frame(frame)
-  footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   
   footer_widgets = make_footer(
     footer_frame,

@@ -91,6 +91,7 @@ def make_input(frame, variables, filetypes, record):
     command=record_window.deiconify
   )
   
+  # may be None if recording module is unavailable
   if record_ask_save:
     record_button.pack(side=tk.LEFT)
   
@@ -301,8 +302,9 @@ def make_presets(frame, import_, export):
   )
 
 
-def make_general(frame, variables, input_filetypes, class_names,
-  record, import_preset, export_preset):
+def make_general(frame, variables,
+  input_filetypes, record, class_names,
+  import_preset, export_preset):
   frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -489,9 +491,8 @@ def make_output_file_options(frame, variables):
   # this is only sticky to W so Help only appears when mousing over the checkbutton itself
   output_scores_checkbutton.grid(row=3, sticky=tk.W, pady=gui.PADY_QN)
   
-  frame_rows = frame.grid_size()[1]
-  frame.rowconfigure(tuple(range(frame_rows)), weight=1,
-    uniform='output_worker_options_row') # make the rows uniform
+  gui.grid_configure_size_widget(frame, 'row', weight=1,
+    uniform='output_file_worker_options_row') # make the rows uniform
   
   return (
     sort_by_frame, sort_reverse_checkbutton,
@@ -522,9 +523,8 @@ def make_worker_options(frame, variables):
   spacer_frame.grid(row=3, pady=gui.PADY_QN)
   make_spacer(spacer_frame)
   
-  frame_rows = frame.grid_size()[1]
-  frame.rowconfigure(tuple(range(frame_rows)), weight=1,
-    uniform='output_worker_options_row') # make the rows uniform
+  gui.grid_configure_size_widget(frame, 'row', weight=1,
+    uniform='output_file_worker_options_row') # make the rows uniform
   
   return memory_limit_frame, max_workers_frame, high_priority_checkbutton
 
@@ -642,15 +642,16 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
 
 
 def make_options(notebook, variables,
-  input_filetypes, class_names, weights_filetypes, tfhub_enabled,
-  record, import_preset, export_preset):
+  input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
+  import_preset, export_preset):
   notebook['style'] = 'Raised.TNotebook'
   
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
-  record_ask_save = make_general(general_frame, variables, input_filetypes, class_names,
-    record, import_preset, export_preset)
+  record_ask_save = make_general(general_frame, variables,
+    input_filetypes, record, class_names,
+    import_preset, export_preset)
   
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   
@@ -692,8 +693,8 @@ def make_footer(frame, yamscan, restore_defaults):
 
 
 def make_yamosse(frame, title, options_variables,
-  input_filetypes, class_names, weights_filetypes, tfhub_enabled,
-  record, import_preset, export_preset, yamscan, restore_defaults):
+  input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
+  import_preset, export_preset, yamscan, restore_defaults):
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
     iconphotos=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('emoji_u1f3a4')].values())
@@ -708,8 +709,8 @@ def make_yamosse(frame, title, options_variables,
   options_notebook = ttk.Notebook(frame)
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   record_ask_save = make_options(options_notebook, options_variables,
-    input_filetypes, class_names, weights_filetypes, tfhub_enabled,
-    record, import_preset, export_preset)
+    input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
+    import_preset, export_preset)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
