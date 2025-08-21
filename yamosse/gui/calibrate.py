@@ -152,6 +152,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       master_scale.bind(name, data)
   
   master()
+  
+  # TODO: add back reset code, just removed it so I could focus
 
 
 def make_calibrate(frame, variables, class_names, attached):
