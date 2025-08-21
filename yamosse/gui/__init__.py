@@ -169,6 +169,10 @@ def test_widget(widget):
   return True
 
 
+def match_variable_widget(widget, variable):
+  assert str(widget['variable']) == str(variable), 'variable mismatch'
+
+
 def after_invalidcommand_widget(widget, validate):
   # editing a variable from within an invalidcommand normally resets validate to none
   # this ensures it remains set to focusout

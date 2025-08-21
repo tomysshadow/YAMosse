@@ -162,6 +162,8 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
     task=True
   )
   
+  gui_progressbar.trace_add_progressbar(progressbar_widgets, progressbar_variable)
+  
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
   log_text = gui.make_text(log_labelframe, takefocus=True)[1][0]

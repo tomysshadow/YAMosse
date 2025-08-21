@@ -14,7 +14,7 @@ def _init_show_progressbar():
     name_frame, progressbar_taskbar, percent_label = widgets
     progressbar, taskbar = progressbar_taskbar
     
-    assert str(variable) == str(progressbar['variable']), 'variable mismatch'
+    gui.match_variable_widget(progressbar, variable)
     
     value = 0
     
@@ -40,10 +40,32 @@ def _is_determinate_progressbar(progressbar):
   return str(progressbar['mode']) == 'determinate'
 
 
+def trace_add_progressbar(widgets, variable):
+  progressbar = widgets[1][0]
+  
+  gui.match_variable_widget(progressbar, variable)
+  
+  return variable.trace_add(
+    'write',
+    lambda *args, **kwargs: show_progressbar(widgets, variable)
+  )
+
+
+def trace_remove_progressbar(widgets, variable):
+  progressbar = widgets[1][0]
+  
+  gui.match_variable_widget(progressbar, variable)
+  
+  variable.trace_remove(
+    'write',
+    cbname
+  )
+
+
 def configure_progressbar(widgets, variable, type_):
   progressbar, taskbar = widgets[1]
   
-  assert str(variable) == str(progressbar['variable']), 'variable mismatch'
+  gui.match_variable_widget(progressbar, variable)
   
   variable_set = False
   
@@ -80,31 +102,11 @@ def configure_progressbar(widgets, variable, type_):
   return variable_set
 
 
-def trace_add_progressbar(widgets, variable):
-  progressbar = widgets[1][0]
-  
-  assert str(variable) == str(progressbar['variable']), 'variable mismatch'
-  
-  return variable.trace_add(
-    'write',
-    lambda *args, **kwargs: show_progressbar(widgets, variable)
-  )
-
-
-def trace_remove_progressbar(widgets, variable):
-  progressbar = widgets[1][0]
-  
-  assert str(variable) == str(progressbar['variable']), 'variable mismatch'
-  
-  variable.trace_remove(
-    'write',
-    cbname
-  )
-
-
 def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
   type_=yamosse_progress.NORMAL, parent=None, task=False, **kwargs):
-  if not variable: variable = tk.IntVar()
+  trace = not variable
+  
+  if trace: variable = tk.IntVar()
   
   frame.rowconfigure(0, weight=1) # make progressbar vertically centered
   frame.columnconfigure(1, weight=1) # make progressbar horizontally resizable
@@ -123,7 +125,9 @@ def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
     taskbar = yamosse_progress.PyTaskbar.Progress(hwnd=yamosse_progress.hwnd(parent))
   
   widgets = (gui.make_name(frame, name), (progressbar, taskbar), percent_label)
-  trace_add_progressbar(widgets, variable)
+  
+  if trace:
+    trace_add_progressbar(widgets, variable)
   
   if not configure_progressbar(widgets, variable, type_):
     show_progressbar(widgets, variable)
