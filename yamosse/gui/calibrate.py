@@ -131,20 +131,20 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     
     def data(e):
       nonlocal oldvalue
-      nonlocal master_oldvalues
+      nonlocal oldvalues
       
       newvalue = master_scale.get()
       if oldvalue == newvalue: return
       
       print(f'Undo master scale save {master_scale} {newvalue} {oldvalue}')
       
-      master_newvalues = {scale: scale.get() for scale in oldvalues.keys()}
+      newvalues = {scale: scale.get() for scale in oldvalues.keys()}
       
       undooptions((revert, oldvalue, oldvalues.copy(), master_oldvalues.copy()),
-        (revert, newvalue, oldvalues.copy(), master_newvalues.copy()))
+        (revert, newvalue, newvalues.copy(), master_oldvalues.copy()))
       
       oldvalue = newvalue
-      master_oldvalues = master_newvalues
+      oldvalues = newvalues
     
     gui.bind_truekey_widget(master_scale, release=data)
     
