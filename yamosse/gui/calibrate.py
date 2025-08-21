@@ -96,7 +96,11 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     
     print(f'Undo scale save {widget} {newvalue} {oldvalue}')
     
-    undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
+    undooptions(
+      (revert, widget, oldvalue),
+      (revert, widget, newvalue)
+    )
+    
     set_(widget, newvalue)
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
@@ -159,7 +163,32 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   
   master(master_scale)
   
-  # TODO: add back reset code, just removed it so I could focus
+  def reset():
+    # it's okay to use a dictionary as a default here
+    # because we won't ever be mutating it
+    def revert(newvalues=defaults, newmasters=defaults, master_oldvalue=DEFAULT_SCALE_VALUE):
+      nonlocal oldvalues
+      nonlocal oldmasters
+      
+      for scale, newvalue in newvalues.items():
+        scale.set(newvalue)
+      
+      # we must copy this here so we don't mutate a redo state
+      oldvalues = newvalues.copy()
+      oldmasters = newmasters.copy()
+      master_scale.set(master_oldvalue)
+    
+    # the oldvalues must be copied when turned into an undooption
+    # because they get changed as the scales are set
+    # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
+    undooptions(
+      (revert, oldvalues.copy(), oldmasters.copy(), master_scale.get()),
+      (revert,)
+    )
+    
+    revert()
+  
+  reset_button['command'] = reset
 
 
 def make_calibrate(frame, variables, class_names, attached):
