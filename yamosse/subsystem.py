@@ -156,7 +156,7 @@ def subsystem(window, title, variables):
         else:
           prompt = 'Please enter %c or %c.\n' % (yes, no)
         
-        result = input(prompt).strip()
+        result = input(prompt).lstrip()
         
         if result:
           result = result[0].casefold()
