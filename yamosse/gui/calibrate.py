@@ -76,7 +76,9 @@ def _undoable_scales(scales, master_scale_variable, text, reset_button, undoopti
     oldvalues[widget] = newvalue
     
     master_value = (master_variable.get() / 100.0)
-    master_oldvalues[widget] = newvalue / (master_value if master_value else 1.0)
+    if master_value: newvalue = round(newvalue / master_value)
+    
+    master_oldvalues[widget] = newvalue
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -106,16 +108,14 @@ def _undoable_scales(scales, master_scale_variable, text, reset_button, undoopti
     text.bind_class(bindtag, name, data)
   
   def master():
-    # TODO: there's some kind of bug here where sometimes
-    # the variable is not in sync with what's shown in the percentage labels
-    # (it's visible on my machine from 56% to 57%)
-    def variable_write(*args, **kwargs):
-      for scale, value in master_oldvalues.items():
-        scale.set(value * (master_variable.get() / 100.0))
-    
-    master_variable.trace('w', variable_write)
+    def set_(master_values, value):
+      for scale, master_value in master_values.items():
+        scale.set(round(master_value * (value / 100.0)))
     
     oldvalue = master_variable.get()
+    
+    master_variable.trace('w',
+      lambda *args, **kwargs: set_(master_oldvalues, master_variable.get()))
     
     def revert(newvalue, newvalues, master_newvalues):
       nonlocal oldvalue
@@ -125,8 +125,7 @@ def _undoable_scales(scales, master_scale_variable, text, reset_button, undoopti
       master_variable.set(newvalue)
       oldvalue = newvalue
       
-      for scale, value in master_newvalues.items():
-        scale.set(value * (newvalue / 100.0))
+      set_(master_newvalues, newvalue)
       
       oldvalues = newvalues.copy()
       master_oldvalues = master_newvalues.copy()
