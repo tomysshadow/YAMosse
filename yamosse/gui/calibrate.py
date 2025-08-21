@@ -60,7 +60,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   
   defaults = {}
   oldvalues = {}
-  master_oldvalues = oldvalues
+  oldvalues2 = oldvalues
   
   for scale in scales.values():
     defaults[scale] = DEFAULT_SCALE_VALUE
@@ -76,7 +76,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     master_value = (master_scale.get() / 100.0)
     if master_value: newvalue = round(newvalue / master_value)
     
-    master_oldvalues[widget] = newvalue
+    oldvalues2[widget] = newvalue
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -105,57 +105,59 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   for name in NAMES:
     text.bind_class(bindtag, name, data)
   
-  def master():
-    def set_(newvalue, master_newvalues):
-      for scale, master_newvalue in master_newvalues.items():
-        scale.set(round(master_newvalue * (newvalue / 100.0)))
+  def master(scale):
+    def set_(newvalue, newvalues2):
+      for scale, newvalue2 in newvalues2.items():
+        scale.set(round(newvalue2 * (newvalue / 100.0)))
     
-    command = master_scale['command']
+    command = scale['command']
     
     def call_command(*args):
-      set_(master_scale.get(), master_oldvalues)
-      return master_scale.tk.call(command, *args)
+      set_(scale.get(), oldvalues2)
+      return scale.tk.call(command, *args)
     
-    master_scale['command'] = call_command
+    scale['command'] = call_command
     
-    oldvalue = master_scale.get()
+    oldvalue = scale.get()
     
-    def revert(newvalue, newvalues, master_newvalues):
+    def revert(newvalue, newvalues, newvalues2):
       nonlocal oldvalue
       nonlocal oldvalues
-      nonlocal master_oldvalues
+      nonlocal oldvalues2
       
-      master_scale.set(newvalue)
+      scale.set(newvalue)
       oldvalue = newvalue
       
-      set_(newvalue, master_newvalues)
+      set_(newvalue, newvalues2)
       
       oldvalues = newvalues.copy()
-      master_oldvalues = master_newvalues.copy()
+      oldvalues2 = newvalues2.copy()
     
     def data(e):
       nonlocal oldvalue
       nonlocal oldvalues
       
-      newvalue = master_scale.get()
+      newvalue = scale.get()
       if oldvalue == newvalue: return
       
-      print(f'Undo master scale save {master_scale} {newvalue} {oldvalue}')
+      print(f'Undo master scale save {scale} {newvalue} {oldvalue}')
       
-      newvalues = {scale: scale.get() for scale in oldvalues.keys()}
+      newvalues = {s: s.get() for s in oldvalues.keys()}
       
-      undooptions((revert, oldvalue, oldvalues.copy(), master_oldvalues.copy()),
-        (revert, newvalue, newvalues.copy(), master_oldvalues.copy()))
+      undooptions(
+        (revert, oldvalue, oldvalues, oldvalues2),
+        (revert, newvalue, newvalues, oldvalues2)
+      )
       
       oldvalue = newvalue
-      oldvalues = newvalues
+      oldvalues = newvalues.copy()
     
-    gui.bind_truekey_widget(master_scale, release=data)
+    gui.bind_truekey_widget(scale, release=data)
     
     for name in NAMES:
-      master_scale.bind(name, data)
+      scale.bind(name, data)
   
-  master()
+  master(master_scale)
   
   # TODO: add back reset code, just removed it so I could focus
 
