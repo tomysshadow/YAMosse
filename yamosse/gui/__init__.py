@@ -169,10 +169,6 @@ def test_widget(widget):
   return True
 
 
-def variable_widget(widget):
-  return tk.Variable(name=str(widget['variable']))
-
-
 def after_invalidcommand_widget(widget, validate):
   # editing a variable from within an invalidcommand normally resets validate to none
   # this ensures it remains set to focusout
@@ -532,8 +528,8 @@ def make_scale(frame, name='',
     showing = True
     
     try:
-      value = scale.get()
-      scale.set(int(value)) # increment in steps
+      value = int(scale.get()) # increment in steps
+      scale.set(value)
       text = '%d%%' % value
       percent_label['text'] = text
     finally:

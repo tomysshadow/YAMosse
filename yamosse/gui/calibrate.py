@@ -35,7 +35,7 @@ def make_footer(frame, ok, cancel):
   return undooptions, reset_button
 
 
-def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
+def _undoable_scales(scales, master_scale_variable, text, reset_button, undooptions):
   # There are a couple known issues with this:
   # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
   #   while still editing the current one. The ideal is that undo is disabled
@@ -69,7 +69,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
-  master_variable = gui.variable_widget(master_scale)
+  master_scale, master_variable = master_scale_variable
   master_oldvalues = oldvalues
   
   def mastervalue(widget, newvalue):
@@ -173,11 +173,13 @@ def make_calibrate(frame, variables, class_names, attached):
   scale_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
   scale_frame.grid(row=0, sticky=tk.NSEW)
   
+  master_variable = tk.IntVar()
+  
   master_scale = gui.make_scale(
     scale_frame,
     name='Master',
     to=200,
-    variable=tk.IntVar()
+    variable=master_variable
   )[1]
   
   master_scale.set(DEFAULT_SCALE_VALUE)
@@ -235,6 +237,12 @@ def make_calibrate(frame, variables, class_names, attached):
     lambda: gui.release_modal_window(window)
   )
   
-  _undoable_scales(scales, master_scale, calibration_text, reset_button, undooptions)
+  _undoable_scales(
+    scales,
+    (master_scale, master_variable),
+    calibration_text,
+    reset_button,
+    undooptions
+  )
   
   gui.set_modal_window(window)
