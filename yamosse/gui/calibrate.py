@@ -35,7 +35,7 @@ def make_footer(frame, ok, cancel):
   return undooptions, reset_button
 
 
-def _undoable_scales(scales, master_scale_variable, text, reset_button, undooptions):
+def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   # There are a couple known issues with this:
   # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
   #   while still editing the current one. The ideal is that undo is disabled
@@ -69,13 +69,12 @@ def _undoable_scales(scales, master_scale_variable, text, reset_button, undoopti
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
-  master_scale, master_variable = master_scale_variable
   master_oldvalues = oldvalues
   
   def mastervalue(widget, newvalue):
     oldvalues[widget] = newvalue
     
-    master_value = (master_variable.get() / 100.0)
+    master_value = (master_scale.get() / 100.0)
     if master_value: newvalue = round(newvalue / master_value)
     
     master_oldvalues[widget] = newvalue
@@ -112,17 +111,22 @@ def _undoable_scales(scales, master_scale_variable, text, reset_button, undoopti
       for scale, master_value in master_values.items():
         scale.set(round(master_value * (value / 100.0)))
     
-    oldvalue = master_variable.get()
+    command = master_scale['command']
     
-    master_variable.trace('w',
-      lambda *args, **kwargs: set_(master_oldvalues, master_variable.get()))
+    def call_command(*args):
+      set_(master_oldvalues, master_scale.get())
+      return master_scale.tk.call(command, *args)
+    
+    master_scale['command'] = call_command
+    
+    oldvalue = master_scale.get()
     
     def revert(newvalue, newvalues, master_newvalues):
       nonlocal oldvalue
       nonlocal oldvalues
       nonlocal master_oldvalues
       
-      master_variable.set(newvalue)
+      master_scale.set(newvalue)
       oldvalue = newvalue
       
       set_(master_newvalues, newvalue)
@@ -134,7 +138,7 @@ def _undoable_scales(scales, master_scale_variable, text, reset_button, undoopti
       nonlocal oldvalue
       nonlocal oldvalues
       
-      newvalue = master_variable.get()
+      newvalue = master_scale.get()
       if oldvalue == newvalue: return
       
       print(f'Undo master scale save {master_scale} {newvalue} {oldvalue}')
@@ -172,13 +176,10 @@ def make_calibrate(frame, variables, class_names, attached):
   scale_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
   scale_frame.grid(row=0, sticky=tk.NSEW)
   
-  master_variable = tk.IntVar()
-  
   master_scale = gui.make_scale(
     scale_frame,
     name='Master',
-    to=200,
-    variable=master_variable
+    to=200
   )[1]
   
   master_scale.set(DEFAULT_SCALE_VALUE)
@@ -236,12 +237,6 @@ def make_calibrate(frame, variables, class_names, attached):
     lambda: gui.release_modal_window(window)
   )
   
-  _undoable_scales(
-    scales,
-    (master_scale, master_variable),
-    calibration_text,
-    reset_button,
-    undooptions
-  )
+  _undoable_scales(scales, master_scale, calibration_text, reset_button, undooptions)
   
   gui.set_modal_window(window)
