@@ -60,7 +60,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   
   defaults = {}
   oldvalues = {}
-  oldvalues2 = oldvalues
+  oldmasters = oldvalues
   
   for scale in scales.values():
     defaults[scale] = DEFAULT_SCALE_VALUE
@@ -76,7 +76,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     master_value = (master_scale.get() / 100.0)
     if master_value: newvalue = round(newvalue / master_value)
     
-    oldvalues2[widget] = newvalue
+    oldmasters[widget] = newvalue
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -106,32 +106,32 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     text.bind_class(bindtag, name, data)
   
   def master(scale):
-    def set_(newvalue, newvalues2):
-      for scale, newvalue2 in newvalues2.items():
-        scale.set(round(newvalue2 * (newvalue / 100.0)))
+    def set_(newvalue, newmasters):
+      for scale, newmaster in newmasters.items():
+        scale.set(round(newmaster * (newvalue / 100.0)))
     
     command = scale['command']
     
     def call_command(*args):
-      set_(scale.get(), oldvalues2)
+      set_(scale.get(), oldmasters)
       return scale.tk.call(command, *args)
     
     scale['command'] = call_command
     
     oldvalue = scale.get()
     
-    def revert(newvalue, newvalues, newvalues2):
+    def revert(newvalue, newvalues, newmasters):
       nonlocal oldvalue
       nonlocal oldvalues
-      nonlocal oldvalues2
+      nonlocal oldmasters
       
       scale.set(newvalue)
       oldvalue = newvalue
       
-      set_(newvalue, newvalues2)
+      set_(newvalue, newmasters)
       
       oldvalues = newvalues.copy()
-      oldvalues2 = newvalues2.copy()
+      oldmasters = newmasters.copy()
     
     def data(e):
       nonlocal oldvalue
@@ -145,8 +145,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       newvalues = {s: s.get() for s in oldvalues.keys()}
       
       undooptions(
-        (revert, oldvalue, oldvalues, oldvalues2),
-        (revert, newvalue, newvalues, oldvalues2)
+        (revert, oldvalue, oldvalues, oldmasters),
+        (revert, newvalue, newvalues, oldmasters)
       )
       
       oldvalue = newvalue
