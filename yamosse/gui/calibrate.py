@@ -206,6 +206,7 @@ def make_calibrate(frame, variables, class_names, attached):
   scale_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
   scale_frame.grid(row=0, sticky=tk.NSEW)
   
+  # TODO: recentre button
   master_scale = gui.make_scale(
     scale_frame,
     name='Master',

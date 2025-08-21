@@ -512,14 +512,14 @@ def make_scale(frame, name='',
   frame.rowconfigure(0, weight=1) # make scale vertically centered
   frame.columnconfigure(1, weight=1) # make scale horizontally resizable
   
-  # unused text argument is just so this will work as scale command
-  # we're using the command here so that it'll continue to work
+  # we're using the command here (instead of variable tracing)
+  # so that this will continue to work
   # even if the variable the scale is using changes
   showing = False
   scale = None
   percent_label = make_percent(frame)
   
-  def show(text=''):
+  def show(*args, **kwargs):
     nonlocal showing
     
     if showing: return
