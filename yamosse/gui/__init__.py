@@ -900,12 +900,10 @@ def values_treeview_items(i):
   return {cid: {'values': v} for cid, v in yamosse_utils.dict_enumerate(i).items()}
 
 
-def make_filedialog(frame, name='', textvariable=None,
+def make_filedialog(frame, name='',
   asks=None, parent=None, filetypes=None, defaultextension='', **kwargs):
   ASKS_ALL = ('openfilename', 'openfilenames', 'saveasfilename', 'directory')
   ASKS_FILES = ('openfilename', 'openfilenames', 'saveasfilename')
-  
-  if not textvariable: textvariable = tk.StringVar()
   
   if asks is None: asks = ('openfilename',)
   
@@ -920,7 +918,7 @@ def make_filedialog(frame, name='', textvariable=None,
   frame.rowconfigure(0, weight=1) # make entry vertically centered
   frame.columnconfigure(0, weight=1) # make entry horizontally resizable
   
-  entry = ttk.Entry(frame, textvariable=textvariable, **kwargs)
+  entry = ttk.Entry(frame, **kwargs)
   entry.grid(row=0, sticky=tk.EW)
   
   name_frame = ttk.Frame(frame)
@@ -945,7 +943,8 @@ def make_filedialog(frame, name='', textvariable=None,
       
       assert isinstance(data, str), 'data must be a string or sequence of strings'
     
-    textvariable.set(data)
+    entry.delete(0, tk.END)
+    entry.insert(tk.END, data)
   
   def show(ask='openfilename'):
     kwargs = {}
