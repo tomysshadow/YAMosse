@@ -530,8 +530,7 @@ def make_scale(frame, name='',
     try:
       value = int(scale.get()) # increment in steps
       scale.set(value)
-      text = '%d%%' % value
-      percent_label['text'] = text
+      percent_label['text'] = '%d%%' % value
     finally:
       showing = False
   
