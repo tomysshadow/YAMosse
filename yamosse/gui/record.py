@@ -48,13 +48,12 @@ def make_record(frame, variables, record):
   
   recording_button.grid(row=0, column=0, sticky=tk.W)
   
-  volume_variable = tk.IntVar()
-  
   volume_after = None
   volume_after_ms = int(yamosse_recording.BLOCKSIZE_SECONDS * 1000)
   
   volume_frame = ttk.Frame(row_frame)
   volume_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
+  volume_variable = tk.IntVar()
   
   volume_widgets = gui_progressbar.make_progressbar(
     volume_frame,

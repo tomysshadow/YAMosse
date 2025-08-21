@@ -220,7 +220,6 @@ def make_calibrate(frame, variables, class_names, attached):
   
   calibration_frame = ttk.Frame(frame, relief=tk.SUNKEN, borderwidth=BORDERWIDTH)
   calibration_frame.grid(row=1, sticky=tk.NSEW)
-  
   calibration_text = gui.make_text(calibration_frame, font=('TkDefaultFont', 24))[1][0]
   gui_embed.text_embed(calibration_text)
   
