@@ -76,7 +76,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     oldvalues[widget] = newvalue
     
     master_value = (master_variable.get() / 100.0)
-    master_oldvalues[widget] = newvalue / (master_value if master_value else 1)
+    master_oldvalues[widget] = newvalue / (master_value if master_value else 1.0)
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
