@@ -75,7 +75,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     nonlocal master_oldvalues
     
     oldvalues[widget] = newvalue
-    master_oldvalues = oldvalues
+    master_oldvalues[widget] = newvalue
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -123,8 +123,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       master_scale.set(newvalue)
       oldvalue = newvalue
       
-      for scale, newvalue in master_newvalues.items():
-        scale.set(newvalue)
+      for scale, value in master_newvalues.items():
+        scale.set(value * (newvalue / 100.0))
       
       oldvalues = newvalues.copy()
       master_oldvalues = master_newvalues.copy()
