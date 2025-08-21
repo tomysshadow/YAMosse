@@ -92,6 +92,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     
     undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
     oldvalues[widget] = newvalue
+    mastervalues[widget] = newvalue
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
   gui.bind_truekey_widget(text, class_=bindtag, release=data)
