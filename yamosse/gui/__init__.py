@@ -286,23 +286,27 @@ def measure_text_width_widget(widget, width, font):
 
 def make_widgets(frame, make_widget, items=None,
   orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING):
-  ORIENTS = (tk.HORIZONTAL, tk.VERTICAL)
-  
-  if orient not in ORIENTS: raise ValueError('orient must be in %r' % (ORIENTS,))
+  ORIENTS = {
+    tk.HORIZONTAL: (
+      'row',
+      'column',
+      'padx'
+    ),
+    
+    tk.VERTICAL: (
+      'column',
+      'row',
+      'pady'
+    )
+  }
   
   widgets = []
   if not items: return widgets
   
   last = len(items) - 1
   
-  x = 'row'
-  y = 'column'
-  pad = 'padx'
-  
-  if orient == tk.VERTICAL:
-    x = 'column'
-    y = 'row'
-    pad = 'pady'
+  try: x, y, pad = ORIENTS[orient]
+  except KeyError: raise ValueError('orient must be in %r' % tuple(ORIENTS.keys()))
   
   # float divide is used here in case padding is not even
   padding = padding / 2 if last != 0 else 0
@@ -316,7 +320,7 @@ def make_widgets(frame, make_widget, items=None,
   if last == 0: return widgets
   
   # middle widgets
-  for middle in range(last - 1):
+  for middle in range(1, last):
     widget = make_widget(frame, **items[middle])
     widget.grid(sticky=sticky, **{x: cell, y: middle, pad: padding})
     widgets.append(widget)
@@ -496,19 +500,16 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 
 
-def make_combobox(frame, name='', state=None, **kwargs):
+def make_combobox(frame, name='', **kwargs):
   frame.rowconfigure(0, weight=1) # make combobox vertically centered
   frame.columnconfigure(1, weight=1) # make combobox horizontally resizable
   
   combobox = ttk.Combobox(frame, **kwargs)
   combobox.grid(row=0, column=1, sticky=tk.EW)
-  
-  if state: combobox.state(state)
   return make_name(frame, name), combobox
 
 
-def make_scale(frame, name='',
-  from_=0, to=100, **kwargs):
+def make_scale(frame, name='', from_=0, to=100, **kwargs):
   frame.rowconfigure(0, weight=1) # make scale vertically centered
   frame.columnconfigure(1, weight=1) # make scale horizontally resizable
   
@@ -770,7 +771,7 @@ def get_items_treeview(treeview, item=''):
 
 
 def make_treeview(frame, name='', columns=None, items=None, show=None,
-  selectmode=tk.BROWSE, xscroll=False, yscroll=True, **kwargs):
+  selectmode=tk.EXTENDED, xscroll=False, yscroll=True, **kwargs):
   columns = yamosse_utils.dict_enumerate(columns) if columns else {}
   
   if show is None:
@@ -812,6 +813,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     # items may be a dictionary with custom child IDs
     # or a sequence, where the IDs are auto generated
     for child, insertion in yamosse_utils.dict_enumerate(items).items():
+      insertion = insertion.copy() # so we don't modify items dict passed in
       children = insertion.pop('children', None)
       
       treeview.insert(parent, tk.END, child, **insertion)
@@ -879,6 +881,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
       )
     ]
   
+  # must be done in a separate loop to button creation so tab order is correct
   for button in reversed(buttons):
     button.pack(side=tk.RIGHT, padx=PADX_QW)
   
@@ -896,7 +899,13 @@ def values_treeview_items(i):
 
 def make_filedialog(frame, name='',
   asks=None, parent=None, filetypes=None, defaultextension='', **kwargs):
-  ASKS_ALL = ('openfilename', 'openfilenames', 'saveasfilename', 'directory')
+  ASKS_ALL = {
+    'openfilename': 'Browse...',
+    'openfilenames': 'Browse Files...',
+    'saveasfilename': 'Browse...',
+    'directory': 'Browse Folder...'
+  }
+  
   ASKS_FILES = ('openfilename', 'openfilenames', 'saveasfilename')
   
   if asks is None: asks = ('openfilename',)
@@ -954,14 +963,8 @@ def make_filedialog(frame, name='',
   buttons = []
   
   for ask in asks:
-    if ask not in ASKS_ALL: raise ValueError('ask must be in %r' % (ASKS_ALL,))
-    
-    text = 'Browse...'
-    
-    if ask == 'openfilenames':
-      text = 'Browse Files...'
-    elif ask == 'directory':
-      text = 'Browse Folder...'
+    try: text = ASKS_ALL[ask]
+    except KeyError: raise ValueError('ask must be in %r' % tuple(ASKS_ALL.keys()))
     
     button = ttk.Button(
       buttons_frame,
@@ -1077,16 +1080,16 @@ def make_undoable(frame):
     
     enable()
   
-  photo = get_root_images()[FSENC_PHOTO]
+  photo_images = get_root_images()[FSENC_PHOTO]
   
   undo_button = ttk.Button(frame, text='Undo', width=WIDTH,
-    image=photo[fsenc('undo.gif')], compound=tk.LEFT,
+    image=photo_images[fsenc('undo.gif')], compound=tk.LEFT,
     command=undolast, state=tk.DISABLED)
   
   undo_button.grid(row=0, column=0)
   
   redo_button = ttk.Button(frame, text='Redo', width=WIDTH,
-    image=photo[fsenc('redo.gif')], compound=tk.LEFT,
+    image=photo_images[fsenc('redo.gif')], compound=tk.LEFT,
     command=redolast, state=tk.DISABLED)
   
   redo_button.grid(row=0, column=1, padx=PADX_QW)
@@ -1140,7 +1143,6 @@ def after_idle_window(window, callback):
   try: window.after_idle(callback)
   except (tk.TclError, RuntimeError):
     if window.children: raise
-    return False
   
   return window.children
 

@@ -416,12 +416,12 @@ def make_sort(frame, variables):
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
   
-  photo = gui.get_root_images()[gui.FSENC_PHOTO]
-  up = photo[fsenc('up.gif')]
-  down = photo[fsenc('down.gif')]
+  photo_images = gui.get_root_images()[gui.FSENC_PHOTO]
+  up_image = photo_images[fsenc('up.gif')]
+  down_image = photo_images[fsenc('down.gif')]
   
   def show_sort_reverse_checkbutton():
-    sort_reverse_checkbutton['image'] = up if sort_reverse_variable.get() else down
+    sort_reverse_checkbutton['image'] = up_image if sort_reverse_variable.get() else down_image
   
   sort_reverse_checkbutton = ttk.Checkbutton(frame, width=1,
     variable=sort_reverse_variable, command=show_sort_reverse_checkbutton)
