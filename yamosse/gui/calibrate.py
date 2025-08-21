@@ -60,6 +60,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   
   defaults = {}
   oldvalues = {}
+  master_oldvalues = oldvalues
   
   for scale in scales.values():
     defaults[scale] = DEFAULT_SCALE_VALUE
@@ -69,9 +70,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
   
-  master_oldvalues = oldvalues
-  
-  def mastervalue(widget, newvalue):
+  def set_(widget, newvalue):
     oldvalues[widget] = newvalue
     
     master_value = (master_scale.get() / 100.0)
@@ -85,7 +84,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     widget.focus_set()
     
     widget.set(newvalue)
-    mastervalue(widget, newvalue)
+    set_(widget, newvalue)
   
   def data(e):
     widget = e.widget
@@ -98,7 +97,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     print(f'Undo scale save {widget} {newvalue} {oldvalue}')
     
     undooptions((revert, widget, oldvalue), (revert, widget, newvalue))
-    mastervalue(widget, newvalue)
+    set_(widget, newvalue)
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
   gui.bind_truekey_widget(text, class_=bindtag, release=data)
@@ -107,14 +106,14 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     text.bind_class(bindtag, name, data)
   
   def master():
-    def set_(master_values, value):
-      for scale, master_value in master_values.items():
-        scale.set(round(master_value * (value / 100.0)))
+    def set_(newvalue, master_newvalues):
+      for scale, master_newvalue in master_newvalues.items():
+        scale.set(round(master_newvalue * (newvalue / 100.0)))
     
     command = master_scale['command']
     
     def call_command(*args):
-      set_(master_oldvalues, master_scale.get())
+      set_(master_scale.get(), master_oldvalues)
       return master_scale.tk.call(command, *args)
     
     master_scale['command'] = call_command
@@ -129,7 +128,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       master_scale.set(newvalue)
       oldvalue = newvalue
       
-      set_(master_newvalues, newvalue)
+      set_(newvalue, master_newvalues)
       
       oldvalues = newvalues.copy()
       master_oldvalues = master_newvalues.copy()
