@@ -42,7 +42,6 @@ class UndoableMaster(UndoableScale):
     self.undoable_calibration = undoable_calibration
     
     scale = undoable_calibration.master_scale
-    
     self._tk = scale.tk
     self._command = scale['command']
     
@@ -51,13 +50,10 @@ class UndoableMaster(UndoableScale):
   
   def revert(self, widget, newvalues, newmasters, newmaster):
     undoable_calibration = self.undoable_calibration
-    
     undoable_calibration.oldvalues = newvalues.copy()
     undoable_calibration.oldmasters = newmasters.copy()
-    
-    # this invokes the self._master function
-    widget.set(newmaster)
     undoable_calibration.oldmaster = newmaster
+    widget.set(newmaster) # this invokes the self._master function
   
   def data(self, e):
     revert = self.revert
@@ -100,12 +96,7 @@ class UndoableReset(Undoable):
   
   # it's okay to use a dictionary as a default here
   # because we won't ever be mutating it
-  def revert(
-    self,
-    newvalues=None,
-    newmasters=None,
-    newmaster=DEFAULT_SCALE_VALUE
-  ):
+  def revert(self, newvalues=None, newmasters=None, newmaster=DEFAULT_SCALE_VALUE):
     undoable_calibration = self.undoable_calibration
     defaultvalues = undoable_calibration.defaultvalues
     
@@ -118,9 +109,8 @@ class UndoableReset(Undoable):
     # we must copy this here so we don't mutate a redo state
     undoable_calibration.oldvalues = newvalues.copy()
     undoable_calibration.oldmasters = newmasters.copy()
-    
-    undoable_calibration.master_scale.set(newmaster)
     undoable_calibration.oldmaster = newmaster
+    undoable_calibration.master_scale.set(newmaster)
   
   def _reset(self):
     revert = self.revert
@@ -184,12 +174,10 @@ class UndoableCalibration(UndoableScale):
     
     self.defaultvalues = defaultvalues
     self.oldvalues = oldvalues
-    
     self.oldmasters = oldvalues
     self.oldmaster = master_scale.get()
     
     self.bind(text, bindtag)
-    
     self.master = UndoableMaster(self)
     self.reset = UndoableReset(self)
   
@@ -210,7 +198,7 @@ class UndoableCalibration(UndoableScale):
     newvalue = widget.get()
     if oldvalue == newvalue: return
     
-    print(f'Undo scale save {widget} {newvalue} {oldvalue}')
+    print(f'Undo calibration scale save {widget} {newvalue} {oldvalue}')
     
     self.undooptions(
       (revert, widget, oldvalue),
