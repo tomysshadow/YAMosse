@@ -147,6 +147,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       oldmaster = newmaster
       
       oldmasters = newmasters.copy()
+      
       values()
     
     def data(e):
@@ -168,8 +169,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
         (revert, newvalues, newmaster, newmasters)
       )
       
-      oldmaster = newmaster
       oldvalues = newvalues.copy()
+      oldmaster = newmaster
     
     gui.bind_truekey_widget(scale, release=data)
     
