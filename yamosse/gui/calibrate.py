@@ -10,6 +10,9 @@ SIZE = (520, 500)
 
 DEFAULT_SCALE_VALUE = 100
 
+MASTER_LIMIT = 0.00001
+MASTER_CENTER = 100.0
+
 
 def make_footer(frame, ok, cancel):
   frame.columnconfigure(1, weight=1)
@@ -73,10 +76,14 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   def set_(widget, newvalue):
     oldvalues[widget] = newvalue
     
-    master_value = (master_scale.get() / 100.0)
-    if master_value: newvalue = round(newvalue / master_value)
-    
-    oldmasters[widget] = newvalue
+    # the value of MASTER_LIMIT is such that if the master scale is
+    # set to zero, then another scale has its value changed from zero
+    # to any non-zero number, it will jump to the highest possible
+    # percentage (200%) representable by the scales at any other master value
+    oldmasters[widget] = round(newvalue / max(
+      MASTER_LIMIT,
+      master_scale.get() / MASTER_CENTER
+    ))
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -112,7 +119,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   def master(scale):
     def set_(newvalue, newmasters):
       for scale, newmaster in newmasters.items():
-        scale.set(round(newmaster * (newvalue / 100.0)))
+        scale.set(round(newmaster * (newvalue / MASTER_CENTER)))
     
     command = scale['command']
     
