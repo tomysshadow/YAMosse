@@ -15,6 +15,9 @@ MASTER_LIMIT = 0.00001
 MASTER_CENTER = 100.0
 
 class UndoableWidget(ABC):
+  def __init__(self, undooptions):
+    self._undooptions = undooptions
+  
   @abstractmethod
   def revert(self, *args):
     pass
@@ -38,7 +41,9 @@ class UndoableScale(UndoableWidget):
       widget.bind_class(bindtag, name, data)
 
 class UndoableMaster(UndoableScale):
-  def __init__(self, scale, calibration):
+  def __init__(self, undooptions, scale, calibration):
+    super().__init__(undooptions)
+    
     self._tk = scale.tk
     self._command = scale['command']
     
@@ -80,7 +85,7 @@ class UndoableMaster(UndoableScale):
     
     revert = self.revert
     
-    calibration.undooptions(
+    self._undooptions(
       (revert, calibration_oldvalues, newvalues, oldvalue),
       (revert, calibration_newvalues, newvalues, newvalue)
     )
@@ -108,7 +113,10 @@ class UndoableMaster(UndoableScale):
 
 
 class UndoableReset(UndoableWidget):
-  def __init__(self, button, calibration):
+  def __init__(self, undooptions, button, calibration):
+    super().__init__(undooptions)
+    
+    self.button = button
     self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
     
     button['command'] = self._reset
@@ -119,12 +127,15 @@ class UndoableReset(UndoableWidget):
     self,
     calibration_newvalues=None,
     master_newvalues=None,
-    master_newvalue=DEFAULT_SCALE_VALUE
+    master_newvalue=DEFAULT_SCALE_VALUE,
+    focus=True
   ):
     oldvalues = self.oldvalues
     
     if calibration_newvalues is None: calibration_newvalues = oldvalues
     if master_newvalues is None: master_newvalues = oldvalues
+    
+    self.button.focus_set()
     
     for scale, newvalue in calibration_newvalues.items():
       scale.set(newvalue)
@@ -145,7 +156,7 @@ class UndoableReset(UndoableWidget):
     # the oldvalues must be copied when turned into an undooption
     # because they get changed as the scales are set
     # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
-    calibration.undooptions(
+    self._undooptions(
       (
         revert,
         calibration.oldvalues.copy(),
@@ -156,7 +167,7 @@ class UndoableReset(UndoableWidget):
       (revert,)
     )
     
-    revert()
+    revert(focus=False)
 
 # There are a couple known issues with this:
 # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
@@ -177,9 +188,10 @@ class UndoableReset(UndoableWidget):
 # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
 # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
 class UndoableCalibration(UndoableScale):
-  def __init__(self, text, scales, undooptions, master_scale, reset_button):
+  def __init__(self, undooptions, text, scales, master_scale, reset_button):
+    super().__init__(undooptions)
+    
     self.text = text
-    self.undooptions = undooptions
     
     oldvalues = {s: float(s.get()) for s in scales.values()}
     self.oldvalues = oldvalues
@@ -193,8 +205,8 @@ class UndoableCalibration(UndoableScale):
     
     self.bind(text, bindtag)
     
-    self.master = UndoableMaster(master_scale, self)
-    self.reset = UndoableReset(reset_button, self)
+    self.master = UndoableMaster(undooptions, master_scale, self)
+    self.reset = UndoableReset(undooptions, reset_button, self)
   
   def revert(self, widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -216,7 +228,7 @@ class UndoableCalibration(UndoableScale):
     
     revert = self.revert
     
-    self.undooptions(
+    self._undooptions(
       (revert, widget, oldvalue),
       (revert, widget, newvalue)
     )
@@ -329,9 +341,9 @@ def make_calibrate(frame, variables, class_names, attached):
   )
   
   undoable_calibration = UndoableCalibration(
+    undooptions,
     calibration_text,
     scales,
-    undooptions,
     master_scale,
     reset_button
   )
