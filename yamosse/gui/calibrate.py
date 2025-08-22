@@ -48,12 +48,8 @@ class UndoableMaster(UndoableScale):
     self.bind(scale, scale)
     scale['command'] = self._master
   
-  def revert(self, widget, newvalues, newmasters, newmaster):
-    undoable_calibration = self.undoable_calibration
-    undoable_calibration.oldvalues = newvalues.copy()
-    undoable_calibration.oldmasters = newmasters.copy()
-    undoable_calibration.oldmaster = newmaster
-    widget.set(newmaster) # this invokes the self._master function
+  def revert(self, *args):
+    self.undoable_calibration.revert_master(*args)
   
   def data(self, e):
     revert = self.revert
@@ -74,8 +70,8 @@ class UndoableMaster(UndoableScale):
     newmasters = undoable_calibration.oldmasters.copy()
     
     undoable_calibration.undooptions(
-      (revert, widget, oldvalues, newmasters, oldmaster),
-      (revert, widget, newvalues, newmasters, newmaster)
+      (revert, oldvalues, newmasters, oldmaster),
+      (revert, newvalues, newmasters, newmaster)
     )
     
     undoable_calibration.oldvalues = newvalues.copy()
@@ -106,11 +102,7 @@ class UndoableReset(Undoable):
     for scale, newvalue in newvalues.items():
       scale.set(newvalue)
     
-    # we must copy this here so we don't mutate a redo state
-    undoable_calibration.oldvalues = newvalues.copy()
-    undoable_calibration.oldmasters = newmasters.copy()
-    undoable_calibration.oldmaster = newmaster
-    undoable_calibration.master_scale.set(newmaster)
+    undoable_calibration.revert_master(newvalues, newmasters, newmaster)
   
   def _reset(self):
     revert = self.revert
@@ -188,6 +180,13 @@ class UndoableCalibration(UndoableScale):
     widget.set(newvalue)
     
     self._calibration(widget, newvalue)
+  
+  def revert_master(self, newvalues, newmasters, newmaster):
+    # we must copy this here so we don't mutate a redo state
+    self.oldvalues = newvalues.copy()
+    self.oldmasters = newmasters.copy()
+    self.oldmaster = newmaster
+    self.master_scale.set(newmaster)
   
   def data(self, e):
     revert = self.revert
