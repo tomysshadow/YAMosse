@@ -65,15 +65,15 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   oldvalues = {}
   
   for scale in scales.values():
-    defaultvalues[scale] = DEFAULT_SCALE_VALUE
-    oldvalues[scale] = scale.get()
-    
     # this bindtag must be on the end
     # so that we don't swallow all events before the text gets them
     scale.bindtags(scale.bindtags() + (bindtag,))
+    
+    defaultvalues[scale] = DEFAULT_SCALE_VALUE
+    oldvalues[scale] = scale.get()
   
-  oldmaster = master_scale.get()
   oldmasters = oldvalues
+  oldmaster = master_scale.get()
   
   def values(widget):
     newvalue = widget.get()
@@ -94,8 +94,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # look at and focus the widget so the user notices what's just changed
     text.see(widget.master)
     widget.focus_set()
-    
     widget.set(newvalue)
+    
     values(widget)
   
   def data(e):
@@ -122,33 +122,28 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     text.bind_class(bindtag, name, data)
   
   def master(scale):
-    def values():
+    command = scale['command']
+    
+    def values(*args):
       newmaster = scale.get()
       
       for widget, newvalue in oldmasters.items():
         widget.set(round(newvalue * (newmaster / MASTER_CENTER)))
-    
-    command = scale['command']
-    
-    def call_command(*args):
-      values()
+      
       return scale.tk.call(command, *args)
     
-    scale['command'] = call_command
+    scale['command'] = values
     
-    def revert(newvalues, newmaster, newmasters):
+    def revert(newvalues, newmasters, newmaster):
       nonlocal oldvalues
-      nonlocal oldmaster
       nonlocal oldmasters
+      nonlocal oldmaster
       
       oldvalues = newvalues.copy()
+      oldmasters = newmasters.copy()
       
       scale.set(newmaster)
       oldmaster = newmaster
-      
-      oldmasters = newmasters.copy()
-      
-      values()
     
     def data(e):
       nonlocal oldvalues
@@ -165,8 +160,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       newmasters = oldmasters.copy()
       
       undooptions(
-        (revert, oldvalues, oldmaster, newmasters),
-        (revert, newvalues, newmaster, newmasters)
+        (revert, oldvalues, newmasters, oldmaster),
+        (revert, newvalues, newmasters, newmaster)
       )
       
       oldvalues = newvalues.copy()
@@ -188,19 +183,18 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       newmasters=defaultvalues
     ):
       nonlocal oldvalues
-      nonlocal oldmaster
       nonlocal oldmasters
+      nonlocal oldmaster
       
       for scale, newvalue in newvalues.items():
         scale.set(newvalue)
       
       # we must copy this here so we don't mutate a redo state
       oldvalues = newvalues.copy()
+      oldmasters = newmasters.copy()
       
       master_scale.set(newmaster)
       oldmaster = newmaster
-      
-      oldmasters = newmasters.copy()
     
     # the oldvalues must be copied when turned into an undooption
     # because they get changed as the scales are set
