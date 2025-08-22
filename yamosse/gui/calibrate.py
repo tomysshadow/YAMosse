@@ -14,12 +14,12 @@ DEFAULT_SCALE_VALUE = 100
 MASTER_LIMIT = 0.00001
 MASTER_CENTER = 100.0
 
-class Undoable(ABC):
+class UndoableWidget(ABC):
   @abstractmethod
   def revert(self, *args):
     pass
 
-class UndoableScale(Undoable):
+class UndoableScale(UndoableWidget):
   @abstractmethod
   def revert(self, *args):
     pass
@@ -84,7 +84,7 @@ class UndoableMaster(UndoableScale):
     return self._tk.call(self._command, text, *args)
 
 
-class UndoableReset(Undoable):
+class UndoableReset(UndoableWidget):
   def __init__(self, undoable_calibration):
     self.undoable_calibration = undoable_calibration
     
