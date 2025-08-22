@@ -31,14 +31,14 @@ class UndoableScale(UndoableWidget):
   def data(self, e):
     pass
   
-  def bind(self, widget, bindtag):
+  def bind(self, widget, class_):
     data = self.data
     
     # focus out is caught in case a widget gets a key press then loses focus before key release
-    gui.bind_truekey_widget(widget, class_=bindtag, release=data)
+    gui.bind_truekey_widget(widget, class_=class_, release=data)
     
     for name in ('<ButtonRelease>', '<FocusOut>'):
-      widget.bind_class(bindtag, name, data)
+      widget.bind_class(class_, name, data)
 
 class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
