@@ -43,12 +43,13 @@ class UndoableMaster(UndoableScale):
     self._command = scale['command']
     
     self.scale = scale
-    self.calibration = calibration
     self.oldvalues = calibration.oldvalues
     self.oldvalue = float(scale.get())
     
-    self.bind(scale, scale)
     scale['command'] = self._master
+    self.bind(scale, scale)
+    
+    self.calibration = calibration
   
   def revert(self, calibration_newvalues, newvalues, newvalue, focus=True):
     # we must copy this here so we don't mutate a redo state
@@ -108,10 +109,11 @@ class UndoableMaster(UndoableScale):
 
 class UndoableReset(UndoableWidget):
   def __init__(self, button, calibration):
-    self.calibration = calibration
     self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
     
     button['command'] = self._reset
+    
+    self.calibration = calibration
   
   def revert(
     self,
@@ -190,6 +192,7 @@ class UndoableCalibration(UndoableScale):
       scale.bindtags(scale.bindtags() + (bindtag,))
     
     self.bind(text, bindtag)
+    
     self.master = UndoableMaster(master_scale, self)
     self.reset = UndoableReset(reset_button, self)
   
