@@ -65,7 +65,7 @@ def _peek_embed(M):
   if not int(M):
     while _stack:
       text = _stack[-1]
-      if gui.test_widget(text): return text
+      if text.winfo_exists(): return text
       
       # throw out dead text
       _stack.pop()
@@ -217,7 +217,7 @@ def _root_embed():
             # do not remove dead windows from the list! No touching that here
             # only the window getting destroyed should remove it
             for window_bindings in _windows.items():
-              if not gui.test_widget(window_bindings[0]): continue
+              if not window_bindings[0].winfo_exists(): continue
               bind_window(window_bindings, name_sequence(sequence))
             
             return result

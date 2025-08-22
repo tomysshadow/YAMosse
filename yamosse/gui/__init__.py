@@ -162,13 +162,6 @@ def _init_enable_widget():
 enable_widget = _init_enable_widget()
 
 
-def test_widget(widget):
-  # give a widget a "vibe check" to test it's still alive
-  try: widget.winfo_name()
-  except tk.TclError: return False
-  return True
-
-
 def match_variable_widget(widget, variable):
   assert str(widget['variable']) == str(variable), 'variable mismatch'
 
