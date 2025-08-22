@@ -39,53 +39,64 @@ class UndoableScale(UndoableWidget):
 
 class UndoableMaster(UndoableScale):
   def __init__(self, scale, calibration):
-    self.scale = scale
     self._tk = scale.tk
     self._command = scale['command']
     
-    self.oldmasters = calibration.oldvalues
-    self.oldmaster = scale.get()
+    self.scale = scale
+    self.calibration = calibration
+    self.oldvalues = calibration.oldvalues
+    self.oldvalue = scale.get()
     
     self.bind(scale, scale)
     scale['command'] = self._master
-    
-    self.calibration = calibration
   
-  def revert(self, newvalues, newmasters, newmaster):
+  def revert(self, calibration_newvalues, newvalues, newvalue):
     # we must copy this here so we don't mutate a redo state
-    self.calibration.oldvalues = newvalues.copy()
-    self.oldmasters = newmasters.copy()
-    self.oldmaster = newmaster
-    self.scale.set(newmaster)
+    self.calibration.oldvalues = calibration_newvalues.copy()
+    self.oldvalues = newvalues.copy()
+    self.oldvalue = newvalue
+    self.scale.set(newvalue) # must happen last, invokes self._master function
   
   def data(self, e):
-    revert = self.revert
     widget = e.widget
     
-    calibration = self.calibration
+    oldvalue = self.oldvalue
+    newvalue = widget.get()
+    if oldvalue == newvalue: return
     
-    newmaster = widget.get()
-    oldmaster = self.oldmaster
-    if oldmaster == newmaster: return
+    print(f'Undo master scale save {widget} {newvalue} {oldvalue}')
     
-    print(f'Undo master scale save {widget} {newmaster} {oldmaster}')
-    
-    # oldmasters must be copied because it could be mutated
+    # oldvalues must be copied because it could be mutated
     # by the normal revert function still
-    oldvalues = calibration.oldvalues
-    newvalues = {s: s.get() for s in oldvalues.keys()}
-    newmasters = self.oldmasters.copy()
+    calibration = self.calibration
+    calibration_oldvalues = calibration.oldvalues
+    calibration_newvalues = {s: s.get() for s in calibration_oldvalues.keys()}
+    newvalues = self.oldvalues.copy()
+    
+    revert = self.revert
     
     calibration.undooptions(
-      (revert, oldvalues, newmasters, oldmaster),
-      (revert, newvalues, newmasters, newmaster)
+      (revert, calibration_oldvalues, newvalues, oldvalue),
+      (revert, calibration_newvalues, newvalues, newvalue)
     )
     
-    calibration.oldvalues = newvalues.copy()
-    self.oldmaster = newmaster
+    calibration.oldvalues = calibration_newvalues.copy()
+    self.oldvalue = newvalue
+  
+  def calibrate(self, widget, newvalue):
+    # the value of MASTER_LIMIT is such that if the master scale is
+    # set to zero, then another scale has its value changed from zero
+    # to any non-zero number, it will jump to the highest possible
+    # percentage (200%) representable by the scales at any other master value
+    self.oldvalues[widget] = round(
+      newvalue / max(
+        MASTER_LIMIT,
+        self.scale.get() / MASTER_CENTER
+      )
+    )
   
   def _master(self, text, *args):
-    for scale, newvalue in self.oldmasters.items():
+    for scale, newvalue in self.oldvalues.items():
       scale.set(round(newvalue * (float(text) / MASTER_CENTER)))
     
     return self._tk.call(self._command, text, *args)
@@ -93,29 +104,36 @@ class UndoableMaster(UndoableScale):
 
 class UndoableReset(UndoableWidget):
   def __init__(self, button, calibration):
-    button['command'] = self._reset
-    
     self.calibration = calibration
+    self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
+    
+    button['command'] = self._reset
   
-  # it's okay to use a dictionary as a default here
-  # because we won't ever be mutating it
-  def revert(self, newvalues=None, newmasters=None, newmaster=DEFAULT_SCALE_VALUE):
-    calibration = self.calibration
-    defaultvalues = calibration.defaultvalues
+  def revert(
+    self,
+    calibration_newvalues=None,
+    master_newvalues=None,
+    master_newvalue=DEFAULT_SCALE_VALUE
+  ):
+    oldvalues = self.oldvalues
     
-    if newvalues is None: newvalues = defaultvalues
-    if newmasters is None: newmasters = defaultvalues
+    if calibration_newvalues is None: calibration_newvalues = oldvalues
+    if master_newvalues is None: master_newvalues = oldvalues
     
-    for scale, newvalue in newvalues.items():
+    for scale, newvalue in calibration_newvalues.items():
       scale.set(newvalue)
     
-    calibration.master.revert(newvalues, newmasters, newmaster)
+    self.calibration.master.revert(
+      calibration_newvalues,
+      master_newvalues,
+      master_newvalue
+    )
   
   def _reset(self):
-    revert = self.revert
-    
     calibration = self.calibration
     master = calibration.master
+    
+    revert = self.revert
     
     # the oldvalues must be copied when turned into an undooption
     # because they get changed as the scales are set
@@ -124,7 +142,7 @@ class UndoableReset(UndoableWidget):
       (
         revert,
         calibration.oldvalues.copy(),
-        master.oldmasters.copy(),
+        master.oldvalues.copy(),
         master.scale.get()
       ),
       
@@ -152,26 +170,19 @@ class UndoableReset(UndoableWidget):
 # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
 # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
 class UndoableCalibration(UndoableScale):
-  def __init__(self, text, scales, master_scale, reset_button, undooptions):
+  def __init__(self, text, scales, undooptions, master_scale, reset_button):
     self.text = text
-    self.scales = scales
     self.undooptions = undooptions
     
+    oldvalues = {s: s.get() for s in scales.values()}
+    self.oldvalues = oldvalues
+    
+    # this bindtag must be on the end
+    # so that we don't swallow all events before the text gets them
     bindtag = gui.bindtag(text)
     
-    defaultvalues = {}
-    oldvalues = {}
-    
-    for scale in scales.values():
-      # this bindtag must be on the end
-      # so that we don't swallow all events before the text gets them
+    for scale in oldvalues:
       scale.bindtags(scale.bindtags() + (bindtag,))
-      
-      defaultvalues[scale] = DEFAULT_SCALE_VALUE
-      oldvalues[scale] = scale.get()
-    
-    self.defaultvalues = defaultvalues
-    self.oldvalues = oldvalues
     
     self.bind(text, bindtag)
     self.master = UndoableMaster(master_scale, self)
@@ -183,10 +194,9 @@ class UndoableCalibration(UndoableScale):
     widget.focus_set()
     widget.set(newvalue)
     
-    self._calibration(widget, newvalue)
+    self._calibrate(widget, newvalue)
   
   def data(self, e):
-    revert = self.revert
     widget = e.widget
     
     # don't do anything if the value hasn't changed
@@ -196,28 +206,18 @@ class UndoableCalibration(UndoableScale):
     
     print(f'Undo calibration scale save {widget} {newvalue} {oldvalue}')
     
+    revert = self.revert
+    
     self.undooptions(
       (revert, widget, oldvalue),
       (revert, widget, newvalue)
     )
     
-    self._calibration(widget, newvalue)
+    self._calibrate(widget, newvalue)
   
-  def _calibration(self, widget, newvalue):
+  def _calibrate(self, widget, newvalue):
     self.oldvalues[widget] = newvalue
-    
-    # the value of MASTER_LIMIT is such that if the master scale is
-    # set to zero, then another scale has its value changed from zero
-    # to any non-zero number, it will jump to the highest possible
-    # percentage (200%) representable by the scales at any other master value
-    master = self.master
-    
-    master.oldmasters[widget] = round(
-      newvalue / max(
-        MASTER_LIMIT,
-        master.scale.get() / MASTER_CENTER
-      )
-    )
+    self.master.calibrate(widget, newvalue)
 
 
 def make_footer(frame, ok, cancel):
@@ -323,9 +323,9 @@ def make_calibrate(frame, variables, class_names, attached):
   undoable_calibration = UndoableCalibration(
     calibration_text,
     scales,
+    undooptions,
     master_scale,
-    reset_button,
-    undooptions
+    reset_button
   )
   
   gui.set_modal_window(window)
