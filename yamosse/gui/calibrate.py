@@ -207,10 +207,10 @@ class UndoableCalibration(UndoableScale):
     self.master = UndoableMaster(undooptions, master_scale, self)
     self.reset = UndoableReset(undooptions, reset_button, self)
   
-  def revert(self, widget, newvalue):
+  def revert(self, widget, newvalue, focus=True):
     # look at and focus the widget so the user notices what's just changed
     self.text.see(widget.master)
-    widget.focus_set()
+    if focus: widget.focus_set()
     widget.set(newvalue)
     
     self._calibrate(widget, newvalue)
