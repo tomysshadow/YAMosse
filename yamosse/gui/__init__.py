@@ -300,6 +300,9 @@ def measure_text_width_widget(widget, width, font):
 
 def make_widgets(frame, make_widget, items=None,
   orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING):
+  widgets = []
+  if not items: return widgets
+  
   ORIENTS = {
     tk.HORIZONTAL: (
       'row',
@@ -314,12 +317,9 @@ def make_widgets(frame, make_widget, items=None,
     )
   }
   
-  widgets = []
-  if not items: return widgets
-  
   # float divide is used for padding in case it is not even
-  last = len(items) - 1
   x, y, pad = ORIENTS[orient]
+  last = len(items) - 1
   padding = padding / 2 if last != 0 else 0
   
   # first widget

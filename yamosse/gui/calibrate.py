@@ -146,11 +146,14 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       
       print(f'Undo master scale save {scale} {newvalue} {oldvalue}')
       
+      # oldmasters must be copied because it could be mutated
+      # by the normal revert function still
       newvalues = {s: s.get() for s in oldvalues.keys()}
+      newmasters = oldmasters.copy()
       
       undooptions(
-        (revert, oldvalue, oldvalues, oldmasters),
-        (revert, newvalue, newvalues, oldmasters)
+        (revert, oldvalue, oldvalues, newmasters),
+        (revert, newvalue, newvalues, newmasters)
       )
       
       oldvalue = newvalue

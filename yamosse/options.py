@@ -77,10 +77,14 @@ class Options:
     self.high_priority = high_priority
   
   def print(self, end='\n', file=None):
-    def joined(value):
-      return value == shlex.join(shlex.split(value))
+    #def joined(value):
+    #  return value == shlex.join(shlex.split(value))
     
-    assert joined(self.input), 'input must be joined'
+    # this check is disabled because
+    # the value of the input field may be temporarily invalid
+    # the user can just type anything they want in the entry
+    # and that should be fine until it's time to scan
+    #assert joined(self.input), 'input must be joined'
     #assert joined(self.weights), 'weights must be joined'
     
     def option(name, value, end='\n'):
