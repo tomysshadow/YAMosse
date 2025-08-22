@@ -19,12 +19,12 @@ class UndoableWidget(ABC):
     self._undooptions = undooptions
   
   @abstractmethod
-  def revert(self, *args):
+  def revert(self, *args, focus=True):
     pass
 
 class UndoableScale(UndoableWidget):
   @abstractmethod
-  def revert(self, *args):
+  def revert(self, *args, focus=True):
     pass
   
   @abstractmethod
