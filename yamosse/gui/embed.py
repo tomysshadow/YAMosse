@@ -216,6 +216,9 @@ def _root_embed():
             # filter out dead windows so bind_window doesn't die on them
             # do not remove dead windows from the list! No touching that here
             # only the window getting destroyed should remove it
+            # ideally dead windows should get auto removed from the dictionary
+            # because it's a WeakKeyDictionary, but in theory something could
+            # still be holding onto its Python reference
             for window_bindings in _windows.items():
               if not window_bindings[0].winfo_exists(): continue
               bind_window(window_bindings, name_sequence(sequence))
