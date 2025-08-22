@@ -11,7 +11,11 @@ VIEWS = {
   '<<PrevChar>>': (tk.X, (tk.SCROLL, -1, tk.UNITS)),
   '<<NextChar>>': (tk.X, (tk.SCROLL, 1, tk.UNITS)),
   '<<PrevLine>>': (tk.Y, (tk.SCROLL, -1, tk.UNITS)),
-  '<<NextLine>>': (tk.Y, (tk.SCROLL, 1, tk.UNITS))
+  '<<NextLine>>': (tk.Y, (tk.SCROLL, 1, tk.UNITS)),
+  '<<PrevWord>>': (tk.X, (tk.SCROLL, -10, tk.UNITS)),
+  '<<NextWord>>': (tk.X, (tk.SCROLL, 10, tk.UNITS)),
+  '<<PrevPara>>': (tk.Y, (tk.SCROLL, -10, tk.UNITS)),
+  '<<NextPara>>': (tk.Y, (tk.SCROLL, 10, tk.UNITS))
 }
 
 ADD = '+'
