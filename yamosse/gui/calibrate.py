@@ -38,63 +38,70 @@ class UndoableScale(UndoableWidget):
       widget.bind_class(bindtag, name, data)
 
 class UndoableMaster(UndoableScale):
-  def __init__(self, undoable_calibration):
-    self.undoable_calibration = undoable_calibration
-    
-    scale = undoable_calibration.master_scale
+  def __init__(self, scale, calibration):
+    self.scale = scale
     self._tk = scale.tk
     self._command = scale['command']
     
+    self.oldmasters = calibration.oldvalues
+    self.oldmaster = scale.get()
+    
     self.bind(scale, scale)
     scale['command'] = self._master
+    
+    self.calibration = calibration
   
-  def revert(self, *args):
-    self.undoable_calibration.revert_master(*args)
+  def revert(self, newvalues, newmasters, newmaster):
+    # we must copy this here so we don't mutate a redo state
+    self.calibration.oldvalues = newvalues.copy()
+    self.oldmasters = newmasters.copy()
+    self.oldmaster = newmaster
+    self.scale.set(newmaster)
   
   def data(self, e):
     revert = self.revert
     widget = e.widget
     
-    undoable_calibration = self.undoable_calibration
+    calibration = self.calibration
     
     newmaster = widget.get()
-    oldmaster = undoable_calibration.oldmaster
+    oldmaster = self.oldmaster
     if oldmaster == newmaster: return
     
     print(f'Undo master scale save {widget} {newmaster} {oldmaster}')
     
     # oldmasters must be copied because it could be mutated
     # by the normal revert function still
-    oldvalues = undoable_calibration.oldvalues
+    oldvalues = calibration.oldvalues
     newvalues = {s: s.get() for s in oldvalues.keys()}
-    newmasters = undoable_calibration.oldmasters.copy()
+    newmasters = self.oldmasters.copy()
     
-    undoable_calibration.undooptions(
+    calibration.undooptions(
       (revert, oldvalues, newmasters, oldmaster),
       (revert, newvalues, newmasters, newmaster)
     )
     
-    undoable_calibration.oldvalues = newvalues.copy()
-    undoable_calibration.oldmaster = newmaster
+    calibration.oldvalues = newvalues.copy()
+    self.oldmaster = newmaster
   
   def _master(self, text, *args):
-    for scale, newvalue in self.undoable_calibration.oldmasters.items():
+    for scale, newvalue in self.oldmasters.items():
       scale.set(round(newvalue * (float(text) / MASTER_CENTER)))
     
     return self._tk.call(self._command, text, *args)
 
 
 class UndoableReset(UndoableWidget):
-  def __init__(self, undoable_calibration):
-    self.undoable_calibration = undoable_calibration
+  def __init__(self, button, calibration):
+    button['command'] = self._reset
     
-    undoable_calibration.reset_button['command'] = self._reset
+    self.calibration = calibration
   
   # it's okay to use a dictionary as a default here
   # because we won't ever be mutating it
   def revert(self, newvalues=None, newmasters=None, newmaster=DEFAULT_SCALE_VALUE):
-    undoable_calibration = self.undoable_calibration
-    defaultvalues = undoable_calibration.defaultvalues
+    calibration = self.calibration
+    defaultvalues = calibration.defaultvalues
     
     if newvalues is None: newvalues = defaultvalues
     if newmasters is None: newmasters = defaultvalues
@@ -102,22 +109,23 @@ class UndoableReset(UndoableWidget):
     for scale, newvalue in newvalues.items():
       scale.set(newvalue)
     
-    undoable_calibration.revert_master(newvalues, newmasters, newmaster)
+    calibration.master.revert(newvalues, newmasters, newmaster)
   
   def _reset(self):
     revert = self.revert
     
-    undoable_calibration = self.undoable_calibration
+    calibration = self.calibration
+    master = calibration.master
     
     # the oldvalues must be copied when turned into an undooption
     # because they get changed as the scales are set
     # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
-    undoable_calibration.undooptions(
+    calibration.undooptions(
       (
         revert,
-        undoable_calibration.oldvalues.copy(),
-        undoable_calibration.oldmasters.copy(),
-        undoable_calibration.master_scale.get()
+        calibration.oldvalues.copy(),
+        master.oldmasters.copy(),
+        master.scale.get()
       ),
       
       (revert,)
@@ -147,8 +155,6 @@ class UndoableCalibration(UndoableScale):
   def __init__(self, text, scales, master_scale, reset_button, undooptions):
     self.text = text
     self.scales = scales
-    self.master_scale = master_scale
-    self.reset_button = reset_button
     self.undooptions = undooptions
     
     bindtag = gui.bindtag(text)
@@ -166,12 +172,10 @@ class UndoableCalibration(UndoableScale):
     
     self.defaultvalues = defaultvalues
     self.oldvalues = oldvalues
-    self.oldmasters = oldvalues
-    self.oldmaster = master_scale.get()
     
     self.bind(text, bindtag)
-    self.master = UndoableMaster(self)
-    self.reset = UndoableReset(self)
+    self.master = UndoableMaster(master_scale, self)
+    self.reset = UndoableReset(reset_button, self)
   
   def revert(self, widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
@@ -180,13 +184,6 @@ class UndoableCalibration(UndoableScale):
     widget.set(newvalue)
     
     self._calibration(widget, newvalue)
-  
-  def revert_master(self, newvalues, newmasters, newmaster):
-    # we must copy this here so we don't mutate a redo state
-    self.oldvalues = newvalues.copy()
-    self.oldmasters = newmasters.copy()
-    self.oldmaster = newmaster
-    self.master_scale.set(newmaster)
   
   def data(self, e):
     revert = self.revert
@@ -213,10 +210,12 @@ class UndoableCalibration(UndoableScale):
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
-    self.oldmasters[widget] = round(
+    master = self.master
+    
+    master.oldmasters[widget] = round(
       newvalue / max(
         MASTER_LIMIT,
-        self.master_scale.get() / MASTER_CENTER
+        master.scale.get() / MASTER_CENTER
       )
     )
 
