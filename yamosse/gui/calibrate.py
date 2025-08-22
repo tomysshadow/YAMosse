@@ -137,10 +137,7 @@ class UndoableReset(UndoableWidget):
     if calibration_newvalues is None: calibration_newvalues = oldvalues
     if master_newvalues is None: master_newvalues = oldvalues
     
-    self.button.focus_set()
-    
-    for scale, newvalue in calibration_newvalues.items():
-      scale.set(newvalue)
+    if focus: self.button.focus_set()
     
     self.calibration.master.revert(
       calibration_newvalues,
