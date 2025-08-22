@@ -139,6 +139,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       oldvalues = newvalues.copy()
       oldmasters = newmasters.copy()
       
+      # this invokes the value() function above
       widget.set(newmaster)
       oldmaster = newmaster
     
@@ -180,8 +181,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # because we won't ever be mutating it
     def revert(
       newvalues=defaultvalues,
-      newmaster=DEFAULT_SCALE_VALUE,
-      newmasters=defaultvalues
+      newmasters=defaultvalues,
+      newmaster=DEFAULT_SCALE_VALUE
     ):
       nonlocal oldvalues
       nonlocal oldmasters
@@ -201,7 +202,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # because they get changed as the scales are set
     # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
     undooptions(
-      (revert, oldvalues.copy(), master_scale.get(), oldmasters.copy()),
+      (revert, oldvalues.copy(), oldmasters.copy(), master_scale.get()),
       (revert,)
     )
     
