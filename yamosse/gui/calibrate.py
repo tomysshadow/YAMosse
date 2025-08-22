@@ -83,10 +83,12 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
-    oldmasters[widget] = round(newvalue / max(
-      MASTER_LIMIT,
-      master_scale.get() / MASTER_CENTER
-    ))
+    oldmasters[widget] = round(
+      newvalue / max(
+        MASTER_LIMIT,
+        master_scale.get() / MASTER_CENTER
+      )
+    )
   
   def revert(widget, newvalue):
     # look at and focus the widget so the user notices what's just changed
