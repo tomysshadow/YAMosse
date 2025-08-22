@@ -75,7 +75,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
   oldmasters = oldvalues
   oldmaster = master_scale.get()
   
-  def values(widget):
+  def value(widget):
     newvalue = widget.get()
     oldvalues[widget] = newvalue
     
@@ -96,7 +96,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     widget.focus_set()
     widget.set(newvalue)
     
-    values(widget)
+    value(widget)
   
   def data(e):
     widget = e.widget
@@ -113,7 +113,7 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       (revert, widget, newvalue)
     )
     
-    values(widget)
+    value(widget)
   
   # focus out is caught in case a widget gets a key press then loses focus before key release
   gui.bind_truekey_widget(text, class_=bindtag, release=data)
@@ -122,19 +122,16 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     text.bind_class(bindtag, name, data)
   
   def master(scale):
+    tk_ = scale.tk
     command = scale['command']
     
-    def values(*args):
-      newmaster = scale.get()
+    def value(value, *args):
+      for scale, newvalue in oldmasters.items():
+        scale.set(round(newvalue * (float(value) / MASTER_CENTER)))
       
-      for widget, newvalue in oldmasters.items():
-        widget.set(round(newvalue * (newmaster / MASTER_CENTER)))
-      
-      return scale.tk.call(command, *args)
+      return tk_.call(command, value, *args)
     
-    scale['command'] = values
-    
-    def revert(newvalues, newmasters, newmaster):
+    def revert(widget, newvalues, newmasters, newmaster):
       nonlocal oldvalues
       nonlocal oldmasters
       nonlocal oldmaster
@@ -142,17 +139,19 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       oldvalues = newvalues.copy()
       oldmasters = newmasters.copy()
       
-      scale.set(newmaster)
+      widget.set(newmaster)
       oldmaster = newmaster
     
     def data(e):
       nonlocal oldvalues
       nonlocal oldmaster
       
-      newmaster = scale.get()
+      widget = e.widget
+      
+      newmaster = widget.get()
       if oldmaster == newmaster: return
       
-      print(f'Undo master scale save {scale} {newmaster} {oldmaster}')
+      print(f'Undo master scale save {widget} {newmaster} {oldmaster}')
       
       # oldmasters must be copied because it could be mutated
       # by the normal revert function still
@@ -160,8 +159,8 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
       newmasters = oldmasters.copy()
       
       undooptions(
-        (revert, oldvalues, newmasters, oldmaster),
-        (revert, newvalues, newmasters, newmaster)
+        (revert, widget, oldvalues, newmasters, oldmaster),
+        (revert, widget, newvalues, newmasters, newmaster)
       )
       
       oldvalues = newvalues.copy()
@@ -171,8 +170,10 @@ def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
     
     for name in NAMES:
       scale.bind(name, data)
+    
+    return value
   
-  master(master_scale)
+  master_scale['command'] = master(master_scale)
   
   def reset():
     # it's okay to use a dictionary as a default here
