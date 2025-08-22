@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from abc import ABC, abstractmethod
 
 from .. import gui
 from . import embed as gui_embed
@@ -12,6 +13,225 @@ DEFAULT_SCALE_VALUE = 100
 
 MASTER_LIMIT = 0.00001
 MASTER_CENTER = 100.0
+
+class Undoable(ABC):
+  @abstractmethod
+  def revert(self, *args):
+    pass
+
+class UndoableScale(Undoable):
+  @abstractmethod
+  def revert(self, *args):
+    pass
+  
+  @abstractmethod
+  def data(self, e):
+    pass
+  
+  def bind(self, widget, bindtag):
+    data = self.data
+    
+    # focus out is caught in case a widget gets a key press then loses focus before key release
+    gui.bind_truekey_widget(widget, class_=bindtag, release=data)
+    
+    for name in ('<ButtonRelease>', '<FocusOut>'):
+      widget.bind_class(bindtag, name, data)
+
+class UndoableMaster(UndoableScale):
+  def __init__(self, undoable_calibration):
+    self.undoable_calibration = undoable_calibration
+    
+    scale = undoable_calibration.master_scale
+    
+    self._tk = scale.tk
+    self._command = scale['command']
+    
+    self.bind(scale, scale)
+    scale['command'] = self._master
+  
+  def revert(self, widget, newvalues, newmasters, newmaster):
+    undoable_calibration = self.undoable_calibration
+    
+    undoable_calibration.oldvalues = newvalues.copy()
+    undoable_calibration.oldmasters = newmasters.copy()
+    
+    # this invokes the self._master function
+    widget.set(newmaster)
+    undoable_calibration.oldmaster = newmaster
+  
+  def data(self, e):
+    revert = self.revert
+    widget = e.widget
+    
+    undoable_calibration = self.undoable_calibration
+    
+    newmaster = widget.get()
+    oldmaster = undoable_calibration.oldmaster
+    if oldmaster == newmaster: return
+    
+    print(f'Undo master scale save {widget} {newmaster} {oldmaster}')
+    
+    # oldmasters must be copied because it could be mutated
+    # by the normal revert function still
+    oldvalues = undoable_calibration.oldvalues
+    newvalues = {s: s.get() for s in oldvalues.keys()}
+    newmasters = undoable_calibration.oldmasters.copy()
+    
+    undoable_calibration.undooptions(
+      (revert, widget, oldvalues, newmasters, oldmaster),
+      (revert, widget, newvalues, newmasters, newmaster)
+    )
+    
+    undoable_calibration.oldvalues = newvalues.copy()
+    undoable_calibration.oldmaster = newmaster
+  
+  def _master(self, text, *args):
+    for scale, newvalue in self.undoable_calibration.oldmasters.items():
+      scale.set(round(newvalue * (float(text) / MASTER_CENTER)))
+    
+    return self._tk.call(self._command, text, *args)
+
+
+class UndoableReset(Undoable):
+  def __init__(self, undoable_calibration):
+    self.undoable_calibration = undoable_calibration
+    
+    undoable_calibration.reset_button['command'] = self._reset
+  
+  # it's okay to use a dictionary as a default here
+  # because we won't ever be mutating it
+  def revert(
+    self,
+    newvalues=None,
+    newmasters=None,
+    newmaster=DEFAULT_SCALE_VALUE
+  ):
+    undoable_calibration = self.undoable_calibration
+    defaultvalues = undoable_calibration.defaultvalues
+    
+    if newvalues is None: newvalues = defaultvalues
+    if newmasters is None: newmasters = defaultvalues
+    
+    for scale, newvalue in newvalues.items():
+      scale.set(newvalue)
+    
+    # we must copy this here so we don't mutate a redo state
+    undoable_calibration.oldvalues = newvalues.copy()
+    undoable_calibration.oldmasters = newmasters.copy()
+    
+    undoable_calibration.master_scale.set(newmaster)
+    undoable_calibration.oldmaster = newmaster
+  
+  def _reset(self):
+    revert = self.revert
+    
+    undoable_calibration = self.undoable_calibration
+    
+    # the oldvalues must be copied when turned into an undooption
+    # because they get changed as the scales are set
+    # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
+    undoable_calibration.undooptions(
+      (
+        revert,
+        undoable_calibration.oldvalues.copy(),
+        undoable_calibration.oldmasters.copy(),
+        undoable_calibration.master_scale.get()
+      ),
+      
+      (revert,)
+    )
+    
+    revert()
+
+# There are a couple known issues with this:
+# -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
+#   while still editing the current one. The ideal is that undo is disabled
+#   when you're in the middle of a click and drag.
+# -if you tab into one of the scales and hold the up/down arrow keys to edit it
+#   then simultaneously click the Undo button, you can undo the current widget while
+#   it's still navigating, clobbering the Redo stack in the process. The ideal would
+#   be that if you have any key held on a focused scale, you can't undo, but the problem is
+#   this should obviously not apply to Ctrl+Z/Ctrl+Y itself, which needs to work
+#   even if a scale is focused. Thing is I don't want to make the assumption in this code
+#   that the arrow keys are the only editing hotkeys, nor do I want to assume
+#   that Ctrl+Z/Ctrl+Y are the only undo hotkeys. So really it should only undo if... when???
+# I anticipate that both of these problems could be solved in the same way/with the same
+# simple solution, which I just can't think of at the moment. It will obviously involve
+# capturing ButtonPress/KeyPress events to know when you're "clicked in," but it's the
+# exceptions to the rule that make things difficult. I did think of using variable tracing,
+# but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
+# it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
+class UndoableCalibration(UndoableScale):
+  def __init__(self, text, scales, master_scale, reset_button, undooptions):
+    self.text = text
+    self.scales = scales
+    self.master_scale = master_scale
+    self.reset_button = reset_button
+    self.undooptions = undooptions
+    
+    bindtag = gui.bindtag(text)
+    
+    defaultvalues = {}
+    oldvalues = {}
+    
+    for scale in scales.values():
+      # this bindtag must be on the end
+      # so that we don't swallow all events before the text gets them
+      scale.bindtags(scale.bindtags() + (bindtag,))
+      
+      defaultvalues[scale] = DEFAULT_SCALE_VALUE
+      oldvalues[scale] = scale.get()
+    
+    self.defaultvalues = defaultvalues
+    self.oldvalues = oldvalues
+    
+    self.oldmasters = oldvalues
+    self.oldmaster = master_scale.get()
+    
+    self.bind(text, bindtag)
+    
+    self.master = UndoableMaster(self)
+    self.reset = UndoableReset(self)
+  
+  def revert(self, widget, newvalue):
+    # look at and focus the widget so the user notices what's just changed
+    self.text.see(widget.master)
+    widget.focus_set()
+    widget.set(newvalue)
+    
+    self._calibration(widget, newvalue)
+  
+  def data(self, e):
+    revert = self.revert
+    widget = e.widget
+    
+    # don't do anything if the value hasn't changed
+    oldvalue = self.oldvalues[widget]
+    newvalue = widget.get()
+    if oldvalue == newvalue: return
+    
+    print(f'Undo scale save {widget} {newvalue} {oldvalue}')
+    
+    self.undooptions(
+      (revert, widget, oldvalue),
+      (revert, widget, newvalue)
+    )
+    
+    self._calibration(widget, newvalue)
+  
+  def _calibration(self, widget, newvalue):
+    self.oldvalues[widget] = newvalue
+    
+    # the value of MASTER_LIMIT is such that if the master scale is
+    # set to zero, then another scale has its value changed from zero
+    # to any non-zero number, it will jump to the highest possible
+    # percentage (200%) representable by the scales at any other master value
+    self.oldmasters[widget] = round(
+      newvalue / max(
+        MASTER_LIMIT,
+        self.master_scale.get() / MASTER_CENTER
+      )
+    )
 
 
 def make_footer(frame, ok, cancel):
@@ -36,179 +256,6 @@ def make_footer(frame, ok, cancel):
     gui.enable_traversal_button(button)
   
   return undooptions, reset_button
-
-
-def _undoable_scales(scales, master_scale, text, reset_button, undooptions):
-  # There are a couple known issues with this:
-  # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
-  #   while still editing the current one. The ideal is that undo is disabled
-  #   when you're in the middle of a click and drag.
-  # -if you tab into one of the scales and hold the up/down arrow keys to edit it
-  #   then simultaneously click the Undo button, you can undo the current widget while
-  #   it's still navigating, clobbering the Redo stack in the process. The ideal would
-  #   be that if you have any key held on a focused scale, you can't undo, but the problem is
-  #   this should obviously not apply to Ctrl+Z/Ctrl+Y itself, which needs to work
-  #   even if a scale is focused. Thing is I don't want to make the assumption in this code
-  #   that the arrow keys are the only editing hotkeys, nor do I want to assume
-  #   that Ctrl+Z/Ctrl+Y are the only undo hotkeys. So really it should only undo if... when???
-  # I anticipate that both of these problems could be solved in the same way/with the same
-  # simple solution, which I just can't think of at the moment. It will obviously involve
-  # capturing ButtonPress/KeyPress events to know when you're "clicked in," but it's the
-  # exceptions to the rule that make things difficult. I did think of using variable tracing,
-  # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
-  # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
-  NAMES = ('<ButtonRelease>', '<FocusOut>')
-  
-  bindtag = gui.bindtag(text)
-  
-  defaultvalues = {}
-  oldvalues = {}
-  
-  for scale in scales.values():
-    # this bindtag must be on the end
-    # so that we don't swallow all events before the text gets them
-    scale.bindtags(scale.bindtags() + (bindtag,))
-    
-    defaultvalues[scale] = DEFAULT_SCALE_VALUE
-    oldvalues[scale] = scale.get()
-  
-  oldmasters = oldvalues
-  oldmaster = master_scale.get()
-  
-  def value(widget):
-    newvalue = widget.get()
-    oldvalues[widget] = newvalue
-    
-    # the value of MASTER_LIMIT is such that if the master scale is
-    # set to zero, then another scale has its value changed from zero
-    # to any non-zero number, it will jump to the highest possible
-    # percentage (200%) representable by the scales at any other master value
-    oldmasters[widget] = round(
-      newvalue / max(
-        MASTER_LIMIT,
-        master_scale.get() / MASTER_CENTER
-      )
-    )
-  
-  def revert(widget, newvalue):
-    # look at and focus the widget so the user notices what's just changed
-    text.see(widget.master)
-    widget.focus_set()
-    widget.set(newvalue)
-    
-    value(widget)
-  
-  def data(e):
-    widget = e.widget
-    
-    # don't do anything if the value hasn't changed
-    oldvalue = oldvalues[widget]
-    newvalue = widget.get()
-    if oldvalue == newvalue: return
-    
-    print(f'Undo scale save {widget} {newvalue} {oldvalue}')
-    
-    undooptions(
-      (revert, widget, oldvalue),
-      (revert, widget, newvalue)
-    )
-    
-    value(widget)
-  
-  # focus out is caught in case a widget gets a key press then loses focus before key release
-  gui.bind_truekey_widget(text, class_=bindtag, release=data)
-  
-  for name in NAMES:
-    text.bind_class(bindtag, name, data)
-  
-  def master(scale):
-    tk_ = scale.tk
-    command = scale['command']
-    
-    def value(value, *args):
-      for scale, newvalue in oldmasters.items():
-        scale.set(round(newvalue * (float(value) / MASTER_CENTER)))
-      
-      return tk_.call(command, value, *args)
-    
-    def revert(widget, newvalues, newmasters, newmaster):
-      nonlocal oldvalues
-      nonlocal oldmasters
-      nonlocal oldmaster
-      
-      oldvalues = newvalues.copy()
-      oldmasters = newmasters.copy()
-      
-      # this invokes the value() function above
-      widget.set(newmaster)
-      oldmaster = newmaster
-    
-    def data(e):
-      nonlocal oldvalues
-      nonlocal oldmaster
-      
-      widget = e.widget
-      
-      newmaster = widget.get()
-      if oldmaster == newmaster: return
-      
-      print(f'Undo master scale save {widget} {newmaster} {oldmaster}')
-      
-      # oldmasters must be copied because it could be mutated
-      # by the normal revert function still
-      newvalues = {s: s.get() for s in oldvalues.keys()}
-      newmasters = oldmasters.copy()
-      
-      undooptions(
-        (revert, widget, oldvalues, newmasters, oldmaster),
-        (revert, widget, newvalues, newmasters, newmaster)
-      )
-      
-      oldvalues = newvalues.copy()
-      oldmaster = newmaster
-    
-    gui.bind_truekey_widget(scale, release=data)
-    
-    for name in NAMES:
-      scale.bind(name, data)
-    
-    return value
-  
-  master_scale['command'] = master(master_scale)
-  
-  def reset():
-    # it's okay to use a dictionary as a default here
-    # because we won't ever be mutating it
-    def revert(
-      newvalues=defaultvalues,
-      newmasters=defaultvalues,
-      newmaster=DEFAULT_SCALE_VALUE
-    ):
-      nonlocal oldvalues
-      nonlocal oldmasters
-      nonlocal oldmaster
-      
-      for scale, newvalue in newvalues.items():
-        scale.set(newvalue)
-      
-      # we must copy this here so we don't mutate a redo state
-      oldvalues = newvalues.copy()
-      oldmasters = newmasters.copy()
-      
-      master_scale.set(newmaster)
-      oldmaster = newmaster
-    
-    # the oldvalues must be copied when turned into an undooption
-    # because they get changed as the scales are set
-    # if we didn't copy, then as we set the scales, they'd mutate the undo state (bad!)
-    undooptions(
-      (revert, oldvalues.copy(), oldmasters.copy(), master_scale.get()),
-      (revert,)
-    )
-    
-    revert()
-  
-  reset_button['command'] = reset
 
 
 def make_calibrate(frame, variables, class_names, attached):
@@ -287,6 +334,12 @@ def make_calibrate(frame, variables, class_names, attached):
     lambda: gui.release_modal_window(window)
   )
   
-  _undoable_scales(scales, master_scale, calibration_text, reset_button, undooptions)
+  undoable_calibration = UndoableCalibration(
+    calibration_text,
+    scales,
+    master_scale,
+    reset_button,
+    undooptions
+  )
   
   gui.set_modal_window(window)
