@@ -106,8 +106,10 @@ class UndoableMaster(UndoableScale):
     )
   
   def _master(self, text, *args):
+    multiplier = float(text) / MASTER_CENTER
+    
     for scale, newvalue in self.oldvalues.items():
-      scale.set(round(newvalue * (float(text) / MASTER_CENTER)))
+      scale.set(round(newvalue * multiplier))
     
     return self._tk.call(self._command, text, *args)
 
