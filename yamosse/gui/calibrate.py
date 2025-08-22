@@ -45,23 +45,27 @@ class UndoableMaster(UndoableScale):
     self.scale = scale
     self.calibration = calibration
     self.oldvalues = calibration.oldvalues
-    self.oldvalue = scale.get()
+    self.oldvalue = float(scale.get())
     
     self.bind(scale, scale)
     scale['command'] = self._master
   
-  def revert(self, calibration_newvalues, newvalues, newvalue):
+  def revert(self, calibration_newvalues, newvalues, newvalue, focus=True):
     # we must copy this here so we don't mutate a redo state
     self.calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalues = newvalues.copy()
     self.oldvalue = newvalue
-    self.scale.set(newvalue) # must happen last, invokes self._master function
+    
+    # this must happen last, invokes self._master function
+    scale = self.scale
+    if focus: scale.focus_set()
+    scale.set(newvalue)
   
   def data(self, e):
     widget = e.widget
     
     oldvalue = self.oldvalue
-    newvalue = widget.get()
+    newvalue = float(widget.get())
     if oldvalue == newvalue: return
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue}')
@@ -70,7 +74,7 @@ class UndoableMaster(UndoableScale):
     # by the normal revert function still
     calibration = self.calibration
     calibration_oldvalues = calibration.oldvalues
-    calibration_newvalues = {s: s.get() for s in calibration_oldvalues.keys()}
+    calibration_newvalues = {s: float(s.get()) for s in calibration_oldvalues.keys()}
     newvalues = self.oldvalues.copy()
     
     revert = self.revert
@@ -91,7 +95,7 @@ class UndoableMaster(UndoableScale):
     self.oldvalues[widget] = round(
       newvalue / max(
         MASTER_LIMIT,
-        self.scale.get() / MASTER_CENTER
+        float(self.scale.get()) / MASTER_CENTER
       )
     )
   
@@ -126,7 +130,8 @@ class UndoableReset(UndoableWidget):
     self.calibration.master.revert(
       calibration_newvalues,
       master_newvalues,
-      master_newvalue
+      master_newvalue,
+      focus=False
     )
   
   def _reset(self):
@@ -143,7 +148,7 @@ class UndoableReset(UndoableWidget):
         revert,
         calibration.oldvalues.copy(),
         master.oldvalues.copy(),
-        master.scale.get()
+        float(master.scale.get())
       ),
       
       (revert,)
@@ -174,7 +179,7 @@ class UndoableCalibration(UndoableScale):
     self.text = text
     self.undooptions = undooptions
     
-    oldvalues = {s: s.get() for s in scales.values()}
+    oldvalues = {s: float(s.get()) for s in scales.values()}
     self.oldvalues = oldvalues
     
     # this bindtag must be on the end
@@ -201,7 +206,7 @@ class UndoableCalibration(UndoableScale):
     
     # don't do anything if the value hasn't changed
     oldvalue = self.oldvalues[widget]
-    newvalue = widget.get()
+    newvalue = float(widget.get())
     if oldvalue == newvalue: return
     
     print(f'Undo calibration scale save {widget} {newvalue} {oldvalue}')
