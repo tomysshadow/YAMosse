@@ -42,12 +42,12 @@ class UndoableScale(UndoableWidget):
   def bind(self, widget, class_):
     data = self.data
     
-    gui.bind_truekey_widget(widget, class_=class_, release=data)
+    gui.bind_truekey_widget(widget, class_=class_, release=data, add=True)
     
     # focus out is caught in case a widget gets a key press
     # then loses focus before key release
     for name in ('<ButtonRelease>', '<FocusOut>'):
-      widget.bind_class(class_, name, data)
+      widget.bind_class(class_, name, data, add=True)
 
 class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
@@ -67,7 +67,7 @@ class UndoableMaster(UndoableScale):
     # but for spacebar it's just a standard key event
     # (same as pressing a button)
     for name in ('<Double-ButtonRelease>', '<Key-space>'):
-      scale.bind(name, lambda e: self.data(e, recenter=True))
+      scale.bind(name, lambda e: self.data(e, recenter=True), add=True)
     
     self.bind(scale, scale)
     
@@ -348,7 +348,11 @@ def make_footer(frame, ok, cancel):
   reset_button = ttk.Button(frame, text='Reset', underline=0)
   reset_button.grid(row=0, column=4, sticky=tk.E, padx=gui.PADX_QW)
   
-  gui.bind_buttons_window(frame.winfo_toplevel(), ok_button=ok_button, cancel_button=cancel_button)
+  gui.bind_buttons_window(
+    frame.winfo_toplevel(),
+    ok_button=ok_button,
+    cancel_button=cancel_button
+  )
   
   for button in (ok_button, cancel_button, reset_button):
     gui.enable_traversal_button(button)
