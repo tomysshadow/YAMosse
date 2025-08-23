@@ -102,9 +102,10 @@ class UndoableMaster(UndoableScale):
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
+    calibration = self.calibration
+    
     # calibration.oldvalues doesn't need to be copied here
     # because we will always be reassigning it down below anyway
-    calibration = self.calibration
     calibration_oldvalues = calibration.oldvalues
     oldvalues = self.oldvalues
     
@@ -112,8 +113,7 @@ class UndoableMaster(UndoableScale):
     # because it could be mutated by the normal revert function still
     # it does not need to be copied in the recentre case
     # because in that case we will be reassigning self.oldvalues to newvalues anyway
-    multiplier = self._multiplier(newvalue)
-    calibration_newvalues = {w: round(o * multiplier) for w, o in oldvalues.items()}
+    calibration_newvalues = self._multiplied(oldvalues, newvalue)
     newvalues = calibration_newvalues if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
@@ -141,10 +141,8 @@ class UndoableMaster(UndoableScale):
     if newvalue is None:
       newvalue = self.value()
     
-    multiplier = self._multiplier(newvalue)
-    
-    for widget in widgets:
-      widget.set(round(oldvalues[widget] * multiplier))
+    for widget, multiplied in self._multiplied(oldvalues, newvalue).items():
+      widget.set(multiplied)
   
   def value(self):
     return float(self._scale.get())
@@ -169,8 +167,9 @@ class UndoableMaster(UndoableScale):
     return self._tk.call(command, text, *args)
   
   @staticmethod
-  def _multiplier(newvalue):
-    return float(newvalue) / MASTER_CENTER
+  def _multiplied(oldvalues, newvalue):
+    multiplier = float(newvalue) / MASTER_CENTER
+    return {w: round(o * multiplier) for w, o in oldvalues.items()}
 
 # There are a couple known issues with this:
 # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
