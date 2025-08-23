@@ -29,8 +29,22 @@ class UndoableScale(UndoableWidget):
     pass
   
   @abstractmethod
-  def data(self, e):
-    pass
+  def data(self, e, recenter=False):
+    widget = e.widget
+    
+    oldvalue = self._old(widget)
+    newvalue = float(widget.get())
+    
+    if recenter:
+      # disallow double clicking on the bar area to recentre
+      # it should only be possible by double clicking the squeezy-grabber thing
+      # so it doesn't interfere with people clicking on the bar to increment by one
+      if oldvalue != newvalue: raise ValueError('oldvalue must equal newvalue')
+      
+      newvalue = DEFAULT_SCALE_VALUE
+    
+    if oldvalue == newvalue: raise ValueError('oldvalue must not equal newvalue')
+    return widget, newvalue, oldvalue, recenter
   
   @abstractmethod
   def show(self, *args, **kwargs):
@@ -49,6 +63,17 @@ class UndoableScale(UndoableWidget):
     # then loses focus before key release
     for name in ('<ButtonRelease>', '<FocusOut>'):
       widget.bind_class(class_, name, data, add=True)
+    
+    # this must use a double button *release* specifically
+    # so that the event handler can compare the old/new value
+    # but for spacebar it's just a standard key event
+    # (same as pressing a button)
+    for name in ('<Double-ButtonRelease>', '<Key-space>'):
+      widget.bind_class(class_, name, lambda e: self.data(e, recenter=True), add=True)
+  
+  @abstractmethod
+  def _old(self, widget):
+    pass
 
 class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
@@ -62,14 +87,6 @@ class UndoableMaster(UndoableScale):
     self.oldvalue = float(scale.get())
     
     scale['command'] = self._master
-    
-    # this must use a double button *release* specifically
-    # so that the event handler can compare the old/new value
-    # but for spacebar it's just a standard key event
-    # (same as pressing a button)
-    for name in ('<Double-ButtonRelease>', '<Key-space>'):
-      scale.bind(name, lambda e: self.data(e, recenter=True), add=True)
-    
     self.bind(scale, scale)
     
     self.calibration = calibration
@@ -86,20 +103,8 @@ class UndoableMaster(UndoableScale):
     scale.set(newvalue)
   
   def data(self, e, recenter=False):
-    widget = e.widget
-    
-    oldvalue = self.oldvalue
-    newvalue = float(widget.get())
-    
-    if recenter:
-      # disallow double clicking on the bar area to recentre
-      # it should only be possible by double clicking the squeezy-grabber thing
-      # so it doesn't interfere with people clicking on the bar to increment by one
-      if oldvalue != newvalue: return
-      
-      newvalue = DEFAULT_SCALE_VALUE
-    
-    if oldvalue == newvalue: return
+    try: widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
+    except ValueError: return
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
@@ -114,7 +119,7 @@ class UndoableMaster(UndoableScale):
     # because it could be mutated by the normal revert function still
     # it does not need to be copied in the recentre case
     # because in that case we will be reassigning self.oldvalues anyway
-    calibration_newvalues = self._newvalues(widgets=oldvalues, newvalue=newvalue)
+    calibration_newvalues = self._new(widgets=oldvalues, newvalue=newvalue)
     newvalues = calibration_oldvalues if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
@@ -132,9 +137,11 @@ class UndoableMaster(UndoableScale):
       # copied to avoid mutating redo state
       self.oldvalues = newvalues.copy()
       self._scale.set(newvalue)
+    
+    return widget, newvalue, oldvalue, recenter
   
   def show(self, widgets=None, newvalue=None):
-    for widget, newvalue in self._newvalues(widgets=widgets, newvalue=newvalue).items():
+    for widget, newvalue in self._new(widgets=widgets, newvalue=newvalue).items():
       widget.set(newvalue)
   
   def value(self):
@@ -143,7 +150,10 @@ class UndoableMaster(UndoableScale):
   def calibrate(self, widget, newvalue):
     self.oldvalues[widget] = round(newvalue / self._reciprocal())
   
-  def _newvalues(self, widgets=None, newvalue=None):
+  def _old(self, widget):
+    return self.oldvalue
+  
+  def _new(self, widgets=None, newvalue=None):
     # by default, only use the scales that are within a visible window
     if widgets is None:
       widgets = self.calibration.scales
@@ -230,15 +240,11 @@ class UndoableCalibration(UndoableScale):
     
     self.show(widget, newvalue)
   
-  def data(self, e):
-    widget = e.widget
+  def data(self, e, recenter=False):
+    try: widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
+    except ValueError: return
     
-    # don't do anything if the value hasn't changed
-    oldvalue = self.oldvalues[widget]
-    newvalue = float(widget.get())
-    if oldvalue == newvalue: return
-    
-    print(f'Undo calibration scale save {widget} {newvalue} {oldvalue}')
+    print(f'Undo calibration scale save {widget} {newvalue} {oldvalue} {recenter}')
     
     revert = self.revert
     
@@ -247,11 +253,17 @@ class UndoableCalibration(UndoableScale):
       (revert, widget, newvalue)
     )
     
+    if recenter: widget.set(newvalue)
+    
     self.show(widget, newvalue)
+    return widget, newvalue, oldvalue, recenter
   
   def show(self, widget, newvalue):
     self.oldvalues[widget] = newvalue
     self.master.calibrate(widget, newvalue)
+  
+  def _old(self, widget):
+    return self.oldvalues[widget]
   
   def _scrollcommand(self, command, *args):
     text = self._text
