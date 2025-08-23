@@ -61,7 +61,10 @@ class UndoableMaster(UndoableScale):
     self.oldvalue = float(scale.get())
     
     scale['command'] = self._master
-    scale.bind('<Double-ButtonRelease>', lambda e: self.data(e, recenter=True))
+    
+    for name in ('<Double-ButtonRelease>', '<Key-space>'):
+      scale.bind(name, lambda e: self.data(e, recenter=True))
+    
     self.bind(scale, scale)
     
     self.calibration = calibration
