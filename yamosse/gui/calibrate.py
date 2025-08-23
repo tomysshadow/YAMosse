@@ -421,6 +421,9 @@ def make_calibrate(frame, variables, class_names, attached):
   undoable_calibration = None
   
   def ok():
+    # we can't just get the values of all the scales here
+    # because their values aren't updated if they aren't on screen
+    # oldvalues is the true arbiter of the state they're meant to be in
     oldvalues = undoable_calibration.oldvalues
     
     for cid in attached:
