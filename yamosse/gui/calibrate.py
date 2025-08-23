@@ -105,7 +105,7 @@ class UndoableMaster(UndoableScale):
     
     # by default, only show the scales that are within a visible window
     if newvalues is None:
-      newvalues = [s for s in oldvalues if s.master in self.calibration.windows]
+      newvalues = self.calibration.scales
     
     if newvalue is None:
       newvalue = self.value()
@@ -162,7 +162,7 @@ class UndoableCalibration(UndoableScale):
     
     oldvalues = {s: float(s.get()) for s in scales.values()}
     self.oldvalues = oldvalues
-    self.windows = oldvalues
+    self.scales = oldvalues
     
     # this bindtag must be on the end
     # so that we don't swallow all events before the text gets them
@@ -171,7 +171,7 @@ class UndoableCalibration(UndoableScale):
     for scale in oldvalues:
       scale.bindtags(scale.bindtags() + (bindtag,))
     
-    # we need to update the list of visible windows
+    # we need to update the list of visible scales
     # in basically any circumstance that would normally cause
     # the scrollbar appearance to change
     # so here we add our own scrollcommands
@@ -220,12 +220,17 @@ class UndoableCalibration(UndoableScale):
     text = self._text
     
     # get all windows currently visible on screen
-    self.windows = [text.nametowidget(d[1]) for d in text.dump(
+    windows = [text.nametowidget(d[1]) for d in text.dump(
       '@0,0', # top left
       '@%d,%d + 1 indices' % (text.winfo_width(), text.winfo_height()), # bottom right
       window=True
     )]
     
+    # get the scales in those windows
+    self.scales = [s for s in self.oldvalues if s.master in windows]
+    
+    # we need to show the master again in case the user scrolls the widget
+    # while editing the master (like by pressing the arrow keys)
     self.master.show()
     return self._tk.call(command, *args)
   
