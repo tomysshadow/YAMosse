@@ -283,7 +283,6 @@ class UndoableCalibration(UndoableScale):
     self.master.show()
     return self._tk.call(command, *args)
 
-
 class UndoableReset(UndoableWidget):
   def __init__(self, undooptions, button, calibration):
     super().__init__(undooptions)
