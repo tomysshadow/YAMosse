@@ -104,7 +104,7 @@ class UndoableMaster(UndoableScale):
   
   def data(self, e, recenter=False):
     try: widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
-    except ValueError: return
+    except ValueError: return None
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
@@ -242,7 +242,7 @@ class UndoableCalibration(UndoableScale):
   
   def data(self, e, recenter=False):
     try: widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
-    except ValueError: return
+    except ValueError: return None
     
     print(f'Undo calibration scale save {widget} {newvalue} {oldvalue} {recenter}')
     
