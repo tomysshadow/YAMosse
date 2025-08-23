@@ -375,8 +375,8 @@ def make_calibrate(frame, variables, class_names, attached):
   master_scale = gui.make_scale(master_frame, name='Master', to=200)[1]
   master_scale.set(DEFAULT_SCALE_VALUE)
   
-  master_frame.columnconfigure(0, weight=2, uniform='class_column')
-  master_frame.columnconfigure(1, weight=1, uniform='class_column')
+  master_frame.columnconfigure(0, weight=2, uniform='scale_column')
+  master_frame.columnconfigure(1, weight=1, uniform='scale_column')
   
   calibration_frame = ttk.Frame(frame, relief=tk.SUNKEN, borderwidth=BORDERWIDTH)
   calibration_frame.grid(row=1, sticky=tk.NSEW)
@@ -407,8 +407,8 @@ def make_calibrate(frame, variables, class_names, attached):
     scale.set(int(calibration_variable[cid]))
     scales[cid] = scale
     
-    scale_frame.columnconfigure(0, weight=2, uniform='class_column')
-    scale_frame.columnconfigure(1, weight=1, uniform='class_column')
+    scale_frame.columnconfigure(0, weight=2, uniform='scale_column')
+    scale_frame.columnconfigure(1, weight=1, uniform='scale_column')
     
     gui_embed.insert_embed(calibration_text, scale_frame)
   
