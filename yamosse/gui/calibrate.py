@@ -140,15 +140,19 @@ class UndoableMaster(UndoableScale):
     return float(self._scale.get())
   
   def calibrate(self, widget, newvalue):
+    self.oldvalues[widget] = round(newvalue / self._reciprocal())
+  
+  def _reciprocal(self, value=None):
+    if value is None:
+      value = self.value()
+    
     # the value of MASTER_LIMIT is such that if the master scale is
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
-    self.oldvalues[widget] = round(
-      newvalue / max(
-        MASTER_LIMIT,
-        self.value() / MASTER_CENTER
-      )
+    return max(
+      MASTER_LIMIT,
+      value / MASTER_CENTER
     )
   
   def _multiply(self, widgets=None, newvalue=None):
@@ -156,14 +160,11 @@ class UndoableMaster(UndoableScale):
     if widgets is None:
       widgets = self.calibration.scales
     
-    if newvalue is None:
-      newvalue = self.value()
-    
-    multiplier = float(newvalue) / MASTER_CENTER
-    return {w: round(self.oldvalues[w] * multiplier) for w in widgets}
+    reciprocal = self._reciprocal(value=newvalue)
+    return {w: round(self.oldvalues[w] * reciprocal) for w in widgets}
   
   def _master(self, text, *args):
-    self.show(newvalue=text)
+    self.show(newvalue=float(text))
     
     command = self._command
     if not command: return
