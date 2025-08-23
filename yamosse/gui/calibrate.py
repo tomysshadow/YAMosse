@@ -151,17 +151,14 @@ class UndoableMaster(UndoableScale):
     return {w: round(self.oldvalues[w] * reciprocal) for w in widgets}
   
   def _reciprocal(self, value=None):
-    if value is None:
-      value = self.value()
-    
     # the value of MASTER_LIMIT is such that if the master scale is
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
-    return max(
-      MASTER_LIMIT,
-      value / MASTER_CENTER
-    )
+    if value is None:
+      value = self.value()
+    
+    return value / MASTER_CENTER if value else MASTER_LIMIT
   
   def _master(self, text, *args):
     self.show(newvalue=float(text))
