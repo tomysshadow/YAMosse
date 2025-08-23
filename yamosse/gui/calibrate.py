@@ -106,7 +106,7 @@ class UndoableMaster(UndoableScale):
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
     calibration = self.calibration
-    calibration_oldvalues = calibration.oldvalues
+    calibration_oldvalues = calibration.oldvalues.copy()
     calibration_newvalues = self.scalevalues(calibration_oldvalues)
     
     # oldvalues must be copied if not recentring
@@ -114,7 +114,7 @@ class UndoableMaster(UndoableScale):
     # it does not need to be copied in the recentre case
     # because in that case we will be replacing it with newvalues anyway
     oldvalues = self.oldvalues
-    newvalues = self.scalevalues(oldvalues) if recenter else (oldvalues := oldvalues.copy())
+    newvalues = calibration_newvalues if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
     
