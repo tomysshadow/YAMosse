@@ -31,6 +31,10 @@ class UndoableScale(UndoableWidget):
   def data(self, e):
     pass
   
+  @abstractmethod
+  def show(self, *args, **kwargs):
+    pass
+  
   def bind(self, widget, class_):
     data = self.data
     
@@ -69,7 +73,7 @@ class UndoableMaster(UndoableScale):
     scale.set(newvalue)
     
     # show all scales, not just the visible ones
-    self.show(newvalues=newvalues, newvalue=newvalue)
+    self.show(widgets=newvalues, newvalue=newvalue)
   
   def data(self, e):
     widget = e.widget
@@ -97,25 +101,22 @@ class UndoableMaster(UndoableScale):
     calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalue = newvalue
     
-    self.show(newvalues=newvalues, newvalue=newvalue)
+    self.show(widgets=newvalues, newvalue=newvalue)
   
-  def value(self):
-    return float(self._scale.get())
-  
-  def show(self, newvalues=None, newvalue=None):
+  def show(self, widgets=None, newvalue=None):
     oldvalues = self.oldvalues
     
     # by default, only show the scales that are within a visible window
-    if newvalues is None:
-      newvalues = self.calibration.scales
+    if widgets is None:
+      widgets = self.calibration.scales
     
     if newvalue is None:
       newvalue = self.value()
     
     multiplier = float(newvalue) / MASTER_CENTER
     
-    for scale in newvalues:
-      scale.set(round(oldvalues[scale] * multiplier))
+    for widget in widgets:
+      widget.set(round(oldvalues[widget] * multiplier))
   
   def calibrate(self, widget, newvalue):
     # the value of MASTER_LIMIT is such that if the master scale is
@@ -128,6 +129,9 @@ class UndoableMaster(UndoableScale):
         self.value() / MASTER_CENTER
       )
     )
+  
+  def value(self):
+    return float(self._scale.get())
   
   def _master(self, text, *args):
     self.show(newvalue=text)
