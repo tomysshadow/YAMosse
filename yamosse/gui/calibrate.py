@@ -61,7 +61,7 @@ class UndoableMaster(UndoableScale):
     self.oldvalue = float(scale.get())
     
     scale['command'] = self._master
-    scale.bind('<Double-Button>', lambda e: self.data(e, recenter=True))
+    scale.bind('<Double-ButtonRelease>', lambda e: self.data(e, recenter=True))
     self.bind(scale, scale)
     
     self.calibration = calibration
@@ -84,8 +84,12 @@ class UndoableMaster(UndoableScale):
     widget = e.widget
     
     oldvalue = self.oldvalue
-    newvalue = DEFAULT_SCALE_VALUE if recenter else widget.get()
-    if oldvalue == newvalue: return
+    newvalue = float(widget.get())
+    
+    if oldvalue == newvalue and (not recenter or oldvalue == DEFAULT_SCALE_VALUE):
+      return
+    
+    if recenter: newvalue = DEFAULT_SCALE_VALUE
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
@@ -116,7 +120,6 @@ class UndoableMaster(UndoableScale):
       self._scale.set(newvalue)
     
     self.show(widgets=newvalues, newvalue=newvalue)
-    return 'break' # for double clicking on the bar to recentre
   
   def show(self, widgets=None, newvalue=None):
     oldvalues = self.oldvalues
