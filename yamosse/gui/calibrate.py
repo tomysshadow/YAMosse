@@ -35,6 +35,10 @@ class UndoableScale(UndoableWidget):
   def show(self, *args, **kwargs):
     pass
   
+  @staticmethod
+  def scalevalues(scales):
+    return {s: float(s.get()) for s in scales}
+  
   def bind(self, widget, class_):
     data = self.data
     
@@ -57,6 +61,7 @@ class UndoableMaster(UndoableScale):
     self.oldvalue = float(scale.get())
     
     scale['command'] = self._master
+    scale.bind('<Double-Button>', lambda e: self.data(e, recenter=True))
     self.bind(scale, scale)
     
     self.calibration = calibration
@@ -75,31 +80,37 @@ class UndoableMaster(UndoableScale):
     # show all scales, not just the visible ones
     self.show(widgets=newvalues, newvalue=newvalue)
   
-  def data(self, e):
+  def data(self, e, recenter=False):
     widget = e.widget
     
     oldvalue = self.oldvalue
-    newvalue = float(widget.get())
+    newvalue = DEFAULT_SCALE_VALUE if recenter else widget.get()
     if oldvalue == newvalue: return
     
-    print(f'Undo master scale save {widget} {newvalue} {oldvalue}')
+    print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
     # oldvalues must be copied because it could be mutated
     # by the normal revert function still
     calibration = self.calibration
     calibration_oldvalues = calibration.oldvalues
-    calibration_newvalues = {s: float(s.get()) for s in calibration_oldvalues}
-    newvalues = self.oldvalues.copy()
+    calibration_newvalues = self.scalevalues(calibration_oldvalues)
+    
+    oldvalues = self.oldvalues
+    newvalues = self.scalevalues(oldvalues) if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
     
     self._undooptions(
-      (revert, calibration_oldvalues, newvalues, oldvalue),
+      (revert, calibration_oldvalues, oldvalues, oldvalue),
       (revert, calibration_newvalues, newvalues, newvalue)
     )
     
     calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalue = newvalue
+    
+    if recenter:
+      self.oldvalues = newvalues
+      self._scale.set(newvalue)
     
     self.show(widgets=newvalues, newvalue=newvalue)
   
@@ -165,7 +176,7 @@ class UndoableCalibration(UndoableScale):
     self._text = text
     self._tk = text.tk
     
-    oldvalues = {s: float(s.get()) for s in scales.values()}
+    oldvalues = self.scalevalues(scales.values())
     self.oldvalues = oldvalues
     self.scales = oldvalues
     
@@ -338,20 +349,14 @@ def make_calibrate(frame, variables, class_names, attached):
   frame.rowconfigure(1, weight=1) # make calibration frame vertically resizable
   frame.columnconfigure(0, weight=1) # make calibration frame horizontally resizable
   
-  scale_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
-  scale_frame.grid(row=0, sticky=tk.NSEW)
+  master_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
+  master_frame.grid(row=0, sticky=tk.EW)
   
-  # TODO: recentre button
-  master_scale = gui.make_scale(
-    scale_frame,
-    name='Master',
-    to=200
-  )[1]
-  
+  master_scale = gui.make_scale(master_frame, name='Master', to=200)[1]
   master_scale.set(DEFAULT_SCALE_VALUE)
   
-  scale_frame.columnconfigure(0, weight=2, uniform='class_column')
-  scale_frame.columnconfigure(1, weight=1, uniform='class_column')
+  master_frame.columnconfigure(0, weight=2, uniform='class_column')
+  master_frame.columnconfigure(1, weight=1, uniform='class_column')
   
   calibration_frame = ttk.Frame(frame, relief=tk.SUNKEN, borderwidth=BORDERWIDTH)
   calibration_frame.grid(row=1, sticky=tk.NSEW)
