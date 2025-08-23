@@ -414,9 +414,13 @@ def make_calibrate(frame, variables, class_names, attached):
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   
+  undoable_calibration = None
+  
   def ok():
+    oldvalues = undoable_calibration.oldvalues
+    
     for cid in attached:
-      calibration_variable[cid] = int(scales[cid].get())
+      calibration_variable[cid] = int(oldvalues[scales[cid]])
     
     gui.release_modal_window(window)
   
