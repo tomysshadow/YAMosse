@@ -116,7 +116,7 @@ class UndoableMaster(UndoableScale):
       self._scale.set(newvalue)
     
     self.show(widgets=newvalues, newvalue=newvalue)
-    return 'break'
+    return 'break' # for double clicking on the bar to recentre
   
   def show(self, widgets=None, newvalue=None):
     oldvalues = self.oldvalues
