@@ -62,7 +62,7 @@ class UndoableMaster(UndoableScale):
     
     scale['command'] = self._master
     
-    # this must use a double button release specifically
+    # this must use a double button *release* specifically
     # so that the event handler can compare the old/new value
     # but for spacebar it's just a standard key event
     # (same as pressing a button)
