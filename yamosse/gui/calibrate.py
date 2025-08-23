@@ -34,9 +34,9 @@ class UndoableScale(UndoableWidget):
   def bind(self, widget, class_):
     data = self.data
     
-    # focus out is caught in case a widget gets a key press then loses focus before key release
     gui.bind_truekey_widget(widget, class_=class_, release=data)
     
+    # focus out is caught in case a widget gets a key press then loses focus before key release
     for name in ('<ButtonRelease>', '<FocusOut>'):
       widget.bind_class(class_, name, data)
 
@@ -44,10 +44,10 @@ class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
     super().__init__(undooptions)
     
+    self._scale = scale
     self._tk = scale.tk
     self._command = scale['command']
     
-    self.scale = scale
     self.oldvalues = calibration.oldvalues
     self.oldvalue = float(scale.get())
     
@@ -63,9 +63,11 @@ class UndoableMaster(UndoableScale):
     self.oldvalue = newvalue
     
     # this must happen last, invokes self._master function
-    scale = self.scale
+    scale = self._scale
     if focus: scale.focus_set()
     scale.set(newvalue)
+    
+    self.show(newvalues=newvalues, newvalue=newvalue)
   
   def data(self, e):
     widget = e.widget
@@ -92,6 +94,26 @@ class UndoableMaster(UndoableScale):
     
     calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalue = newvalue
+    
+    self.show(newvalues=newvalues, newvalue=newvalue)
+  
+  def value(self):
+    return float(self._scale.get())
+  
+  def show(self, newvalues=None, newvalue=None):
+    oldvalues = self.oldvalues
+    
+    # by default, only show the scales that are within a visible window
+    if newvalues is None:
+      newvalues = [s for s in oldvalues if s.master in self.calibration.windows]
+    
+    if newvalue is None:
+      newvalue = self.value()
+    
+    multiplier = float(newvalue) / MASTER_CENTER
+    
+    for scale in newvalues:
+      scale.set(round(oldvalues[scale] * multiplier))
   
   def calibrate(self, widget, newvalue):
     # the value of MASTER_LIMIT is such that if the master scale is
@@ -101,17 +123,17 @@ class UndoableMaster(UndoableScale):
     self.oldvalues[widget] = round(
       newvalue / max(
         MASTER_LIMIT,
-        float(self.scale.get()) / MASTER_CENTER
+        self.value() / MASTER_CENTER
       )
     )
   
   def _master(self, text, *args):
-    multiplier = float(text) / MASTER_CENTER
+    self.show(newvalue=text)
     
-    for scale, newvalue in self.oldvalues.items():
-      scale.set(round(newvalue * multiplier))
+    command = self._command
+    if not command: return
     
-    return self._tk.call(self._command, text, *args)
+    return self._tk.call(command, text, *args)
 
 # There are a couple known issues with this:
 # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
@@ -135,10 +157,12 @@ class UndoableCalibration(UndoableScale):
   def __init__(self, undooptions, text, scales, master_scale, reset_button):
     super().__init__(undooptions)
     
-    self.text = text
+    self._text = text
+    self._tk = text.tk
     
     oldvalues = {s: float(s.get()) for s in scales.values()}
     self.oldvalues = oldvalues
+    self.windows = oldvalues
     
     # this bindtag must be on the end
     # so that we don't swallow all events before the text gets them
@@ -147,6 +171,19 @@ class UndoableCalibration(UndoableScale):
     for scale in oldvalues:
       scale.bindtags(scale.bindtags() + (bindtag,))
     
+    # we need to update the list of visible windows
+    # in basically any circumstance that would normally cause
+    # the scrollbar appearance to change
+    # so here we add our own scrollcommands
+    for scrollcommand in (tk.X, tk.Y):
+      scrollcommand = ''.join((scrollcommand, 'scrollcommand'))
+      
+      command = text[scrollcommand]
+      if not command: continue
+      
+      def scroll(*args, command=command): return self._scrollcommand(command, *args)
+      text[scrollcommand] = scroll
+    
     self.bind(text, bindtag)
     
     self.master = UndoableMaster(undooptions, master_scale, self)
@@ -154,7 +191,7 @@ class UndoableCalibration(UndoableScale):
   
   def revert(self, widget, newvalue, focus=True):
     # look at and focus the widget so the user notices what's just changed
-    self.text.see(widget.master)
+    self._text.see(widget.master)
     if focus: widget.focus_set()
     widget.set(newvalue)
     
@@ -179,6 +216,19 @@ class UndoableCalibration(UndoableScale):
     
     self._calibrate(widget, newvalue)
   
+  def _scrollcommand(self, command, *args):
+    text = self._text
+    
+    # get all windows currently visible on screen
+    self.windows = [text.nametowidget(d[1]) for d in text.dump(
+      '@0,0',
+      '@%d,%d + 1 indices' % (text.winfo_width(), text.winfo_height()),
+      window=True
+    )]
+    
+    self.master.show()
+    return self._tk.call(command, *args)
+  
   def _calibrate(self, widget, newvalue):
     self.oldvalues[widget] = newvalue
     self.master.calibrate(widget, newvalue)
@@ -188,7 +238,8 @@ class UndoableReset(UndoableWidget):
   def __init__(self, undooptions, button, calibration):
     super().__init__(undooptions)
     
-    self.button = button
+    self._button = button
+    
     self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
     
     button['command'] = self._reset
@@ -207,7 +258,7 @@ class UndoableReset(UndoableWidget):
     if calibration_newvalues is None: calibration_newvalues = oldvalues
     if master_newvalues is None: master_newvalues = oldvalues
     
-    if focus: self.button.focus_set()
+    if focus: self._button.focus_set()
     
     self.calibration.master.revert(
       calibration_newvalues,
@@ -230,7 +281,7 @@ class UndoableReset(UndoableWidget):
         revert,
         calibration.oldvalues.copy(),
         master.oldvalues.copy(),
-        float(master.scale.get())
+        master.value()
       ),
       
       (revert,)
@@ -272,7 +323,7 @@ def make_calibrate(frame, variables, class_names, attached):
   gui.customize_window(window, TITLE, resizable=RESIZABLE, size=SIZE,
     location=gui.location_center_window(parent, SIZE))
   
-  frame.rowconfigure(0, weight=1) # make calibration frame vertically resizable
+  frame.rowconfigure(1, weight=1) # make calibration frame vertically resizable
   frame.columnconfigure(0, weight=1) # make calibration frame horizontally resizable
   
   scale_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
