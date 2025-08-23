@@ -24,6 +24,23 @@ class UndoableWidget(ABC):
     pass
 
 class UndoableScale(UndoableWidget):
+  def bind(self, widget, class_):
+    data = self.data
+    
+    gui.bind_truekey_widget(widget, class_=class_, release=data, add=True)
+    
+    # focus out is caught in case a widget gets a key press
+    # then loses focus before key release
+    for name in ('<ButtonRelease>', '<FocusOut>'):
+      widget.bind_class(class_, name, data, add=True)
+    
+    # this must use a double button *release* specifically
+    # so that the event handler can compare the old/new value
+    # but for spacebar it's just a standard key event
+    # (same as pressing a button)
+    for name in ('<Double-ButtonRelease>', '<Key-space>'):
+      widget.bind_class(class_, name, lambda e: self.data(e, recenter=True), add=True)
+  
   @abstractmethod
   def revert(self, *args, focus=True):
     pass
@@ -53,23 +70,6 @@ class UndoableScale(UndoableWidget):
   @staticmethod
   def values(scales):
     return {s: float(s.get()) for s in scales}
-  
-  def bind(self, widget, class_):
-    data = self.data
-    
-    gui.bind_truekey_widget(widget, class_=class_, release=data, add=True)
-    
-    # focus out is caught in case a widget gets a key press
-    # then loses focus before key release
-    for name in ('<ButtonRelease>', '<FocusOut>'):
-      widget.bind_class(class_, name, data, add=True)
-    
-    # this must use a double button *release* specifically
-    # so that the event handler can compare the old/new value
-    # but for spacebar it's just a standard key event
-    # (same as pressing a button)
-    for name in ('<Double-ButtonRelease>', '<Key-space>'):
-      widget.bind_class(class_, name, lambda e: self.data(e, recenter=True), add=True)
   
   @abstractmethod
   def _old(self, widget):
