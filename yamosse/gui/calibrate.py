@@ -62,6 +62,8 @@ class UndoableMaster(UndoableScale):
     
     scale['command'] = self._master
     
+    # this must use a double button release specifically
+    # so that the event handler can compare the old/new value
     for name in ('<Double-ButtonRelease>', '<Key-space>'):
       scale.bind(name, lambda e: self.data(e, recenter=True))
     
