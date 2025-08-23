@@ -936,7 +936,7 @@ def make_filedialog(frame, name='',
   buttons_frame = ttk.Frame(name_frame)
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   
-  def set_(data):
+  def data(data):
     if not data: return
     
     is_str = isinstance(data, str)
@@ -962,7 +962,7 @@ def make_filedialog(frame, name='',
     if defaultextension and ask == 'saveasfilename':
       kwargs['defaultextension'] = defaultextension
     
-    set_(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
+    data(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
   
   buttons = []
   
@@ -1004,7 +1004,7 @@ def make_filedialog(frame, name='',
       return e.action
     
     def drop(e):
-      set_(e.widget.tk.splitlist(e.data))
+      data(e.widget.tk.splitlist(e.data))
       return e.action
     
     frame.drop_target_register(tkinterdnd2.DND_FILES)
