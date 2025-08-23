@@ -532,8 +532,8 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
     showing = True
     
     try:
-      value = int(scale.get()) # increment in steps
-      scale.set(value)
+      value = int(scale.get())
+      scale.set(value) # this is so we increment in steps instead of a smooth scroll
       percent_label['text'] = '%d%%' % value
     finally:
       showing = False
