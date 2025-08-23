@@ -64,6 +64,8 @@ class UndoableMaster(UndoableScale):
     
     # this must use a double button release specifically
     # so that the event handler can compare the old/new value
+    # but for spacebar it's just a standard key event
+    # (same as pressing a button)
     for name in ('<Double-ButtonRelease>', '<Key-space>'):
       scale.bind(name, lambda e: self.data(e, recenter=True))
     
