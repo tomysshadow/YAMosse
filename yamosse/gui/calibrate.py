@@ -86,10 +86,15 @@ class UndoableMaster(UndoableScale):
     oldvalue = self.oldvalue
     newvalue = float(widget.get())
     
-    if oldvalue == newvalue and (not recenter or oldvalue == DEFAULT_SCALE_VALUE):
-      return
+    if recenter:
+      # disallow double clicking on the bar area to recentre
+      # it should only be possible by double clicking the squeezy-grabber thing
+      # so it doesn't interfere with people clicking on the bar to increment by one
+      if oldvalue != newvalue: return
+      
+      newvalue = DEFAULT_SCALE_VALUE
     
-    if recenter: newvalue = DEFAULT_SCALE_VALUE
+    if oldvalue == newvalue: return
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
