@@ -68,6 +68,7 @@ class UndoableMaster(UndoableScale):
     if focus: scale.focus_set()
     scale.set(newvalue)
     
+    # show all scales, not just the visible ones
     self.show(newvalues=newvalues, newvalue=newvalue)
   
   def data(self, e):
@@ -133,7 +134,6 @@ class UndoableMaster(UndoableScale):
     
     command = self._command
     if not command: return
-    
     return self._tk.call(command, text, *args)
 
 # There are a couple known issues with this:
@@ -196,7 +196,7 @@ class UndoableCalibration(UndoableScale):
     if focus: widget.focus_set()
     widget.set(newvalue)
     
-    self._calibrate(widget, newvalue)
+    self.show(widget, newvalue)
   
   def data(self, e):
     widget = e.widget
@@ -215,7 +215,11 @@ class UndoableCalibration(UndoableScale):
       (revert, widget, newvalue)
     )
     
-    self._calibrate(widget, newvalue)
+    self.show(widget, newvalue)
+  
+  def show(self, widget, newvalue):
+    self.oldvalues[widget] = newvalue
+    self.master.calibrate(widget, newvalue)
   
   def _scrollcommand(self, command, *args):
     text = self._text
@@ -234,10 +238,6 @@ class UndoableCalibration(UndoableScale):
     # while editing the master (like by pressing the arrow keys)
     self.master.show()
     return self._tk.call(command, *args)
-  
-  def _calibrate(self, widget, newvalue):
-    self.oldvalues[widget] = newvalue
-    self.master.calibrate(widget, newvalue)
 
 
 class UndoableReset(UndoableWidget):
@@ -266,6 +266,8 @@ class UndoableReset(UndoableWidget):
     
     if focus: self._button.focus_set()
     
+    # we don't need to revert the calibration directly
+    # reverting its master will have the side effect of reverting it anyway
     self.calibration.master.revert(
       calibration_newvalues,
       master_newvalues,
