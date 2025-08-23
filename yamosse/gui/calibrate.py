@@ -114,7 +114,7 @@ class UndoableMaster(UndoableScale):
     # it does not need to be copied in the recentre case
     # because in that case we will be reassigning self.oldvalues to newvalues anyway
     calibration_newvalues = self._multiplied(oldvalues, newvalue)
-    newvalues = calibration_newvalues if recenter else (oldvalues := oldvalues.copy())
+    newvalues = calibration_oldvalues if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
     
