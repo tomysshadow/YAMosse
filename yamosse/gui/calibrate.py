@@ -112,8 +112,8 @@ class UndoableMaster(UndoableScale):
     # self.oldvalues must be copied if not recentring
     # because it could be mutated by the normal revert function still
     # it does not need to be copied in the recentre case
-    # because in that case we will be reassigning self.oldvalues to newvalues anyway
-    calibration_newvalues = self._multiplied(oldvalues, newvalue)
+    # because in that case we will be reassigning self.oldvalues anyway
+    calibration_newvalues = self._multiply(widgets=oldvalues, newvalue=newvalue)
     newvalues = calibration_oldvalues if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
@@ -123,25 +123,17 @@ class UndoableMaster(UndoableScale):
       (revert, calibration_newvalues, newvalues, newvalue)
     )
     
+    # copied to avoid mutating redo state
     calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalue = newvalue
     
     if recenter:
-      # newvalues must be copied in this instance to avoid mutating the redo state
+      # copied to avoid mutating redo state
       self.oldvalues = newvalues.copy()
       self._scale.set(newvalue)
   
   def show(self, widgets=None, newvalue=None):
-    oldvalues = self.oldvalues
-    
-    # by default, only show the scales that are within a visible window
-    if widgets is None:
-      widgets = self.calibration.scales
-    
-    if newvalue is None:
-      newvalue = self.value()
-    
-    for widget, multiplied in self._multiplied(oldvalues, newvalue).items():
+    for widget, multiplied in self._multiply(widgets=widgets, newvalue=newvalue).items():
       widget.set(multiplied)
   
   def value(self):
@@ -159,17 +151,23 @@ class UndoableMaster(UndoableScale):
       )
     )
   
+  def _multiply(self, widgets=None, newvalue=None):
+    # by default, only multiply the scales that are within a visible window
+    if widgets is None:
+      widgets = self.calibration.scales
+    
+    if newvalue is None:
+      newvalue = self.value()
+    
+    multiplier = float(newvalue) / MASTER_CENTER
+    return {w: round(self.oldvalues[w] * multiplier) for w in widgets}
+  
   def _master(self, text, *args):
     self.show(newvalue=text)
     
     command = self._command
     if not command: return
     return self._tk.call(command, text, *args)
-  
-  @staticmethod
-  def _multiplied(oldvalues, newvalue):
-    multiplier = float(newvalue) / MASTER_CENTER
-    return {w: round(o * multiplier) for w, o in oldvalues.items()}
 
 # There are a couple known issues with this:
 # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
