@@ -113,7 +113,7 @@ class UndoableMaster(UndoableScale):
     # because it could be mutated by the normal revert function still
     # it does not need to be copied in the recentre case
     # because in that case we will be reassigning self.oldvalues anyway
-    calibration_newvalues = self._multiply(widgets=oldvalues, newvalue=newvalue)
+    calibration_newvalues = self._newvalues(widgets=oldvalues, newvalue=newvalue)
     newvalues = calibration_oldvalues if recenter else (oldvalues := oldvalues.copy())
     
     revert = self.revert
@@ -133,8 +133,8 @@ class UndoableMaster(UndoableScale):
       self._scale.set(newvalue)
   
   def show(self, widgets=None, newvalue=None):
-    for widget, multiplied in self._multiply(widgets=widgets, newvalue=newvalue).items():
-      widget.set(multiplied)
+    for widget, newvalue in self._newvalues(widgets=widgets, newvalue=newvalue).items():
+      widget.set(newvalue)
   
   def value(self):
     return float(self._scale.get())
@@ -155,8 +155,8 @@ class UndoableMaster(UndoableScale):
       value / MASTER_CENTER
     )
   
-  def _multiply(self, widgets=None, newvalue=None):
-    # by default, only multiply the scales that are within a visible window
+  def _newvalues(self, widgets=None, newvalue=None):
+    # by default, only use the scales that are within a visible window
     if widgets is None:
       widgets = self.calibration.scales
     
