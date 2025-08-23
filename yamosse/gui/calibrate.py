@@ -88,7 +88,7 @@ class UndoableMaster(UndoableScale):
     # by the normal revert function still
     calibration = self.calibration
     calibration_oldvalues = calibration.oldvalues
-    calibration_newvalues = {s: float(s.get()) for s in calibration_oldvalues.keys()}
+    calibration_newvalues = {s: float(s.get()) for s in calibration_oldvalues}
     newvalues = self.oldvalues.copy()
     
     revert = self.revert
