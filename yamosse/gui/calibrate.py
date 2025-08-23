@@ -36,7 +36,8 @@ class UndoableScale(UndoableWidget):
     
     gui.bind_truekey_widget(widget, class_=class_, release=data)
     
-    # focus out is caught in case a widget gets a key press then loses focus before key release
+    # focus out is caught in case a widget gets a key press
+    # then loses focus before key release
     for name in ('<ButtonRelease>', '<FocusOut>'):
       widget.bind_class(class_, name, data)
 
