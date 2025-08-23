@@ -142,6 +142,14 @@ class UndoableMaster(UndoableScale):
   def calibrate(self, widget, newvalue):
     self.oldvalues[widget] = round(newvalue / self._reciprocal())
   
+  def _newvalues(self, widgets=None, newvalue=None):
+    # by default, only use the scales that are within a visible window
+    if widgets is None:
+      widgets = self.calibration.scales
+    
+    reciprocal = self._reciprocal(value=newvalue)
+    return {w: round(self.oldvalues[w] * reciprocal) for w in widgets}
+  
   def _reciprocal(self, value=None):
     if value is None:
       value = self.value()
@@ -154,14 +162,6 @@ class UndoableMaster(UndoableScale):
       MASTER_LIMIT,
       value / MASTER_CENTER
     )
-  
-  def _newvalues(self, widgets=None, newvalue=None):
-    # by default, only use the scales that are within a visible window
-    if widgets is None:
-      widgets = self.calibration.scales
-    
-    reciprocal = self._reciprocal(value=newvalue)
-    return {w: round(self.oldvalues[w] * reciprocal) for w in widgets}
   
   def _master(self, text, *args):
     self.show(newvalue=float(text))
