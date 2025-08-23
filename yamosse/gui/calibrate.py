@@ -221,8 +221,8 @@ class UndoableCalibration(UndoableScale):
     
     # get all windows currently visible on screen
     self.windows = [text.nametowidget(d[1]) for d in text.dump(
-      '@0,0',
-      '@%d,%d + 1 indices' % (text.winfo_width(), text.winfo_height()),
+      '@0,0', # top left
+      '@%d,%d + 1 indices' % (text.winfo_width(), text.winfo_height()), # bottom right
       window=True
     )]
     
