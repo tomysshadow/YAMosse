@@ -10,6 +10,7 @@ RESIZABLE = True
 SIZE = (520, 500)
 
 DEFAULT_SCALE_VALUE = 100
+TO_SCALE_VALUE = 200
 
 MASTER_LIMIT = 0.00001
 MASTER_CENTER = 100.0
@@ -371,8 +372,7 @@ def make_calibrate(frame, variables, class_names, attached):
   
   master_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
   master_frame.grid(row=0, sticky=tk.EW)
-  
-  master_scale = gui.make_scale(master_frame, name='Master', to=200)[1]
+  master_scale = gui.make_scale(master_frame, name='Master', to=TO_SCALE_VALUE)[1]
   master_scale.set(DEFAULT_SCALE_VALUE)
   
   master_frame.columnconfigure(0, weight=2, uniform='scale_column')
@@ -401,7 +401,7 @@ def make_calibrate(frame, variables, class_names, attached):
     scale = gui.make_scale(
       scale_frame,
       name='%d. %s' % (int(number), class_name),
-      to=200
+      to=TO_SCALE_VALUE
     )[1]
     
     scale.set(int(calibration_variable[cid]))
