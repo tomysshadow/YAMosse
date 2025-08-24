@@ -103,7 +103,7 @@ def show_yamscan(widgets, values=None):
       
       try:
         log_text.delete('1.0', '%s - %d lines' % (tk.END, LOG_LINES_MAX))
-        log_text.insert(tk.END, values['log'])
+        log_text.insert(tk.END, value)
         log_text.insert(tk.END, '\n')
         log_text.see(tk.END)
       finally:
