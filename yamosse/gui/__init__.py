@@ -1183,6 +1183,9 @@ def after_window(window, callback):
   if not (children := window.children): return children
   
   try:
+    # we use after(0) here instead of after_idle
+    # because this is basically akin to other events getting sent
+    # in the sense that it'll be handled on the next round of event processing
     window.after(0, callback)
   except (tk.TclError, RuntimeError):
     # silence any errors caused by the window exiting
