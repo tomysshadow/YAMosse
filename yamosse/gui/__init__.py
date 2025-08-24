@@ -984,8 +984,6 @@ def make_filedialog(frame, name='',
   
   # drag and drop
   if tkinterdnd2:
-    frame.drop_target_register(tkinterdnd2.DND_FILES)
-    
     def refuse(data):
       assert data, 'data must not be empty'
       
@@ -1007,6 +1005,8 @@ def make_filedialog(frame, name='',
           return True
       
       return False
+    
+    frame.drop_target_register(tkinterdnd2.DND_FILES)
     
     def drop_enter(e):
       data = e.widget.tk.splitlist(e.data)
