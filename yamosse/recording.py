@@ -18,6 +18,7 @@ BLOCKSIZE_SECONDS = 0.1
 LINE = '#' * 80
 VOLUME_SPEC = '{volume:>4.0%}'
 
+
 class Recording:
   def __init__(self, options, start=None, stop=None):
     self.save = True

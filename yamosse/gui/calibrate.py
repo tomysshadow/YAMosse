@@ -15,6 +15,7 @@ TO_SCALE_VALUE = 200
 MASTER_LIMIT = 0.00001
 MASTER_CENTER = 100.0
 
+
 class UndoableWidget(ABC):
   def __init__(self, undooptions):
     self._undooptions = undooptions
@@ -22,6 +23,7 @@ class UndoableWidget(ABC):
   @abstractmethod
   def revert(self, *args, focus=True):
     pass
+
 
 class UndoableScale(UndoableWidget):
   def bind(self, widget, class_):
@@ -74,6 +76,7 @@ class UndoableScale(UndoableWidget):
   @abstractmethod
   def _old(self, widget):
     pass
+
 
 class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
@@ -177,6 +180,7 @@ class UndoableMaster(UndoableScale):
     command = self._command
     if not command: return ''
     return self._tk.call(command, text, *args)
+
 
 # There are a couple known issues with this:
 # -hitting Ctrl+Z while clicking and dragging a scale undoes other scales
@@ -282,6 +286,7 @@ class UndoableCalibration(UndoableScale):
     # while editing the master (like by pressing the arrow keys)
     self.master.show()
     return self._tk.call(command, *args)
+
 
 class UndoableReset(UndoableWidget):
   def __init__(self, undooptions, button, calibration):

@@ -12,6 +12,7 @@ FILE_NAME = 'options.pickle'
 
 _root_file_name = yamosse_root.root(FILE_NAME)
 
+
 class Options:
   class VersionError(ValueError):
     def __init__(self):
