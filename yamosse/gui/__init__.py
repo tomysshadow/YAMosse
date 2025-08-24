@@ -936,8 +936,8 @@ def make_filedialog(frame, name='',
   buttons_frame = ttk.Frame(name_frame)
   buttons_frame.grid(row=0, column=1, sticky=tk.EW)
   
-  def data(data):
-    if not data: return
+  def accept(data):
+    assert data, 'data must not be empty'
     
     is_str = isinstance(data, str)
     
@@ -962,7 +962,10 @@ def make_filedialog(frame, name='',
     if defaultextension and ask == 'saveasfilename':
       kwargs['defaultextension'] = defaultextension
     
-    data(getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs))
+    data = getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs)
+    if not data: return
+    
+    accept(data)
   
   buttons = []
   
@@ -981,34 +984,48 @@ def make_filedialog(frame, name='',
   
   # drag and drop
   if tkinterdnd2:
-    def drop_enter(e):
-      data = e.widget.tk.splitlist(e.data)
-      if not data: return tkinterdnd2.REFUSE_DROP
+    frame.drop_target_register(tkinterdnd2.DND_FILES)
+    
+    def refuse(data):
+      assert data, 'data must not be empty'
+      
       if isinstance(data, str): data = (data,)
       
       multiple = len(data) > 1
       
       # if multiple selection is not enabled, refuse multiple files
       if multiple and not asks_multiple:
-        return tkinterdnd2.REFUSE_DROP
+        return True
       
       not_asks_dir = multiple or not asks_dir
       
       for d in data:
         if not asks_file and os.path.isfile(d):
-          return tkinterdnd2.REFUSE_DROP
+          return True
         
         if not_asks_dir and os.path.isdir(d):
-          return tkinterdnd2.REFUSE_DROP
+          return True
       
+      return False
+    
+    def drop_enter(e):
+      data = e.widget.tk.splitlist(e.data)
+      
+      if not data: return e.action # on some platforms we only get data on drop
+      if refuse(data): return tkinterdnd2.REFUSE_DROP
       return e.action
+    
+    frame.dnd_bind('<<DropEnter>>', drop_enter)
     
     def drop(e):
-      data(e.widget.tk.splitlist(e.data))
+      data = e.widget.tk.splitlist(e.data)
+      
+      if not data: return tkinterdnd2.REFUSE_DROP
+      if refuse(data): return tkinterdnd2.REFUSE_DROP
+      
+      accept(data)
       return e.action
     
-    frame.drop_target_register(tkinterdnd2.DND_FILES)
-    frame.dnd_bind('<<DropEnter>>', drop_enter)
     frame.dnd_bind('<<Drop>>', drop)
   
   return make_name(name_frame, name), entry, (buttons_frame, buttons)
