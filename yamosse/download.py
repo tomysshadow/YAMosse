@@ -16,4 +16,4 @@ def download(url, file):
     raise DownloadError('The server couldn\'t fulfill the request.\nError code: %d\n\n%r' % (
       code, ': '.join(BaseHTTPRequestHandler.responses[code]))) from ex
   except URLError as ex:
-    raise DownloadError(''.join(('We failed to reach a server.\nReason: ', ex.reason))) from ex
+    raise DownloadError(': '.join(('We failed to reach a server.\nReason', ex.reason))) from ex

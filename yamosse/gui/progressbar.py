@@ -20,7 +20,7 @@ def _init_show_progressbar():
     
     # only update the percent label in determinate mode
     if _is_determinate_progressbar(progressbar):
-      value = variable.get()
+      value = int(variable.get())
       
       if taskbar:
         taskbar.set_progress(value, int(progressbar['maximum']))

@@ -211,9 +211,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
           # quote function is used here to match file name format used in output files
           log = f'{log}{status} {file_names_pos}/{file_names_len}: {quote(file_name)}\n'
         
-        log = log.rstrip()
-        
-        if log:
+        if log := log.removesuffix('\n'):
           subsystem.show(values={
             'log': log
           })

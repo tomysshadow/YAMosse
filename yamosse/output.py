@@ -50,7 +50,7 @@ def output(file_name, *args, **kwargs):
       
       if subsystem:
         subsystem.show(values={
-          'log': 'Elapsed Time: %s' % yamosse_utils.hours_minutes(time() - self.seconds)
+          'log': ': '.join(('Elapsed Time', yamosse_utils.hours_minutes(time() - self.seconds)))
         })
     
     @abstractmethod

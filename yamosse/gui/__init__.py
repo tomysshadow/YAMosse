@@ -214,11 +214,10 @@ def bind_truekey_widget(widget, class_='', keysym='',
     # and we'll miss our window of opportunity
     if release: widget.after(0, callback)
   
-  if keysym: keysym = '-%s' % keysym
-  
+  # the trailing space after the event type is ignored if keysym is empty
   keys = (
-    ('<KeyPress%s>' % keysym, call_press),
-    ('<KeyRelease%s>' % keysym, call_release)
+    ('<KeyPress %s>' % keysym, call_press),
+    ('<KeyRelease %s>' % keysym, call_release)
   )
   
   if class_:
@@ -544,13 +543,6 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
   scale.grid(row=0, column=1, sticky=tk.EW)
   show()
   return make_name(frame, name), scale, percent_label
-
-
-def delete_lines_text(text, max_lines=1000):
-  lines = text.index(tk.END)
-  lines = int(lines[:lines.index('.')]) - max_lines
-  
-  if lines > 0: text.delete('1.0', '%d.%s' % (lines, tk.END))
 
 
 def make_text(frame, name='', width=10, height=10,

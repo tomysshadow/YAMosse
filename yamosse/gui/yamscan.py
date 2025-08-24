@@ -13,6 +13,9 @@ SIZE = (540, 430)
 
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
+LOG_MAX_LINES = 1000
+DONE_VALUES = ('OK', 'Cancel')
+
 
 def ask_cancel(window, footer_widgets):
   open_output_file_button, done_button = footer_widgets
@@ -81,8 +84,6 @@ def make_footer(frame, log_text, open_output_file, done):
 
 
 def show_yamscan(widgets, values=None):
-  DONE_VALUES = ('OK', 'Cancel')
-  
   window, progressbar_widgets, progressbar_variable, log_text, footer_widgets = widgets
   
   def callback():
@@ -101,8 +102,7 @@ def show_yamscan(widgets, values=None):
       log_text['state'] = tk.NORMAL
       
       try:
-        gui.delete_lines_text(log_text)
-        
+        log_text.delete('1.0', '%s - %d lines' % (tk.END, LOG_MAX_LINES))
         log_text.insert(tk.END, values['log'])
         log_text.insert(tk.END, '\n')
         log_text.see(tk.END)
