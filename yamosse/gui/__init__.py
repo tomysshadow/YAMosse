@@ -1011,17 +1011,29 @@ def make_filedialog(frame, name='',
     def drop_enter(e):
       data = e.widget.tk.splitlist(e.data)
       
-      if not data: return e.action # on some platforms we only get data on drop
-      if refuse(data): return tkinterdnd2.REFUSE_DROP
+      # on some platforms we only get data on drop
+      if data and refuse(data): return tkinterdnd2.REFUSE_DROP
+      
+      entry.focus_set()
+      entry.selection_range(0, tk.END)
       return e.action
     
     frame.dnd_bind('<<DropEnter>>', drop_enter)
     
+    def drop_leave(e):
+      entry.selection_clear()
+      return e.action
+    
+    frame.dnd_bind('<<DropLeave>>', drop_leave)
+    
     def drop(e):
       data = e.widget.tk.splitlist(e.data)
       
-      if not data: return tkinterdnd2.REFUSE_DROP
-      if refuse(data): return tkinterdnd2.REFUSE_DROP
+      entry.selection_clear()
+      
+      if not data or refuse(data):
+        frame.bell()
+        return tkinterdnd2.REFUSE_DROP
       
       accept(data)
       return e.action
@@ -1407,7 +1419,7 @@ def _style():
   # this is an internal function, so we trust that this will only be called
   # after we have gotten the root window
   style = ttk.Style()
-  style.configure('Debug.TFrame', background='Red', relief=tk.GROOVE)
+  style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
   style.configure('Title.TLabel', font=('Trebuchet MS', 24))
   
   if windowingsystem() == 'x11':
