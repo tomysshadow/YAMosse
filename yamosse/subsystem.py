@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from threading import Thread, Event
+from threading import Thread
 
 import yamosse.utils as yamosse_utils
 
@@ -96,29 +96,22 @@ def subsystem(window, title, variables):
       # (because otherwise, you'd just get the variable directly)
       # so here we automate getting the variable on the other thread n' waiting...
       value = super().get_variable_or_attr(attrs, key)
-      event = Event()
       
       def callback():
         nonlocal value
         
         value = self.variables[key].get()
-        event.set()
       
-      if gui.after_idle_window(self.window, callback):
-        event.wait()
-      
+      gui.after_wait_window(self.window, callback)
       return value
     
     def set_variable_and_attr(self, attrs, key, value):
       super().set_variable_and_attr(attrs, key, value)
-      event = Event()
       
-      def callback():
-        self.variables[key].set(value)
-        event.set()
-      
-      if gui.after_idle_window(self.window, callback):
-        event.wait()
+      gui.after_wait_window(
+        self.window,
+        lambda: self.variables[key].set(value)
+      )
     
     def quit(self):
       self.window.quit()

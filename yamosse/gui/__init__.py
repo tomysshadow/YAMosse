@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
 from weakref import finalize, WeakKeyDictionary
 import traceback
-from threading import Lock
+from threading import Lock, Event
 from math import ceil
 import shlex
 import os
@@ -1166,15 +1166,45 @@ def _root_window():
 get_root_window = _root_window()
 
 
-def after_idle_window(window, callback):
+def after_window(window, callback):
   # for thread safety
   # it's not safe to have a non-GUI thread interact directly with widgets
-  # so we queue this for when idle
-  try: window.after_idle(callback)
+  # so we need to use window.after with a callback
+  # here I use the window.children property to check if the window exists
+  # I prefer this over winfo_exists because it means we don't hit
+  # the interpreter, which may not be running anymore
+  # which is also why we check the children first before calling window.after
+  # (technically a race but unlikely to cause issues, window.after would probably throw anyway)
+  # but it does make the assumption
+  # that the window will have at least one child
+  # which it will, if make_window was used to make it
+  # it's important to stash the children variable before use
+  # so another thread doesn't change it underneath us before we return it
+  if not (children := window.children): return children
+  
+  try:
+    window.after(0, callback)
   except (tk.TclError, RuntimeError):
-    if window.children: raise
+    # silence any errors caused by the window exiting
+    # before getting the chance to run our callback
+    # otherwise it's probably a genuine error so reraise it then
+    if not (children := window.children): return children
+    raise
   
   return window.children
+
+
+def after_wait_window(window, callback):
+  # the same as after_window, except
+  # we block until the callback has finished running
+  event = Event()
+  
+  def set_(*args, **kwargs):
+    try: return callback(*args, **kwargs)
+    finally: event.set()
+  
+  if not (children := after_window(window, set_)): return children
+  event.wait()
 
 
 def bind_buttons_window(window, ok_button=None, cancel_button=None):
@@ -1290,6 +1320,8 @@ def make_window(window, make_frame, *args, **kwargs):
   
   frame = ttk.Frame(window)
   frame.grid(row=1, column=1, sticky=tk.NSEW)
+  
+  assert window.children, 'window must have children'
   return window, make_frame(frame, *args, **kwargs)
 
 

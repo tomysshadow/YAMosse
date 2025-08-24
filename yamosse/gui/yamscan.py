@@ -134,7 +134,7 @@ def show_yamscan(widgets, values=None):
       
       if ok: window.bell()
   
-  return gui.after_idle_window(window, callback)
+  return gui.after_window(window, callback)
 
 
 def make_yamscan(frame, open_output_file, progressbar_maximum=100):
