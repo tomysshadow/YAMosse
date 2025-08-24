@@ -18,8 +18,10 @@ import yamosse.subsystem as yamosse_subsystem
 
 
 def _key_getsize(file_name):
-  try: return os.path.getsize(file_name)
-  except OSError: return 0
+  try:
+    return os.path.getsize(file_name)
+  except OSError:
+    return 0
 
 
 def _file_names_sorted_next(file_names):
@@ -51,11 +53,14 @@ def _real_relpath(path, start=os.curdir):
 
 
 def _input_file_names(input_, recursive=True):
-  if not input_: raise ValueError('input must not be empty')
+  if not input_:
+    raise ValueError('input must not be empty')
   
   if not isinstance(input_, str):
-    try: input_, = input_
-    except ValueError: return set(input_)
+    try:
+      input_, = input_
+    except ValueError:
+      return set(input_)
   
   path = _real_relpath(input_)
   file_names = set()
@@ -69,7 +74,8 @@ def _input_file_names(input_, recursive=True):
           file_names.add(os.path.join(walk_root_dir_name, walk_file_name))
       
       # walk does not error if path is not a directory
-      if not file_names and not os.path.isdir(path): raise NotADirectoryError
+      if not file_names and not os.path.isdir(path):
+        raise NotADirectoryError
     else:
       # get a flat listing of every file in the directory but not its subdirectories
       with os.scandir(path) as scandir:
@@ -86,7 +92,9 @@ def _input_file_names(input_, recursive=True):
 def _download_weights_file_unique(url, path, subsystem=None, options=None):
   if options:
     weights = options.weights
-    if weights: return open(weights, 'rb')
+    
+    if weights:
+      return open(weights, 'rb')
   
   if subsystem:
     subsystem.show(values={
@@ -262,8 +270,10 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
         # while the workers are booting up, sort the next batch
         # this allows both tasks to be done at once
         # although any individual batch should not take longer than a few seconds to sort
-        try: file_names_sorted = _file_names_sorted_next(file_names_batched)
-        except StopIteration: file_names_batched = None
+        try:
+          file_names_sorted = _file_names_sorted_next(file_names_batched)
+        except StopIteration:
+          file_names_batched = None
         
         while next_ and file_names_pos < file_names_len:
           # waits for incoming values so they'll be instantly shown when they arrive

@@ -38,8 +38,10 @@ def insert_embed(text, widget, line=0):
   
   try:
     # if the placeholder exists, then delete it
-    try: text.delete(_texts[text])
-    except tk.TclError: pass
+    try:
+      text.delete(_texts[text])
+    except tk.TclError:
+      pass
     
     # use the insertion cursor so that it moves from the linestart to the lineend
     text.mark_set(tk.INSERT,
@@ -65,7 +67,9 @@ def _peek_embed(M):
   if not int(M):
     while _stack:
       text = _stack[-1]
-      if text.winfo_exists(): return text
+      
+      if text.winfo_exists():
+        return text
       
       # throw out dead text
       _stack.pop()
@@ -126,8 +130,11 @@ def _root_embed():
         
         # get the name, which should be the only binding
         # then unbind the sequence
-        try: name, = bind(bindtag)
-        finally: bind(bindtag, sequence, '')
+        try:
+          name, = bind(bindtag)
+        finally:
+          bind(bindtag, sequence, '')
+        
         return str(name)
       
       bindtag = gui.bindtag(name_sequence)
@@ -202,8 +209,10 @@ def _root_embed():
         # propagate it to all the windows
         # if we are binding a new script to a window
         # then add the binding, before the Text class binding
-        try: class_, sequence, script = args
-        except ValueError: pass
+        try:
+          class_, sequence, script = args
+        except ValueError:
+          pass
         else:
           class_ = str(class_)
           
@@ -231,7 +240,8 @@ def _root_embed():
           try:
             window = root_window.nametowidget(class_)
             bindings = _windows[window]
-          except KeyError: pass
+          except KeyError:
+            pass
           else:
             name = name_sequence(sequence)
             scripts = bindings.setdefault(name, [])

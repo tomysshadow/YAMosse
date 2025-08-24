@@ -19,7 +19,9 @@ def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, model_yamnet_class_names, identification,
       subsystem=None, encoding='utf8'):
-      if subsystem: self.seconds = time()
+      if subsystem:
+        self.seconds = time()
+      
       self.subsystem = subsystem
       
       identification = yamosse_identification.identification(option=identification)
@@ -110,7 +112,8 @@ def output(file_name, *args, **kwargs):
       super().__init__(*args, encoding=encoding, **kwargs)
     
     def options(self, options):
-      if not yamosse_utils.dict_once(self._d, 'options'): return False
+      if not yamosse_utils.dict_once(self._d, 'options'):
+        return False
       
       if not super().options(options):
         return False
@@ -124,9 +127,12 @@ def output(file_name, *args, **kwargs):
       return True
     
     def results(self, results):
-      if not yamosse_utils.dict_once(self._d, 'results'): return None
+      if not yamosse_utils.dict_once(self._d, 'results'):
+        return None
       
-      if not results: return None
+      if not results:
+        return None
+      
       results = super().results(results)
       
       file = self.file
@@ -139,9 +145,12 @@ def output(file_name, *args, **kwargs):
       return results
     
     def errors(self, errors):
-      if not yamosse_utils.dict_once(self._d, 'errors'): return None
+      if not yamosse_utils.dict_once(self._d, 'errors'):
+        return None
       
-      if not errors: return None
+      if not errors:
+        return None
+      
       errors = super().errors(errors)
       
       file = self.file
@@ -185,7 +194,8 @@ def output(file_name, *args, **kwargs):
       super().__exit__(*args, **kwargs)
     
     def options(self, options):
-      if not super().options(options): return False
+      if not super().options(options):
+        return False
       
       options = vars(options)
       return self._d.setdefault('options', options) is options

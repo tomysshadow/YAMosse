@@ -3,8 +3,10 @@ from threading import Thread
 
 import yamosse.utils as yamosse_utils
 
-try: from . import gui
-except ImportError: gui = None
+try:
+  from . import gui
+except ImportError:
+  gui = None
 
 class SubsystemExit(Exception): pass
 class SubsystemError(Exception): pass
@@ -135,8 +137,10 @@ def subsystem(window, title, variables):
       default_has_value = default is not None
       
       if default_has_value:
-        if default: yes = yes.upper()
-        else: no = no.upper()
+        if default:
+          yes = yes.upper()
+        else:
+          no = no.upper()
       
       result = ''
       
@@ -156,7 +160,8 @@ def subsystem(window, title, variables):
           
           if result not in RESULTS:
             result = ''
-        elif default_has_value: return default
+        elif default_has_value:
+          return default
       
       return result == YES
   

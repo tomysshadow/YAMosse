@@ -1,11 +1,15 @@
 def try_int(value, *args, **kwargs):
-  try: return int(value, *args, **kwargs)
-  except ValueError: return value
+  try:
+    return int(value, *args, **kwargs)
+  except ValueError:
+    return value
 
 
 def try_split(value, *args, **kwargs):
-  try: return value.split(*args, **kwargs)
-  except AttributeError: return value
+  try:
+    return value.split(*args, **kwargs)
+  except AttributeError:
+    return value
 
 
 def ascii_backslashreplace(value):

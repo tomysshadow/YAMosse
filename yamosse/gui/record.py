@@ -3,8 +3,10 @@ from tkinter import ttk, messagebox
 from threading import Lock, Event
 from os import fsencode as fsenc
 
-try: import yamosse.recording as yamosse_recording
-except ImportError: yamosse_recording = None
+try:
+  import yamosse.recording as yamosse_recording
+except ImportError:
+  yamosse_recording = None
 
 from .. import gui
 from . import progressbar as gui_progressbar
@@ -146,7 +148,9 @@ def make_record(frame, variables, record):
       save = messagebox.askyesnocancel(
         parent=window, title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
       
-      if save is None: return
+      if save is None:
+        return
+      
       recording.save = save
     
     close()

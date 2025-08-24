@@ -137,7 +137,9 @@ class Options:
     with open(_root_file_name, 'rb') as f:
       options = pickle.load(f)
       
-      if options.version != VERSION: raise cls.VersionError
+      if options.version != VERSION:
+        raise cls.VersionError
+      
       return options
   
   def dump(self):
@@ -160,7 +162,9 @@ class Options:
       # and likewise, a TypeError if the type couldn't be casted
       options.set(json.load(f))
       
-      if options.version != VERSION: raise cls.VersionError
+      if options.version != VERSION:
+        raise cls.VersionError
+      
       return options
   
   def export_preset(self, file_name):

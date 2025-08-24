@@ -106,7 +106,8 @@ def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
   type_=yamosse_progress.NORMAL, parent=None, task=False, **kwargs):
   trace = not variable
   
-  if trace: variable = tk.IntVar()
+  if trace:
+    variable = tk.IntVar()
   
   frame.rowconfigure(0, weight=1) # make progressbar vertically centered
   frame.columnconfigure(1, weight=1) # make progressbar horizontally resizable
@@ -121,7 +122,9 @@ def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
   taskbar = None
   
   if task and yamosse_progress.PyTaskbar:
-    if not parent: parent = frame.winfo_toplevel()
+    if not parent:
+      parent = frame.winfo_toplevel()
+    
     taskbar = yamosse_progress.PyTaskbar.Progress(hwnd=yamosse_progress.hwnd(parent))
   
   widgets = (gui.make_name(frame, name), (progressbar, taskbar), percent_label)

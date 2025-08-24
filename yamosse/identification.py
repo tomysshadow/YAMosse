@@ -50,8 +50,10 @@ def identification(option=None):
           timestamp = HMS_ALL
         else:
           # convert to HMS string and join the timestamps if this is a timespan
-          try: timestamp = HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
-          except TypeError: timestamp = yamosse_utils.hours_minutes(timestamp)
+          try:
+            timestamp = HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+          except TypeError:
+            timestamp = yamosse_utils.hours_minutes(timestamp)
         
         keys.append(timestamp)
       
@@ -111,7 +113,9 @@ def identification(option=None):
       for class_ in options.classes:
         # calibrate the score and ensure it is less than 100%
         calibrated_score = min(score[class_] * calibration[class_], 1.0)
-        if not self._minmax(calibrated_score, confidence_score): continue
+        
+        if not self._minmax(calibrated_score, confidence_score):
+          continue
         
         prediction_scores = class_predictions.setdefault(class_, {})
         
@@ -215,9 +219,12 @@ def identification(option=None):
                   all_timestamp = (class_name, timestamps.pop(t))
                   break
             else:
-              try: timestamps.remove(HMS_ALL)
-              except ValueError: pass
-              else: all_timestamp = class_name
+              try:
+                timestamps.remove(HMS_ALL)
+              except ValueError:
+                pass
+              else:
+                all_timestamp = class_name
             
             if all_timestamp is not None:
               assert not timestamps, 'timestamps must be empty if Span All is checked'
@@ -311,8 +318,10 @@ def identification(option=None):
         
         # when timespan is zero, prediction should always be set to its initial value
         # this tells the location of the first sound identified, which is useful information
-        if timespan: prediction = prediction // timespan * timespan
-        elif top_scores: prediction = top
+        if timespan:
+          prediction = prediction // timespan * timespan
+        elif top_scores:
+          prediction = top
         
         score = [score]
         default = top_scores.setdefault(int(prediction), score)
@@ -483,8 +492,11 @@ def identification(option=None):
     def key_result(cls, item):
       begin = super().key_result(item)
       
-      try: begin, end = begin
-      except TypeError: return begin, 0
+      try:
+        begin, end = begin
+      except TypeError:
+        return begin, 0
+      
       return begin, end
   
   if option == IDENTIFICATION_CONFIDENCE_SCORE:

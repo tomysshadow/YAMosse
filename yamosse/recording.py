@@ -53,8 +53,10 @@ class Recording:
       indatas = Queue()
       
       # try and ensure the directory exists
-      try: mkdir(DIR)
-      except FileExistsError: pass
+      try:
+        mkdir(DIR)
+      except FileExistsError:
+        pass
       
       # Make sure the file is opened before recording anything:
       tmp = NamedTemporaryFile(

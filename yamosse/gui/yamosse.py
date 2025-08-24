@@ -608,7 +608,8 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   gui.make_filedialog(weights_labelframe, textvariable=variables['weights'],
     parent=frame.winfo_toplevel(), filetypes=weights_filetypes)
   
-  if tfhub_enabled: gui.enable_widget(weights_labelframe, enabled=False)
+  if tfhub_enabled:
+    gui.enable_widget(weights_labelframe, enabled=False)
   
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)
   tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui.PADY_QN)

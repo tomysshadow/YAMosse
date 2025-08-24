@@ -58,11 +58,14 @@ class UndoableScale(UndoableWidget):
       # disallow double clicking on the bar area to recentre
       # it should only be possible by double clicking the squeezy-grabber thing
       # so it doesn't interfere with people clicking on the bar to increment by one
-      if oldvalue != newvalue: raise ValueError('oldvalue must equal newvalue')
+      if oldvalue != newvalue:
+        raise ValueError('oldvalue must equal newvalue')
       
       newvalue = DEFAULT_SCALE_VALUE
     
-    if oldvalue == newvalue: raise ValueError('oldvalue must not equal newvalue')
+    if oldvalue == newvalue:
+      raise ValueError('oldvalue must not equal newvalue')
+    
     return widget, newvalue, oldvalue, recenter
   
   @abstractmethod
@@ -102,12 +105,17 @@ class UndoableMaster(UndoableScale):
     
     # this must happen last, invokes self._master function
     scale = self._scale
-    if focus: scale.focus_set()
+    
+    if focus:
+      scale.focus_set()
+    
     scale.set(newvalue)
   
   def data(self, e, recenter=False):
-    try: widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
-    except ValueError: return None
+    try:
+      widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
+    except ValueError:
+      return None
     
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
@@ -239,14 +247,19 @@ class UndoableCalibration(UndoableScale):
   def revert(self, widget, newvalue, focus=True):
     # look at and focus the widget so the user notices what's just changed
     self._text.see(widget.master)
-    if focus: widget.focus_set()
+    
+    if focus:
+      widget.focus_set()
+    
     widget.set(newvalue)
     
     self.show(widget, newvalue)
   
   def data(self, e, recenter=False):
-    try: widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
-    except ValueError: return None
+    try:
+      widget, newvalue, oldvalue, recenter = super().data(e, recenter=recenter)
+    except ValueError:
+      return None
     
     print(f'Undo calibration scale save {widget} {newvalue} {oldvalue} {recenter}')
     
@@ -309,10 +322,14 @@ class UndoableReset(UndoableWidget):
   ):
     oldvalues = self.oldvalues
     
-    if calibration_newvalues is None: calibration_newvalues = oldvalues
-    if master_newvalues is None: master_newvalues = oldvalues
+    if calibration_newvalues is None:
+      calibration_newvalues = oldvalues
     
-    if focus: self._button.focus_set()
+    if master_newvalues is None:
+      master_newvalues = oldvalues
+    
+    if focus:
+      self._button.focus_set()
     
     # we don't need to revert the calibration directly
     # reverting its master will have the side effect of reverting it anyway

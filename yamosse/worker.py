@@ -57,7 +57,9 @@ def _high_priority(psutil=None):
 
 def _step_progress(worker_step, current_worker_step=1.0):
   current_worker_step = int(current_worker_step * PROGRESSBAR_MAXIMUM) - worker_step
-  if current_worker_step <= 0: return worker_step
+  
+  if current_worker_step <= 0:
+    return worker_step
   
   previous_step = 0
   worker_step += current_worker_step
@@ -171,7 +173,8 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     
     options.worker(np, model_yamnet_class_names)
     
-    if options.high_priority: _high_priority(psutil=psutil)
+    if options.high_priority:
+      _high_priority(psutil=psutil)
     
     # currently, setting a per-CPU memory limit isn't supported by TensorFlow
     # however in future the 'GPU' argument could be removed if it does ever become supported

@@ -22,7 +22,8 @@ def ask_cancel(window, footer_widgets):
   
   # while this may feel like a bit of a hack, doing it this way ensures that
   # there is no possible desync between what the button says and whether the message box appears
-  if str(done_button['text']) == 'OK': return True
+  if str(done_button['text']) == 'OK':
+    return True
   
   return messagebox.askyesno(
     parent=window, title=TITLE, message=ASK_CANCEL_MESSAGE, default=messagebox.NO)
@@ -112,7 +113,8 @@ def show_yamscan(widgets, values=None):
     value = values.get('done')
     
     if value is not None:
-      if value not in DONE_VALUES: raise ValueError('value must be in %r' % (DONE_VALUES,))
+      if value not in DONE_VALUES:
+        raise ValueError('value must be in %r' % (DONE_VALUES,))
       
       open_output_file_button, done_button = footer_widgets
       

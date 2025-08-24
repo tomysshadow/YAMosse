@@ -137,16 +137,20 @@ def _init_enable_widget():
   normalcursors = WeakKeyDictionary()
   
   def enable_widget(widget, enabled=True, cursor=True):
-    try: widget['state'] = tk.NORMAL if enabled else tk.DISABLED
-    except tk.TclError: pass
+    try:
+      widget['state'] = tk.NORMAL if enabled else tk.DISABLED
+    except tk.TclError:
+      pass
     else:
       # we do this in the try-else block
       # this way, we'll only attempt to change the cursor
       # if we were successfully able to change the state
       if cursor:
         if enabled:
-          try: widget['cursor'] = normalcursors.pop(widget)
-          except KeyError: pass
+          try:
+            widget['cursor'] = normalcursors.pop(widget)
+          except KeyError:
+            pass
         else:
           normalcursor = widget['cursor']
           
@@ -238,7 +242,9 @@ def grid_configure_size_widget(widget, configure, **kwargs):
 
 def padding4_widget(widget, padding):
   padding = yamosse_utils.try_split(padding)
-  if not padding: return [0.0, 0.0, 0.0, 0.0]
+  
+  if not padding:
+    return [0.0, 0.0, 0.0, 0.0]
   
   def fpixels(*lengths):
     return [widget.winfo_fpixels(l) for l in lengths]
@@ -246,20 +252,31 @@ def padding4_widget(widget, padding):
   # should raise TypeError is padding is just an integer
   try:
     # should raise ValueError if too many values to unpack
-    try: left, top, right, bottom = padding
-    except ValueError: pass
-    else: return fpixels(left, top, right, bottom)
+    try:
+      left, top, right, bottom = padding
+    except ValueError:
+      pass
+    else:
+      return fpixels(left, top, right, bottom)
     
-    try: left, vertical, right = padding
-    except ValueError: pass
-    else: return fpixels(left, vertical, right, vertical)
+    try:
+      left, vertical, right = padding
+    except ValueError:
+      pass
+    else:
+      return fpixels(left, vertical, right, vertical)
     
-    try: horizontal, vertical = padding
-    except ValueError: pass
-    else: return fpixels(horizontal, vertical, horizontal, vertical)
+    try:
+      horizontal, vertical = padding
+    except ValueError:
+      pass
+    else:
+      return fpixels(horizontal, vertical, horizontal, vertical)
     
     padding, = padding
-  except TypeError: pass
+  except TypeError:
+    pass
+  
   return fpixels(padding, padding, padding, padding)
 
 
@@ -275,7 +292,8 @@ def lookup_style_widget(widget, option, element='', state=None, **kwargs):
   try:
     if state is None:
       state = widget.state()
-  except tk.TclError: pass
+  except tk.TclError:
+    pass
   
   return ttk.Style(widget).lookup(style, option, state=state, **kwargs)
 
@@ -293,7 +311,9 @@ def measure_text_width_widget(widget, width, font):
 def make_widgets(frame, make_widget, items=None,
   orient=tk.HORIZONTAL, cell=0, sticky=tk.W, padding=PADDING):
   widgets = []
-  if not items: return widgets
+  
+  if not items:
+    return widgets
   
   ORIENTS = {
     tk.HORIZONTAL: (
@@ -448,8 +468,10 @@ def _init_validationoptions_spinbox():
       
       # we default to zero if the widget has never had a valid value
       # don't use setdefault here because once we clamp, we might end up with a different number
-      try: number = int(P)
-      except ValueError: number = _spinbox_numbers.get(widget, 0)
+      try:
+        number = int(P)
+      except ValueError:
+        number = _spinbox_numbers.get(widget, 0)
       
       widget.set(yamosse_utils.clamp(number, int(widget['from']), int(widget['to'])))
       after_invalidcommand_widget(widget, v)
@@ -461,8 +483,10 @@ def _init_validationoptions_spinbox():
     def command(W, P):
       widget = frame.nametowidget(W)
       
-      try: number = int(P)
-      except ValueError: return False
+      try:
+        number = int(P)
+      except ValueError:
+        return False
       
       valid = str(number) == str(P) and number in range(int(widget['from']), int(widget['to']))
       
@@ -602,8 +626,11 @@ def indents_treeview(treeview, item=None):
 def measure_widths_treeview(treeview, widths, item=None):
   # get the per-treeview indent, padding and font
   indent = lookup_style_widget(treeview, 'indent')
-  try: indent = treeview.winfo_fpixels(indent)
-  except tk.TclError: indent = DEFAULT_TREEVIEW_INDENT
+  
+  try:
+    indent = treeview.winfo_fpixels(indent)
+  except tk.TclError:
+    indent = DEFAULT_TREEVIEW_INDENT
   
   def width_padding(padding):
     left, top, right, bottom = padding4_widget(treeview, padding)
@@ -612,7 +639,9 @@ def measure_widths_treeview(treeview, widths, item=None):
   padding_width = width_padding(DEFAULT_TREEVIEW_CELL_PADDING)
   
   font = lookup_style_widget(treeview, 'font')
-  if not font: font = 'TkDefaultFont'
+  
+  if not font:
+    font = 'TkDefaultFont'
   
   fonts = {font}
   
@@ -620,16 +649,21 @@ def measure_widths_treeview(treeview, widths, item=None):
   show = yamosse_utils.try_split(treeview['show'])
   show_headings = True
   
-  try: show = [str(s) for s in show]
-  except TypeError: pass
-  else: show_headings = 'headings' in show
+  try:
+    show = [str(s) for s in show]
+  except TypeError:
+    pass
+  else:
+    show_headings = 'headings' in show
   
   if show_headings:
     padding_width = max(padding_width, width_padding(
       lookup_style_widget(treeview, 'padding', element='Heading')))
     
     font = lookup_style_widget(treeview, 'font', element='Heading')
-    if font: fonts.add(font)
+    
+    if font:
+      fonts.add(font)
   
   def width_image(name):
     return int(treeview.tk.call('image', 'width', name)) if name else 0
@@ -647,7 +681,8 @@ def measure_widths_treeview(treeview, widths, item=None):
       # although it doesn't take very long to query a tag's configuration, it is still
       # worth checking if we've done it yet, as it is likely there are many many columns
       # but only a few tags they are collectively using
-      if not yamosse_utils.dict_once(tags, child_tag): continue
+      if not yamosse_utils.dict_once(tags, child_tag):
+        continue
       
       # after confirming we have not done the tag yet, query the tag's configuration
       # ideally, this would only get the "active" tag
@@ -694,9 +729,12 @@ def measure_widths_treeview(treeview, widths, item=None):
     # the width can be a sequence like (width, minwidth) which we unpack here
     # if the sequence is too short, just get the width and use default minwidth
     # otherwise the width is specified as an integer, not a sequence
-    try: width, minwidth = width
-    except ValueError: width, = width
-    except TypeError: pass
+    try:
+      width, minwidth = width
+    except ValueError:
+      width, = width
+    except TypeError:
+      pass
     
     # a width of None means don't do this column
     if width is None: continue
@@ -793,12 +831,16 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     # we don't set a default value for get
     # (it's valid for column/heading to be explicitly set to None, so pointless anyway)
     column = options.get('column')
-    if column: treeview.column(cid, **column)
+    
+    if column:
+      treeview.column(cid, **column)
     
     heading = options.get('heading')
     
     # left align the heading by default
-    if not heading: heading = {}
+    if not heading:
+      heading = {}
+    
     heading.setdefault(tk.ANCHOR, tk.W)
     
     treeview.heading(cid, **heading)
@@ -853,9 +895,14 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     ]
   
   if selectmode == tk.EXTENDED:
-    def select_all(): treeview.selection_set(get_items_treeview(treeview))
-    def select_none(): treeview.selection_set(())
-    def invert_selection(): treeview.selection_toggle(get_items_treeview(treeview))
+    def select_all():
+      treeview.selection_set(get_items_treeview(treeview))
+    
+    def select_none():
+      treeview.selection_set(())
+    
+    def invert_selection():
+      treeview.selection_toggle(get_items_treeview(treeview))
     
     buttons += [
       ttk.Button(
@@ -955,7 +1002,9 @@ def make_filedialog(frame, name='',
       kwargs['defaultextension'] = defaultextension
     
     data = getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs)
-    if not data: return
+    
+    if not data:
+      return
     
     accept(data)
   
@@ -979,7 +1028,8 @@ def make_filedialog(frame, name='',
     def refuse(data):
       assert data, 'data must not be empty'
       
-      if isinstance(data, str): data = (data,)
+      if isinstance(data, str):
+        data = (data,)
       
       multiple = len(data) > 1
       
@@ -1004,7 +1054,8 @@ def make_filedialog(frame, name='',
       data = e.widget.tk.splitlist(e.data)
       
       # on some platforms we only get data on drop
-      if data and refuse(data): return tkinterdnd2.REFUSE_DROP
+      if data and refuse(data):
+        return tkinterdnd2.REFUSE_DROP
       
       entry.focus_set()
       entry.selection_range(0, tk.END)
@@ -1195,8 +1246,10 @@ def after_wait_window(window, callback):
   event = Event()
   
   def set_(*args, **kwargs):
-    try: return callback(*args, **kwargs)
-    finally: event.set()
+    try:
+      return callback(*args, **kwargs)
+    finally:
+      event.set()
   
   if not (children := after_window(window, set_)): return children
   event.wait()
@@ -1222,11 +1275,14 @@ def release_modal_window(window, destroy=True):
   
   # this must be done before destroying the window
   # otherwise the window behind this one will not take focus back
-  try: parent.attributes('-disabled', False)
-  except tk.TclError: pass # not supported on this OS
+  try:
+    parent.attributes('-disabled', False)
+  except tk.TclError:
+    pass # not supported on this OS
   
   window.grab_release() # is not necessary on Windows, but is necessary on other OS's
   parent.focus_set()
+  
   if destroy: window.destroy()
 
 
@@ -1235,8 +1291,10 @@ def set_modal_window(window, delete_window=release_modal_window):
   window.protocol('WM_DELETE_WINDOW', lambda: delete_window(window))
   
   # make the window behind us play the "bell" sound if we try and interact with it
-  try: window.master.attributes('-disabled', True)
-  except tk.TclError: pass # not supported on this OS
+  try:
+    window.master.attributes('-disabled', True)
+  except tk.TclError:
+    pass # not supported on this OS
   
   # turns on WM_TRANSIENT_FOR on Linux (X11) which modal dialogs are meant to have
   # this should be done before setting the window type to dialog
@@ -1245,13 +1303,17 @@ def set_modal_window(window, delete_window=release_modal_window):
   
   # disable the minimize and maximize buttons
   # Windows
-  try: window.attributes('-toolwindow', True)
-  except tk.TclError: pass # not supported on this OS
+  try:
+    window.attributes('-toolwindow', True)
+  except tk.TclError:
+    pass # not supported on this OS
   
   # Linux (X11)
   # see type list here: https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#id-1.6.7
-  try: window.attributes('-type', 'dialog')
-  except tk.TclError: pass # not supported on this OS
+  try:
+    window.attributes('-type', 'dialog')
+  except tk.TclError:
+    pass # not supported on this OS
   
   # wait for window to be visible
   # (necessary on Linux, does nothing on Windows but it doesn't matter there)
@@ -1291,7 +1353,9 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
       # note that it is still necessary to call iconphoto before this
       # because Windows has a bug where you need to call iconphoto with default off first
       # otherwise it will use the wrong icon size
-      if WINDOWS_ICONPHOTO_BUGFIX: window.iconphoto(False, *iconphotos)
+      if WINDOWS_ICONPHOTO_BUGFIX:
+        window.iconphoto(False, *iconphotos)
+      
       window.iconphoto(True, *iconphotos)
     else:
       window.iconphoto(False, *iconphotos)
@@ -1299,8 +1363,10 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
 
 def make_window(window, make_frame, *args, **kwargs):
   for child in list(window.children.values()):
-    try: child.destroy()
-    except tk.TclError: pass
+    try:
+      child.destroy()
+    except tk.TclError:
+      pass
   
   window.rowconfigure(1, weight=1) # make frame vertically resizable
   window.columnconfigure(1, weight=1) # make frame horizontally resizable
@@ -1333,7 +1399,9 @@ def _root_images():
         with os.scandir(path) as scandir:
           for scandir_entry in scandir:
             item = callback(scandir_entry)
-            if not item: continue
+            
+            if not item:
+              continue
             
             key, value = item
             result[key] = value
@@ -1348,18 +1416,24 @@ def _root_images():
             image_entry, make_image, ext)))
         
         # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
-        if os.path.splitext(name)[1] != ext: return None
+        if os.path.splitext(name)[1] != ext:
+          return None
         
-        try: return (name, make_image(file=fsdec(entry.path)))
-        except tk.TclError: return None
+        try:
+          return (name, make_image(file=fsdec(entry.path)))
+        except tk.TclError:
+          return None
       
       def callback_images(entry):
-        if not entry.is_dir(): return None
+        if not entry.is_dir():
+          return None
         
         image = entry.name.title()
         
-        try: ext = IMAGE_EXTS[image]
-        except KeyError: return None
+        try:
+          ext = IMAGE_EXTS[image]
+        except KeyError:
+          return None
         
         return (image, scandir(entry.path, lambda image_entry: callback_image(
           image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), ext)))
@@ -1392,10 +1466,13 @@ def elements_layout(layout, name):
   elements = []
   
   for child, options in layout:
-    if str(child) == name: elements.append(options)
+    if str(child) == name:
+      elements.append(options)
     
-    try: children = options['children']
-    except KeyError: continue
+    try:
+      children = options['children']
+    except KeyError:
+      continue
     
     elements += elements_layout(children, name)
   
@@ -1483,7 +1560,8 @@ def bindtag(obj):
 
 
 def gui(make_frame, *args, window=None, child=False, **kwargs):
-  if not window: window = get_root_window()
+  if not window:
+    window = get_root_window()
   
   return make_window(
     window if not child else tk.Toplevel(window),

@@ -1,5 +1,7 @@
-try: import PyTaskbar
-except ImportError: PyTaskbar = None
+try:
+  import PyTaskbar
+except ImportError:
+  PyTaskbar = None
 
 NORMAL = 'normal'
 WARNING = 'warning'

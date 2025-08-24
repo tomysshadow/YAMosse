@@ -78,8 +78,10 @@ def _mainloop(**kwargs):
   
   # try and load the options file first
   # if failed to load options file, reset to defaults
-  try: options = yamosse_options.Options.load()
-  except Exception: options = yamosse_options.Options()
+  try:
+    options = yamosse_options.Options.load()
+  except Exception:
+    options = yamosse_options.Options()
   
   model_yamnet_class_names = yamosse_worker.class_names()
   
