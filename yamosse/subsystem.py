@@ -128,9 +128,9 @@ def subsystem(window, title, variables):
     def confirm(self, message, *args, default=None, **kwargs):
       YES = 'y'
       NO = 'n'
+      RESULTS = (YES, NO)
       
-      yes = YES
-      no = NO
+      yes, no = RESULTS
       
       default_has_value = default is not None
       
@@ -154,7 +154,7 @@ def subsystem(window, title, variables):
         if result:
           result = result[0].casefold()
           
-          if result not in (YES, NO):
+          if result not in RESULTS:
             result = ''
         elif default_has_value: return default
       
