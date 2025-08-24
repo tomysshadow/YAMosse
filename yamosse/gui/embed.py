@@ -289,8 +289,8 @@ def text_embed(text):
     def configure(e):
       widget = e.widget
       
-      inset = sum([widget.winfo_fpixels(widget[i]) for i in (
-        'borderwidth', 'highlightthickness', 'padx')])
+      inset = sum(widget.winfo_fpixels(widget[i]) for i in (
+        'borderwidth', 'highlightthickness', 'padx'))
       
       width = max(0, widget.winfo_fpixels(e.width) - (inset * 2))
       

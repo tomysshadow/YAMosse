@@ -101,7 +101,7 @@ def make_record(frame, variables, record):
     volume_frame.after_cancel(volume_after)
     hide_volume()
   
-  def start_recording(e=None):
+  def start_recording():
     nonlocal recording
     
     if recording: return
@@ -117,7 +117,7 @@ def make_record(frame, variables, record):
     
     start_volume()
   
-  def stop_recording(e=None):
+  def stop_recording():
     nonlocal recording
     
     if not recording: return
@@ -137,7 +137,7 @@ def make_record(frame, variables, record):
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
   for name in ('<Unmap>', '<Destroy>'):
-    window.bind(name, stop_recording)
+    window.bind(name, lambda e: stop_recording())
   
   window.protocol('WM_SAVE_YOURSELF', stop_recording)
   

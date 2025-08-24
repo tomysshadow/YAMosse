@@ -51,7 +51,7 @@ def trace_add_progressbar(widgets, variable):
   )
 
 
-def trace_remove_progressbar(widgets, variable):
+def trace_remove_progressbar(widgets, variable, cbname):
   progressbar = widgets[1][0]
   
   gui.match_variable_widget(progressbar, variable)

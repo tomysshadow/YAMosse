@@ -1,12 +1,10 @@
 import pickle
 import json
 from datetime import datetime
-import shlex
 from os import cpu_count
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
-import yamosse.worker as yamosse_worker
 import yamosse.identification as yamosse_identification
 
 VERSION = 2

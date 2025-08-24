@@ -56,7 +56,8 @@ def main(argc, argv):
         if arg in ('-o',  '--option'):
           key = args[a := a + 1]
           
-          try: options_attrs[key] = yamosse_options.json.loads(args[a := a + 1])
+          try:
+            options_attrs[key] = yamosse_options.json.loads(args[a := a + 1])
           except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
             help_()
             return 2

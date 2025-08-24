@@ -175,7 +175,7 @@ class UndoableMaster(UndoableScale):
     self.show(newvalue=float(text))
     
     command = self._command
-    if not command: return
+    if not command: return ''
     return self._tk.call(command, text, *args)
 
 # There are a couple known issues with this:

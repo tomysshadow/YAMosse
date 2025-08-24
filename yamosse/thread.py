@@ -83,7 +83,7 @@ def _input_file_names(input_, recursive=True):
   return file_names
 
 
-def _download_weights_file_unique(url, path, min_=1, max_=1000, subsystem=None, options=None):
+def _download_weights_file_unique(url, path, subsystem=None, options=None):
   if options:
     weights = options.weights
     if weights: return open(weights, 'rb')

@@ -450,7 +450,7 @@ def make_items(frame, variables):
     name='Item Delimiter',
     textvariable=item_delimiter_variable,
     invalidcommand=(item_delimiter_frame.register(invalid_item_delimiter), '%W', '%v'),
-    validatecommand=(item_delimiter_frame.register(lambda P: bool(P)), '%P'),
+    validatecommand=(item_delimiter_frame.register(bool), '%P'),
     validate='focusout'
   )[1]
   

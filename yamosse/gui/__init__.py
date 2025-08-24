@@ -1032,7 +1032,7 @@ def make_filedialog(frame, name='',
       entry.selection_clear()
       
       if not data or refuse(data):
-        frame.bell()
+        frame.bell() # to make it more obvious the file was noticed but refused
         return tkinterdnd2.REFUSE_DROP
       
       accept(data)
