@@ -1517,8 +1517,6 @@ def _style():
   # this is an internal function, so we trust that this will only be called
   # after we have gotten the root window
   style = ttk.Style()
-  style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
-  style.configure('Title.TLabel', font=('Trebuchet MS', 24))
   
   style.theme_settings('default', {
     'Treeview.Heading': {
@@ -1526,9 +1524,14 @@ def _style():
     }
   })
   
+  style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
+  style.configure('Title.TLabel', font=('Trebuchet MS', 24))
+  
   style.layout('Raised.TNotebook', [])
   style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
   
+  # the align element ensures that all buttons are large enough
+  # to fit a 16x16 icon
   style.element_create('align', 'image',
     get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
   
