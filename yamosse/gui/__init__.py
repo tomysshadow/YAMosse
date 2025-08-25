@@ -241,7 +241,10 @@ def grid_configure_size_widget(widget, configure, **kwargs):
 
 
 def padding4_widget(widget, padding):
-  padding = yamosse_utils.try_split(padding)
+  try:
+    padding = widget.tk.splitlist(padding)
+  except TypeError:
+    pass
   
   if not padding:
     return [0.0, 0.0, 0.0, 0.0]
@@ -561,10 +564,14 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
     finally:
       showing = False
   
+  # I wrote this function before I knew about LabeledScale
+  # but I prefer my implementation anyway, so I just kept it
   scale = ttk.Scale(frame,
     from_=from_, to=to, orient=tk.HORIZONTAL, command=show, **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
+  scale.bind('<<RangeChanged>>', show)
+  
   show()
   return make_name(frame, name), scale, percent_label
 
@@ -646,15 +653,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   fonts = {font}
   
   # get the per-heading padding and font, but only if the heading is shown
-  show = yamosse_utils.try_split(treeview['show'])
-  show_headings = True
-  
-  try:
-    show = [str(s) for s in show]
-  except TypeError:
-    pass
-  else:
-    show_headings = 'headings' in show
+  show_headings = 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]
   
   if show_headings:
     padding_width = max(padding_width, width_padding(
@@ -665,8 +664,8 @@ def measure_widths_treeview(treeview, widths, item=None):
     if font:
       fonts.add(font)
   
-  def width_image(name):
-    return int(treeview.tk.call('image', 'width', name)) if name else 0
+  def width_image(image):
+    return int(treeview.tk.call('image', 'width', image)) if image else 0
   
   item_image_width = 0
   
@@ -674,9 +673,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   tags = {}
   
   for child in treeview.get_children(item=item):
-    child_tags = yamosse_utils.try_split(treeview.item(child, 'tags'))
-    
-    for child_tag in child_tags:
+    for child_tag in treeview.tk.splitlist(treeview.item(child, 'tags')):
       # first check if we've already done this tag before
       # although it doesn't take very long to query a tag's configuration, it is still
       # worth checking if we've done it yet, as it is likely there are many many columns
@@ -811,7 +808,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   if show is None:
     show = ['tree', 'headings']
   else:
-    show = [str(s) for s in yamosse_utils.try_split(show)]
+    show = [str(s) for s in frame.tk.splitlist(show)]
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -1028,9 +1025,6 @@ def make_filedialog(frame, name='',
     def refuse(data):
       assert data, 'data must not be empty'
       
-      if isinstance(data, str):
-        data = (data,)
-      
       multiple = len(data) > 1
       
       # if multiple selection is not enabled, refuse multiple files
@@ -1051,7 +1045,7 @@ def make_filedialog(frame, name='',
     frame.drop_target_register(tkinterdnd2.DND_FILES)
     
     def drop_enter(e):
-      data = e.widget.tk.splitlist(e.data)
+      data = [str(d) for d in e.widget.tk.splitlist(e.data)]
       
       # on some platforms we only get data on drop
       if data and refuse(data):
@@ -1070,7 +1064,7 @@ def make_filedialog(frame, name='',
     frame.dnd_bind('<<DropLeave>>', drop_leave)
     
     def drop(e):
-      data = e.widget.tk.splitlist(e.data)
+      data = [str(d) for d in e.widget.tk.splitlist(e.data)]
       
       entry.selection_clear()
       
@@ -1526,8 +1520,11 @@ def _style():
   style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
   style.configure('Title.TLabel', font=('Trebuchet MS', 24))
   
-  if windowingsystem() == 'x11':
-    style.configure('Treeview.Heading', padding=(2, 0))
+  style.theme_settings('default', {
+    'Treeview.Heading': {
+      'configure': {'padding': (2, 0)}
+    }
+  })
   
   style.layout('Raised.TNotebook', [])
   style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
@@ -1543,10 +1540,6 @@ def _style():
     children.append(('align', {}))
   
   style.layout('TButton', layout)
-
-
-def windowingsystem():
-  return get_root_window().tk.call('tk', 'windowingsystem')
 
 
 def threaded():

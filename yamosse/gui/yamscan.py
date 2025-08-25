@@ -13,7 +13,7 @@ SIZE = (540, 430)
 
 ASK_CANCEL_MESSAGE = 'Are you sure you want to cancel the YAMScan?'
 
-LOG_LINES_MAX = 1000
+LOG_LINES = 1000
 DONE_VALUES = ('OK', 'Cancel')
 
 
@@ -105,7 +105,7 @@ def show_yamscan(widgets, values=None):
       try:
         log_text.insert(tk.END, value)
         log_text.insert(tk.END, '\n')
-        log_text.delete('1.0', '%s - %d lines' % (tk.END, LOG_LINES_MAX))
+        log_text.delete('1.0', '%s - %d lines' % (tk.END, LOG_LINES))
         log_text.see(tk.END)
       finally:
         log_text['state'] = tk.DISABLED

@@ -5,13 +5,6 @@ def try_int(value, *args, **kwargs):
     return value
 
 
-def try_split(value, *args, **kwargs):
-  try:
-    return value.split(*args, **kwargs)
-  except AttributeError:
-    return value
-
-
 def ascii_backslashreplace(value):
   return str(value).encode('ascii', 'backslashreplace').decode()
 

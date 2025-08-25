@@ -12,15 +12,6 @@ class TestUtils(unittest.TestCase):
   def test_try_int_base(self):
     self.assertIsInstance(utils.try_int('0x10', base=16), int)
   
-  def test_try_split_string(self):
-    self.assertEqual(len(utils.try_split('tree headings')), 2)
-  
-  def test_try_split_delimiter(self):
-    self.assertEqual(len(utils.try_split('tree,headings', ',')), 2)
-  
-  def test_try_split_sequence(self):
-    self.assertEqual(len(utils.try_split(('tree', 'headings'))), 2)
-  
   def test_ascii_backslashreplace_unicode(self):
     self.assertEqual(utils.ascii_backslashreplace('I \u2665 YAMosse'), r'I \u2665 YAMosse')
   
