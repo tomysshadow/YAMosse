@@ -109,6 +109,8 @@ class Progressbar(ttk.Progressbar):
     self._command_taskbar(command)
   
   def state(self, statespec=None):
+    # we intentionally don't check that the states are in STATES
+    # because other Tkinter states are still allowed here
     result = super().state(statespec=statespec)
     
     # we only need to do stuff when setting the state
@@ -137,11 +139,13 @@ class Progressbar(ttk.Progressbar):
   
   @mode.setter
   def mode(self, value):
-    if value == yamosse_progress.MODE_DETERMINATE and not self._is_determinate():
+    DETERMINATE = yamosse_progress.MODE_DETERMINATE
+    
+    if value == DETERMINATE and self.mode != DETERMINATE:
       self.stop() # as the first step, stop the animation
       super().configure(mode=value)
       self._setvar(0) # must be done after setting mode to take effect
-    elif value != yamosse_progress.MODE_DETERMINATE and self._is_determinate():
+    elif value != DETERMINATE and self.mode == DETERMINATE:
       super().configure(mode=value)
       self._setvar(0) # must be done after setting mode to take effect
       self.start() # as the last step, start the animation
@@ -181,9 +185,6 @@ class Progressbar(ttk.Progressbar):
   def _setvar(self, value):
     self.setvar(str(self._variable), value)
   
-  def _is_determinate(self):
-    return self.mode == yamosse_progress.MODE_DETERMINATE
-  
   def _command_taskbar(self, command):
     taskbar = self.taskbar
     
@@ -212,7 +213,7 @@ class Progressbar(ttk.Progressbar):
   
   def _show(self, *args, **kwargs):
     # only update the percent label in determinate mode
-    if self._is_determinate():
+    if self.mode == yamosse_progress.MODE_DETERMINATE:
       value = int(self._getvar())
       
       taskbar = self.taskbar
