@@ -119,7 +119,7 @@ def configure_progressbar(widgets, variable, state):
 
 
 def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
-  type_=yamosse_progress.NORMAL, parent=None, task=False, **kwargs):
+  state=yamosse_progress.NORMAL, parent=None, task=False, **kwargs):
   trace = not variable
   
   if trace:
@@ -148,7 +148,7 @@ def make_progressbar(frame, name='', variable=None, orient=tk.HORIZONTAL,
   if trace:
     trace_add_progressbar(widgets, variable)
   
-  if not configure_progressbar(widgets, variable, type_):
+  if not configure_progressbar(widgets, variable, state):
     show_progressbar(widgets, variable)
   
   return widgets

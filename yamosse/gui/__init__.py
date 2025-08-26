@@ -579,7 +579,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
     from_=from_, to=to, orient=tk.HORIZONTAL, command=show, **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
-  scale.bind('<<RangeChanged>>', show)
+  #scale.bind('<<RangeChanged>>', show)
   
   show()
   return make_name(frame, name), scale, percent_label
