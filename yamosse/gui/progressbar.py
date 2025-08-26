@@ -70,7 +70,7 @@ class Progressbar(ttk.Progressbar):
     
     if value in yamosse_progress.MODES:
       self.mode = value
-      return
+      return None
     
     # this is done last so we've exhausted
     # all the other valid string values
@@ -86,7 +86,7 @@ class Progressbar(ttk.Progressbar):
       if state:
         return self.state(value)
     
-    self._setvar(value)
+    return self._setvar(value)
   
   def command(self, command):
     if command not in yamosse_progress.COMMANDS:
@@ -112,6 +112,7 @@ class Progressbar(ttk.Progressbar):
     result = super().state(statespec=statespec)
     
     # we only need to do stuff when setting the state
+    # so if we're only getting the state, just return here
     if statespec is None:
       return result
     
@@ -132,7 +133,7 @@ class Progressbar(ttk.Progressbar):
   
   @property
   def mode(self):
-    return self['mode']
+    return str(self['mode'])
   
   @mode.setter
   def mode(self, value):
@@ -181,7 +182,7 @@ class Progressbar(ttk.Progressbar):
     self.setvar(str(self._variable), value)
   
   def _is_determinate(self):
-    return str(self['mode']) == yamosse_progress.MODE_DETERMINATE
+    return self.mode == yamosse_progress.MODE_DETERMINATE
   
   def _command_taskbar(self, command):
     taskbar = self.taskbar
@@ -202,7 +203,7 @@ class Progressbar(ttk.Progressbar):
     if not taskbar:
       return None
     
-    type_ = yamosse_progress.types[str(self['mode'])]
+    type_ = yamosse_progress.types[self.mode]
     
     if type_ is None:
       type_ = self._state_type
