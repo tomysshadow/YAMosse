@@ -115,6 +115,8 @@ class Progressbar(ttk.Progressbar):
     if statespec is None:
       return result
     
+    # get the highest priority state
+    # so the taskbar knows what type to use
     for state in yamosse_progress.STATES:
       if not self.instate((state,)):
         continue
@@ -134,16 +136,16 @@ class Progressbar(ttk.Progressbar):
   
   @mode.setter
   def mode(self, value):
-    if value == yamosse_progress.MODE_DETERMINATE:
-      if not self._is_determinate():
-        self.stop() # as the first step, stop the animation
-        super().configure(mode=value)
-        self._setvar(0) # must be done after setting mode to take effect
-    elif value == yamosse_progress.MODE_INDETERMINATE:
-      if self._is_determinate():
-        super().configure(mode=value)
-        self._setvar(0) # must be done after setting mode to take effect
-        self.start() # as the last step, start the animation
+    if value == yamosse_progress.MODE_DETERMINATE and not self._is_determinate():
+      self.stop() # as the first step, stop the animation
+      super().configure(mode=value)
+      self._setvar(0) # must be done after setting mode to take effect
+    elif value != yamosse_progress.MODE_DETERMINATE and self._is_determinate():
+      super().configure(mode=value)
+      self._setvar(0) # must be done after setting mode to take effect
+      self.start() # as the last step, start the animation
+    else:
+      super().configure(mode=value)
     
     self._mode_state_taskbar()
   
@@ -153,6 +155,8 @@ class Progressbar(ttk.Progressbar):
   
   @variable.setter
   def variable(self, value):
+    # we manually call trace add/remove here
+    # juuust in case configure gets called with a string variable name
     variable = self._variable
     show_cbname = self._show_cbname
     
