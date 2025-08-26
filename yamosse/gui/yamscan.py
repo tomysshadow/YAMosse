@@ -85,7 +85,7 @@ def make_footer(frame, log_text, open_output_file, done):
 
 
 def show_yamscan(widgets, values=None):
-  window, progressbar_widgets, progressbar_variable, log_text, footer_widgets = widgets
+  window, progressbar, log_text, footer_widgets = widgets
   
   def callback():
     if not window.children: return
@@ -94,8 +94,7 @@ def show_yamscan(widgets, values=None):
     value = values.get('progressbar')
     
     if value is not None:
-      gui_progressbar.configure_progressbar(
-        progressbar_widgets, progressbar_variable, value)
+      progressbar.value(value)
     
     value = values.get('log')
     
@@ -155,17 +154,15 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
   progressbar_frame.grid(row=0, sticky=tk.EW)
   progressbar_variable = tk.IntVar()
   
-  progressbar_widgets = gui_progressbar.make_progressbar(
+  progressbar = gui_progressbar.Progressbar(
     progressbar_frame,
     variable=progressbar_variable,
     maximum=progressbar_maximum,
-    state=yamosse_progress.LOADING,
+    mode=yamosse_progress.MODE_LOADING,
     parent=parent,
     task=True,
     style='Fill.TProgressbar'
   )
-  
-  gui_progressbar.trace_add_progressbar(progressbar_widgets, progressbar_variable)
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
@@ -190,8 +187,7 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
   def done(window):
     if not ask_cancel(window, footer_widgets): return
     
-    gui_progressbar.configure_progressbar(
-      progressbar_widgets, progressbar_variable, yamosse_progress.RESET)
+    progressbar.command(yamosse_progress.COMMAND_DONE)
     
     gui.release_modal_window(window)
   
@@ -203,4 +199,4 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
   )
   
   gui.set_modal_window(window, delete_window=done)
-  return window, progressbar_widgets, progressbar_variable, log_text, footer_widgets
+  return window, progressbar, log_text, footer_widgets

@@ -57,14 +57,12 @@ def make_record(frame, variables, record):
   volume_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
   volume_variable = tk.IntVar()
   
-  volume_widgets = gui_progressbar.make_progressbar(
+  volume_progressbar = gui_progressbar.Progressbar(
     volume_frame,
     variable=volume_variable,
     maximum=VOLUME_MAXIMUM,
     task=False
   )
-  
-  gui_progressbar.trace_add_progressbar(volume_widgets, volume_variable)
   
   row_frame = ttk.Frame(frame)
   row_frame.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_HN)

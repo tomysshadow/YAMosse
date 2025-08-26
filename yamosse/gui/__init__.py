@@ -19,6 +19,7 @@ except ImportError:
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
+import yamosse.progress as yamosse_progress
 
 PADDING = 12
 PADDING_NSEW = PADDING
@@ -102,13 +103,7 @@ VARIABLE_TYPES = {
 }
 
 STYLE_PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
-
-STYLE_PROGRESS_FILLSTATES = (
-  ('user3', 4), # partial
-  ('user2', 3), # paused
-  ('user1', 2), # error
-  ('', 1) # normal
-)
+STYLE_PROGRESS_FILLSTATES = reversed(tuple(enumerate(yamosse_progress.STATES, start=1)))
 
 
 def _init_report_callback_exception():
@@ -173,10 +168,6 @@ def _init_enable_widget():
   return enable_widget
 
 enable_widget = _init_enable_widget()
-
-
-def match_variable_widget(widget, variable):
-  assert str(widget['variable']) == str(variable), 'variable mismatch'
 
 
 def after_invalidcommand_widget(widget, validate):
