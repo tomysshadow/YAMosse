@@ -43,7 +43,7 @@ if PyTaskbar:
   }
 
 
-def disabled_state(state):
+def off_state(state):
   return '!%s' % state
 
 
