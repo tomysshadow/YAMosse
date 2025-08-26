@@ -225,7 +225,10 @@ class Progressbar(ttk.Progressbar):
       self._value = value
     
     if percent:
-      self._percent_label['text'] = '%d%%' % self._value
+      percent_label = self._percent_label
+      
+      if percent_label:
+        percent_label['text'] = '%d%%' % self._value
   
   def _command_task(self, command):
     if not self.winfo_ismapped():
