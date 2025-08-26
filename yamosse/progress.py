@@ -11,13 +11,13 @@ COMMANDS = (
 COMMAND_DONE, COMMAND_RESET = COMMANDS
 
 STATES = (
-  '', # normal
-  'user1', # error
+  'user3', # partial
   'user2', # paused
-  'user3' # partial
+  'user1', # error
+  '' # normal
 )
 
-STATE_NORMAL, STATE_ERROR, STATE_PAUSED, STATE_PARTIAL = STATES
+STATE_PARTIAL, STATE_PAUSED, STATE_ERROR, STATE_NORMAL = STATES
 
 MODES = (
   'determinate',
@@ -33,10 +33,10 @@ if PyTaskbar:
     COMMAND_DONE: 'flash_done',
     COMMAND_RESET: 'reset',
     
-    STATE_NORMAL: PyTaskbar.NORMAL,
-    STATE_ERROR: PyTaskbar.ERROR,
-    STATE_PAUSED: PyTaskbar.WARNING,
     STATE_PARTIAL: None,
+    STATE_PAUSED: PyTaskbar.WARNING,
+    STATE_ERROR: PyTaskbar.ERROR,
+    STATE_NORMAL: PyTaskbar.NORMAL,
     
     MODE_DETERMINATE: None,
     MODE_INDETERMINATE: PyTaskbar.LOADING

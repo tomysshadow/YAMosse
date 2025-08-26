@@ -103,7 +103,7 @@ VARIABLE_TYPES = {
 }
 
 STYLE_PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
-STYLE_PROGRESS_FILLSTATES = reversed(tuple(enumerate(yamosse_progress.STATES, start=1)))
+STYLE_PROGRESS_FILLSTATES = tuple(enumerate(yamosse_progress.STATES, start=1))
 
 
 def _init_report_callback_exception():

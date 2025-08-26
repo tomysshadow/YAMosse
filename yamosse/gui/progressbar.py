@@ -115,8 +115,7 @@ class Progressbar(ttk.Progressbar):
     if statespec is None:
       return result
     
-    # reversed so that highest priority states are tried first
-    for state in reversed(yamosse_progress.STATES):
+    for state in yamosse_progress.STATES:
       if not self.instate((state,)):
         continue
       
