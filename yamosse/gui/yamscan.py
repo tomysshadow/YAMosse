@@ -94,7 +94,7 @@ def show_yamscan(widgets, values=None):
     value = values.get('progressbar')
     
     if value is not None:
-      progressbar.value(value)
+      progressbar.set(value)
     
     value = values.get('log')
     

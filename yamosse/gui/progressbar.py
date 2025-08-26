@@ -70,7 +70,7 @@ class Progressbar(ttk.Progressbar):
     
     return super().configure(**kw)
   
-  def value(self, value):
+  def set(self, value):
     if value in yamosse_progress.COMMANDS:
       return self.command(value)
     
@@ -206,7 +206,7 @@ class Progressbar(ttk.Progressbar):
     self.setvar(str(self._variable), value)
   
   def _trace(self, *args, **kwargs):
-    return self._show()
+    self._show()
   
   def _show(self, percent=True, task=True):
     if not self.winfo_ismapped():
