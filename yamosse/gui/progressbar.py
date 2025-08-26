@@ -141,11 +141,15 @@ class Progressbar(ttk.Progressbar):
   def mode(self, value):
     DETERMINATE = yamosse_progress.MODE_DETERMINATE
     
-    if value == DETERMINATE and self.mode != DETERMINATE:
+    mode = self.mode
+    
+    if value == DETERMINATE and mode != DETERMINATE:
+      # exit determinate mode
       self.stop() # as the first step, stop the animation
       super().configure(mode=value)
       self._setvar(0) # must be done after setting mode to take effect
-    elif value != DETERMINATE and self.mode == DETERMINATE:
+    elif value != DETERMINATE and mode == DETERMINATE:
+      # enter determinate mode
       super().configure(mode=value)
       self._setvar(0) # must be done after setting mode to take effect
       self.start() # as the last step, start the animation
