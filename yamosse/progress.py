@@ -43,7 +43,7 @@ if PyTaskbar:
   }
 
 
-def off_state(state):
+def not_state(state):
   return '!%s' % state
 
 
