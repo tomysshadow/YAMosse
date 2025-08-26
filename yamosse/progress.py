@@ -11,10 +11,10 @@ COMMANDS = (
 COMMAND_DONE, COMMAND_RESET = COMMANDS
 
 STATES = (
-  'user3', # partial
-  'user2', # paused
-  'user1', # error
-  '' # normal
+  'user3',
+  'user2',
+  'user1',
+  ''
 )
 
 STATE_PARTIAL, STATE_PAUSED, STATE_ERROR, STATE_NORMAL = STATES
