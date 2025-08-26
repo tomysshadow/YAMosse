@@ -152,11 +152,9 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
   # we instead want the taskbar progress to be shown in the parent window
   progressbar_frame = ttk.Frame(frame)
   progressbar_frame.grid(row=0, sticky=tk.EW)
-  progressbar_variable = tk.IntVar()
   
   progressbar = gui_progressbar.Progressbar(
     progressbar_frame,
-    variable=progressbar_variable,
     maximum=progressbar_maximum,
     mode=yamosse_progress.MODE_LOADING,
     parent=parent,
