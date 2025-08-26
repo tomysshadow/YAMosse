@@ -159,7 +159,7 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
     progressbar_frame,
     variable=progressbar_variable,
     maximum=progressbar_maximum,
-    type_=yamosse_progress.LOADING,
+    state=yamosse_progress.LOADING,
     parent=parent,
     task=True,
     style='Fill.TProgressbar'
