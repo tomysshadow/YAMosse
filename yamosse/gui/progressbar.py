@@ -15,11 +15,13 @@ class Progressbar(ttk.Progressbar):
     frame.rowconfigure(0, weight=1) # make progressbar vertically centered
     frame.columnconfigure(1, weight=1) # make progressbar horizontally resizable
     
-    self.name = gui.make_name(frame, name)
+    self.name_frame = gui.make_name(frame, name)
     
     progressbar = super()
     progressbar.__init__(frame, **kwargs)
     progressbar.grid(row=0, column=1, sticky=tk.EW)
+    
+    self.percent_label = gui.make_percent(frame)
     
     taskbar = None
     
@@ -31,22 +33,20 @@ class Progressbar(ttk.Progressbar):
         hwnd=yamosse_progress.hwnd(parent)
       )
     
-    self.taskbar = taskbar
-    self.percent = gui.make_percent(frame)
-    
+    self._taskbar = taskbar
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
     self._variable = None
-    self._show_cbname = self.register(self._show)
+    self._trace_cbname = self.register(self._trace)
     self._value = 0
     
     self.variable = variable
     self.mode = mode
     
     # show or hide taskbar progress with the widget
-    self.bind('<Map>', lambda e: self._mode_state_taskbar())
+    self.bind('<Map>', self._enter_task)
     
     for name in ('<Unmap>', '<Destroy>'):
-      self.bind(name, lambda e: self._command_taskbar(yamosse_progress.COMMAND_RESET))
+      self.bind(name, self._exit_task)
   
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
@@ -112,7 +112,7 @@ class Progressbar(ttk.Progressbar):
     
     # in future there might be taskbar only commands
     # so this is outside of the main if...elif block
-    self._command_taskbar(command)
+    self._command_task(command)
   
   def state(self, statespec=None):
     # we intentionally don't check that the states are in STATES
@@ -136,7 +136,7 @@ class Progressbar(ttk.Progressbar):
         self._state_type = state_type
         break
     
-    self._mode_state_taskbar()
+    self._mode_state_task()
     return result
   
   @property
@@ -162,7 +162,7 @@ class Progressbar(ttk.Progressbar):
     else:
       super().configure(mode=value)
     
-    self._mode_state_taskbar()
+    self._mode_state_task()
   
   @property
   def variable(self):
@@ -173,21 +173,31 @@ class Progressbar(ttk.Progressbar):
     # we manually call trace add/remove here
     # juuust in case configure gets called with a string variable name
     variable = self._variable
-    show_cbname = self._show_cbname
+    trace_cbname = self._trace_cbname
     
     if variable is not None:
       self.tk.call('trace', 'remove', 'variable',
-        variable, 'write', show_cbname)
+        variable, 'write', trace_cbname)
     
     variable = value if value else tk.IntVar()
     
     self.tk.call('trace', 'add', 'variable',
-      variable, 'write', show_cbname)
+      variable, 'write', trace_cbname)
     
     super().configure(variable=variable)
     self._variable = variable
     
     self._show()
+  
+  @property
+  def taskbar(self):
+    return self._taskbar
+  
+  @taskbar.setter
+  def taskbar(self, value):
+    self._exit_task()
+    self._taskbar = value
+    self._enter_task()
   
   def _getvar(self):
     return self.getvar(str(self._variable))
@@ -195,8 +205,33 @@ class Progressbar(ttk.Progressbar):
   def _setvar(self, value):
     self.setvar(str(self._variable), value)
   
-  def _command_taskbar(self, command):
-    taskbar = self.taskbar
+  def _trace(self, *args, **kwargs):
+    return self._show()
+  
+  def _show(self, percent=True, task=True):
+    if not self.winfo_ismapped():
+      return
+    
+    # only update the percent label in determinate mode
+    if self.mode == yamosse_progress.MODE_DETERMINATE:
+      value = int(self._getvar())
+      
+      if task:
+        taskbar = self._taskbar
+        
+        if taskbar:
+          taskbar.set_progress(value, int(self['maximum']))
+      
+      self._value = value
+    
+    if percent:
+      self.percent_label['text'] = '%d%%' % self._value
+  
+  def _command_task(self, command):
+    if not self.winfo_ismapped():
+      return
+    
+    taskbar = self._taskbar
     
     if not taskbar:
       return None
@@ -208,8 +243,11 @@ class Progressbar(ttk.Progressbar):
     
     return getattr(taskbar, type_)()
   
-  def _mode_state_taskbar(self):
-    taskbar = self.taskbar
+  def _mode_state_task(self):
+    if not self.winfo_ismapped():
+      return None
+    
+    taskbar = self._taskbar
     
     if not taskbar:
       return None
@@ -221,16 +259,9 @@ class Progressbar(ttk.Progressbar):
     
     return taskbar.set_progress_type(type_)
   
-  def _show(self, *args, **kwargs):
-    # only update the percent label in determinate mode
-    if self.mode == yamosse_progress.MODE_DETERMINATE:
-      value = int(self._getvar())
-      
-      taskbar = self.taskbar
-      
-      if taskbar:
-        taskbar.set_progress(value, int(self['maximum']))
-      
-      self._value = value
-    
-    self.percent['text'] = '%d%%' % self._value
+  def _enter_task(self, e):
+    self._mode_state_task()
+    self._show(percent=False)
+  
+  def _exit_task(self, e):
+    self._command_task(yamosse_progress.COMMAND_RESET)
