@@ -17,6 +17,10 @@ class Progressbar(ttk.Progressbar):
     
     self.name = gui.make_name(frame, name)
     
+    progressbar = super()
+    progressbar.__init__(frame, **kwargs)
+    progressbar.grid(row=0, column=1, sticky=tk.EW)
+    
     taskbar = None
     
     if task and yamosse_progress.PyTaskbar:
@@ -28,12 +32,7 @@ class Progressbar(ttk.Progressbar):
       )
     
     self.taskbar = taskbar
-    
     self.percent = gui.make_percent(frame)
-    
-    progressbar = super()
-    progressbar.__init__(frame, **kwargs)
-    progressbar.grid(row=0, column=1, sticky=tk.EW)
     
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
     self._variable = None
@@ -93,18 +92,20 @@ class Progressbar(ttk.Progressbar):
     if command not in yamosse_progress.COMMANDS:
       raise ValueError('command must be in %r' % (yamosse_progress.COMMANDS,))
     
+    # the taskbar should only flash in the normal state
+    # because it also resets the progress type
+    # so it would become out of sync with the progress bar otherwise
     if command == yamosse_progress.COMMAND_DONE:
       self.mode = yamosse_progress.MODE_DETERMINATE
       self._setvar(int(self['maximum']))
-      
-      # the taskbar may only flash in the normal state
-      # because it also resets the progress type
-      # so it would become out of sync with the progress bar otherwise
       if self.state(): return
     elif command == yamosse_progress.COMMAND_RESET:
       self.state(COMMAND_RESET_STATES)
+      self.mode = yamosse_progress.MODE_DETERMINATE
       self._setvar(0)
     
+    # in future there might be taskbar only commands
+    # so this is outside of the main if...elif block
     self._command_taskbar(command)
   
   def state(self, statespec=None):
@@ -136,14 +137,14 @@ class Progressbar(ttk.Progressbar):
   def mode(self, value):
     if value == yamosse_progress.MODE_DETERMINATE:
       if not self._is_determinate():
-        self.stop()
-        self._setvar(0)
+        self.stop() # as the first step, stop the animation
         super().configure(mode=value)
+        self._setvar(0) # must be done after setting mode to take effect
     elif value == yamosse_progress.MODE_INDETERMINATE:
       if self._is_determinate():
         super().configure(mode=value)
-        self._setvar(0)
-        self.start()
+        self._setvar(0) # must be done after setting mode to take effect
+        self.start() # as the last step, start the animation
     
     self._mode_state_taskbar()
   
@@ -171,10 +172,10 @@ class Progressbar(ttk.Progressbar):
     self._show()
   
   def _getvar(self):
-    return self.tk.getvar(str(self._variable))
+    return self.getvar(str(self._variable))
   
   def _setvar(self, value):
-    return self.tk.setvar(str(self._variable), value)
+    self.setvar(str(self._variable), value)
   
   def _is_determinate(self):
     return str(self['mode']) == yamosse_progress.MODE_DETERMINATE
