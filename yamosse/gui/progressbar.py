@@ -72,16 +72,13 @@ class Progressbar(ttk.Progressbar):
   
   def set(self, value):
     if value in yamosse_progress.COMMANDS:
-      return self.command(value)
-    
-    if value in yamosse_progress.MODES:
+      self.command(value)
+    elif value in yamosse_progress.MODES:
       self.mode = value
-      return None
-    
-    if yamosse_progress.is_state(value):
-      return self.state(value)
-    
-    return self._setvar(value)
+    elif yamosse_progress.is_state(value):
+      self.state(value)
+    else:
+      self._setvar(value)
   
   def command(self, command):
     if command not in yamosse_progress.COMMANDS:
@@ -180,6 +177,9 @@ class Progressbar(ttk.Progressbar):
   
   @property
   def taskbar(self):
+    if not self.winfo_ismapped():
+      return None
+    
     return self._taskbar
   
   @taskbar.setter
@@ -211,8 +211,8 @@ class Progressbar(ttk.Progressbar):
     if self.mode == yamosse_progress.MODE_DETERMINATE:
       value = int(self._getvar())
       
-      if task and self.winfo_ismapped():
-        taskbar = self._taskbar
+      if task:
+        taskbar = self.taskbar
         
         if taskbar:
           taskbar.set_progress(value, int(self['maximum']))
@@ -226,36 +226,30 @@ class Progressbar(ttk.Progressbar):
         percent_label['text'] = '%d%%' % self._value
   
   def _command_task(self, command):
-    if not self.winfo_ismapped():
-      return
-    
-    taskbar = self._taskbar
+    taskbar = self.taskbar
     
     if not taskbar:
-      return None
+      return
     
     type_ = yamosse_progress.types[command]
     
     if type_ is None:
-      return None
+      return
     
-    return getattr(taskbar, type_)()
+    getattr(taskbar, type_)()
   
   def _mode_state_task(self):
-    if not self.winfo_ismapped():
-      return None
-    
-    taskbar = self._taskbar
+    taskbar = self.taskbar
     
     if not taskbar:
-      return None
+      return
     
     type_ = yamosse_progress.types[self.mode]
     
     if type_ is None:
       type_ = self._state_type
     
-    return taskbar.set_progress_type(type_)
+    taskbar.set_progress_type(type_)
   
   def _enter_task(self, e):
     self._mode_state_task()
