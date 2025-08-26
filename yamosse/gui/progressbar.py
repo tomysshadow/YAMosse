@@ -21,8 +21,6 @@ class Progressbar(ttk.Progressbar):
     progressbar.__init__(frame, **kwargs)
     progressbar.grid(row=0, column=1, sticky=tk.EW)
     
-    self.percent_label = gui.make_percent(frame)
-    
     taskbar = None
     
     if task and yamosse_progress.PyTaskbar:
@@ -34,6 +32,8 @@ class Progressbar(ttk.Progressbar):
       )
     
     self._taskbar = taskbar
+    self._percent_label = gui.make_percent(frame)
+    
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
     self._variable = None
     self._trace_cbname = self.register(self._trace)
@@ -199,6 +199,15 @@ class Progressbar(ttk.Progressbar):
     self._taskbar = value
     self._enter_task()
   
+  @property
+  def percent_label(self):
+    return self._percent_label
+  
+  @percent_label.setter
+  def percent_label(self, value):
+    self._percent_label = value
+    self._show(task=False)
+  
   def _getvar(self):
     return self.getvar(str(self._variable))
   
@@ -209,14 +218,11 @@ class Progressbar(ttk.Progressbar):
     self._show()
   
   def _show(self, percent=True, task=True):
-    if not self.winfo_ismapped():
-      return
-    
     # only update the percent label in determinate mode
     if self.mode == yamosse_progress.MODE_DETERMINATE:
       value = int(self._getvar())
       
-      if task:
+      if task and self.winfo_ismapped():
         taskbar = self._taskbar
         
         if taskbar:
@@ -225,7 +231,7 @@ class Progressbar(ttk.Progressbar):
       self._value = value
     
     if percent:
-      self.percent_label['text'] = '%d%%' % self._value
+      self._percent_label['text'] = '%d%%' % self._value
   
   def _command_task(self, command):
     if not self.winfo_ismapped():
