@@ -10,12 +10,12 @@ COMMANDS = (
 
 COMMAND_DONE, COMMAND_RESET = COMMANDS
 
-STATES = (
-  'user3',
-  'user2',
+STATES = tuple(reversed(( # order matters for priority levels
+  '',
   'user1',
-  ''
-)
+  'user2',
+  'user3'
+)))
 
 STATE_PARTIAL, STATE_PAUSED, STATE_ERROR, STATE_NORMAL = STATES
 
