@@ -89,14 +89,17 @@ def configure_progressbar(widgets, variable, state):
     if state == yamosse_progress.DONE:
       variable.set(int(progressbar['maximum']))
       
-      if taskbar and progressbar.instate((yamosse_progress.NORMAL,)):
+      # the taskbar may only flash in the normal state
+      # because it also resets the progress type
+      # so it would become out of sync with the progress bar otherwise
+      if taskbar and not progressbar.state():
         taskbar.flash_done()
       
       return True
     
     progressbar.state(['!%s' % s for s in (
-      yamosse_progress.ERROR,
-      yamosse_progress.WARNING
+      yamosse_progress.WARNING,
+      yamosse_progress.ERROR
     )])
     
     if state == yamosse_progress.RESET:
