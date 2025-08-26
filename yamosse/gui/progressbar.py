@@ -17,7 +17,6 @@ class Progressbar(ttk.Progressbar):
     
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
     self._variable = None
-    self._cbname = ''
     self._value = 0
     
     self.name = gui.make_name(frame, name)
@@ -38,6 +37,8 @@ class Progressbar(ttk.Progressbar):
     
     super().__init__(frame, variable=variable, **kwargs)
     super().grid(row=0, column=1, sticky=tk.EW)
+    
+    self._show_cbname = self.register(self._show)
     
     self.variable = variable
     self.mode = mode
@@ -92,8 +93,7 @@ class Progressbar(ttk.Progressbar):
       # the taskbar may only flash in the normal state
       # because it also resets the progress type
       # so it would become out of sync with the progress bar otherwise
-      if super().state():
-        return
+      if self.state(): return
     elif command == yamosse_progress.COMMANDS_RESET:
       self.state(COMMAND_RESET_STATES)
       self._setvar(0)
@@ -109,7 +109,7 @@ class Progressbar(ttk.Progressbar):
     
     # reversed so that highest priority states are tried first
     for state in reversed(yamosse_progress.STATES):
-      if not super().instate(state):
+      if not self.instate(state):
         continue
       
       state_type = yamosse_progress.types[state]
@@ -125,7 +125,7 @@ class Progressbar(ttk.Progressbar):
   def mode(self):
     return self['mode']
   
-  @property.setter
+  @mode.setter
   def mode(self, value):
     if value == yamosse_progress.MODE_NORMAL:
       if not self._is_determinate():
@@ -142,23 +142,27 @@ class Progressbar(ttk.Progressbar):
   def variable(self):
     return self._variable
   
-  @property.setter
+  @variable.setter
   def variable(self, value):
-    cbname = self._cbname
+    variable = self._variable
     
-    if cbname:
-      super().trace_remove('write', cbname)
+    if variable is not None:
+      self.tk.call('trace', 'remove', 'variable',
+        variable, 'write', self._show_cbname)
     
-    self._variable = value if value else tk.IntVar()
-    self._cbname = super().trace_add('write', self._show)
+    variable = value if value else tk.IntVar()
     
+    self.tk.call('trace', 'add', 'variable',
+      variable, 'write', self._show_cbname)
+    
+    self._variable = variable
     self._show()
   
   def _getvar(self):
-    return super().tk.getvar(str(self._variable))
+    return self.tk.getvar(str(self._variable))
   
   def _setvar(self, value):
-    return super().tk.setvar(str(self._variable), value)
+    return self.tk.setvar(str(self._variable), value)
   
   def _is_determinate(self):
     return str(self['mode']) == 'determinate'
@@ -191,8 +195,10 @@ class Progressbar(ttk.Progressbar):
   
   def _show(self, *args, **kwargs):
     # only update the percent label in determinate mode
-    if self._is_determinate(progressbar):
+    if self._is_determinate():
       value = int(self._getvar())
+      
+      taskbar = self.taskbar
       
       if taskbar:
         taskbar.set_progress(value, int(progressbar['maximum']))
