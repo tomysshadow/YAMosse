@@ -50,10 +50,10 @@ class Progressbar(ttk.Progressbar):
     self.mode = mode
     
     # show or hide taskbar progress with the widget
-    self.bind('<Map>', self._enter_task)
+    self.bind('<Map>', self._open_task)
     
     for name in ('<Unmap>', '<Destroy>'):
-      self.bind(name, self._exit_task)
+      self.bind(name, self._close_task)
   
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
@@ -191,9 +191,9 @@ class Progressbar(ttk.Progressbar):
   
   @taskbar.setter
   def taskbar(self, value):
-    self._exit_task()
+    self._close_task()
     self._taskbar = value
-    self._enter_task()
+    self._open_task()
   
   @property
   def percent_label(self):
@@ -258,9 +258,9 @@ class Progressbar(ttk.Progressbar):
     
     taskbar.set_progress_type(type_)
   
-  def _enter_task(self, e):
+  def _open_task(self, e):
     self._mode_state_task()
     self._show(percent=False)
   
-  def _exit_task(self, e):
+  def _close_task(self, e):
     self._command_task(yamosse_progress.COMMAND_RESET)
