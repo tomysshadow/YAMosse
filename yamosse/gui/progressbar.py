@@ -112,7 +112,9 @@ def configure_progressbar(widgets, variable, state):
     
     progressbar.state((state,))
   
-  if taskbar: taskbar.set_progress_type(yamosse_progress.types[state])
+  if taskbar:
+    taskbar.set_progress_type(yamosse_progress.types[state])
+  
   return variable_set
 
 
