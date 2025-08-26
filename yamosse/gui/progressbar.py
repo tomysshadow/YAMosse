@@ -214,7 +214,7 @@ class Progressbar(ttk.Progressbar):
     self._show()
   
   def _show(self, percent=True, task=True):
-    # only update the percent label in determinate mode
+    # only update the value in determinate mode
     if self.mode == yamosse_progress.MODE_DETERMINATE:
       value = int(self._getvar())
       
