@@ -53,6 +53,9 @@ def is_state(state):
 
 
 def not_state(state):
+  if not state:
+    return ''
+  
   return '!%s' % state
 
 

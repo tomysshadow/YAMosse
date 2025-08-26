@@ -6,7 +6,7 @@ import yamosse.utils as yamosse_utils
 
 from .. import gui
 
-COMMAND_RESET_STATES = ['!%s' % s for s in yamosse_progress.STATES if s]
+COMMAND_RESET_STATES = [yamosse_progress.not_state(s) for s in yamosse_progress.STATES]
 
 
 class Progressbar(ttk.Progressbar):
