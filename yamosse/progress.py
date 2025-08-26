@@ -3,9 +3,9 @@ try:
 except ImportError:
   PyTaskbar = None
 
-NORMAL = 'normal'
-WARNING = 'warning'
-ERROR = 'error'
+NORMAL = ''
+WARNING = 'user2'
+ERROR = 'user1'
 LOADING = 'loading'
 DONE = 'done'
 RESET = 'reset'

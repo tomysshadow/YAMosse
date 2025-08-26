@@ -101,6 +101,15 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
+STYLE_PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
+
+STYLE_PROGRESS_FILLSTATES = (
+  ('user3', 4), # partial
+  ('user2', 3), # paused
+  ('user1', 2), # error
+  ('', 1) # normal
+)
+
 
 def _init_report_callback_exception():
   reported = False
@@ -1523,6 +1532,55 @@ def _style():
       'configure': {'padding': (2, 0)}
     }
   })
+  
+  for orient in STYLE_PROGRESS_ORIENTS:
+    style.layout(
+      f'{orient}.Fill.TProgressbar',
+      style.layout(f'{orient}.TProgressbar')
+    )
+  
+  try:
+    for o, orient in enumerate(STYLE_PROGRESS_ORIENTS):
+      fill_progressbar = f'{orient}.Fill.Progressbar'
+      
+      style.element_create(
+        f'{fill_progressbar}.trough',
+        'vsapi', 'PROGRESS',
+        o + 1
+      )
+      
+      style.element_create(
+        f'{fill_progressbar}.pbar',
+        'vsapi', 'PROGRESS',
+        o + 5, STYLE_PROGRESS_FILLSTATES,
+        width=11, height=11
+      )
+    
+    style.theme_settings('vista', {
+      'Horizontal.Fill.TProgressbar': {
+        'layout': [
+          ('Horizontal.Fill.Progressbar.trough', {
+            'children': [('Horizontal.Fill.Progressbar.pbar', {
+              'side': tk.LEFT,
+              'sticky': tk.NS
+            })]
+          }),
+        ]
+      },
+      
+      'Vertical.Fill.TProgressbar': {
+        'layout': [
+          ('Vertical.Fill.Progressbar.trough', {
+            'children': [('Vertical.Fill.Progressbar.pbar', {
+              'side': tk.BOTTOM,
+              'sticky': tk.EW
+            })]
+          }),
+        ]
+      }
+    })
+  except tk.TclError:
+    pass # not supported for this platform or version
   
   style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
   style.configure('Title.TLabel', font=('Trebuchet MS', 24))

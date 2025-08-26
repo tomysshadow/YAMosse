@@ -62,18 +62,18 @@ def trace_remove_progressbar(widgets, variable, cbname):
   )
 
 
-def configure_progressbar(widgets, variable, type_):
+def configure_progressbar(widgets, variable, state):
   progressbar, taskbar = widgets[1]
   
   gui.match_variable_widget(progressbar, variable)
   
   variable_set = False
   
-  if type_ not in yamosse_progress.types:
-    variable.set(int(type_))
+  if state not in yamosse_progress.types:
+    variable.set(int(state))
     return True
   
-  if type_ == yamosse_progress.LOADING:
+  if state == yamosse_progress.LOADING:
     if _is_determinate_progressbar(progressbar):
       progressbar['mode'] = 'indeterminate'
       variable.set(0) # must be done after setting mode to take effect
@@ -86,19 +86,30 @@ def configure_progressbar(widgets, variable, type_):
       variable.set(0) # must be done after setting mode to take effect
       variable_set = True
     
-    if type_ == yamosse_progress.DONE:
+    if state == yamosse_progress.DONE:
       variable.set(int(progressbar['maximum']))
       
-      if taskbar: taskbar.flash_done()
+      if taskbar and progressbar.instate((yamosse_progress.NORMAL,)):
+        taskbar.flash_done()
+      
       return True
     
-    if type_ == yamosse_progress.RESET:
+    progressbar.state(['!%s' % s for s in (
+      yamosse_progress.ERROR,
+      yamosse_progress.WARNING
+    )])
+    
+    if state == yamosse_progress.RESET:
       variable.set(0)
       
-      if taskbar: taskbar.reset()
+      if taskbar:
+        taskbar.reset()
+      
       return True
+    
+    progressbar.state((state,))
   
-  if taskbar: taskbar.set_progress_type(yamosse_progress.types[type_])
+  if taskbar: taskbar.set_progress_type(yamosse_progress.types[state])
   return variable_set
 
 
