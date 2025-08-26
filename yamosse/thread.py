@@ -244,7 +244,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
         
         if normal:
           subsystem.show(values={
-            'progressbar': yamosse_progress.MODE_NORMAL
+            'progressbar': yamosse_progress.MODE_DETERMINATE
           })
           
           clear_done = clear_done_normal

@@ -11,13 +11,9 @@ COMMAND_RESET_STATES = ['!%s' % s for s in yamosse_progress.STATES if s]
 
 class Progressbar(ttk.Progressbar):
   def __init__(self, frame, name='', variable=None,
-  mode=yamosse_progress.MODE_NORMAL, parent=None, task=False, **kwargs):
+  mode=yamosse_progress.MODE_DETERMINATE, parent=None, task=False, **kwargs):
     frame.rowconfigure(0, weight=1) # make progressbar vertically centered
     frame.columnconfigure(1, weight=1) # make progressbar horizontally resizable
-    
-    self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
-    self._variable = None
-    self._value = 0
     
     self.name = gui.make_name(frame, name)
     
@@ -39,7 +35,10 @@ class Progressbar(ttk.Progressbar):
     progressbar.__init__(frame, **kwargs)
     progressbar.grid(row=0, column=1, sticky=tk.EW)
     
+    self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
+    self._variable = None
     self._show_cbname = self.register(self._show)
+    self._value = 0
     
     self.variable = variable
     self.mode = mode
@@ -70,6 +69,13 @@ class Progressbar(ttk.Progressbar):
     if value in yamosse_progress.COMMANDS:
       return self.command(value)
     
+    if value in yamosse_progress.MODES:
+      self.mode = value
+      return
+    
+    # this is done last so we've exhausted
+    # all the other valid string values
+    # before doing all this extra work
     try:
       state = yamosse_utils.intersects(
         [str(v) for v in value],
@@ -81,10 +87,6 @@ class Progressbar(ttk.Progressbar):
       if state:
         return self.state(value)
     
-    if value in yamosse_progress.MODES:
-      self.mode = value
-      return
-    
     self._setvar(value)
   
   def command(self, command):
@@ -92,7 +94,7 @@ class Progressbar(ttk.Progressbar):
       raise ValueError('command must be in %r' % (yamosse_progress.COMMANDS,))
     
     if command == yamosse_progress.COMMAND_DONE:
-      self.mode = yamosse_progress.MODE_NORMAL
+      self.mode = yamosse_progress.MODE_DETERMINATE
       self._setvar(int(self['maximum']))
       
       # the taskbar may only flash in the normal state
@@ -114,7 +116,7 @@ class Progressbar(ttk.Progressbar):
     
     # reversed so that highest priority states are tried first
     for state in reversed(yamosse_progress.STATES):
-      if not self.instate(state):
+      if not self.instate((state,)):
         continue
       
       state_type = yamosse_progress.types[state]
@@ -132,12 +134,12 @@ class Progressbar(ttk.Progressbar):
   
   @mode.setter
   def mode(self, value):
-    if value == yamosse_progress.MODE_NORMAL:
+    if value == yamosse_progress.MODE_DETERMINATE:
       if not self._is_determinate():
         self.stop()
         self._setvar(0)
         super().configure(mode=value)
-    elif value == yamosse_progress.MODE_LOADING:
+    elif value == yamosse_progress.MODE_INDETERMINATE:
       if self._is_determinate():
         super().configure(mode=value)
         self._setvar(0)
@@ -152,15 +154,16 @@ class Progressbar(ttk.Progressbar):
   @variable.setter
   def variable(self, value):
     variable = self._variable
+    show_cbname = self._show_cbname
     
     if variable is not None:
       self.tk.call('trace', 'remove', 'variable',
-        variable, 'write', self._show_cbname)
+        variable, 'write', show_cbname)
     
     variable = value if value else tk.IntVar()
     
     self.tk.call('trace', 'add', 'variable',
-      variable, 'write', self._show_cbname)
+      variable, 'write', show_cbname)
     
     super().configure(variable=variable)
     self._variable = variable
@@ -174,7 +177,7 @@ class Progressbar(ttk.Progressbar):
     return self.tk.setvar(str(self._variable), value)
   
   def _is_determinate(self):
-    return str(self['mode']) == 'determinate'
+    return str(self['mode']) == yamosse_progress.MODE_DETERMINATE
   
   def _command_taskbar(self, command):
     taskbar = self.taskbar
