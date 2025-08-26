@@ -78,7 +78,6 @@ class Progressbar(ttk.Progressbar):
       self.mode = value
       return None
     
-    # test if value is a valid statespec
     if yamosse_progress.is_state(value):
       return self.state(value)
     
