@@ -78,19 +78,13 @@ class Progressbar(ttk.Progressbar):
       self.mode = value
       return None
     
-    # this is done last so we've exhausted
-    # all the other valid string values
-    # before doing all this extra work
+    # test if value is a valid statespec
     try:
-      state = yamosse_utils.intersects(
-        [str(v) for v in value],
-        yamosse_progress.STATES
-      )
+      ' '.join(value)
     except TypeError:
       pass
     else:
-      if state:
-        return self.state(value)
+      return self.state(value)
     
     return self._setvar(value)
   
