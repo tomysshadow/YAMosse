@@ -43,6 +43,15 @@ if PyTaskbar:
   }
 
 
+def is_state(state):
+  try:
+    ' '.join(state)
+  except TypeError:
+    return False
+  
+  return True
+
+
 def not_state(state):
   return '!%s' % state
 

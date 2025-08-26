@@ -79,11 +79,7 @@ class Progressbar(ttk.Progressbar):
       return None
     
     # test if value is a valid statespec
-    try:
-      ' '.join(value)
-    except TypeError:
-      pass
-    else:
+    if yamosse_progress.is_state(value):
       return self.state(value)
     
     return self._setvar(value)
