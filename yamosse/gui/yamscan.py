@@ -183,9 +183,8 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
   footer_widgets = None
   
   def done(window):
-    if not ask_cancel(window, footer_widgets): return
-    
-    progressbar.command(yamosse_progress.COMMAND_DONE)
+    if not ask_cancel(window, footer_widgets):
+      return
     
     gui.release_modal_window(window)
   
