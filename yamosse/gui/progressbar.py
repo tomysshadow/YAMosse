@@ -11,7 +11,8 @@ COMMAND_RESET_STATES = ['!%s' % s for s in yamosse_progress.STATES if s]
 
 class Progressbar(ttk.Progressbar):
   def __init__(self, frame, name='', variable=None,
-  mode=yamosse_progress.MODE_DETERMINATE, parent=None, task=False, **kwargs):
+  mode=yamosse_progress.MODE_DETERMINATE,
+  parent=None, task=False, percent=True, **kwargs):
     frame.rowconfigure(0, weight=1) # make progressbar vertically centered
     frame.columnconfigure(1, weight=1) # make progressbar horizontally resizable
     
@@ -32,7 +33,13 @@ class Progressbar(ttk.Progressbar):
       )
     
     self._taskbar = taskbar
-    self._percent_label = gui.make_percent(frame)
+    
+    percent_label = None
+    
+    if percent:
+      percent_label = gui.make_percent(frame)
+    
+    self._percent_label = percent_label
     
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
     self._variable = None
