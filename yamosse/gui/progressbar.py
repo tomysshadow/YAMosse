@@ -41,6 +41,12 @@ class Progressbar(ttk.Progressbar):
     
     self.variable = variable
     self.mode = mode
+    
+    # show or hide taskbar progress with the widget
+    self.bind('<Map>', lambda e: self._mode_state_taskbar())
+    
+    for name in ('<Unmap>', '<Destroy>'):
+      self.bind(name, lambda e: self._command_taskbar(yamosse_progress.COMMAND_RESET))
   
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
