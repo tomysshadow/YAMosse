@@ -85,6 +85,12 @@ class Progressbar(ttk.Progressbar):
     
     return super().configure(**kw)
   
+  def get(self):
+    return self.getvar(str(self._variable))
+  
+  def set(self, value):
+    self.setvar(str(self._variable), value)
+  
   def function(self, function, *args, **kwargs):
     if function not in yamosse_progress.FUNCTIONS:
       raise ValueError('function must be in %r' % (yamosse_progress.FUNCTIONS,))
@@ -129,12 +135,6 @@ class Progressbar(ttk.Progressbar):
     
     self._mode_state_task()
     return result
-  
-  def get(self):
-    return self.getvar(str(self._variable))
-  
-  def set(self, value):
-    self.setvar(str(self._variable), value)
   
   @property
   def mode(self):
@@ -209,6 +209,7 @@ class Progressbar(ttk.Progressbar):
     self._show(task=False)
   
   def _trace(self, *args, **kwargs):
+    # suppress the arguments and show everything
     self._show()
   
   def _show(self, percent=True, task=True):

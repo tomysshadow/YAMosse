@@ -174,6 +174,9 @@ class Options:
   def volume_loglinear(self, np, volume):
     VOLUME_LOG = 4 # 60 dB
     
+    # this intentionally doesn't enforce a dtype
+    # so that it will work with any input sound waveform
+    # regardless of its format
     if not self.background_noise_volume_loglinear:
       return np.power(volume, VOLUME_LOG)
     
