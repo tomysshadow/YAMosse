@@ -186,7 +186,10 @@ class UndoableMaster(UndoableScale):
     self.show(newvalue=float(text))
     
     command = self._command
-    if not command: return ''
+    
+    if not command:
+      return ''
+    
     return self._tk.call(command, text, *args)
 
 
@@ -270,7 +273,8 @@ class UndoableCalibration(UndoableScale):
       (revert, widget, newvalue)
     )
     
-    if recenter: widget.set(newvalue)
+    if recenter:
+      widget.set(newvalue)
     
     self.show(widget, newvalue)
     return widget, newvalue, oldvalue, recenter

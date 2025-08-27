@@ -246,7 +246,9 @@ def _mainloop(**kwargs):
     
     for keyword in keywords:
       kwarg = kwargs.get(keyword)
-      if kwarg is None: return None
+      
+      if kwarg is None:
+        return None
       
       args.append(kwarg)
     

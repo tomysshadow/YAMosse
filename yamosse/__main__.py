@@ -62,7 +62,8 @@ def main(argc, argv):
             help_()
             return 2
   
-  if options_attrs: kwargs['options_attrs'] = options_attrs
+  if options_attrs:
+    kwargs['options_attrs'] = options_attrs
   
   yamosse_worker.tfhub_cache()
   

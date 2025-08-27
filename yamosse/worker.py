@@ -150,7 +150,8 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     # seperated out because loading the worker dependencies (mainly TensorFlow) in
     # the main process consumes a non-trivial amount of memory for no benefit
     # and causes startup to take significantly longer
-    try: import tf_keras
+    try:
+      import tf_keras
     except ImportError:
       # for Windows, where we can't use tf_keras with GPU Acceleration
       from tensorflow import keras

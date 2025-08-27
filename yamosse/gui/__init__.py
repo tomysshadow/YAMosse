@@ -369,7 +369,9 @@ def _traversal_button():
   
   def enable(button):
     underline = int(button['underline'])
-    if underline < 0: return
+    
+    if underline < 0:
+      return
     
     button.winfo_toplevel().bind(
       name(button, underline),
@@ -378,7 +380,9 @@ def _traversal_button():
   
   def disable(button):
     underline = int(button['underline'])
-    if underline < 0: return
+    
+    if underline < 0:
+      return
     
     button.winfo_toplevel().unbind(name(button, underline))
   
@@ -493,7 +497,9 @@ def _init_validationoptions_spinbox():
       
       valid = str(number) == str(P) and number in range(int(widget['from']), int(widget['to']))
       
-      if valid: _spinbox_numbers[widget] = number
+      if valid:
+        _spinbox_numbers[widget] = number
+      
       return valid
     
     return frame.register(command), '%W', '%P'
@@ -526,7 +532,9 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   
   # you can easily call validate yourself if you pass your own validatecommand
   # but if you're relying on the default, we do it, as it's required for the scheme to work
-  if validation: spinbox.validate()
+  if validation:
+    spinbox.validate()
+  
   return make_name(frame, name), spinbox, make_unit(frame, unit)
 
 
@@ -626,7 +634,10 @@ def indents_treeview(treeview, item=None):
     return item != ''
   
   indents = 0
-  while parent(): indents += 1
+  
+  while parent():
+    indents += 1
+  
   return indents
 
 
@@ -1137,8 +1148,7 @@ def make_undoable(frame):
     enable()
   
   def redolast():
-    if not redoings:
-      return
+    if not redoings: return
     
     redothis = redoings.pop()
     undo(redothis[1])
@@ -1218,7 +1228,8 @@ def after_window(window, callback):
   # which it will, if make_window was used to make it
   # it's important to stash the children variable before use
   # so another thread doesn't change it underneath us before we return it
-  if not (children := window.children): return children
+  if not (children := window.children):
+    return children
   
   try:
     # we use after(0) here instead of after_idle
@@ -1229,7 +1240,9 @@ def after_window(window, callback):
     # silence any errors caused by the window exiting
     # before getting the chance to run our callback
     # otherwise it's probably a genuine error so reraise it then
-    if not (children := window.children): return children
+    if not (children := window.children):
+      return children
+    
     raise
   
   return window.children
@@ -1246,7 +1259,9 @@ def after_wait_window(window, callback):
     finally:
       event.set()
   
-  if not (children := after_window(window, set_)): return children
+  if not (children := after_window(window, set_)):
+    return children
+  
   event.wait()
 
 

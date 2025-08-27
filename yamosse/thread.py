@@ -240,7 +240,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
         
         if not normal:
           with done_lock:
-            if done: normal = True
+            normal = done
         
         if normal:
           subsystem.show(values={

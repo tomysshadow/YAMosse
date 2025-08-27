@@ -93,7 +93,8 @@ def identification(option=None):
       calibration = options.calibration
       confidence_score = options.confidence_score
       
-      if options.timespan_span_all: prediction = TIMESTAMP_ALL
+      if options.timespan_span_all:
+        prediction = TIMESTAMP_ALL
       
       # this is pretty self explanatory
       # check if the score we got is above the confidence score

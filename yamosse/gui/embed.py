@@ -229,7 +229,9 @@ def _root_embed():
             # because it's a WeakKeyDictionary, but in theory something could
             # still be holding onto its Python reference
             for window_bindings in _windows.items():
-              if not window_bindings[0].winfo_exists(): continue
+              if not window_bindings[0].winfo_exists():
+                continue
+              
               bind_window(window_bindings, name_sequence(sequence))
             
             return result
@@ -313,13 +315,17 @@ def text_embed(text):
     def enter(e):
       widget = e.widget
       
-      if _stack and _stack[-1] is widget: return
+      if _stack and _stack[-1] is widget:
+        return
+      
       _stack.append(widget)
     
     text.bind('<Enter>', enter, add=True)
     
     def leave(e):
-      if not _stack: return
+      if not _stack:
+        return
+      
       _stack.pop()
     
     text.bind('<Leave>', leave, add=True)

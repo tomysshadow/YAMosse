@@ -64,7 +64,8 @@ def subsystem(window, title, variables):
       Thread(target=target, args=args, kwargs=kwargs).start()
     
     def show(self, values=None):
-      if not self.show_callback(self.widgets, values=values): raise SubsystemExit
+      if not self.show_callback(self.widgets, values=values):
+        raise SubsystemExit
     
     def error(self, message, *args, parent=None, **kwargs):
       gui.messagebox.showwarning(
