@@ -94,7 +94,6 @@ def show_yamscan(widgets, values=None):
     value = values.get('progressbar')
     
     if value is not None:
-      
       try:
         function, arguments = value
       except ValueError:
