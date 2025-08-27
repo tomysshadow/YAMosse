@@ -29,8 +29,10 @@ class TestOptions(unittest.TestCase):
   def test_set_strict(self):
     o = options.Options()
     
-    try: o.set({'weights': 123, 'calibration': 'string'}, strict=True)
-    except KeyError: return
+    try:
+      o.set({'weights': 123, 'calibration': 'string'}, strict=True)
+    except KeyError:
+      return
     
     raise Exception('set should raise KeyError if strict is True')
   
@@ -71,8 +73,10 @@ class TestOptions(unittest.TestCase):
     self.assertFalse(o.background_noise_volume == 0.5)
     self.assertTrue(o.confidence_score < 1.0)
     
-    try: o.worker(np, ['Class A', 'Class B', 'Class C', 'Class D', 'Class E'])
-    except RuntimeError: return
+    try:
+      o.worker(np, ['Class A', 'Class B', 'Class C', 'Class D', 'Class E'])
+    except RuntimeError:
+      return
     
     raise Exception('worker should be single shot')
 
