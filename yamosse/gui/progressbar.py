@@ -86,10 +86,10 @@ class Progressbar(ttk.Progressbar):
     return super().configure(**kw)
   
   def get(self):
-    return self.getvar(str(self._variable))
+    return int(self.getvar(str(self._variable)))
   
   def set(self, value):
-    self.setvar(str(self._variable), value)
+    self.setvar(str(self._variable), int(value))
   
   def function(self, function, *args, **kwargs):
     if function not in yamosse_progress.FUNCTIONS:
@@ -100,7 +100,7 @@ class Progressbar(ttk.Progressbar):
     # so it would become out of sync with the progress bar otherwise
     if function == yamosse_progress.FUNCTION_DONE:
       self.mode = yamosse_progress.MODE_DETERMINATE
-      self.set(int(self['maximum']))
+      self.set(self['maximum'])
       if self.state(): return
     elif function == yamosse_progress.FUNCTION_RESET:
       self.state(FUNCTION_RESET_STATES)
@@ -215,7 +215,7 @@ class Progressbar(ttk.Progressbar):
   def _show(self, percent=True, task=True):
     # only update the value in determinate mode
     if self.mode == yamosse_progress.MODE_DETERMINATE:
-      value = int(self.get())
+      value = self.get()
       
       if task:
         taskbar = self.taskbar

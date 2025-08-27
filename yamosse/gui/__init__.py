@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
-from weakref import finalize, WeakKeyDictionary
+import weakref
+from weakref import WeakKeyDictionary
 import traceback
+import threading
 from threading import Lock, Event
 from math import ceil
 import shlex
@@ -72,6 +74,8 @@ PADY_QNS = PADDING_Q
 PADY_QN = (PADDING_Q, 0)
 PADY_QS = (0, PADDING_Q)
 
+PAD_ALIGN = (2, 2)
+
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
@@ -101,9 +105,6 @@ VARIABLE_TYPES = {
   float: tk.DoubleVar,
   str: tk.StringVar
 }
-
-STYLE_PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
-STYLE_PROGRESS_FILLSTATES = tuple(enumerate(yamosse_progress.STATES, start=1))
 
 
 def _init_report_callback_exception():
@@ -1197,21 +1198,109 @@ def _init_sizegrip_window():
 sizegrip_window = _init_sizegrip_window()
 
 
-def _root_window():
+def _init_root_window():
   root_window = None
+  
+  local = threading.local()
+  
+  def styles():
+    PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
+    PROGRESS_FILLSTATES = tuple(enumerate(yamosse_progress.STATES, start=1))
+    
+    style = ttk.Style()
+    
+    style.theme_settings('default', {
+      'Treeview.Heading': {
+        'configure': {'padding': (2, 0)}
+      }
+    })
+    
+    for orient in PROGRESS_ORIENTS:
+      style.layout(
+        f'{orient}.Fill.TProgressbar',
+        style.layout(f'{orient}.TProgressbar')
+      )
+    
+    try:
+      for o, orient in enumerate(PROGRESS_ORIENTS):
+        fill_progressbar = f'{orient}.Fill.Progressbar'
+        
+        style.element_create(
+          f'{fill_progressbar}.trough',
+          'vsapi', 'PROGRESS',
+          o + 1
+        )
+        
+        style.element_create(
+          f'{fill_progressbar}.pbar',
+          'vsapi', 'PROGRESS',
+          o + 5, PROGRESS_FILLSTATES,
+          width=11, height=11
+        )
+      
+      style.theme_settings('vista', {
+        'Horizontal.Fill.TProgressbar': {
+          'layout': [
+            ('Horizontal.Fill.Progressbar.trough', {
+              'children': [('Horizontal.Fill.Progressbar.pbar', {
+                'side': tk.LEFT,
+                'sticky': tk.NS
+              })]
+            }),
+          ]
+        },
+        
+        'Vertical.Fill.TProgressbar': {
+          'layout': [
+            ('Vertical.Fill.Progressbar.trough', {
+              'children': [('Vertical.Fill.Progressbar.pbar', {
+                'side': tk.BOTTOM,
+                'sticky': tk.EW
+              })]
+            }),
+          ]
+        }
+      })
+    except tk.TclError:
+      pass # not supported for this platform or version
+    
+    style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
+    style.configure('Title.TLabel', font=('Trebuchet MS', 24))
+    
+    style.layout('Raised.TNotebook', [])
+    style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
+    
+    # the align element ensures that all buttons are large enough
+    # to fit a 16x16 icon
+    style.element_create('align', 'image',
+      get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
+    
+    layout = style.layout('TButton')
+    elements = elements_layout(layout, 'Button.padding')
+    
+    for element in elements:
+      children = element.setdefault('children', [])
+      children.append(('align', {}))
+    
+    style.layout('TButton', layout)
   
   def get():
     nonlocal root_window
     
     if not root_window:
       root_window = tkdnd.Tk() if tkdnd else tk.Tk()
-      _style()
+      
+      local.owner = True
+      styles()
     
     return root_window
   
-  return get
+  def owner():
+    return getattr(local, 'owner', False)
+  
+  return get, owner
 
-get_root_window = _root_window()
+get_root_window, owner_root_window = _init_root_window()
 
 
 def after_window(window, callback):
@@ -1249,6 +1338,13 @@ def after_window(window, callback):
 
 
 def after_wait_window(window, callback):
+  # don't deadlock if we're on the GUI thread
+  if owner_root_window():
+    if children := window.children:
+      callback(*args, **kwargs)
+    
+    return children
+  
   # the same as after_window, except
   # we block until the callback has finished running
   event = Event()
@@ -1463,7 +1559,7 @@ def _root_images():
         
         del root_images
       
-      finalize(root_window, del_)
+      weakref.finalize(root_window, del_)
     
     return root_images
   
@@ -1527,87 +1623,6 @@ def set_attrs_to_variables(variables, attrs):
       continue
     
     setattr(attrs, key, value)
-
-
-def _style():
-  # this is an internal function, so we trust that this will only be called
-  # after we have gotten the root window
-  style = ttk.Style()
-  
-  style.theme_settings('default', {
-    'Treeview.Heading': {
-      'configure': {'padding': (2, 0)}
-    }
-  })
-  
-  for orient in STYLE_PROGRESS_ORIENTS:
-    style.layout(
-      f'{orient}.Fill.TProgressbar',
-      style.layout(f'{orient}.TProgressbar')
-    )
-  
-  try:
-    for o, orient in enumerate(STYLE_PROGRESS_ORIENTS):
-      fill_progressbar = f'{orient}.Fill.Progressbar'
-      
-      style.element_create(
-        f'{fill_progressbar}.trough',
-        'vsapi', 'PROGRESS',
-        o + 1
-      )
-      
-      style.element_create(
-        f'{fill_progressbar}.pbar',
-        'vsapi', 'PROGRESS',
-        o + 5, STYLE_PROGRESS_FILLSTATES,
-        width=11, height=11
-      )
-    
-    style.theme_settings('vista', {
-      'Horizontal.Fill.TProgressbar': {
-        'layout': [
-          ('Horizontal.Fill.Progressbar.trough', {
-            'children': [('Horizontal.Fill.Progressbar.pbar', {
-              'side': tk.LEFT,
-              'sticky': tk.NS
-            })]
-          }),
-        ]
-      },
-      
-      'Vertical.Fill.TProgressbar': {
-        'layout': [
-          ('Vertical.Fill.Progressbar.trough', {
-            'children': [('Vertical.Fill.Progressbar.pbar', {
-              'side': tk.BOTTOM,
-              'sticky': tk.EW
-            })]
-          }),
-        ]
-      }
-    })
-  except tk.TclError:
-    pass # not supported for this platform or version
-  
-  style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
-  style.configure('Title.TLabel', font=('Trebuchet MS', 24))
-  
-  style.layout('Raised.TNotebook', [])
-  style.configure('Raised.TNotebook > .TFrame', relief=tk.RAISED)
-  
-  # the align element ensures that all buttons are large enough
-  # to fit a 16x16 icon
-  style.element_create('align', 'image',
-    get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
-  
-  layout = style.layout('TButton')
-  elements = elements_layout(layout, 'Button.padding')
-  
-  for element in elements:
-    children = element.setdefault('children', [])
-    children.append(('align', {}))
-  
-  style.layout('TButton', layout)
 
 
 def threaded():

@@ -145,7 +145,7 @@ def make_classes(frame, variables, class_names):
   find_frame.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=gui.PADX_HEW)
   
   find_entry = gui.make_entry(find_frame, name='Find:', validate='key')[1]
-  find_entry.grid(sticky=tk.NSEW, pady=(2, 2)) # fix misalignment with row
+  find_entry.grid(sticky=tk.NSEW, pady=gui.PAD_ALIGN) # fix misalignment with row
   
   erase_button = ttk.Button(
     find_frame,

@@ -78,7 +78,7 @@ def _step_progress(worker_step, current_worker_step=1.0):
   
   for progress in range(previous_progress + 1, current_progress + 1):
     _sender.send({
-      'progressbar': ('set', {'args': (progress,)}),
+      'progressbar': {'set': {'args': (progress,)}},
       'log': '%d%% complete' % progress
     })
   

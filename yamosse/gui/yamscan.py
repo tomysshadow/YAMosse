@@ -94,15 +94,10 @@ def show_yamscan(widgets, values=None):
     value = values.get('progressbar')
     
     if value is not None:
-      try:
-        function, arguments = value
-      except ValueError:
-        function, = value
-        arguments = {}
-      
-      args = arguments.get('args', ())
-      kwargs = arguments.get('kwargs', {})
-      getattr(progressbar, function)(*args, **kwargs)
+      for function, arguments in value.items():
+        args = arguments.get('args', ())
+        kwargs = arguments.get('kwargs', {})
+        getattr(progressbar, function)(*args, **kwargs)
     
     value = values.get('log')
     
