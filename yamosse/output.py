@@ -99,7 +99,7 @@ def output(file_name, *args, **kwargs):
         results[file_name] = yamosse_utils.dict_sorted(result,
           key=self.identification.key_result)
       
-      return self.identification.hms(results, self)
+      return self.identification.restructure_results_for_output(results, self)
     
     @abstractmethod
     def errors(self, errors):

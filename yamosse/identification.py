@@ -31,38 +31,27 @@ def identification(option=None):
       return (begin, end) if timespan and begin + timespan < end else begin
     
     @classmethod
-    def hms(cls, timestamps, output):
-      # timestamps doesn't need to be a list, just an iterable
-      # but we want a list at the end
-      keys = []
-      
-      # this function can operate on either dictionaries or other iterables
-      # if operating on a dictionary, it replaces the keys
-      # (because the timestamps are always keys)
-      values = None
-      
-      if isinstance(timestamps, dict):
-        values = timestamps.values()
-      
-      for timestamp in timestamps:
-        if timestamp == TIMESTAMP_ALL:
-          # substitute TIMESTAMP_ALL for HMS_ALL
-          timestamp = HMS_ALL
-        else:
-          # convert to HMS string and join the timestamps if this is a timespan
-          try:
-            timestamp = HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
-          except TypeError:
-            timestamp = yamosse_utils.hours_minutes(timestamp)
-        
-        keys.append(timestamp)
-      
-      return keys if values is None else dict(zip(keys, values, strict=True))
+    def restructure_results_for_output(cls, results, output):
+      return results
     
     @classmethod
     @abstractmethod
     def print_results_to_output(cls, results, output):
       raise NotImplementedError
+    
+    @classmethod
+    def hms(cls, timestamp):
+      # substitute TIMESTAMP_ALL for HMS_ALL
+      if timestamp == TIMESTAMP_ALL:
+        return HMS_ALL
+      
+      # convert to HMS string and join the timestamps if this is a timespan
+      try:
+        return HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+      except TypeError:
+        pass
+      
+      return yamosse_utils.hours_minutes(timestamp)
     
     @classmethod
     def key_number_of_sounds(cls, item):
@@ -165,19 +154,15 @@ def identification(option=None):
       return result
     
     @classmethod
-    def hms(cls, results, output):
-      # super call is done out here to avoid the overhead of doing it every loop
-      identification = super()
-      
+    def restructure_results_for_output(cls, results, output):
       for class_timestamps in results.values():
         for class_, timestamps in class_timestamps.items():
-          timestamps = identification.hms(timestamps, output)
+          if not isinstance(timestamps, dict):
+            continue
           
           # if Output Scores is checked, timestamps will be a dictionary
           # for JSON that won't preserve insertion order, so we need to make it a list
-          if isinstance(timestamps, dict):
-            timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps.items()]
-          
+          timestamps = [{'timestamp': ts, 'score': s} for ts, s in timestamps.items()]
           class_timestamps[class_] = timestamps
       
       return results
@@ -215,12 +200,12 @@ def identification(option=None):
             
             if output_scores:
               for t, timestamp_score in enumerate(timestamps):
-                if timestamp_score['timestamp'] == HMS_ALL:
+                if timestamp_score['timestamp'] == TIMESTAMP_ALL:
                   all_timestamp = (class_name, timestamps.pop(t))
                   break
             else:
               try:
-                timestamps.remove(HMS_ALL)
+                timestamps.remove(TIMESTAMP_ALL)
               except ValueError:
                 pass
               else:
@@ -233,7 +218,9 @@ def identification(option=None):
               continue
             
             if output_scores:
-              timestamps = [f'{t["timestamp"]} ({t["score"]:.0%})' for t in timestamps]
+              timestamps = [f'{cls.hms(t["timestamp"])} ({t["score"]:.0%})' for t in timestamps]
+            else:
+              timestamps = [cls.hms(t) for t in timestamps]
             
             print(indent, class_name, ':\n', indent2,
               item_delimiter.join(timestamps), sep='', file=file)
@@ -427,20 +414,14 @@ def identification(option=None):
       return result
     
     @classmethod
-    def hms(cls, results, output):
-      # super call must be done out here because it doesn't work in list comprehensions
-      identification = super()
-      
+    def restructure_results_for_output(cls, results, output):
       output_timestamps = output.top_ranked_output_timestamps
       
       for file_name, top_scores in results.items():
-        top_scores = identification.hms(top_scores, output)
-        
         if output_timestamps:
           results[file_name] = [{'timestamp': t, 'classes': cs} for t, cs in top_scores.items()]
-          continue
-        
-        results[file_name] = [{'classes': cs} for cs in top_scores.values()]
+        else:
+          results[file_name] = [{'classes': cs} for cs in top_scores.values()]
       
       return results
     
@@ -478,7 +459,7 @@ def identification(option=None):
             print(indent, end='', file=file)
             
             if output_timestamps:
-              print(top_score['timestamp'], end=': ', sep='', file=file)
+              print(cls.hms(top_score['timestamp']), end=': ', sep='', file=file)
             
             print(classes, file=file)
         finally:
