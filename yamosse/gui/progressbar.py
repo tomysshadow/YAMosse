@@ -230,7 +230,7 @@ class Progressbar(ttk.Progressbar):
       if percent_label:
         percent_label['text'] = '%d%%' % self._value
   
-  def _function_task(self, function):
+  def _function_task(self, function, *args, **kwargs):
     taskbar = self.taskbar
     
     if not taskbar:
@@ -241,7 +241,7 @@ class Progressbar(ttk.Progressbar):
     if type_ is None:
       return
     
-    getattr(taskbar, type_)()
+    getattr(taskbar, type_)(*args, **kwargs)
   
   def _mode_state_task(self):
     taskbar = self.taskbar

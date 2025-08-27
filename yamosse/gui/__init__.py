@@ -998,7 +998,8 @@ def make_filedialog(frame, name='',
     if defaultextension and ask == 'saveasfilename':
       kwargs['defaultextension'] = defaultextension
     
-    data = getattr(filedialog, ''.join(('ask', ask)))(parent=parent, **kwargs)
+    data = getattr(filedialog, ''.join(('ask', ask)))(
+      parent=parent, **kwargs)
     
     if not data:
       return
