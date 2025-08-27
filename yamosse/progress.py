@@ -3,12 +3,12 @@ try:
 except ImportError:
   PyTaskbar = None
 
-COMMANDS = (
+FUNCTIONS = (
   'done',
   'reset'
 )
 
-COMMAND_DONE, COMMAND_RESET = COMMANDS
+FUNCTION_DONE, FUNCTION_RESET = FUNCTIONS
 
 STATES = tuple(reversed(( # order matters for priority levels
   '',
@@ -26,12 +26,12 @@ MODES = (
 
 MODE_DETERMINATE, MODE_INDETERMINATE = MODES
 
-types = dict.fromkeys((*COMMANDS, *STATES, *MODES))
+types = dict.fromkeys((*FUNCTIONS, *STATES, *MODES))
 
 if PyTaskbar:
   types = {
-    COMMAND_DONE: 'flash_done',
-    COMMAND_RESET: 'reset',
+    FUNCTION_DONE: 'flash_done',
+    FUNCTION_RESET: 'reset',
     
     STATE_PARTIAL: None,
     STATE_PAUSED: PyTaskbar.WARNING,
@@ -41,15 +41,6 @@ if PyTaskbar:
     MODE_DETERMINATE: None,
     MODE_INDETERMINATE: PyTaskbar.LOADING
   }
-
-
-def is_state(state):
-  try:
-    ' '.join(state)
-  except TypeError:
-    return False
-  
-  return True
 
 
 def not_state(state):

@@ -188,7 +188,7 @@ def _mainloop(**kwargs):
         parent=child
       ):
         subsystem.show(values={
-          'progressbar': (yamosse_progress.STATE_ERROR,),
+          'progressbar': ('state', {'args': (yamosse_progress.STATE_ERROR,)}),
           'log': 'The YAMScan was cancelled because there is no weights file.',
           'done': 'OK'
         })
