@@ -155,7 +155,9 @@ def identification(option=None):
     
     @classmethod
     def restructure_results_for_output(cls, results, output):
-      for class_timestamps in results.values():
+      for file_name_result in results:
+        class_timestamps = file_name_result['result']
+        
         for class_, timestamps in class_timestamps.items():
           if not isinstance(timestamps, dict):
             continue
@@ -178,8 +180,10 @@ def identification(option=None):
       
       output_scores = output.output_scores
       
-      for file_name, class_timestamps in results.items():
-        output.print_file(file_name)
+      for file_name_result in results:
+        output.print_file(file_name_result['file_name'])
+        
+        class_timestamps = file_name_result['result']
         
         # this try-finally is just to ensure the newline is always printed even when continuing
         try:
@@ -417,11 +421,16 @@ def identification(option=None):
     def restructure_results_for_output(cls, results, output):
       output_timestamps = output.top_ranked_output_timestamps
       
-      for file_name, top_scores in results.items():
+      for file_name_result in results:
+        file_name = file_name_result['file_name']
+        top_scores = file_name_result['result']
+        
         if output_timestamps:
-          results[file_name] = [{'timestamp': t, 'classes': cs} for t, cs in top_scores.items()]
+          file_name_result['result'] = [{'timestamp': t, 'classes': cs
+            } for t, cs in top_scores.items()]
         else:
-          results[file_name] = [{'classes': cs} for cs in top_scores.values()]
+          file_name_result['result'] = [{'classes': cs
+            } for cs in top_scores.values()]
       
       return results
     
@@ -434,8 +443,10 @@ def identification(option=None):
       output_scores = output.output_scores
       output_timestamps = output.top_ranked_output_timestamps
       
-      for file_name, top_scores in results.items():
-        output.print_file(file_name)
+      for file_name_result in results:
+        output.print_file(file_name_result['file_name'])
+        
+        top_scores = file_name_result['result']
         
         try:
           if not top_scores:

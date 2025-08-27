@@ -82,11 +82,13 @@ def output(file_name, *args, **kwargs):
       # this function makes any changes that are to be applied universally
       # regardless of the identification setting (Confidence Scores or Top Ranked)
       # first, we perform the "Sort By" setting (by Number of Sounds, or File Name)
-      results = yamosse_utils.dict_sorted(results, key=self.sort_by, reverse=self.sort_reverse)
+      items = yamosse_utils.dict_sorted(
+        results, key=self.sort_by, reverse=self.sort_reverse).items()
       
+      results = []
       output_scores = self.output_scores
       
-      for file_name, result in results.items():
+      for file_name, result in items:
         # if not outputting scores, take them out
         # we take the dictionary (whose values are the scores) and turn its keys into a flat list
         # this is needed for the JSON to be structured correct
@@ -96,8 +98,11 @@ def output(file_name, *args, **kwargs):
           result = {key: list(value.keys()) for key, value in result.items()}
         
         # this sorts the next column - sorting by class/timestamp so that the output is consistent
-        results[file_name] = yamosse_utils.dict_sorted(result,
-          key=self.identification.key_result)
+        results.append({
+          'file_name': file_name,
+          'result': yamosse_utils.dict_sorted(result,
+            key=self.identification.key_result)
+        })
       
       return self.identification.restructure_results_for_output(results, self)
     
