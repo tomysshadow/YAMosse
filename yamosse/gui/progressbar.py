@@ -133,7 +133,7 @@ class Progressbar(ttk.Progressbar):
         self._state_type = state_type
         break
     
-    self._mode_state_task()
+    self._state_mode_task()
     return result
   
   @property
@@ -159,7 +159,7 @@ class Progressbar(ttk.Progressbar):
     else:
       super().configure(mode=value)
     
-    self._mode_state_task()
+    self._state_mode_task()
   
   @property
   def variable(self):
@@ -244,7 +244,7 @@ class Progressbar(ttk.Progressbar):
     
     getattr(taskbar, type_)(*args, **kwargs)
   
-  def _mode_state_task(self):
+  def _state_mode_task(self):
     taskbar = self.taskbar
     
     if not taskbar:
@@ -258,7 +258,7 @@ class Progressbar(ttk.Progressbar):
     taskbar.set_progress_type(type_)
   
   def _open_task(self, e):
-    self._mode_state_task()
+    self._state_mode_task()
     self._show(percent=False)
   
   def _close_task(self, e):
