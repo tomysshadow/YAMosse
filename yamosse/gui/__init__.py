@@ -1165,7 +1165,8 @@ def _init_sizegrip_window():
   def sizegrip_window(window, sizegrip=None, resizable=True):
     if sizegrip:
       if window not in sizegrips:
-        window.bind('<Destroy>', lambda e: sizegrips.pop(e.widget, None), add=True)
+        window.bind_class(bindtag_window(window),
+          '<Destroy>', lambda e: sizegrips.pop(e.widget, None), add=True)
       
       sizegrips[window] = sizegrip
     else:
@@ -1342,6 +1343,17 @@ def after_wait_window(window, callback):
     return children
   
   event.wait()
+
+
+def bindtag_window(window):
+  # create a bindtag which will only get events specifically for this window
+  window_bindtag = bindtag(window)
+  bindtags = window.bindtags()
+  
+  if not window_bindtag in bindtags:
+    window.bindtags((window_bindtag,) + window.bindtags())
+  
+  return window_bindtag
 
 
 def bind_buttons_window(window, ok_button=None, cancel_button=None):
@@ -1544,7 +1556,8 @@ def _root_images():
         
         root_images = None
       
-      root_window.bind('<Destroy>', destroy, add=True)
+      root_window.bind_class(bindtag_window(root_window),
+        '<Destroy>', destroy, add=True)
     
     return root_images
   

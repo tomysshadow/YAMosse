@@ -136,8 +136,11 @@ def make_record(frame, variables, record):
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
+  window_bindtag = gui.bindtag_window(window)
+  
   for sequence in ('<Unmap>', '<Destroy>'):
-    window.bind(sequence, lambda e: stop_recording(), add=True)
+    window.bind_class(window_bindtag,
+      sequence, lambda e: stop_recording(), add=True)
   
   window.protocol('WM_SAVE_YOURSELF', stop_recording)
   

@@ -5,6 +5,7 @@ from weakref import WeakKeyDictionary
 
 from .. import gui
 
+BINDTAG = 'embed'
 CLASS_TEXT = 'Text'
 
 VIEWS = {
@@ -102,7 +103,7 @@ def _root_embed():
         for child in widget.winfo_children():
           child['width'] = width
       
-      root_window.bind_class('embed', '<Configure>', configure, add=True)
+      root_window.bind_class(BINDTAG, '<Configure>', configure, add=True)
       
       def enter(e):
         widget = e.widget
@@ -112,7 +113,7 @@ def _root_embed():
         
         _stack.append(widget)
       
-      root_window.bind_class('embed', '<Enter>', enter, add=True)
+      root_window.bind_class(BINDTAG, '<Enter>', enter, add=True)
       
       def leave(e):
         if not _stack:
@@ -120,7 +121,7 @@ def _root_embed():
         
         _stack.pop()
       
-      root_window.bind_class('embed', '<Leave>', leave, add=True)
+      root_window.bind_class(BINDTAG, '<Leave>', leave, add=True)
       
       tk_ = root_window.tk
       
@@ -146,7 +147,7 @@ def _root_embed():
       
       view_cbname = root_window.register(view)
       
-      bindtag = None
+      name_sequence_bindtag = None
       
       def name_sequence(sequence):
         # we need to get the "canonical" name from the sequence
@@ -159,18 +160,18 @@ def _root_embed():
         # for us, into a canonical name, then get the name
         # the bindtag here is intended to be unique to this function
         # so that only one event will be bound to it at a time
-        bind(bindtag, sequence, ' ')
+        bind(name_sequence_bindtag, sequence, ' ')
         
         # get the name, which should be the only binding
         # then unbind the sequence
         try:
-          name, = bind(bindtag)
+          name, = bind(name_sequence_bindtag)
         finally:
-          bind(bindtag, sequence, '')
+          bind(name_sequence_bindtag, sequence, '')
         
         return str(name)
       
-      bindtag = gui.bindtag(name_sequence)
+      name_sequence_bindtag = gui.bindtag(name_sequence)
       
       def bind_window(window_bindings, name):
         window, bindings = window_bindings
@@ -332,7 +333,7 @@ def text_embed(text):
     # unbind from Text class so we can't get duplicate events
     # they'll be received from window instead
     gui.prevent_default_widget(text)
-    text.bindtags(('embed',) + text.bindtags())
+    text.bindtags((BINDTAG,) + text.bindtags())
     
     # delete anything that might've been typed in before the text was passed to us
     # then create the placeholder frame
@@ -344,7 +345,8 @@ def text_embed(text):
   window = text.winfo_toplevel()
   
   if window not in _windows:
-    window.bind('<Destroy>', lambda e: _windows.pop(e.widget, None), add=True)
+    window.bind_class(gui.bindtag_window(window),
+      '<Destroy>', lambda e: _windows.pop(e.widget, None), add=True)
   
   window_bindings = (window, _windows.setdefault(window, {}))
   

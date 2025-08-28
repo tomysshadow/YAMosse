@@ -567,12 +567,12 @@ def _link_tips(text, tips):
     finally:
       text['state'] = tk.DISABLED
   
-  bindtag = gui.bindtag(text)
-  text.bind_class(bindtag, '<Enter>', lambda e: show(e, tips[e.widget]))
-  text.bind_class(bindtag, '<Leave>', show)
+  text_bindtag = gui.bindtag(text)
+  text.bind_class(text_bindtag, '<Enter>', lambda e: show(e, tips[e.widget]))
+  text.bind_class(text_bindtag, '<Leave>', show)
   
   for widget in tips:
-    widget.bindtags((bindtag,) + widget.bindtags())
+    widget.bindtags((text_bindtag,) + widget.bindtags())
 
 
 def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):

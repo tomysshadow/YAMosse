@@ -228,10 +228,10 @@ class UndoableCalibration(UndoableScale):
     
     # this bindtag must be on the end
     # so that we don't swallow all events before the text gets them
-    bindtag = gui.bindtag(text)
+    text_bindtag = gui.bindtag(text)
     
     for scale in oldvalues:
-      scale.bindtags(scale.bindtags() + (bindtag,))
+      scale.bindtags(scale.bindtags() + (text_bindtag,))
     
     # we need to update the list of visible scales
     # in basically any circumstance that would normally cause
@@ -246,7 +246,7 @@ class UndoableCalibration(UndoableScale):
       def scroll(*args, command=command): return self._scrollcommand(command, *args)
       text[scrollcommand] = scroll
     
-    self.bind(text, bindtag)
+    self.bind(text, text_bindtag)
     
     self.master = UndoableMaster(undooptions, master_scale, self)
     self.reset = UndoableReset(undooptions, reset_button, self)
