@@ -52,8 +52,8 @@ class Progressbar(ttk.Progressbar):
     # show or hide taskbar progress with the widget
     self.bind('<Map>', lambda e: self._open_task(), add=True)
     
-    for name in ('<Unmap>', '<Destroy>'):
-      self.bind(name, lambda e: self._close_task(), add=True)
+    for sequence in ('<Unmap>', '<Destroy>'):
+      self.bind(sequence, lambda e: self._close_task(), add=True)
   
   def __getattr__(self, name):
     if name not in yamosse_progress.FUNCTIONS:

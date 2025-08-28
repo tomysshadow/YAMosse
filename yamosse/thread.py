@@ -89,7 +89,7 @@ def _input_file_names(input_, recursive=True):
   return file_names
 
 
-def _download_weights_file_unique(url, path, subsystem=None, options=None):
+def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None):
   if options:
     weights = options.weights
     
@@ -331,6 +331,7 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
       _download_weights_file_unique(
         yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
         yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
+        exit_,
         subsystem=subsystem,
         options=options
       ),

@@ -84,9 +84,10 @@ def identification(option=None):
       
       self._minmax = self._max if options.confidence_score_minmax else self._min
     
-    def predict(self, class_predictions, prediction_score=None):
+    def predict(self, result, prediction_score=None):
       if not prediction_score: return
       
+      class_predictions = result
       prediction, score = prediction_score
       
       options = self.options
@@ -112,10 +113,12 @@ def identification(option=None):
         prediction_scores[prediction] = max(
           prediction_scores.get(prediction, calibrated_score), calibrated_score)
     
-    def timestamps(self, class_predictions, shutdown):
+    def timestamps(self, result, shutdown):
       # create timestamps from predictions/scores
-      result = {}
+      class_timestamps = {}
       timespan = self.options.timespan
+      
+      class_predictions = result
       
       for class_, prediction_scores in class_predictions.items():
         if shutdown.is_set(): return None
@@ -150,9 +153,9 @@ def identification(option=None):
           score_end = prediction
         
         # class is cast to int for same reason as above (it might come from a numpy array)
-        result[int(class_)] = timestamp_scores
+        class_timestamps[int(class_)] = timestamp_scores
       
-      return result
+      return class_timestamps
     
     @classmethod
     def restructure_results_for_output(cls, results, output):
@@ -258,7 +261,7 @@ def identification(option=None):
       
       self.calibration = np.take(options.calibration, options.classes)
     
-    def predict(self, top_scores, prediction_score=None):
+    def predict(self, result, prediction_score=None):
       np = self.np
       
       options = self.options
@@ -268,6 +271,7 @@ def identification(option=None):
       # this is what ensures the timer starts at zero
       top = 0
       scores = []
+      top_scores = result
       
       # get the last top scores, if any
       # this is so we can convert them into their final dictionary form later
@@ -301,8 +305,10 @@ def identification(option=None):
           # as we need to expand it with new scores, so a numpy array wouldn't cut it
           # (or at least, wouldn't be efficient with all the copying of arrays)
           for class_index in class_indices:
-            scores = class_scores.setdefault(int(classes[class_index]), [])
-            scores += [score[class_index]]
+            scores = (
+              class_scores.setdefault(int(classes[class_index]), [])
+              + [score[class_index]]
+            )
           
           return
         
@@ -354,10 +360,10 @@ def identification(option=None):
       # otherwise add the new score, we'll find the mean of them all later
       default += score
     
-    def timestamps(self, top_scores, shutdown):
-      self.predict(top_scores)
+    def timestamps(self, result, shutdown):
+      self.predict(result)
       
-      result = {}
+      top_scores = {}
       timespan = self.options.timespan
       np = self.np
       
@@ -370,7 +376,7 @@ def identification(option=None):
       score_begin = 0
       score_end = 0
       
-      predictions = list(top_scores.keys())
+      predictions = list(result.keys())
       predictions_len = len(predictions)
       
       scores = []
@@ -380,12 +386,12 @@ def identification(option=None):
         
         if prediction != predictions_len:
           score_end = predictions[prediction]
-          class_scores_end = top_scores[score_end]
+          class_scores_end = result[score_end]
         
         # the first loop iteration is just to initialize scores
         try:
           if scores:
-            class_scores_begin = top_scores[score_begin]
+            class_scores_begin = result[score_begin]
             score_begin += timespan
             
             # check if we are still in a contiguous range of timestamps
@@ -404,7 +410,7 @@ def identification(option=None):
             # it is not necessary to sort here again, as it would be impossible
             # for the order to change as the result of averaging here, because
             # we are only joining timestamps where the keys are in the same order
-            result[timestamp] = dict(zip(class_scores_begin.keys(),
+            top_scores[timestamp] = dict(zip(class_scores_begin.keys(),
               np.mean(scores, axis=0, dtype=np.float32).tolist(), strict=True))
         finally:
           score_begin = score_end
@@ -416,14 +422,13 @@ def identification(option=None):
           begin = score_end
           scores = [np.fromiter(class_scores_end.values(), dtype=np.float32)]
       
-      return result
+      return top_scores
     
     @classmethod
     def restructure_results_for_output(cls, results, output):
       output_timestamps = output.top_ranked_output_timestamps
       
       for file_name_result in results:
-        file_name = file_name_result['file_name']
         top_scores = file_name_result['result']
         
         if output_timestamps:

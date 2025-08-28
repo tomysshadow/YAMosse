@@ -57,7 +57,7 @@ def make_record(frame, variables, record):
   volume_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
   volume_variable = tk.IntVar()
   
-  volume_progressbar = gui_progressbar.Progressbar(
+  gui_progressbar.Progressbar(
     volume_frame,
     variable=volume_variable,
     maximum=VOLUME_MAXIMUM,
@@ -136,8 +136,8 @@ def make_record(frame, variables, record):
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
-  for name in ('<Unmap>', '<Destroy>'):
-    window.bind(name, lambda e: stop_recording(), add=True)
+  for sequence in ('<Unmap>', '<Destroy>'):
+    window.bind(sequence, lambda e: stop_recording(), add=True)
   
   window.protocol('WM_SAVE_YOURSELF', stop_recording)
   

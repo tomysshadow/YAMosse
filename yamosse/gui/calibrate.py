@@ -33,15 +33,15 @@ class UndoableScale(UndoableWidget):
     
     # focus out is caught in case a widget gets a key press
     # then loses focus before key release
-    for name in ('<ButtonRelease>', '<FocusOut>'):
-      widget.bind_class(class_, name, data, add=True)
+    for sequence in ('<ButtonRelease>', '<FocusOut>'):
+      widget.bind_class(class_, sequence, data, add=True)
     
     # this must use a double button *release* specifically
     # so that the event handler can compare the old/new value
     # but for spacebar it's just a standard key event
     # (same as pressing a button)
-    for name in ('<Double-ButtonRelease>', '<Key-space>'):
-      widget.bind_class(class_, name, lambda e: self.data(e, recenter=True), add=True)
+    for sequence in ('<Double-ButtonRelease>', '<Key-space>'):
+      widget.bind_class(class_, sequence, lambda e: self.data(e, recenter=True), add=True)
   
   @abstractmethod
   def revert(self, *args, focus=True):
@@ -97,7 +97,9 @@ class UndoableMaster(UndoableScale):
     
     self.calibration = calibration
   
-  def revert(self, calibration_newvalues, newvalues, newvalue, focus=True):
+  def revert(self, *args, focus=True):
+    calibration_newvalues, newvalues, newvalue = args
+    
     # we must copy this here so we don't mutate a redo state
     self.calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalues = newvalues.copy()
@@ -151,8 +153,10 @@ class UndoableMaster(UndoableScale):
     
     return widget, newvalue, oldvalue, recenter
   
-  def show(self, widgets=None, newvalue=None):
-    for widget, newvalue in self._new(widgets=widgets, newvalue=newvalue).items():
+  def show(self, *args, **kwargs):
+    newvalues = self._new(*args, **kwargs)
+    
+    for widget, newvalue in newvalues.items():
       widget.set(newvalue)
   
   def value(self):
@@ -247,7 +251,9 @@ class UndoableCalibration(UndoableScale):
     self.master = UndoableMaster(undooptions, master_scale, self)
     self.reset = UndoableReset(undooptions, reset_button, self)
   
-  def revert(self, widget, newvalue, focus=True):
+  def revert(self, *args, focus=True):
+    widget, newvalue = args
+    
     # look at and focus the widget so the user notices what's just changed
     self._text.see(widget.master)
     
@@ -279,7 +285,9 @@ class UndoableCalibration(UndoableScale):
     self.show(widget, newvalue)
     return widget, newvalue, oldvalue, recenter
   
-  def show(self, widget, newvalue):
+  def show(self, *args, **kwargs):
+    widget, newvalue = args
+    
     self.oldvalues[widget] = newvalue
     self.master.calibrate(widget, newvalue)
   
@@ -317,13 +325,12 @@ class UndoableReset(UndoableWidget):
     
     self.calibration = calibration
   
-  def revert(
-    self,
-    calibration_newvalues=None,
-    master_newvalues=None,
-    master_newvalue=DEFAULT_SCALE_VALUE,
-    focus=True
-  ):
+  def revert(self, *args, focus=True):
+    ARGS_LEN = 3
+    
+    args += (None,) * ARGS_LEN
+    calibration_newvalues, master_newvalues, master_newvalue = args[:ARGS_LEN]
+    
     oldvalues = self.oldvalues
     
     if calibration_newvalues is None:
@@ -331,6 +338,9 @@ class UndoableReset(UndoableWidget):
     
     if master_newvalues is None:
       master_newvalues = oldvalues
+    
+    if master_newvalue is None:
+      master_newvalue = DEFAULT_SCALE_VALUE
     
     if focus:
       self._button.focus_set()

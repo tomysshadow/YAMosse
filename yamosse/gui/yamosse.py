@@ -202,7 +202,9 @@ def make_classes(frame, variables, class_names):
   # we sort it just to get the first class for display purposes
   classes_variable = variables['classes']
   treeview.selection_set(classes_variable)
-  if classes_variable: treeview.see(sorted(classes_variable)[0])
+  
+  if classes_variable:
+    treeview.see(sorted(classes_variable)[0])
   
   def select_treeview(e):
     widget = e.widget

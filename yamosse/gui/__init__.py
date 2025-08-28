@@ -340,7 +340,7 @@ def text_widgets_items(i):
 
 
 def _traversal_button():
-  def name(button, underline):
+  def sequence(button, underline):
     assert underline >= 0, 'underline must be greater than or equal to zero'
     return '<Alt-%c>' % str(button['text'])[underline].lower()
   
@@ -351,7 +351,7 @@ def _traversal_button():
       return
     
     button.winfo_toplevel().bind(
-      name(button, underline),
+      sequence(button, underline),
       lambda e: button.focus_set()
     )
   
@@ -361,7 +361,7 @@ def _traversal_button():
     if underline < 0:
       return
     
-    button.winfo_toplevel().unbind(name(button, underline))
+    button.winfo_toplevel().unbind(sequence(button, underline))
   
   return enable, disable
 
@@ -538,7 +538,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
   scale = None
   percent_label = make_percent(frame)
   
-  def show(*args, **kwargs):
+  def show(value):
     nonlocal showing
     
     if showing: return
@@ -546,7 +546,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
     showing = True
     
     try:
-      value = int(scale.get())
+      value = int(value)
       scale.set(value) # this is so we increment in steps instead of a smooth scroll
       percent_label['text'] = '%d%%' % value
     finally:
@@ -555,12 +555,13 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
   # I wrote this function before I knew about LabeledScale
   # but I prefer my implementation anyway, so I just kept it
   scale = ttk.Scale(frame,
-    from_=from_, to=to, orient=tk.HORIZONTAL, command=show, **kwargs)
+    from_=from_, to=to, orient=tk.HORIZONTAL,
+    command=lambda text: show(float(text)), **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
   #scale.bind('<<RangeChanged>>', show)
   
-  show()
+  show(scale.get())
   return make_name(frame, name), scale, percent_label
 
 
