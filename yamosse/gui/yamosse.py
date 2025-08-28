@@ -616,11 +616,12 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   
   weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui.PADDING_HNSEW)
   weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
-  gui.make_filedialog(weights_labelframe, textvariable=variables['weights'],
-    parent=frame.winfo_toplevel(), filetypes=weights_filetypes)
+  weights_entry = gui.make_filedialog(weights_labelframe, textvariable=variables['weights'],
+    parent=frame.winfo_toplevel(), filetypes=weights_filetypes)[1]
   
   if tfhub_enabled:
     gui.enable_widget(weights_labelframe, enabled=False)
+    weights_entry['cursor'] = ''
   
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)
   tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui.PADY_QN)
