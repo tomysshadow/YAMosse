@@ -4,6 +4,7 @@ import tempfile
 from os import unlink
 from shlex import quote
 import json
+from threading import Event
 
 import yamosse.output as output
 import yamosse.options as options
@@ -118,6 +119,7 @@ class TestOutput(ABC):
     
     return output.output(
       file.name,
+      Event(),
       MODEL_YAMNET_CLASS_NAMES,
       identification
     ), file
