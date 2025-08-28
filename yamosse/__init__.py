@@ -90,9 +90,7 @@ def _mainloop(**kwargs):
     # this is an optional module
     # so we only import it if we are going to attempt recording
     import yamosse.recording as yamosse_recording
-    
-    recording = yamosse_recording.Recording(subsystem, options, *args, **kwargs)
-    return recording
+    return yamosse_recording.Recording(subsystem, options, *args, **kwargs)
   
   def import_preset(file_name=''):
     nonlocal options
