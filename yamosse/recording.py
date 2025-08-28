@@ -20,7 +20,7 @@ VOLUME_SPEC = '{volume:>4.0%}'
 
 
 class Recording:
-  def __init__(self, options, start=None, stop=None):
+  def __init__(self, subsystem, options, start=None, stop=None):
     self.save = True
     self.options = options
     
@@ -28,8 +28,10 @@ class Recording:
     self._stop = Event() if stop is None else stop
     
     self._volume = 0.0
+    
+    subsystem.start(self._thread)
   
-  def thread(self):
+  def _thread(self):
     import numpy as np # Make sure NumPy is loaded before it is used in the callback
     
     with self._start:
