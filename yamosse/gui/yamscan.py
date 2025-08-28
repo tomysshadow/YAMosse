@@ -167,9 +167,9 @@ def make_yamscan(frame, open_output_file, exit_, progressbar_maximum=100):
   
   log_labelframe = ttk.Labelframe(frame, text='Log', padding=gui.PADDING_HNSEW)
   log_labelframe.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
-  log_text = gui.make_text(log_labelframe, takefocus=True)[1][0]
+  log_text = gui.make_text(log_labelframe, takefocus=True, cursor='', state=tk.DISABLED)[1][0]
+  
   #gui.prevent_default_widget(log_text)
-  gui.enable_widget(log_text, enabled=False)
   
   def select_all_log_text(e):
     # in theory you'd think setting the focus would be enough on its own
