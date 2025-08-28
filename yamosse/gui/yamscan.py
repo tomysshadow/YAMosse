@@ -141,7 +141,7 @@ def show_yamscan(widgets, values=None):
   return gui.after_window(window, callback)
 
 
-def make_yamscan(frame, open_output_file, progressbar_maximum=100):
+def make_yamscan(frame, open_output_file, exit_, progressbar_maximum=100):
   window = frame.master
   parent = window.master
   
@@ -197,6 +197,8 @@ def make_yamscan(frame, open_output_file, progressbar_maximum=100):
     open_output_file,
     lambda: done(window)
   )
+  
+  window.bind('<Destroy>', lambda e: exit_.set())
   
   gui.set_modal_window(window, delete_window=done)
   return window, progressbar, log_text, footer_widgets

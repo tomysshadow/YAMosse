@@ -97,7 +97,7 @@ def _download_weights_file_unique(url, path, subsystem=None, options=None):
       return open(weights, 'rb')
   
   if subsystem:
-    subsystem.show(values={
+    subsystem.show(exit_, values={
       'log': 'Downloading weights file, please wait...'
     })
   
@@ -124,7 +124,7 @@ def _download_weights_file_unique(url, path, subsystem=None, options=None):
     raise
 
 
-def _files(input_, model_yamnet_class_names, subsystem, options):
+def _files(input_, model_yamnet_class_names, exit_, subsystem, options):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -171,7 +171,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
     
     try:
       def show_received():
-        while receiver.poll(): subsystem.show(values=receiver.recv())
+        while receiver.poll(): subsystem.show(exit_, values=receiver.recv())
       
       # the done dictionary is keyed by future, not file name
       # it doesn't really matter which is the key since we loop through everything
@@ -220,7 +220,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
           log = f'{log}{status} {file_names_pos}/{file_names_len}: {quote(file_name)}\n'
         
         if log := log.removesuffix('\n'):
-          subsystem.show(values={
+          subsystem.show(exit_, values={
             'log': log
           })
         
@@ -243,7 +243,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
             normal = done
         
         if normal:
-          subsystem.show(values={
+          subsystem.show(exit_, values={
             'progressbar': {'configure': {'kwargs': {'mode': yamosse_progress.MODE_DETERMINATE}}}
           })
           
@@ -255,7 +255,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
       
       clear_done = clear_done_loading
       
-      subsystem.show(values={
+      subsystem.show(exit_, values={
         'log': 'Created Process Pool Executor'
       })
       
@@ -308,7 +308,7 @@ def _files(input_, model_yamnet_class_names, subsystem, options):
 
 def _report_thread_exception(subsystem, exc, val, tb):
   try:
-    subsystem.show(values={
+    subsystem.show(exit_, values={
       'progressbar': {'state': {'args': ((yamosse_progress.STATE_ERROR,),)}},
       
       'log': ':\n'.join((
@@ -319,7 +319,8 @@ def _report_thread_exception(subsystem, exc, val, tb):
   except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(output_file_name, input_, model_yamnet_class_names, subsystem, options):
+def thread(output_file_name, input_, model_yamnet_class_names,
+  exit_, subsystem, options):
   try:
     # we open the output file well in advance of actually using it
     # this is because it would suck to do all the work and
@@ -337,13 +338,14 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
       yamosse_output.output(
         output_file_name,
         model_yamnet_class_names,
+        exit_,
         options.identification,
         subsystem=subsystem
       ) as output
     ):
-      results, errors = _files(input_, model_yamnet_class_names, subsystem, options)
+      results, errors = _files(input_, model_yamnet_class_names, exit_, subsystem, options)
       
-      subsystem.show(values={
+      subsystem.show(exit_, values={
         'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
         'log': 'Finishing, please wait...\n'
       })
@@ -355,7 +357,7 @@ def thread(output_file_name, input_, model_yamnet_class_names, subsystem, option
   except: _report_thread_exception(subsystem, *exc_info())
   finally:
     try:
-      subsystem.show(values={
+      subsystem.show(exit_, values={
         'done': 'OK'
       })
     except yamosse_subsystem.SubsystemExit: pass

@@ -20,8 +20,9 @@ def subsystem(window, title, variables):
       pass
     
     @abstractmethod
-    def show(self, values=None):
-      pass
+    def show(self, exit_, values=None):
+      if exit_.is_set():
+        raise SubsystemExit
     
     def error(self, message, *args, **kwargs):
       raise SubsystemError(message)
@@ -64,7 +65,9 @@ def subsystem(window, title, variables):
       args, kwargs = yamosse_utils.arguments(args, kwargs)
       Thread(target=target, args=args, kwargs=kwargs).start()
     
-    def show(self, values=None):
+    def show(self, exit_, values=None):
+      super().show(exit_, values=values)
+      
       if not self.show_callback(self.widgets, values=values):
         raise SubsystemExit
     
@@ -126,7 +129,9 @@ def subsystem(window, title, variables):
       args, kwargs = yamosse_utils.arguments(args, kwargs)
       target(*args, **kwargs)
     
-    def show(self, values=None):
+    def show(self, exit_, values=None):
+      super().show(exit_, values=values)
+      
       if values and 'log' in values:
         print(yamosse_utils.ascii_backslashreplace(values['log']))
     

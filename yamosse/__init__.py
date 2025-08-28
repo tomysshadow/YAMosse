@@ -5,6 +5,7 @@ import os
 import shlex
 import platform
 from subprocess import Popen
+from threading import Event
 
 import soundfile as sf
 
@@ -171,12 +172,20 @@ def _mainloop(**kwargs):
       
       if not output_file_name: return
       
+      # this event prevents the thread from trying to interact with windows
+      # other than the one it was created for
+      # because it's possible for a window to get "Indiana Jonesed"
+      # and have a new window with the same name as an old one
+      # so the thread doesn't see it exit
+      exit_ = Event()
+      
       child, widgets = gui.gui(
         gui_yamscan.make_yamscan,
         child=True,
         
         args=(
           lambda: open_file(os.path.realpath(output_file_name)),
+          exit_
         ),
         
         kwargs={
@@ -193,7 +202,7 @@ def _mainloop(**kwargs):
         default=True,
         parent=child
       ):
-        subsystem.show(values={
+        subsystem.show(exit_, values={
           'progressbar': {
             'state': {'args': ((yamosse_progress.STATE_ERROR,),)},
             'configure': {'kwargs': {'mode': yamosse_progress.MODE_DETERMINATE}}
@@ -211,6 +220,7 @@ def _mainloop(**kwargs):
         output_file_name,
         input_,
         model_yamnet_class_names,
+        exit_,
         subsystem,
         options
       )
