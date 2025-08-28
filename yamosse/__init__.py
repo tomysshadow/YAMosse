@@ -219,8 +219,8 @@ def _mainloop(**kwargs):
       args=(
         output_file_name,
         input_,
-        model_yamnet_class_names,
         exit_,
+        model_yamnet_class_names,
         subsystem,
         options
       )

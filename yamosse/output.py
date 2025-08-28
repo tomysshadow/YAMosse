@@ -17,12 +17,10 @@ EXT_JSON = '.json'.casefold()
 
 def output(file_name, *args, **kwargs):
   class Output(ABC):
-    def __init__(self, file_name, model_yamnet_class_names, exit_, identification,
+    def __init__(self, file_name, exit_, model_yamnet_class_names, identification,
       subsystem=None, encoding='utf8'):
       if subsystem:
         self._seconds = time()
-      
-      self.exit_ = exit_
       
       self.subsystem = subsystem
       
@@ -39,6 +37,8 @@ def output(file_name, *args, **kwargs):
       self.model_yamnet_class_names = model_yamnet_class_names
       self.identification = identification
       
+      self._exit = exit_
+      
       self.file = open(file_name, 'w', encoding=encoding)
     
     def __enter__(self):
@@ -53,7 +53,7 @@ def output(file_name, *args, **kwargs):
       subsystem = self.subsystem
       
       if subsystem:
-        subsystem.show(self.exit_, values={
+        subsystem.show(self._exit, values={
           'log': ': '.join(('Elapsed Time', yamosse_utils.hours_minutes(time() - self._seconds)))
         })
     

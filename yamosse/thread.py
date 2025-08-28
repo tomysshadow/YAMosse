@@ -124,7 +124,7 @@ def _download_weights_file_unique(url, path, subsystem=None, options=None):
     raise
 
 
-def _files(input_, model_yamnet_class_names, exit_, subsystem, options):
+def _files(input_, exit_, model_yamnet_class_names, subsystem, options):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -319,8 +319,8 @@ def _report_thread_exception(subsystem, exc, val, tb):
   except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(output_file_name, input_, model_yamnet_class_names,
-  exit_, subsystem, options):
+def thread(output_file_name, input_, exit_, model_yamnet_class_names,
+  subsystem, options):
   try:
     # we open the output file well in advance of actually using it
     # this is because it would suck to do all the work and
@@ -337,13 +337,13 @@ def thread(output_file_name, input_, model_yamnet_class_names,
       
       yamosse_output.output(
         output_file_name,
-        model_yamnet_class_names,
         exit_,
+        model_yamnet_class_names,
         options.identification,
         subsystem=subsystem
       ) as output
     ):
-      results, errors = _files(input_, model_yamnet_class_names, exit_, subsystem, options)
+      results, errors = _files(input_, exit_, model_yamnet_class_names, subsystem, options)
       
       subsystem.show(exit_, values={
         'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
