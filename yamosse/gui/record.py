@@ -19,6 +19,7 @@ ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 VOLUME_MAXIMUM = 100
 
 
+# TODO: this is complicated, give it a class rewrite
 def make_record(frame, variables, record):
   window = frame.master
   window.withdraw()
@@ -82,13 +83,20 @@ def make_record(frame, variables, record):
   def show_volume():
     gui.set_attrs_to_variables(variables, recording.options)
     
-    volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
+    try:
+      volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
+    except tk.TclError:
+      pass
+    
     start_volume()
   
   def hide_volume():
     gui.set_attrs_to_variables(variables, recording.options)
     
-    volume_variable.set(0)
+    try:
+      volume_variable.set(0)
+    except tk.TclError:
+      pass
   
   def start_volume():
     nonlocal volume_after
@@ -106,8 +114,13 @@ def make_record(frame, variables, record):
     
     if recording: return
     
-    recording_button.configure(text='Stop Recording', image=stop_image, command=stop_recording)
-    input_devices_combobox['state'] = 'disabled'
+    # TODO: this should probably raise if we aren't destroying
+    # or alternatively, be skipped altogether if we are
+    try:
+      recording_button.configure(text='Stop Recording', image=stop_image, command=stop_recording)
+      input_devices_combobox['state'] = 'disabled'
+    except tk.TclError:
+      pass
     
     stop.clear()
     
@@ -130,8 +143,11 @@ def make_record(frame, variables, record):
       gui.copy_attrs_to_variables(variables, recording.options)
       recording = None
     
-    input_devices_combobox['state'] = 'readonly'
-    recording_button.configure(text='Start Recording', image=record_image, command=start_recording)
+    try:
+      input_devices_combobox['state'] = 'readonly'
+      recording_button.configure(text='Start Recording', image=record_image, command=start_recording)
+    except tk.TclError:
+      pass
   
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
