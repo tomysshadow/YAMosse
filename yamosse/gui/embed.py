@@ -89,6 +89,39 @@ def _root_embed():
       # i.e. there needs to be a root window
       # so all of that stuff is done in here
       root_window = gui.get_root_window()
+      
+      def configure(e):
+        widget = e.widget
+        
+        inset = sum(widget.winfo_fpixels(widget[i]) for i in (
+          'borderwidth', 'highlightthickness', 'padx'))
+        
+        width = max(0, widget.winfo_fpixels(e.width) - (inset * 2))
+        
+        # set the width of the children to fill the available space
+        for child in widget.winfo_children():
+          child['width'] = width
+      
+      root_window.bind_class('embed', '<Configure>', configure, add=True)
+      
+      def enter(e):
+        widget = e.widget
+        
+        if _stack and _stack[-1] is widget:
+          return
+        
+        _stack.append(widget)
+      
+      root_window.bind_class('embed', '<Enter>', enter, add=True)
+      
+      def leave(e):
+        if not _stack:
+          return
+        
+        _stack.pop()
+      
+      root_window.bind_class('embed', '<Leave>', leave, add=True)
+      
       tk_ = root_window.tk
       
       def bind(*args):
@@ -279,6 +312,8 @@ def text_embed(text):
   if text in _texts:
     raise RuntimeError('text_embed is single shot per-text')
   
+  text.bind('<Destroy>', lambda e: _texts.pop(e.widget, None), add=True)
+  
   # placeholder to prevent text selection
   frame = ttk.Frame(text)
   _texts[text] = frame
@@ -297,38 +332,7 @@ def text_embed(text):
     # unbind from Text class so we can't get duplicate events
     # they'll be received from window instead
     gui.prevent_default_widget(text)
-    
-    def configure(e):
-      widget = e.widget
-      
-      inset = sum(widget.winfo_fpixels(widget[i]) for i in (
-        'borderwidth', 'highlightthickness', 'padx'))
-      
-      width = max(0, widget.winfo_fpixels(e.width) - (inset * 2))
-      
-      # set the width of the children to fill the available space
-      for child in widget.winfo_children():
-        child['width'] = width
-    
-    text.bind('<Configure>', configure, add=True)
-    
-    def enter(e):
-      widget = e.widget
-      
-      if _stack and _stack[-1] is widget:
-        return
-      
-      _stack.append(widget)
-    
-    text.bind('<Enter>', enter, add=True)
-    
-    def leave(e):
-      if not _stack:
-        return
-      
-      _stack.pop()
-    
-    text.bind('<Leave>', leave, add=True)
+    text.bindtags(('embed',) + text.bindtags())
     
     # delete anything that might've been typed in before the text was passed to us
     # then create the placeholder frame
@@ -338,6 +342,10 @@ def text_embed(text):
     text['state'] = tk.DISABLED
   
   window = text.winfo_toplevel()
+  
+  if window not in _windows:
+    window.bind('<Destroy>', lambda e: _windows.pop(e.widget, None), add=True)
+  
   window_bindings = (window, _windows.setdefault(window, {}))
   
   bind, bind_window = _get_root_embed()

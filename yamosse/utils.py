@@ -61,3 +61,9 @@ def dict_once(d, key):
 
 def batched(seq, size):
   return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+
+def arguments(args=None, kwargs=None):
+  if args is None: args = ()
+  if kwargs is None: kwargs = {}
+  return args, kwargs

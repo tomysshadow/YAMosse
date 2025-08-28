@@ -77,7 +77,7 @@ def make_record(frame, variables, record):
   
   input_devices_combobox = gui.make_combobox(row_frame,
     name='Device:', textvariable=input_device_variable,
-    values=list(input_devices.keys()), width=72, state=('readonly',))[1]
+    values=list(input_devices.keys()), width=72, state='readonly')[1]
   
   def show_volume():
     gui.set_attrs_to_variables(variables, recording.options)
@@ -107,7 +107,7 @@ def make_record(frame, variables, record):
     if recording: return
     
     recording_button.configure(text='Stop Recording', image=stop_image, command=stop_recording)
-    input_devices_combobox['state'] = ('disabled',)
+    input_devices_combobox['state'] = 'disabled'
     
     stop.clear()
     
@@ -130,14 +130,14 @@ def make_record(frame, variables, record):
       gui.copy_attrs_to_variables(variables, recording.options)
       recording = None
     
-    input_devices_combobox['state'] = ('readonly',)
+    input_devices_combobox['state'] = 'readonly'
     recording_button.configure(text='Start Recording', image=record_image, command=start_recording)
   
   recording_button['command'] = start_recording
   window.bind('<Control-c>', lambda e: recording_button.invoke())
   
   for name in ('<Unmap>', '<Destroy>'):
-    window.bind(name, lambda e: stop_recording())
+    window.bind(name, lambda e: stop_recording(), add=True)
   
   window.protocol('WM_SAVE_YOURSELF', stop_recording)
   

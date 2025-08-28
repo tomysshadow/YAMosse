@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
-import weakref
 from weakref import WeakKeyDictionary
 import traceback
 import threading
@@ -138,37 +137,14 @@ def _init_report_callback_exception():
 tk.Tk.report_callback_exception = _init_report_callback_exception()
 
 
-def _init_enable_widget():
-  normalcursors = WeakKeyDictionary()
+def enable_widget(widget, enabled=True):
+  try:
+    widget['state'] = tk.NORMAL if enabled else tk.DISABLED
+  except tk.TclError:
+    pass
   
-  def enable_widget(widget, enabled=True, cursor=True):
-    try:
-      widget['state'] = tk.NORMAL if enabled else tk.DISABLED
-    except tk.TclError:
-      pass
-    else:
-      # we do this in the try-else block
-      # this way, we'll only attempt to change the cursor
-      # if we were successfully able to change the state
-      if cursor:
-        if enabled:
-          try:
-            widget['cursor'] = normalcursors.pop(widget)
-          except KeyError:
-            pass
-        else:
-          normalcursor = widget['cursor']
-          
-          if normalcursor:
-            normalcursors[widget] = normalcursor
-            widget['cursor'] = ''
-    
-    for child_widget in widget.winfo_children():
-      enable_widget(child_widget, enabled=enabled, cursor=cursor)
-  
-  return enable_widget
-
-enable_widget = _init_enable_widget()
+  for child_widget in widget.winfo_children():
+    enable_widget(child_widget, enabled=enabled)
 
 
 def after_invalidcommand_widget(widget, validate):
@@ -499,6 +475,9 @@ def _init_validationoptions_spinbox():
       valid = str(number) == str(P) and number in range(int(widget['from']), int(widget['to']))
       
       if valid:
+        if widget not in _spinbox_numbers:
+          widget.bind('<Destroy>', lambda e: _spinbox_numbers.pop(e.widget, None), add=True)
+        
         _spinbox_numbers[widget] = number
       
       return valid
@@ -1184,6 +1163,9 @@ def _init_sizegrip_window():
   
   def sizegrip_window(window, sizegrip=None, resizable=True):
     if sizegrip:
+      if window not in sizegrips:
+        window.bind('<Destroy>', lambda e: sizegrips.pop(e.widget, None), add=True)
+      
       sizegrips[window] = sizegrip
     else:
       sizegrip = sizegrips[window]
@@ -1341,7 +1323,7 @@ def after_wait_window(window, callback):
   # don't deadlock if we're on the GUI thread
   if owner_root_window():
     if children := window.children:
-      callback(*args, **kwargs)
+      callback()
     
     return children
   
@@ -1467,7 +1449,7 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
       window.iconphoto(False, *iconphotos)
 
 
-def make_window(window, make_frame, *args, **kwargs):
+def make_window(window, make_frame, args=None, kwargs=None):
   for child in list(window.children.values()):
     try:
       child.destroy()
@@ -1489,6 +1471,8 @@ def make_window(window, make_frame, *args, **kwargs):
   frame.grid(row=1, column=1, sticky=tk.NSEW)
   
   assert window.children, 'window must have children'
+  
+  args, kwargs = yamosse_utils.arguments(args, kwargs)
   return window, make_frame(frame, *args, **kwargs)
 
 
@@ -1554,12 +1538,12 @@ def _root_images():
       # in case the application dies on a thread that isn't the GUI thread
       # normally the images would have their __del__ method called
       # only to discover that the Tk interpreter isn't running
-      def del_():
+      def destroy(e):
         nonlocal root_images
         
-        del root_images
+        root_images = None
       
-      weakref.finalize(root_window, del_)
+      root_window.bind('<Destroy>', destroy, add=True)
     
     return root_images
   
@@ -1635,13 +1619,13 @@ def bindtag(obj):
   return ''.join(('bindtag', repr(id(obj))))
 
 
-def gui(make_frame, *args, window=None, child=False, **kwargs):
+def gui(make_frame, window=None, child=False, args=None, kwargs=None):
   if not window:
     window = get_root_window()
   
   return make_window(
     window if not child else tk.Toplevel(window),
     make_frame,
-    *args,
-    **kwargs
+    args=args,
+    kwargs=kwargs
   )

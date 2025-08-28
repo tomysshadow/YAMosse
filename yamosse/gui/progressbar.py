@@ -50,10 +50,10 @@ class Progressbar(ttk.Progressbar):
     self.mode = mode
     
     # show or hide taskbar progress with the widget
-    self.bind('<Map>', self._open_task)
+    self.bind('<Map>', lambda e: self._open_task(), add=True)
     
     for name in ('<Unmap>', '<Destroy>'):
-      self.bind(name, self._close_task)
+      self.bind(name, lambda e: self._close_task(), add=True)
   
   def __getattr__(self, name):
     if name not in yamosse_progress.FUNCTIONS:
@@ -61,7 +61,7 @@ class Progressbar(ttk.Progressbar):
     
     # variadics are supported in case there is ever a function that uses them
     # (but currently there aren't any)
-    return lambda *args, **kwargs: self.function(name, *args, **kwargs)
+    return lambda *args, **kwargs: self.function(name, args=args, kwargs=kwargs)
   
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
@@ -91,7 +91,7 @@ class Progressbar(ttk.Progressbar):
   def set(self, value):
     self.setvar(str(self._variable), int(value))
   
-  def function(self, function, *args, **kwargs):
+  def function(self, function, args=None, kwargs=None):
     if function not in yamosse_progress.FUNCTIONS:
       raise ValueError('function must be in %r' % (yamosse_progress.FUNCTIONS,))
     
@@ -231,7 +231,7 @@ class Progressbar(ttk.Progressbar):
       if percent_label:
         percent_label['text'] = '%d%%' % self._value
   
-  def _function_task(self, function, *args, **kwargs):
+  def _function_task(self, function, args=None, kwargs=None):
     taskbar = self.taskbar
     
     if not taskbar:
@@ -242,6 +242,7 @@ class Progressbar(ttk.Progressbar):
     if type_ is None:
       return
     
+    args, kwargs = yamosse_utils.arguments(args, kwargs)
     getattr(taskbar, type_)(*args, **kwargs)
   
   def _state_mode_task(self):
@@ -257,9 +258,9 @@ class Progressbar(ttk.Progressbar):
     
     taskbar.set_progress_type(type_)
   
-  def _open_task(self, e):
+  def _open_task(self):
     self._state_mode_task()
     self._show(percent=False)
   
-  def _close_task(self, e):
+  def _close_task(self):
     self._function_task(yamosse_progress.FUNCTION_RESET)

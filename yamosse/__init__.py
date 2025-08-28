@@ -173,9 +173,15 @@ def _mainloop(**kwargs):
       
       child, widgets = gui.gui(
         gui_yamscan.make_yamscan,
-        lambda: open_file(os.path.realpath(output_file_name)),
-        progressbar_maximum=yamosse_worker.PROGRESSBAR_MAXIMUM,
-        child=True
+        child=True,
+        
+        args=(
+          lambda: open_file(os.path.realpath(output_file_name)),
+        ),
+        
+        kwargs={
+          'progressbar_maximum': yamosse_worker.PROGRESSBAR_MAXIMUM
+        }
       )
       
       subsystem.show_callback = gui_yamscan.show_yamscan
@@ -200,11 +206,14 @@ def _mainloop(**kwargs):
     
     subsystem.start(
       yamosse_thread.thread,
-      output_file_name,
-      input_,
-      model_yamnet_class_names,
-      subsystem,
-      options
+      
+      args=(
+        output_file_name,
+        input_,
+        model_yamnet_class_names,
+        subsystem,
+        options
+      )
     )
   
   def restore_defaults():
@@ -227,17 +236,20 @@ def _mainloop(**kwargs):
       
       window = gui.gui(
         gui_yamosse.make_yamosse,
-        TITLE,
-        variables,
-        sf_input_filetypes(),
-        record,
-        model_yamnet_class_names,
-        WEIGHTS_FILETYPES,
-        yamosse_worker.tfhub_enabled(),
-        import_preset,
-        export_preset,
-        yamscan,
-        restore_defaults
+        
+        args=(
+          TITLE,
+          variables,
+          sf_input_filetypes(),
+          record,
+          model_yamnet_class_names,
+          WEIGHTS_FILETYPES,
+          yamosse_worker.tfhub_enabled(),
+          import_preset,
+          export_preset,
+          yamscan,
+          restore_defaults
+        )
       )[0]
     else:
       kwargs['output_file_name'] = input('Please enter the output file name:\n')

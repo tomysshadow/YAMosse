@@ -29,6 +29,8 @@ def treeview_sorted(treeview):
   if treeview in _treeviews:
     raise RuntimeError('treeview_sorted is single shot per-treeview')
   
+  treeview.bind('<Destroy>', lambda e: _treeviews.discard(e.widget), add=True)
+  
   # this can't use dict_once because items may be removed from it over time
   _treeviews.add(treeview)
   

@@ -16,7 +16,7 @@ def subsystem(window, title, variables):
   class Subsystem(ABC):
     @staticmethod
     @abstractmethod
-    def start(target, *args, **kwargs):
+    def start(target, args=None, kwargs=None):
       pass
     
     @abstractmethod
@@ -57,10 +57,11 @@ def subsystem(window, title, variables):
       self.widgets = None
     
     @staticmethod
-    def start(target, *args, **kwargs):
+    def start(target, args=None, kwargs=None):
       gui.threaded()
       
       # start a thread so the GUI isn't blocked
+      args, kwargs = yamosse_utils.arguments(args, kwargs)
       Thread(target=target, args=args, kwargs=kwargs).start()
     
     def show(self, values=None):
@@ -121,7 +122,8 @@ def subsystem(window, title, variables):
   
   class ConsoleSubsystem(Subsystem):
     @staticmethod
-    def start(target, *args, **kwargs):
+    def start(target, args=None, kwargs=None):
+      args, kwargs = yamosse_utils.arguments(args, kwargs)
       target(*args, **kwargs)
     
     def show(self, values=None):

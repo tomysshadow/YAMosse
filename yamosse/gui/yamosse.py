@@ -80,9 +80,12 @@ def make_input(frame, variables, filetypes, record):
   
   record_window, record_ask_save = gui.gui(
     gui_record.make_record,
-    variables,
-    record,
-    child=True
+    child=True,
+    
+    args=(
+      variables,
+      record
+    )
   )
   
   record_button = ttk.Button(
@@ -132,10 +135,13 @@ def make_classes(frame, variables, class_names):
     
     command=lambda: gui.gui(
       gui_calibrate.make_calibrate,
-      variables,
-      class_names,
-      attached,
-      child=True
+      child=True,
+      
+      args=(
+        variables,
+        class_names,
+        attached
+      )
     )
   )
   
@@ -559,9 +565,12 @@ def _link_tips(text, tips):
     finally:
       text['state'] = tk.DISABLED
   
-  for widget, tip in tips.items():
-    widget.bind('<Enter>', lambda e, tip=tip: show(e, tip), add=True)
-    widget.bind('<Leave>', show, add=True)
+  bindtag = gui.bindtag(text)
+  text.bind_class(bindtag, '<Enter>', lambda e: show(e, tips[e.widget]))
+  text.bind_class(bindtag, '<Leave>', show)
+  
+  for widget in tips:
+    widget.bindtags((bindtag,) + widget.bindtags())
 
 
 def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
