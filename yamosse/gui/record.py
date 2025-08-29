@@ -58,7 +58,7 @@ def make_record(frame, variables, record):
   volume_frame.grid(row=0, column=1, sticky=tk.EW, padx=gui.PADX_HW)
   volume_variable = tk.IntVar()
   
-  gui_progressbar.Progressbar(
+  volume_progressbar = gui_progressbar.Progressbar(
     volume_frame,
     variable=volume_variable,
     maximum=VOLUME_MAXIMUM,
@@ -83,20 +83,13 @@ def make_record(frame, variables, record):
   def show_volume():
     gui.set_attrs_to_variables(variables, recording.options)
     
-    try:
-      volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
-    except tk.TclError:
-      pass
-    
+    volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
     start_volume()
   
   def hide_volume():
     gui.set_attrs_to_variables(variables, recording.options)
     
-    try:
-      volume_variable.set(0)
-    except tk.TclError:
-      pass
+    volume_variable.set(0)
   
   def start_volume():
     nonlocal volume_after

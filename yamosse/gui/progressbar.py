@@ -63,6 +63,21 @@ class Progressbar(ttk.Progressbar):
     # (but currently there aren't any)
     return lambda *args, **kwargs: self.function(name, args=args, kwargs=kwargs)
   
+  def destroy(self):
+    # this implementation is basically copy/pasted from Tkinter's LabeledScale
+    try:
+      Progressbar._trace_remove(self, self._variable, self._trace_cbname)
+    except AttributeError:
+      pass
+    else:
+      del self._variable
+    
+    super().destroy()
+    
+    self.name_frame = None
+    self._taskbar = None
+    self._percent_label = None
+  
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
     kw_len = len(kw)
@@ -173,13 +188,11 @@ class Progressbar(ttk.Progressbar):
     trace_cbname = self._trace_cbname
     
     if variable is not None:
-      self.tk.call('trace', 'remove', 'variable',
-        variable, 'write', trace_cbname)
+      Progressbar._trace_remove(self, variable, trace_cbname)
     
     variable = value if value else tk.IntVar()
     
-    self.tk.call('trace', 'add', 'variable',
-      variable, 'write', trace_cbname)
+    Progressbar._trace_add(self, variable, trace_cbname)
     
     super().configure(variable=variable)
     self._variable = variable
@@ -264,3 +277,13 @@ class Progressbar(ttk.Progressbar):
   
   def _close_task(self):
     self._function_task(yamosse_progress.FUNCTION_RESET)
+  
+  @classmethod
+  def _trace_add(cls, widget, variable, cbname):
+    widget.tk.call('trace', 'add', 'variable',
+      variable, 'write', cbname)
+  
+  @classmethod
+  def _trace_remove(cls, widget, variable, cbname):
+    widget.tk.call('trace', 'remove', 'variable',
+      variable, 'write', cbname)
