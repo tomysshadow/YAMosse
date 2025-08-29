@@ -63,14 +63,6 @@ class Progressbar(ttk.Progressbar):
     # (but currently there aren't any)
     return lambda *args, **kwargs: self.function(name, args=args, kwargs=kwargs)
   
-  def destroy(self):
-    super().destroy()
-    
-    self._trace = None
-    self.name_frame = None
-    self._taskbar = None
-    self._percent_label = None
-  
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
     kw_len = len(kw)
