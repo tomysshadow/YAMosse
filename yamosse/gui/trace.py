@@ -48,7 +48,7 @@ class Trace:
   @classmethod
   @staticmethod
   def __finalize(tk, variable, operation, cbname):
-    # this must be a class method so that we
+    # this must be a classmethod so that we
     # don't create a circular reference for weakref
     tk.call('trace', 'remove', 'variable',
       variable, operation, cbname)
