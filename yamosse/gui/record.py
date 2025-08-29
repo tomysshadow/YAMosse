@@ -122,28 +122,6 @@ class Record:
     
     close()
   
-  def _show_volume(self):
-    recording = self._recording
-    
-    gui.set_attrs_to_variables(self._variables, recording.options)
-    
-    self._volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
-    self._start_volume()
-  
-  def _hide_volume(self):
-    recording = self._recording
-    
-    gui.set_attrs_to_variables(self._variables, recording.options)
-    
-    self._volume_variable.set(0)
-  
-  def _start_volume(self):
-    self._volume_after = self._volume_frame.after(VOLUME_AFTER_MS, self._show_volume)
-  
-  def _stop_volume(self):
-    self._volume_frame.after_cancel(self._volume_after)
-    self._hide_volume()
-  
   def _start_recording(self):
     recording = self._recording
     
@@ -192,3 +170,25 @@ class Record:
       image=self._record_image,
       command=self._start_recording
     )
+  
+  def _show_volume(self):
+    recording = self._recording
+    
+    gui.set_attrs_to_variables(self._variables, recording.options)
+    
+    self._volume_variable.set(int(recording.volume() * VOLUME_MAXIMUM))
+    self._start_volume()
+  
+  def _hide_volume(self):
+    recording = self._recording
+    
+    gui.set_attrs_to_variables(self._variables, recording.options)
+    
+    self._volume_variable.set(0)
+  
+  def _start_volume(self):
+    self._volume_after = self._volume_frame.after(VOLUME_AFTER_MS, self._show_volume)
+  
+  def _stop_volume(self):
+    self._volume_frame.after_cancel(self._volume_after)
+    self._hide_volume()
