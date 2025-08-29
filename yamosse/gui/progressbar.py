@@ -5,6 +5,7 @@ import yamosse.progress as yamosse_progress
 import yamosse.utils as yamosse_utils
 
 from .. import gui
+from . import trace as gui_trace
 
 FUNCTION_RESET_STATES = [yamosse_progress.not_state(s) for s in yamosse_progress.STATES]
 
@@ -41,9 +42,8 @@ class Progressbar(ttk.Progressbar):
     
     self._percent_label = percent_label
     
+    self._trace = None
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
-    self._variable = None
-    self._trace_cbname = self.register(self._trace)
     self._value = 0
     
     self.variable = variable
@@ -64,16 +64,9 @@ class Progressbar(ttk.Progressbar):
     return lambda *args, **kwargs: self.function(name, args=args, kwargs=kwargs)
   
   def destroy(self):
-    # this implementation is basically copy/pasted from Tkinter's LabeledScale
-    try:
-      Progressbar._trace_remove(self, self._variable, self._trace_cbname)
-    except AttributeError:
-      pass
-    else:
-      del self._variable
-    
     super().destroy()
     
+    self._trace = None
     self.name_frame = None
     self._taskbar = None
     self._percent_label = None
@@ -101,10 +94,10 @@ class Progressbar(ttk.Progressbar):
     return super().configure(**kw)
   
   def get(self):
-    return int(self.getvar(str(self._variable)))
+    return int(self.getvar(str(self.variable)))
   
   def set(self, value):
-    self.setvar(str(self._variable), int(value))
+    self.setvar(str(self.variable), int(value))
   
   def function(self, function, args=None, kwargs=None):
     if function not in yamosse_progress.FUNCTIONS:
@@ -178,24 +171,20 @@ class Progressbar(ttk.Progressbar):
   
   @property
   def variable(self):
-    return self._variable
+    return self._trace.variable
   
   @variable.setter
   def variable(self, value):
-    # we manually call trace add/remove here
-    # juuust in case configure gets called with a string variable name
-    variable = self._variable
-    trace_cbname = self._trace_cbname
-    
-    if variable is not None:
-      Progressbar._trace_remove(self, variable, trace_cbname)
-    
     variable = value if value else tk.IntVar()
     
-    Progressbar._trace_add(self, variable, trace_cbname)
+    self._trace = gui_trace.Trace(
+      self,
+      variable,
+      'write',
+      lambda *args, **kwargs: self._show()
+    )
     
     super().configure(variable=variable)
-    self._variable = variable
     
     self._show()
   
@@ -220,10 +209,6 @@ class Progressbar(ttk.Progressbar):
   def percent_label(self, value):
     self._percent_label = value
     self._show(task=False)
-  
-  def _trace(self, *args, **kwargs):
-    # suppress the arguments and show everything
-    self._show()
   
   def _show(self, percent=True, task=True):
     # only update the value in determinate mode
@@ -277,15 +262,3 @@ class Progressbar(ttk.Progressbar):
   
   def _close_task(self):
     self._function_task(yamosse_progress.FUNCTION_RESET)
-  
-  @classmethod
-  @staticmethod
-  def _trace_add(widget, variable, cbname):
-    widget.tk.call('trace', 'add', 'variable',
-      variable, 'write', cbname)
-  
-  @classmethod
-  @staticmethod
-  def _trace_remove(widget, variable, cbname):
-    widget.tk.call('trace', 'remove', 'variable',
-      variable, 'write', cbname)
