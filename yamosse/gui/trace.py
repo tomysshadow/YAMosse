@@ -22,9 +22,9 @@ class Trace:
     destroy = weakref.finalize(self, Trace.__finalize,
       tk, variable, operation, cbname)
     
-    # this object should only ever be bound to one variable
+    # this object should only ever be bound to this one variable
     # swapping this to a different variable would defeat the point
-    # so it's internal, with a getter only
+    # so the variable is internal, with a getter only
     self._variable = variable
     self._destroy = destroy
     
