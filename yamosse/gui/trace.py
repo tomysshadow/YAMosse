@@ -21,10 +21,10 @@ class Trace:
     
     # this event fires UNDER the call to destroy() on widgets
     # as if the event was generated with when='now'
-    # that is to say, there is no a window of time
+    # that is to say, there is no window of time
     # during which destroy() has been called but the event is
     # waiting in the event loop before it can trigger
-    # that means this in effect is like monkey patching the destroy() function
+    # that means this is in effect like monkey patching the destroy() function
     # and is safe to use as a "here are extra things you should do on destroy()"
     # bindtag_window is used in case this is a window
     # it is safe, albeit slightly redundant, to use on other widgets
