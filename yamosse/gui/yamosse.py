@@ -78,8 +78,8 @@ def make_input(frame, variables, filetypes, record):
     filetypes=filetypes
   )[2][0]
   
-  record_window, record_ask_save = gui.gui(
-    gui_record.make_record,
+  record_window, record = gui.gui(
+    gui_record.Record,
     child=True,
     
     args=(
@@ -94,7 +94,9 @@ def make_input(frame, variables, filetypes, record):
     command=record_window.deiconify
   )
   
-  # may be None if recording module is unavailable
+  # this may be None if recording module is unavailable
+  record_ask_save = record.ask_save
+  
   if record_ask_save:
     record_button.pack(side=tk.LEFT)
   
