@@ -7,12 +7,14 @@ class Trace:
     # the trace should be removed if this object goes out of scope
     # or if the widget is destroyed
     # (and thus the command registered on it ceases to exist)
+    tk = widget.tk
+    cbname = widget.register(callback)
     variable = widget['variable']
     
-    self._variable = variable
+    self._tk = tk
     self._operation = operation
-    self._cbname = widget.register(callback)
-    self._tk = widget.tk
+    self._cbname = cbname
+    self._variable = variable
     
     # this event fires UNDER the call to destroy() on widgets
     # as if the event was generated with when='now'
@@ -26,30 +28,32 @@ class Trace:
     widget.bind_class(gui.bindtag_window(widget),
       '<Destroy>', lambda e: self.__del__(), add=True)
     
-    # we manually call trace add/remove here,  because
+    # we manually call trace add/remove here, because
     # in all likelihood the variable is a string variable name
-    widget.tk.call('trace', 'add', 'variable',
-      variable, self._operation, self._cbname)
+    tk.call('trace', 'add', 'variable',
+      variable, operation, cbname)
   
   def __del__(self):
+    tk = self._tk
     operation = self._operation
     cbname = self._cbname
-    tk = self._tk
     
     # in case this is called multiple times, we delete the variable
     # so that the trace will only ever be removed one time
     try:
-      tk.call('trace', 'remove', 'variable',
-        self._variable, operation, cbname)
+      variable = self._variable
     except AttributeError:
       pass
     else:
+      tk.call('trace', 'remove', 'variable',
+        variable, operation, cbname)
+      
       del self._variable
     
     # release any other references we're holding onto
+    self._tk = None
     self._operation = None
     self._cbname = None
-    self._tk = None
   
   @property
   def variable(self):
