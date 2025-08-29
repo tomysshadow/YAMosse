@@ -45,6 +45,10 @@ class Trace:
       pass
     else:
       del self._variable
+    
+    self._tk = None
+    self._operation = None
+    self._cbname = None
   
   @property
   def variable(self):
