@@ -9,10 +9,10 @@ class Trace:
     # (and thus the command registered on it ceases to exist)
     variable = widget['variable']
     
-    self._tk = widget.tk
     self._variable = variable
     self._operation = operation
     self._cbname = widget.register(callback)
+    self._tk = widget.tk
     
     # this event fires UNDER the call to destroy() on widgets
     # as if the event was generated with when='now'
@@ -32,9 +32,9 @@ class Trace:
       variable, self._operation, self._cbname)
   
   def __del__(self):
-    tk = self._tk
     operation = self._operation
     cbname = self._cbname
+    tk = self._tk
     
     # in case this is called multiple times, we delete the variable
     # so that the trace will only ever be removed one time
@@ -46,9 +46,10 @@ class Trace:
     else:
       del self._variable
     
-    self._tk = None
+    # release any other references we're holding onto
     self._operation = None
     self._cbname = None
+    self._tk = None
   
   @property
   def variable(self):
