@@ -7,15 +7,24 @@ class Trace:
     # this class is intended to ensure that widgets remove their
     # associated variable from a trace when they cease to exist
     # the trace should be removed if this object goes out of scope
+    # (so that traces can be used in a "RAII" fashion)
     # or if the widget is destroyed
     # (and thus the command registered on it ceases to exist)
     tk = widget.tk
     variable = widget['variable']
     cbname = widget.register(callback)
     
+    # this is created as a local variable
+    # so we can use it in the event bound to the widget
+    # without creating another reference to self
+    # maybe that would have zero impact, but either way
+    # it's just easier to keep track of in my head
     destroy = weakref.finalize(self, Trace.__finalize,
       tk, variable, operation, cbname)
     
+    # this object should only ever be bound to one variable
+    # swapping this to a different variable would defeat the point
+    # so it's internal, with a getter only
     self._variable = variable
     self._destroy = destroy
     
@@ -39,6 +48,8 @@ class Trace:
   @classmethod
   @staticmethod
   def __finalize(tk, variable, operation, cbname):
+    # this must be a class method so that we
+    # don't create a circular reference for weakref
     tk.call('trace', 'remove', 'variable',
       variable, operation, cbname)
   
