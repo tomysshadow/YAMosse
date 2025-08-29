@@ -279,11 +279,13 @@ class Progressbar(ttk.Progressbar):
     self._function_task(yamosse_progress.FUNCTION_RESET)
   
   @classmethod
-  def _trace_add(cls, widget, variable, cbname):
+  @staticmethod
+  def _trace_add(widget, variable, cbname):
     widget.tk.call('trace', 'add', 'variable',
       variable, 'write', cbname)
   
   @classmethod
-  def _trace_remove(cls, widget, variable, cbname):
+  @staticmethod
+  def _trace_remove(widget, variable, cbname):
     widget.tk.call('trace', 'remove', 'variable',
       variable, 'write', cbname)
