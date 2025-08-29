@@ -171,6 +171,13 @@ class Record:
       command=self._start_recording
     )
   
+  def _start_volume(self):
+    self._volume_after = self._volume_frame.after(VOLUME_AFTER_MS, self._show_volume)
+  
+  def _stop_volume(self):
+    self._volume_frame.after_cancel(self._volume_after)
+    self._hide_volume()
+  
   def _show_volume(self):
     recording = self._recording
     
@@ -185,10 +192,3 @@ class Record:
     gui.set_attrs_to_variables(self._variables, recording.options)
     
     self._volume_variable.set(0)
-  
-  def _start_volume(self):
-    self._volume_after = self._volume_frame.after(VOLUME_AFTER_MS, self._show_volume)
-  
-  def _stop_volume(self):
-    self._volume_frame.after_cancel(self._volume_after)
-    self._hide_volume()
