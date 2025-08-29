@@ -44,7 +44,7 @@ def output(file_name, *args, **kwargs):
     def __enter__(self):
       return self
     
-    def __exit__(self, exc, val, tb):
+    def __exit__(self, *args, **kwargs):
       self.close()
     
     def close(self):

@@ -1,3 +1,5 @@
+import weakref
+
 from .. import gui
 
 class Trace:
@@ -8,13 +10,14 @@ class Trace:
     # or if the widget is destroyed
     # (and thus the command registered on it ceases to exist)
     tk = widget.tk
-    cbname = widget.register(callback)
     variable = widget['variable']
+    cbname = widget.register(callback)
     
-    self._tk = tk
-    self._operation = operation
-    self._cbname = cbname
+    destroy = weakref.finalize(self, Trace.__finalize,
+      tk, variable, operation, cbname)
+    
     self._variable = variable
+    self._destroy = destroy
     
     # this event fires UNDER the call to destroy() on widgets
     # as if the event was generated with when='now'
@@ -26,35 +29,29 @@ class Trace:
     # bindtag_window is used in case this is a window
     # it is safe, albeit slightly redundant, to use on other widgets
     widget.bind_class(gui.bindtag_window(widget),
-      '<Destroy>', lambda e: self.__del__(), add=True)
+      '<Destroy>', lambda e: destroy(), add=True)
     
     # we manually call trace add/remove here, because
     # in all likelihood the variable is a string variable name
     tk.call('trace', 'add', 'variable',
       variable, operation, cbname)
   
-  def __del__(self):
-    tk = self._tk
-    operation = self._operation
-    cbname = self._cbname
-    
-    # in case this is called multiple times, we delete the variable
-    # so that the trace will only ever be removed one time
-    try:
-      variable = self._variable
-    except AttributeError:
-      pass
-    else:
-      tk.call('trace', 'remove', 'variable',
-        variable, operation, cbname)
-      
-      del self._variable
-    
-    # release any other references we're holding onto
-    self._tk = None
-    self._operation = None
-    self._cbname = None
+  @classmethod
+  @staticmethod
+  def __finalize(tk, variable, operation, cbname):
+    tk.call('trace', 'remove', 'variable',
+      variable, operation, cbname)
   
   @property
   def variable(self):
     return self._variable
+  
+  @property
+  def destroy(self):
+    return self._destroy
+  
+  def __enter__(self):
+    return self
+  
+  def __exit__(self, *args, **kwargs):
+    self.destroy()
