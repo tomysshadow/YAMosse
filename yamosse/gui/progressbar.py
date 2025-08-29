@@ -175,16 +175,13 @@ class Progressbar(ttk.Progressbar):
   
   @variable.setter
   def variable(self, value):
-    variable = value if value else tk.IntVar()
+    super().configure(variable=value if value else tk.IntVar())
     
     self._trace = gui_trace.Trace(
       self,
-      variable,
       'write',
       lambda *args, **kwargs: self._show()
     )
-    
-    super().configure(variable=variable)
     
     self._show()
   
