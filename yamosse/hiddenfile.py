@@ -35,27 +35,28 @@ class _HiddenFileWrapper:
     tmp.close(*args, **kwargs)
     save = self.save
     
-    if save:
-      try:
-        os.replace(tmp.name, save)
-      except TypeError:
-        # save is allowed to be True
-        # in which case, we generate a new visible name to use
-        # we can't just strip the tilde (~) off the current name
-        # because then it wouldn't be guaranteed unique anymore
-        with NamedTemporaryFile(
-          *self._args,
-          delete=False,
-          prefix=self._prefix,
-          **self._kwargs
-        ) as visible:
-          save = visible.name
-        
-        os.replace(tmp.name, save)
-      
-      self.name = save
-    else:
+    if not save:
       os.unlink(tmp.name)
+      return
+    
+    try:
+      os.replace(tmp.name, save)
+    except TypeError:
+      # save is allowed to be True
+      # in which case, we generate a new visible name to use
+      # we can't just strip the tilde (~) off the current name
+      # because then it wouldn't be guaranteed unique anymore
+      with NamedTemporaryFile(
+        *self._args,
+        delete=False,
+        prefix=self._prefix,
+        **self._kwargs
+      ) as visible:
+        save = visible.name
+      
+      os.replace(tmp.name, save)
+    
+    self.name = save
   
   def _hide(self, hidden):
     if self._system == 'Windows':

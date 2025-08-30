@@ -1,5 +1,4 @@
 import os
-from tempfile import NamedTemporaryFile
 from shlex import quote
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Value, Pipe, Event
@@ -106,16 +105,18 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
   
   root, ext = os.path.splitext(os.path.join(os.path.realpath(os.curdir), path))
   
-  with yamosse_hiddenfile.HiddenFile(
+  hidden = yamosse_hiddenfile.HiddenFile(
     mode='wb',
     prefix=''.join((root, '_')), suffix=ext, dir=''
-  ) as hidden:
-    yamosse_download.download(url, hidden)
-    
-    hidden.save = True
-    
-    weights = hidden.name
-    assert weights, 'weights must not be empty'
+  )
+  
+  yamosse_download.download(url, hidden)
+  
+  hidden.save = True
+  hidden.close()
+  
+  weights = hidden.name
+  assert weights, 'weights must not be empty'
   
   # open the resulting visible file
   file = open(weights, 'rb')
