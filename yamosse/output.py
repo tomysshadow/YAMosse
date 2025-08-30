@@ -38,8 +38,8 @@ def output(file_name, *args, **kwargs):
       self.identification = identification
       
       self._exit = exit_
-      
-      self.file = open(file_name, 'w', encoding=encoding)
+      self._file_truncated = False
+      self._file = open(file_name, 'r+', encoding=encoding)
     
     def __enter__(self):
       return self
@@ -48,7 +48,7 @@ def output(file_name, *args, **kwargs):
       self.close()
     
     def close(self):
-      self.file.close()
+      self._file.close()
       
       subsystem = self.subsystem
       
@@ -70,7 +70,7 @@ def output(file_name, *args, **kwargs):
       
       # this will take any escape characters like \n or \t and make them real characters
       item_delimiter = yamosse_utils.latin1_unescape(options.item_delimiter).encode(
-        self.file.encoding, 'backslashreplace').decode()
+        self._file.encoding, 'backslashreplace').decode()
       
       self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
       self.indent = DEFAULT_INDENT * options.indent
@@ -111,6 +111,14 @@ def output(file_name, *args, **kwargs):
     @abstractmethod
     def errors(self, errors):
       return errors
+    
+    @property
+    def file(self):
+      if not self._file_truncated:
+        self._file.truncate()
+        self._file_truncated = True
+      
+      return self._file
   
   class OutputText(Output):
     def __init__(self, *args, encoding='ascii', **kwargs):
@@ -127,7 +135,7 @@ def output(file_name, *args, **kwargs):
       
       file = self.file
       
-      self.print_section('Options')
+      OutputText.print_section(file, 'Options')
       options.print(file=file)
       
       print('', file=file)
@@ -145,7 +153,7 @@ def output(file_name, *args, **kwargs):
       file = self.file
       
       # print results
-      self.print_section('Results')
+      OutputText.print_section(file, 'Results')
       self.identification.print_results_to_output(results, self)
       
       print('', file=file)
@@ -164,12 +172,12 @@ def output(file_name, *args, **kwargs):
       indent = self.indent
       
       # print errors
-      self.print_section('Errors')
+      OutputText.print_section(file, 'Errors')
       
       # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
-        self.print_file(file_name)
+        OutputText.print_file(file, file_name)
         print(indent, yamosse_utils.ascii_backslashreplace(quote(str(ex))), sep='', file=file)
         print('', file=file)
       
