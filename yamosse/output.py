@@ -185,8 +185,9 @@ def output(file_name, *args, **kwargs):
       return errors
     
     def print_section(self, name):
-      # name should not contain lines
-      # this is an internal method so we trust the class not to pass in a name with lines here
+      # TODO: carraige return
+      if '\n' in name: raise ValueError('name must not contain newlines')
+      
       print('#', name, end='\n\n', file=self.file)
     
     def print_file(self, name):
