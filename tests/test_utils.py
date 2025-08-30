@@ -2,6 +2,7 @@ import unittest
 
 import yamosse.utils as utils
 
+
 class TestUtils(unittest.TestCase):
   def test_try_int_integer(self):
     self.assertIsInstance(utils.try_int('10'), int)
@@ -185,5 +186,6 @@ class TestUtils(unittest.TestCase):
     
     self.assertEqual(args, ())
     self.assertEqual(kwargs, {})
+
 
 if __name__ == '__main__': unittest.main()

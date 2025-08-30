@@ -6,6 +6,7 @@ import yamosse.options as options
 
 import numpy as np
 
+
 class TestOptions(unittest.TestCase):
   def test_print_ascii(self):
     with tempfile.NamedTemporaryFile(
@@ -79,5 +80,6 @@ class TestOptions(unittest.TestCase):
       return
     
     raise Exception('worker should be single shot')
+
 
 if __name__ == '__main__': unittest.main()

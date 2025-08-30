@@ -87,6 +87,7 @@ TOP_RANKED_SPAN_ALL = {
   }
 }
 
+
 class TestOutput(ABC):
   def setUp(self, suffix):
     file = tempfile.NamedTemporaryFile(
@@ -129,6 +130,7 @@ class TestOutput(ABC):
   
   def _file(self):
     return open(self.file.name, 'r')
+
 
 class TestOutputText(TestOutput, unittest.TestCase):
   def setUp(self):
@@ -359,6 +361,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
       for i in range(11): f.readline()
       
       self.assertEqual(f.readline(), '# Errors\n')
+
 
 class TestOutputJSON(TestOutput, unittest.TestCase):
   def setUp(self):
@@ -998,5 +1001,6 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
       
       self.assertIn('results', d)
       self.assertIn('errors', d)
+
 
 if __name__ == '__main__': unittest.main()
