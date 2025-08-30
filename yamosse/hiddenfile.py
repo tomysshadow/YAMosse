@@ -28,19 +28,24 @@ class _HiddenFileWrapper:
     self.visible_name = os.path.join(head, tail.removeprefix(HIDDEN))
   
   def close(self, *args, **kwargs):
+    tmp = self.tmp
+    
     self._hide(False)
-    self.tmp.close(*args, **kwargs)
+    tmp.close(*args, **kwargs)
     save_name = self.save_name
     
     if save_name:
-      os.replace(self.tmp.name, save_name)
+      os.replace(tmp.name, save_name)
       self.name = save_name
     else:
-      os.unlink(self.tmp.name)
+      os.unlink(tmp.name)
   
   def _hide(self, hidden):
     if self._system == 'Windows':
-      subprocess.run(('attrib', '+h' if hidden else '-h', self.tmp.name), check=True)
+      subprocess.run(
+        ('attrib', '+h' if hidden else '-h', self.tmp.name),
+        check=True
+      )
 
 
 class HiddenFile:
