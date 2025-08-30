@@ -306,7 +306,7 @@ def _files(input_, exit_, model_yamnet_class_names, subsystem, options):
   return results, errors
 
 
-def _report_thread_exception(subsystem, exc, val, tb):
+def _report_thread_exception(exit_, subsystem, exc, val, tb):
   try:
     subsystem.show(exit_, values={
       'progressbar': {'state': {'args': ((yamosse_progress.STATE_ERROR,),)}},
@@ -355,7 +355,7 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
       output.results(results)
       output.errors(errors)
   except yamosse_subsystem.SubsystemExit: pass
-  except: _report_thread_exception(subsystem, *exc_info())
+  except: _report_thread_exception(exit_, subsystem, *exc_info())
   finally:
     try:
       subsystem.show(exit_, values={

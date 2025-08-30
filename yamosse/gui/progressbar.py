@@ -43,6 +43,7 @@ class Progressbar(ttk.Progressbar):
     self._percent_label = percent_label
     
     self._trace = None
+    self._variable = None
     self._state_type = yamosse_progress.types[yamosse_progress.STATE_NORMAL]
     self._value = 0
     
@@ -167,7 +168,13 @@ class Progressbar(ttk.Progressbar):
   
   @variable.setter
   def variable(self, value):
-    super().configure(variable=value if value else tk.IntVar())
+    # this is just to ensure the variable is kept alive by the progressbar
+    # the self._variable property is otherwise unused
+    if not value:
+      value = tk.IntVar()
+      self._variable = value
+    
+    super().configure(variable=value)
     
     self._trace = gui_trace.Trace(
       self,

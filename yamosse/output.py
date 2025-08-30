@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from time import time
-from os.path import splitext
+import os.path
 from shlex import quote
 import json
 
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
+import yamosse.hiddenfile as yamosse_hiddenfile
 
 NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
@@ -19,6 +20,8 @@ def output(file_name, *args, **kwargs):
   class Output(ABC):
     def __init__(self, file_name, exit_, model_yamnet_class_names, identification,
       subsystem=None, encoding='utf8'):
+      PREFIX = 'YAM' # must be three characters or less to reliably stay under MAX_PATH
+      
       if subsystem:
         self._seconds = time()
       
@@ -37,18 +40,27 @@ def output(file_name, *args, **kwargs):
       self.model_yamnet_class_names = model_yamnet_class_names
       self.identification = identification
       
+      self._save_name = file_name
       self._exit = exit_
       
-      self.file = open(file_name, 'w', encoding=encoding)
+      self.file = yamosse_hiddenfile.HiddenFile('w',
+        dir=os.path.dirname(file_name), prefix=PREFIX, encoding=encoding)
     
     def __enter__(self):
       return self
     
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, exc, val, tb):
+      # don't save if an exception occurred
+      if tb is not None:
+        self._save_name = None
+      
       self.close()
     
     def close(self):
-      self.file.close()
+      file = self.file
+      
+      file.save_name = self._save_name
+      file.close()
       
       subsystem = self.subsystem
       
@@ -213,7 +225,7 @@ def output(file_name, *args, **kwargs):
     def errors(self, errors):
       return self._d.setdefault('errors', super().errors(errors))
   
-  ext = splitext(file_name)[1]
+  ext = os.path.splitext(file_name)[1]
   
   if ext.casefold() == EXT_JSON:
     return OutputJSON(file_name, *args, **kwargs)

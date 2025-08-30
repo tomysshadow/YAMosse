@@ -121,7 +121,9 @@ def show_yamscan(widgets, values=None):
       open_output_file_button, done_button = footer_widgets
       
       ok = value == 'OK'
-      gui.enable_widget(open_output_file_button, enabled=ok)
+      
+      if ok and not progressbar.instate((yamosse_progress.STATE_ERROR,)):
+        gui.enable_widget(open_output_file_button, enabled=ok)
       
       gui.disable_traversal_button(done_button)
       
