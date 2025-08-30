@@ -164,15 +164,12 @@ class Progressbar(ttk.Progressbar):
   
   @property
   def variable(self):
-    return self._trace.variable
+    return self._variable
   
   @variable.setter
   def variable(self, value):
-    # this is just to ensure the variable is kept alive by the progressbar
-    # the self._variable property is otherwise unused
     if not value:
       value = tk.IntVar()
-      self._variable = value
     
     super().configure(variable=value)
     
@@ -182,6 +179,9 @@ class Progressbar(ttk.Progressbar):
       lambda *args, **kwargs: self._show()
     )
     
+    # even though we can get the variable from the trace
+    # doing it this way ensures that the variable stays alive with the widget
+    self._variable = value
     self._show()
   
   @property
