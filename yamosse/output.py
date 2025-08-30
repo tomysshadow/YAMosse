@@ -44,7 +44,7 @@ def output(file_name, *args, **kwargs):
       self._exit = exit_
       
       self.file = yamosse_hiddenfile.HiddenFile('w',
-        dir=os.path.dirname(file_name), prefix=PREFIX, encoding=encoding)
+        prefix=PREFIX, dir=os.path.dirname(file_name), encoding=encoding)
     
     def __enter__(self):
       return self
