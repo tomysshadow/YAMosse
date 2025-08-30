@@ -135,7 +135,7 @@ def output(file_name, *args, **kwargs):
       
       file = self.file
       
-      OutputText.print_section(file, 'Options')
+      self.print_section(file, 'Options')
       options.print(file=file)
       
       print('', file=file)
@@ -153,7 +153,7 @@ def output(file_name, *args, **kwargs):
       file = self.file
       
       # print results
-      OutputText.print_section(file, 'Results')
+      self.print_section(file, 'Results')
       self.identification.print_results_to_output(results, self)
       
       print('', file=file)
@@ -172,12 +172,12 @@ def output(file_name, *args, **kwargs):
       indent = self.indent
       
       # print errors
-      OutputText.print_section(file, 'Errors')
+      self.print_section(file, 'Errors')
       
       # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
-        OutputText.print_file(file, file_name)
+        self.print_file(file, file_name)
         print(indent, yamosse_utils.ascii_backslashreplace(quote(str(ex))), sep='', file=file)
         print('', file=file)
       
