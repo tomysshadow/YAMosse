@@ -67,10 +67,9 @@ def make_footer(frame, log_text, open_output_file, done):
   copy_to_clipboard_button.grid(row=0, column=0, sticky=tk.W)
   
   open_output_file_button = ttk.Button(frame, text='Open Output File', underline=1,
-    command=open_output_file)
+    command=open_output_file, state=tk.DISABLED)
   
   open_output_file_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
-  gui.state_widget(open_output_file_button, state=tk.DISABLED)
   
   done_button = ttk.Button(frame, text='Cancel', underline=0,
     command=done, default=tk.ACTIVE)
@@ -123,10 +122,7 @@ def show_yamscan(widgets, values=None):
       ok = value == 'OK'
       
       if ok and not progressbar.instate((yamosse_progress.STATE_ERROR,)):
-        gui.state_widget(
-          open_output_file_button,
-          state=tk.NORMAL if ok else tk.DISABLED
-        )
+        open_output_file_button['state'] = tk.NORMAL if ok else tk.DISABLED
       
       gui.disable_traversal_button(done_button)
       

@@ -372,7 +372,11 @@ def make_timespan(frame, variables):
   
   def show_spinbox_frame():
     normal = not timespan_span_all_variable.get()
-    gui.state_widget(spinbox_frame, state=tk.NORMAL if normal else tk.DISABLED)
+    
+    gui.state_children_widget(
+      spinbox_frame,
+      state=tk.NORMAL if normal else tk.DISABLED
+    )
   
   show_spinbox_frame()
   
