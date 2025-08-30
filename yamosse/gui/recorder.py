@@ -11,16 +11,15 @@ except ImportError:
 from .. import gui
 from . import progressbar as gui_progressbar
 
-TITLE = 'Record'
+TITLE = 'Recorder'
 RESIZABLE = False
 
 ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 
 VOLUME_MAXIMUM = 100
-VOLUME_AFTER_MS = int(yamosse_recording.BLOCKSIZE_SECONDS * 1000)
 
 
-class Record:
+class Recorder:
   def __init__(self, frame, variables, record):
     window = frame.master
     window.withdraw()
@@ -113,18 +112,20 @@ class Record:
     self._volume_frame = volume_frame
     self._volume_variable = volume_variable
     self._volume_after = None
+    self._volume_after_ms = int(yamosse_recording.BLOCKSIZE_SECONDS * 1000)
   
   def ask_save(self, close):
-    recording = self._recording
-    
-    if recording:
-      save = messagebox.askyesnocancel(parent=self._window,
-        title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
+    if yamosse_recording:
+      recording = self._recording
       
-      if save is None:
-        return
-      
-      recording.save = save
+      if recording:
+        save = messagebox.askyesnocancel(parent=self._window,
+          title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
+        
+        if save is None:
+          return
+        
+        recording.save = save
     
     close()
   
@@ -178,7 +179,7 @@ class Record:
     )
   
   def _start_volume(self):
-    self._volume_after = self._volume_frame.after(VOLUME_AFTER_MS, self._show_volume)
+    self._volume_after = self._volume_frame.after(self._volume_after_ms, self._show_volume)
   
   def _stop_volume(self):
     self._volume_frame.after_cancel(self._volume_after)

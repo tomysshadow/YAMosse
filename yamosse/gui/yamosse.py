@@ -7,7 +7,7 @@ import yamosse.utils as yamosse_utils
 import yamosse.output as yamosse_output
 
 from .. import gui
-from . import record as gui_record
+from . import recorder as gui_recorder
 from . import sorted as gui_sorted
 from . import calibrate as gui_calibrate
 
@@ -78,8 +78,8 @@ def make_input(frame, variables, filetypes, record):
     filetypes=filetypes
   )[2][0]
   
-  record_window, record = gui.gui(
-    gui_record.Record,
+  recorder_window, recorder = gui.gui(
+    gui_recorder.Recorder,
     child=True,
     
     args=(
@@ -88,27 +88,25 @@ def make_input(frame, variables, filetypes, record):
     )
   )
   
-  record_button = ttk.Button(
+  recorder_button = ttk.Button(
     buttons_frame,
-    text='Record...',
-    command=record_window.deiconify
+    text='Recorder...',
+    command=recorder_window.deiconify
   )
   
   # this may be None if recording module is unavailable
-  record_ask_save = record.ask_save
-  
-  if record_ask_save:
-    record_button.pack(side=tk.LEFT)
+  if gui_recorder.yamosse_recording:
+    recorder_button.pack(side=tk.LEFT)
   
   recursive_checkbutton = ttk.Checkbutton(buttons_frame,
     text='Recursive', variable=variables['input_recursive'])
   
   recursive_checkbutton.pack(side=tk.RIGHT)
   
-  for widget in (recursive_checkbutton, record_button):
+  for widget in (recursive_checkbutton, recorder_button):
     widget.lower() # fix tab order
   
-  return record_ask_save
+  return recorder.ask_save
 
 
 def make_classes(frame, variables, class_names):
@@ -322,7 +320,7 @@ def make_general(frame, variables,
     padding=gui.PADDING_HNSEW)
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
-  record_ask_save = make_input(input_labelframe, variables, input_filetypes, record)
+  recorder_ask_save = make_input(input_labelframe, variables, input_filetypes, record)
   
   classes_labelframe = ttk.Labelframe(frame, text='Classes',
     padding=gui.PADDING_HNSEW)
@@ -346,7 +344,7 @@ def make_general(frame, variables,
   
   presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_HW)
   make_presets(presets_labelframe, import_preset, export_preset)
-  return record_ask_save
+  return recorder_ask_save
 
 
 def make_timespan(frame, variables):
@@ -668,7 +666,7 @@ def make_options(notebook, variables,
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
-  record_ask_save = make_general(general_frame, variables,
+  recorder_ask_save = make_general(general_frame, variables,
     input_filetypes, record, class_names,
     import_preset, export_preset)
   
@@ -681,7 +679,7 @@ def make_options(notebook, variables,
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
   
   notebook.enable_traversal()
-  return record_ask_save
+  return recorder_ask_save
 
 
 def make_footer(frame, yamscan, restore_defaults):
@@ -727,7 +725,7 @@ def make_yamosse(frame, title, options_variables,
   
   options_notebook = ttk.Notebook(frame)
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
-  record_ask_save = make_options(options_notebook, options_variables,
+  recorder_ask_save = make_options(options_notebook, options_variables,
     input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
     import_preset, export_preset)
   
@@ -735,7 +733,5 @@ def make_yamosse(frame, title, options_variables,
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
   make_footer(footer_frame, yamscan, restore_defaults)
   
-  if record_ask_save:
-    window.protocol('WM_DELETE_WINDOW', lambda: record_ask_save(window.destroy))
-  
-  return record_ask_save
+  window.protocol('WM_DELETE_WINDOW', lambda: recorder_ask_save(window.destroy))
+  return recorder_ask_save
