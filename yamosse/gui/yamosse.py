@@ -371,7 +371,8 @@ def make_timespan(frame, variables):
   timespan_span_all_variable = variables['timespan_span_all']
   
   def show_spinbox_frame():
-    gui.enable_widget(spinbox_frame, enabled=not timespan_span_all_variable.get())
+    normal = not timespan_span_all_variable.get()
+    gui.state_widget(spinbox_frame, state=tk.NORMAL if normal else tk.DISABLED)
   
   show_spinbox_frame()
   
@@ -423,7 +424,7 @@ def make_sort(frame, variables):
   sort_by_frame = ttk.Frame(frame)
   sort_by_frame.grid(row=0, column=0, sticky=tk.EW)
   gui.make_combobox(sort_by_frame, name='Sort By', textvariable=variables['sort_by'],
-    values=('Number of Sounds', 'File Name'), state=('readonly',))
+    values=('Number of Sounds', 'File Name'), state='readonly')
   
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
@@ -622,7 +623,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     parent=frame.winfo_toplevel(), filetypes=weights_filetypes)[1]
   
   if tfhub_enabled:
-    gui.enable_widget(weights_labelframe, enabled=False)
+    gui.state_widget(weights_labelframe, state=tk.DISABLED)
     weights_entry['cursor'] = ''
   
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)

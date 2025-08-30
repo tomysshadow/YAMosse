@@ -137,14 +137,14 @@ def _init_report_callback_exception():
 tk.Tk.report_callback_exception = _init_report_callback_exception()
 
 
-def enable_widget(widget, enabled=True):
+def state_widget(widget, state=tk.NORMAL):
   try:
-    widget['state'] = tk.NORMAL if enabled else tk.DISABLED
+    widget['state'] = state
   except tk.TclError:
     pass
   
   for child_widget in widget.winfo_children():
-    enable_widget(child_widget, enabled=enabled)
+    state_widget(child_widget, state=state)
 
 
 def after_invalidcommand_widget(widget, validate):
@@ -375,8 +375,8 @@ def link_radiobuttons(radiobuttons, variable):
     for w, widget in enumerate(radiobuttons.values()):
       if not widget: continue
       
-      enabled = w == variable.get()
-      enable_widget(widget, enabled=enabled)
+      normal = w == variable.get()
+      state_widget(widget, state=tk.NORMAL if normal else tk.DISABLED)
   
   for r, radiobutton in enumerate(radiobuttons.keys()):
     radiobutton.configure(value=r, variable=variable, command=show)
