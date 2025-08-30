@@ -59,6 +59,9 @@ class HiddenFile:
   def __exit__(self, *args, **kwargs):
     self.__closer()
   
+  def close(self, *args, **kwargs):
+    self.__closer(*args, **kwargs)
+  
   @property
   def name(self):
     name = self.__wrapper.name
