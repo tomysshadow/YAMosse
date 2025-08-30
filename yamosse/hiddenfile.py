@@ -25,8 +25,6 @@ class _HiddenFileWrapper:
     self.tmp = tmp
     self.save = False
     self._hide(True)
-    
-    self.name = None
   
   def close(self, *args, **kwargs):
     tmp = self.tmp
@@ -37,6 +35,7 @@ class _HiddenFileWrapper:
     
     if not save:
       os.unlink(tmp.name)
+      self.name = None
       return
     
     try:
@@ -87,12 +86,10 @@ class HiddenFile:
   
   @property
   def name(self):
-    name = self.__wrapper.name
-    
-    if name:
-      return name
-    
-    return self.__wrapper.tmp.name
+    try:
+      return self.__wrapper.name
+    except AttributeError:
+      return self.__wrapper.tmp.name
   
   @property
   def save(self):

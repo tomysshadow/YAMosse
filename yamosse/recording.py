@@ -51,7 +51,6 @@ class Recording:
       volume_str = VOLUME_SPEC.format(volume=volume)
       volume_backspaces = '\b' * len(volume_str)
       
-      name = None
       indatas = Queue()
       
       # try and ensure the directory exists
@@ -120,7 +119,12 @@ class Recording:
       hidden.save = self.save
       hidden.close()
       
-      input_ = quote(hidden.name)
+      input_ = hidden.name
+      
+      if not input_:
+        return
+      
+      input_ = quote(input_)
       print('\nRecording finished:', input_, end='\n\n')
       
       # a previous iteration of this appended the name instead of replacing it
