@@ -36,7 +36,13 @@ class _HiddenFileWrapper:
     save = self.save
     
     if save:
-      if not isinstance(save, str):
+      try:
+        os.replace(tmp.name, save)
+      except TypeError:
+        # save is allowed to be True
+        # in which case, we generate a new visible name to use
+        # we can't just strip the tilde (~) off the current name
+        # because then it wouldn't be guaranteed unique anymore
         with NamedTemporaryFile(
           *self._args,
           delete=False,
@@ -44,8 +50,9 @@ class _HiddenFileWrapper:
           **self._kwargs
         ) as visible:
           save = visible.name
+        
+        os.replace(tmp.name, save)
       
-      os.replace(tmp.name, save)
       self.name = save
     else:
       os.unlink(tmp.name)
