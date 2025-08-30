@@ -216,3 +216,24 @@ YAMosse uses the [YAMNet](https://github.com/tensorflow/models/tree/master/resea
 Application Icons by [www.aha-soft.com.](https://www.aha-soft.com)
 
 Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) by Google.
+
+# Changes
+
+## Version 1.1.0
+
+ - The preset files are now on version 2 and include an input device for recording. If the input device in the preset is not recognized, the default input device is used.
+ - The JSON format has changed slightly:
+   - The results are output as an array instead of an object so that the Sort By setting will have an impact on the order, since the order of keys in objects is not necessarily preserved when reading JSON.
+   - The timestamps are not output as integers or arrays of integers instead of strings in the HH:MM:SS or HH:MM:SS - HH:MM:SS formats respectively.
+ - A new optional recording feature has been added.
+ - A Find box has been added for the Classes list, and the Calibration window mirrors the contents of said list.
+ - A Master slider has been added to the Calibration window that scales every other slider proportionally, and double clicking on it recentres it without affecting the other scales.
+ - Drag and drop is fixed on Mac.
+ - The progress bar will turn red if an error occurs (in Python 3.13.)
+ - A blank output file is no longer left behind if a YAMScan is cancelled or fails with an error.
+ - Fixed a bug where a cancelled YAMScan could come "back to life" after starting a new one.
+ - Fixed a bug where the application could hang if it was closed immediately after cancelling a YAMScan.
+ 
+ # Version 1.0.0
+ 
+  - Initial public release.
