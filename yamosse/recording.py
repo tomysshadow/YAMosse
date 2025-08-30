@@ -2,12 +2,12 @@ from os import mkdir, unlink
 from shlex import quote
 from threading import Lock, Event
 from queue import Queue
-from tempfile import NamedTemporaryFile
 
 import soundfile as sf
 import sounddevice as sd
 
 import yamosse.worker as yamosse_worker
+import yamosse.hiddenfile as yamosse_hiddenfile
 
 PREFIX = 'Recording_'
 SUFFIX = '.wav'
@@ -51,7 +51,7 @@ class Recording:
       volume_str = VOLUME_SPEC.format(volume=volume)
       volume_backspaces = '\b' * len(volume_str)
       
-      save = True
+      name = None
       indatas = Queue()
       
       # try and ensure the directory exists
@@ -61,83 +61,73 @@ class Recording:
         pass
       
       # Make sure the file is opened before recording anything:
-      tmp = NamedTemporaryFile(
-        delete=False, mode='wb',
-        prefix=PREFIX, suffix=SUFFIX, dir=DIR
-      )
-      
-      try:
-        with (
-          sf.SoundFile(
-            tmp, mode='x',
-            samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO
-          ) as f,
+      with (
+        yamosse_hiddenfile.HiddenFile(
+          mode='wb',
+          prefix=PREFIX, suffix=SUFFIX, dir=DIR
+        ) as hidden,
+        
+        sf.SoundFile(
+          hidden, mode='x',
+          samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO
+        ) as f,
+        
+        sd.InputStream(
+          device=device,
+          samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
+          blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
+          callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
+        )
+      ):
+        try:
+          print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
+          print('Volume:', volume_str, end='', flush=True)
           
-          sd.InputStream(
-            device=device,
-            samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
-            blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
-            callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
-          )
-        ):
-          try:
-            print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
-            print('Volume:', volume_str, end='', flush=True)
+          stop = self._stop
+          indata = None
+          
+          while not stop.is_set():
+            self._volume = volume
             
-            stop = self._stop
-            indata = None
+            print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
+              sep='', end='', flush=True)
             
-            while not stop.is_set():
-              self._volume = volume
+            queued = True
+            
+            while queued:
+              # this is done first so we block
+              indata = indatas.get()
+              f.write(indata)
               
-              print(volume_backspaces, VOLUME_SPEC.format(volume=volume),
-                sep='', end='', flush=True)
-              
-              queued = True
-              
-              while queued:
-                # this is done first so we block
-                indata = indatas.get()
-                f.write(indata)
-                
-                # ensure we get all input data if there are multiple queued things piled up
-                queued = not indatas.empty()
-              
-              # only after we've definitely written something, set the new volume
-              volume = float(options.volume_loglinear(np, np.abs(indata).max()))
-          except KeyboardInterrupt:
-            pass
-      except:
-        # this must be a distinct variable to self.save because
-        # otherwise it might get set back to true by some other thread
-        # before it is used
-        save = False
-        raise
-      finally:
-        tmp.close()
-        
-        # delete the file if the user opted not to save it
-        # or an exception occurred
-        save &= self.save
-        if not save: unlink(tmp.name)
-        
-        # this is in the finally block so that
-        # there will always be a newline after the volume
-        # even in the exception case
-        print(volume_backspaces, volume_str, sep='', flush=True)
+              # ensure we get all input data if there are multiple queued things piled up
+              queued = not indatas.empty()
+            
+            # only after we've definitely written something, set the new volume
+            volume = float(options.volume_loglinear(np, np.abs(indata).max()))
+        except KeyboardInterrupt:
+          pass
+        else:
+          # we shouldn't save if an exception occured
+          # if we were successful, we save if self.save is True
+          # (meaning user hit Yes to ask save box)
+          if not self.save: return
+          
+          name = hidden.visible_name
+          hidden.save_name = name
+        finally:
+          # this is in the finally block so that
+          # there will always be a newline after the volume
+          # even in the exception case
+          print(volume_backspaces, volume_str, sep='', flush=True)
       
-      # this can't happen in the finally block
-      # because it might silence an exception
-      if not save: return
-      
-      name = quote(tmp.name)
-      print('\nRecording finished:', name, end='\n\n')
+      input_ = quote(name)
+      print('\nRecording finished:', input_, end='\n\n')
       
       # a previous iteration of this appended the name instead of replacing it
       # but it was broken because the input field can contain folder names
       # in which case, there is only supposed to be one
       # so now we just replace it
-      options.input = name
+      options.input = input_
   
   def volume(self):
     return self._volume
