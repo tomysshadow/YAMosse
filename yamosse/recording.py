@@ -43,7 +43,11 @@ class Recording:
       try:
         device = input_devices[input_device]
       except KeyError:
-        device = input_devices[input_device := input_default_name]
+        try:
+          device = input_devices[input_device := input_default_name]
+        except KeyError:
+          print('Recording aborted: there are no input devices.')
+          return
         
         options.input_device = input_device
       
@@ -122,6 +126,7 @@ class Recording:
       input_ = hidden.name
       
       if not input_:
+        print('\nRecording aborted.')
         return
       
       input_ = quote(input_)
@@ -150,7 +155,12 @@ class Recording:
     names = ['%s%s - %s' % ('> ' if d['index'] == input_default else '', d['name'],
       hostapis[d['hostapi']]['name']) for d in devices]
     
+    try:
+      input_default_name = names[input_default]
+    except KeyError:
+      input_default_name = ''
+    
     return (
       {names[index := d['index']]: index for d in devices if d['max_input_channels']},
-      names[input_default]
+      input_default_name
     )

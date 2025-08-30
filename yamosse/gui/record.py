@@ -90,6 +90,12 @@ class Record:
       lambda: self.ask_save(window.withdraw)
     )
     
+    # don't allow recording if there are no input devices
+    gui.enable_widget(
+      frame,
+      enabled=str(input_device_variable.get()) in input_devices
+    )
+    
     self._window = window
     self._recording_button = recording_button
     self._input_devices_combobox = input_devices_combobox
