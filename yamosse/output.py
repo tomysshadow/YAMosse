@@ -40,7 +40,7 @@ def output(file_name, *args, **kwargs):
       self.model_yamnet_class_names = model_yamnet_class_names
       self.identification = identification
       
-      self._save_name = file_name
+      self._save = file_name
       self._exit = exit_
       
       self.file = yamosse_hiddenfile.HiddenFile('w',
@@ -52,14 +52,14 @@ def output(file_name, *args, **kwargs):
     def __exit__(self, exc, val, tb):
       # don't save if an exception occurred
       if tb is not None:
-        self._save_name = None
+        self._save = False
       
       self.close()
     
     def close(self):
       file = self.file
       
-      file.save_name = self._save_name
+      file.save = self._save
       file.close()
       
       subsystem = self.subsystem

@@ -11,6 +11,10 @@ class _HiddenFileWrapper:
     
     self._system = platform.system()
     
+    self._args = args
+    self._prefix = prefix
+    self._kwargs = kwargs
+    
     tmp = NamedTemporaryFile(
       *args,
       delete=False,
@@ -19,24 +23,30 @@ class _HiddenFileWrapper:
     )
     
     self.tmp = tmp
-    self.save_name = None
+    self.save = False
     self._hide(True)
     
     self.name = None
-    
-    head, tail = os.path.split(tmp.name)
-    self.visible_name = os.path.join(head, tail.removeprefix(HIDDEN))
   
   def close(self, *args, **kwargs):
     tmp = self.tmp
     
     self._hide(False)
     tmp.close(*args, **kwargs)
-    save_name = self.save_name
+    save = self.save
     
-    if save_name:
-      os.replace(tmp.name, save_name)
-      self.name = save_name
+    if save:
+      if not isinstance(save, str):
+        with NamedTemporaryFile(
+          *self._args,
+          delete=False,
+          prefix=self._prefix,
+          **self._kwargs
+        ) as visible:
+          save = visible.name
+      
+      os.replace(tmp.name, save)
+      self.name = save
     else:
       os.unlink(tmp.name)
   
@@ -77,13 +87,9 @@ class HiddenFile:
     return self.__wrapper.tmp.name
   
   @property
-  def save_name(self):
-    return self.__wrapper.save_name
+  def save(self):
+    return self.__wrapper.save
   
-  @save_name.setter
-  def save_name(self, value):
-    self.__wrapper.save_name = value
-  
-  @property
-  def visible_name(self):
-    return self.__wrapper.visible_name
+  @save.setter
+  def save(self, value):
+    self.__wrapper.save = value

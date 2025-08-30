@@ -12,6 +12,7 @@ import soundfile as sf
 import yamosse.utils as yamosse_utils
 import yamosse.progress as yamosse_progress
 import yamosse.worker as yamosse_worker
+import yamosse.hiddenfile as yamosse_hiddenfile
 import yamosse.download as yamosse_download
 import yamosse.output as yamosse_output
 import yamosse.subsystem as yamosse_subsystem
@@ -90,6 +91,8 @@ def _input_file_names(input_, recursive=True):
 
 
 def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None):
+  weights = ''
+  
   if options:
     weights = options.weights
     
@@ -103,25 +106,29 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
   
   root, ext = os.path.splitext(os.path.join(os.path.realpath(os.curdir), path))
   
-  file = NamedTemporaryFile(
-    delete=False, mode='wb',
+  with yamosse_hiddenfile.HiddenFile(
+    mode='wb',
     prefix=''.join((root, '_')), suffix=ext, dir=''
-  )
+  ) as hidden:
+    yamosse_download.download(url, hidden)
+    
+    hidden.save = True
+    
+    weights = hidden.name
+    assert weights, 'weights must not be empty'
+  
+  # open the resulting visible file
+  file = open(weights, 'rb')
   
   try:
-    yamosse_download.download(url, file)
-    
-    name = file.name
-    assert name, 'name must not be empty'
-    
     if subsystem and options:
-      subsystem.set_variable_and_attr(options, 'weights', name)
+      subsystem.set_variable_and_attr(options, 'weights', weights)
       options.dump()
-    
-    return file
   except:
     file.close()
     raise
+  
+  return file
 
 
 def _files(input_, exit_, model_yamnet_class_names, subsystem, options):

@@ -60,13 +60,15 @@ class Recording:
       except FileExistsError:
         pass
       
+      # we don't need to use a with statement for hidden
+      # it's designed such that it will free when it goes out of scope
+      hidden = yamosse_hiddenfile.HiddenFile(
+        mode='wb',
+        prefix=PREFIX, suffix=SUFFIX, dir=DIR
+      )
+      
       # Make sure the file is opened before recording anything:
       with (
-        yamosse_hiddenfile.HiddenFile(
-          mode='wb',
-          prefix=PREFIX, suffix=SUFFIX, dir=DIR
-        ) as hidden,
-        
         sf.SoundFile(
           hidden, mode='x',
           samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO
@@ -106,21 +108,19 @@ class Recording:
             volume = float(options.volume_loglinear(np, np.abs(indata).max()))
         except KeyboardInterrupt:
           pass
-        else:
-          # we shouldn't save if an exception occured
-          # if we were successful, we save if self.save is True
-          # (meaning user hit Yes to ask save box)
-          if not self.save: return
-          
-          name = hidden.visible_name
-          hidden.save_name = name
         finally:
           # this is in the finally block so that
           # there will always be a newline after the volume
           # even in the exception case
           print(volume_backspaces, volume_str, sep='', flush=True)
       
-      input_ = quote(name)
+      # this should only be saved if no exception occurred
+      # done outside with statement so it's closed
+      # after SoundDevice is done using it
+      hidden.save = self.save
+      hidden.close()
+      
+      input_ = quote(hidden.name)
       print('\nRecording finished:', input_, end='\n\n')
       
       # a previous iteration of this appended the name instead of replacing it
