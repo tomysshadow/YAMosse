@@ -41,5 +41,4 @@ def tests(file, wait=False):
   sys.exit(not result.wasSuccessful())
 
 
-if __name__ == '__main__':
-  tests(__file__, wait=True)
+if __name__ == '__main__': tests(__file__, wait=True)

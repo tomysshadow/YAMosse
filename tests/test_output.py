@@ -90,19 +90,16 @@ TOP_RANKED_SPAN_ALL = {
 
 class TestOutput(ABC):
   def setUp(self, suffix):
-    file = tempfile.NamedTemporaryFile(
-      mode='r',
-      delete=False,
+    self.file = tempfile.NamedTemporaryFile(
+      mode='w+',
       suffix=suffix,
-      dir=''
+      delete=False
     )
-    
-    # yes I know this is race condition heaven but who cares, these are just tests
-    file.close()
-    self.file = file
   
   def tearDown(self):
-    unlink(self.file.name)
+    file = self.file
+    file.close()
+    unlink(file.name)
   
   @staticmethod
   def _file_name_keys(result):
@@ -118,7 +115,7 @@ class TestOutput(ABC):
     o.set(kwargs, strict=False)
     return o
   
-  def _output(self, identification=0):
+  def _output_file(self, identification=0):
     file = self.file
     
     return output.output(
@@ -126,10 +123,7 @@ class TestOutput(ABC):
       Event(),
       MODEL_YAMNET_CLASS_NAMES,
       identification
-    )
-  
-  def _file(self):
-    return open(self.file.name, 'r')
+    ), file
 
 
 class TestOutputText(TestOutput, unittest.TestCase):
@@ -137,12 +131,12 @@ class TestOutputText(TestOutput, unittest.TestCase):
     super().setUp(SUFFIX_TXT)
   
   def test_output_options(self):
-    with self._output() as o:
-      o.options(self._set_options())
+    o, f = self._output_file()
     
-    with self._file() as f:
-      self.assertEqual(f.readline(), '# Options\n')
-      self.assertTrue(f.read().endswith('\n\n'))
+    with o: o.options(self._set_options())
+    
+    self.assertEqual(f.readline(), '# Options\n')
+    self.assertTrue(f.read().endswith('\n\n'))
   
   def _output_results_cs(self, results, **kwargs):
     results_output = None
@@ -155,34 +149,35 @@ class TestOutputText(TestOutput, unittest.TestCase):
     
     output_scores = options.output_scores
     
-    with self._output(0) as o:
+    o, f = self._output_file(0)
+    
+    with o:
       self.assertFalse(o.options(options))
       results_output = o.results(results)
     
-    with self._file() as f:
-      self.assertEqual(f.readline(), '# Results\n')
-      self.assertEqual(f.readline(), '\n')
+    self.assertEqual(f.readline(), '# Results\n')
+    self.assertEqual(f.readline(), '\n')
+    
+    for file_name_result in results_output:
+      file_name = file_name_result['file_name']
+      class_timestamps = file_name_result['result']
       
-      for file_name_result in results_output:
-        file_name = file_name_result['file_name']
-        class_timestamps = file_name_result['result']
+      self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+      
+      for class_, timestamps in class_timestamps.items():
+        self.assertEqual(f.readline(), ''.join((indent, MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
         
-        self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+        if output_scores:
+          timestamps = [f'{o.identification.hms(t["timestamp"])} ({t["score"]:.0%})' \
+            for t in timestamps]
+        else:
+          timestamps = [o.identification.hms(t) for t in timestamps]
         
-        for class_, timestamps in class_timestamps.items():
-          self.assertEqual(f.readline(), ''.join((indent, MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
-          
-          if output_scores:
-            timestamps = [f'{o.identification.hms(t["timestamp"])} ({t["score"]:.0%})' \
-              for t in timestamps]
-          else:
-            timestamps = [o.identification.hms(t) for t in timestamps]
-          
-          self.assertEqual(f.readline(), ''.join((indent2, item_delimiter.join(timestamps), '\n')))
-        
-        self.assertEqual(f.readline(), '\n')
+        self.assertEqual(f.readline(), ''.join((indent2, item_delimiter.join(timestamps), '\n')))
       
       self.assertEqual(f.readline(), '\n')
+    
+    self.assertEqual(f.readline(), '\n')
   
   def test_output_results_cs_nos(self):
     self._output_results_cs(CONFIDENCE_SCORES_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
@@ -241,38 +236,39 @@ class TestOutputText(TestOutput, unittest.TestCase):
     output_scores = options.output_scores
     output_timestamps = options.top_ranked_output_timestamps
     
-    with self._output(1) as o:
+    o, f = self._output_file(1)
+    
+    with o:
       self.assertFalse(o.options(options))
       results_output = o.results(results)
     
-    with self._file() as f:
-      self.assertEqual(f.readline(), '# Results\n')
-      self.assertEqual(f.readline(), '\n')
+    self.assertEqual(f.readline(), '# Results\n')
+    self.assertEqual(f.readline(), '\n')
+    
+    for file_name_result in results_output:
+      file_name = file_name_result['file_name']
+      top_scores = file_name_result['result']
       
-      for file_name_result in results_output:
-        file_name = file_name_result['file_name']
-        top_scores = file_name_result['result']
+      self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+      
+      for top_score in top_scores:
+        classes = top_score['classes']
         
-        self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+        if output_scores:
+          classes = [f'{MODEL_YAMNET_CLASS_NAMES[c]} ({s:.0%})' for c, s in classes.items()]
+        else:
+          classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
         
-        for top_score in top_scores:
-          classes = top_score['classes']
-          
-          if output_scores:
-            classes = [f'{MODEL_YAMNET_CLASS_NAMES[c]} ({s:.0%})' for c, s in classes.items()]
-          else:
-            classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
-          
-          if output_timestamps:
-            self.assertEqual(f.readline(), ''.join((indent,
-              o.identification.hms(top_score['timestamp']), ': ',
-              item_delimiter.join(classes), '\n')))
-          else:
-            self.assertEqual(f.readline(), ''.join((indent, item_delimiter.join(classes), '\n')))
-        
-        self.assertEqual(f.readline(), '\n')
+        if output_timestamps:
+          self.assertEqual(f.readline(), ''.join((indent,
+            o.identification.hms(top_score['timestamp']), ': ',
+            item_delimiter.join(classes), '\n')))
+        else:
+          self.assertEqual(f.readline(), ''.join((indent, item_delimiter.join(classes), '\n')))
       
       self.assertEqual(f.readline(), '\n')
+    
+    self.assertEqual(f.readline(), '\n')
   
   def test_output_results_tr_nos(self):
     self._output_results_tr(TOP_RANKED_STANDARD, sort_by=output.NUMBER_OF_SOUNDS,
@@ -332,35 +328,34 @@ class TestOutputText(TestOutput, unittest.TestCase):
   
   def test_output_errors(self):
     errors = self._file_name_keys('message')
+    o, f = self._output_file()
     
-    with self._output() as o:
-      o.errors(errors)
+    with o: o.errors(errors)
     
-    with self._file() as f:
-      self.assertEqual(f.readline(), '# Errors\n')
+    self.assertEqual(f.readline(), '# Errors\n')
+    self.assertEqual(f.readline(), '\n')
+    
+    for file_name, message in errors.items():
+      self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
+      self.assertEqual(f.readline(), ''.join(('\t', quote(message), '\n')))
       self.assertEqual(f.readline(), '\n')
-      
-      for file_name, message in errors.items():
-        self.assertEqual(f.readline(), ''.join((quote(file_name), '\n')))
-        self.assertEqual(f.readline(), ''.join(('\t', quote(message), '\n')))
-        self.assertEqual(f.readline(), '\n')
-      
-      self.assertEqual(f.readline(), '\n')
+    
+    self.assertEqual(f.readline(), '\n')
   
   def test_output_results_errors(self):
     results = self._file_name_keys({})
     errors = self._file_name_keys('message')
+    o, f = self._output_file()
     
-    with self._output() as o:
+    with o:
       o.results(results)
       o.errors(errors)
     
-    with self._file() as f:
-      self.assertEqual(f.readline(), '# Results\n')
-      
-      for i in range(11): f.readline()
-      
-      self.assertEqual(f.readline(), '# Errors\n')
+    self.assertEqual(f.readline(), '# Results\n')
+    
+    for i in range(11): f.readline()
+    
+    self.assertEqual(f.readline(), '# Errors\n')
 
 
 class TestOutputJSON(TestOutput, unittest.TestCase):
@@ -368,12 +363,12 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     super().setUp(SUFFIX_JSON)
   
   def test_output_options(self):
-    with self._output() as o:
-      o.options(self._set_options())
+    o, f = self._output_file()
     
-    with self._file() as f:
-      d = json.loads(f.read())
-      self.assertIn('options', d)
+    with o: o.options(self._set_options())
+    
+    d = json.loads(f.read())
+    self.assertIn('options', d)
   
   def _output_results_cs(self, results, **kwargs):
     results_output = None
@@ -382,30 +377,30 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     item_delimiter = options.item_delimiter
     output_scores = options.output_scores
     
-    with self._output() as o:
+    o, f = self._output_file(0)
+    
+    with o:
       self.assertFalse(o.options(options))
       results_output = o.results(results)
     
-    with self._file() as f:
-      d = json.loads(f.read())
-      results_output_str = results_output.copy()
-      
-      for file_name_result in results_output_str:
-        classes_timestamps = file_name_result['result']
-        
-        for timestamp_scores in classes_timestamps.values():
-          for t, timestamp_score in enumerate(timestamp_scores):
-            if isinstance(timestamp_score, dict
-              ) and isinstance(timestamp_score['timestamp'], tuple):
-              timestamp_score['timestamp'] = list(timestamp_score['timestamp'])
-            elif isinstance(timestamp_score, tuple):
-              timestamp_scores[t] = list(timestamp_score)
-        
-        file_name_result['result'] = dict(zip([str(c) for c in classes_timestamps.keys()],
-          classes_timestamps.values(), strict=True))
-      
-      self.assertEqual(d['results'], results_output_str)
+    d = json.loads(f.read())
+    results_output_str = results_output.copy()
     
+    for file_name_result in results_output_str:
+      classes_timestamps = file_name_result['result']
+      
+      for timestamp_scores in classes_timestamps.values():
+        for t, timestamp_score in enumerate(timestamp_scores):
+          if isinstance(timestamp_score, dict
+            ) and isinstance(timestamp_score['timestamp'], tuple):
+            timestamp_score['timestamp'] = list(timestamp_score['timestamp'])
+          elif isinstance(timestamp_score, tuple):
+            timestamp_scores[t] = list(timestamp_score)
+      
+      file_name_result['result'] = dict(zip([str(c) for c in classes_timestamps.keys()],
+        classes_timestamps.values(), strict=True))
+    
+    self.assertEqual(d['results'], results_output_str)
     return results_output
   
   def test_output_results_cs_nos(self):
@@ -659,33 +654,33 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
     item_delimiter = options.item_delimiter
     output_scores = options.output_scores
     
-    with self._output(1) as o:
+    o, f = self._output_file(1)
+    
+    with o:
       self.assertFalse(o.options(options))
       results_output = o.results(results)
     
-    with self._file() as f:
-      d = json.loads(f.read())
-      results_output_copy = results_output.copy()
-      
-      for file_name_result in results_output_copy:
-        top_scores = file_name_result['result']
-        
-        for top_score in top_scores:
-          timestamp = top_score.get('timestamp', None)
-          
-          if isinstance(timestamp, tuple):
-            top_score['timestamp'] = list(timestamp)
-          
-          if not output_scores:
-            continue
-          
-          classes = top_score['classes']
-          
-          top_score['classes'] = dict(zip([str(c) for c in classes.keys()],
-            classes.values(), strict=True))
-      
-      self.assertEqual(d['results'], results_output_copy)
+    d = json.loads(f.read())
+    results_output_copy = results_output.copy()
     
+    for file_name_result in results_output_copy:
+      top_scores = file_name_result['result']
+      
+      for top_score in top_scores:
+        timestamp = top_score.get('timestamp', None)
+        
+        if isinstance(timestamp, tuple):
+          top_score['timestamp'] = list(timestamp)
+        
+        if not output_scores:
+          continue
+        
+        classes = top_score['classes']
+        
+        top_score['classes'] = dict(zip([str(c) for c in classes.keys()],
+          classes.values(), strict=True))
+    
+    self.assertEqual(d['results'], results_output_copy)
     return results_output
   
   def test_output_results_tr_nos(self):
@@ -978,29 +973,28 @@ class TestOutputJSON(TestOutput, unittest.TestCase):
   
   def test_output_errors(self):
     errors = self._file_name_keys('message')
+    o, f = self._output_file()
     
-    with self._output() as o:
-      o.errors(errors)
+    with o: o.errors(errors)
     
-    with self._file() as f:
-      d = json.loads(f.read())
-      
-      for message in d['errors'].values():
-        self.assertEqual(message, 'message')
+    d = json.loads(f.read())
+    
+    for message in d['errors'].values():
+      self.assertEqual(message, 'message')
   
   def test_output_results_errors(self):
     results = self._file_name_keys({})
     errors = self._file_name_keys('message')
+    o, f = self._output_file()
     
-    with self._output() as o:
+    with o:
       o.results(results)
       o.errors(errors)
     
-    with self._file() as f:
-      d = json.loads(f.read())
-      
-      self.assertIn('results', d)
-      self.assertIn('errors', d)
+    d = json.loads(f.read())
+    
+    self.assertIn('results', d)
+    self.assertIn('errors', d)
 
 
 if __name__ == '__main__': unittest.main()
