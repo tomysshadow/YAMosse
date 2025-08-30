@@ -103,11 +103,12 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
       'log': 'Downloading weights file, please wait...'
     })
   
-  root, ext = os.path.splitext(os.path.join(os.path.realpath(os.curdir), path))
+  head, tail = os.path.split(path)
+  root, ext = os.path.splitext(tail)
   
   hidden = yamosse_hiddenfile.HiddenFile(
     mode='wb',
-    prefix=''.join((root, '_')), suffix=ext, dir=''
+    prefix=''.join((root, '_')), suffix=ext, dir=head
   )
   
   yamosse_download.download(url, hidden)
