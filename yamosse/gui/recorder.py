@@ -92,7 +92,7 @@ class Recorder:
     )
     
     # don't allow recording if there are no input devices
-    if not input_device in input_devices:
+    if input_device not in input_devices:
       gui.state_children_widget(frame, tk.DISABLED)
     
     self._window = window

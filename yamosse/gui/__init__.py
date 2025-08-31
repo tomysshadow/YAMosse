@@ -375,7 +375,7 @@ def link_radiobuttons(radiobuttons, variable):
     for w, widget in enumerate(radiobuttons.values()):
       if not widget: continue
       
-      normal = w == variable.get()
+      normal = w == int(variable.get())
       state_children_widget(widget, tk.NORMAL if normal else tk.DISABLED)
   
   for r, radiobutton in enumerate(radiobuttons.keys()):
@@ -457,7 +457,12 @@ def _init_validationoptions_spinbox():
       except ValueError:
         number = _spinbox_numbers.get(widget, 0)
       
-      widget.set(yamosse_utils.clamp(number, int(widget['from']), int(widget['to'])))
+      widget.set(yamosse_utils.clamp(
+        number,
+        int(widget['from']),
+        int(widget['to'])
+      ))
+      
       after_invalidcommand_widget(widget, v)
     
     return frame.register(command), '%W', '%P', '%v'
@@ -472,11 +477,18 @@ def _init_validationoptions_spinbox():
       except ValueError:
         return False
       
-      valid = str(number) == str(P) and number in range(int(widget['from']), int(widget['to']))
+      valid = str(number) == str(P) and number in range(
+        int(widget['from']),
+        int(widget['to'])
+      )
       
       if valid:
         if widget not in _spinbox_numbers:
-          widget.bind('<Destroy>', lambda e: _spinbox_numbers.pop(e.widget, None), add=True)
+          widget.bind(
+            '<Destroy>',
+            lambda e: _spinbox_numbers.pop(e.widget, None),
+            add=True
+          )
         
         _spinbox_numbers[widget] = number
       
@@ -1350,7 +1362,7 @@ def bindtag_window(window):
   window_bindtag = bindtag(window)
   bindtags = window.bindtags()
   
-  if not window_bindtag in bindtags:
+  if window_bindtag not in bindtags:
     window.bindtags((window_bindtag,) + window.bindtags())
   
   return window_bindtag
