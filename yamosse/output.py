@@ -129,6 +129,10 @@ def output(file_name, *args, **kwargs):
         self._file_truncated = True
       
       return self._file
+    
+    @property
+    def file_truncated(self):
+      return self._file_truncated
   
   class OutputText(Output):
     def __init__(self, *args, encoding='ascii', **kwargs):

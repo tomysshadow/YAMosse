@@ -358,16 +358,27 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         subsystem=subsystem
       ) as output
     ):
-      results, errors = _files(input_, exit_, model_yamnet_class_names, subsystem, options)
-      
-      subsystem.show(exit_, values={
-        'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
-        'log': 'Finishing, please wait...\n'
-      })
-      
-      output.options(options)
-      output.results(results)
-      output.errors(errors)
+      try:
+        results, errors = _files(
+          input_,
+          exit_,
+          model_yamnet_class_names,
+          subsystem,
+          options
+        )
+        
+        subsystem.show(exit_, values={
+          'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
+          'log': 'Finishing, please wait...\n'
+        })
+        
+        output.options(options)
+        output.results(results)
+        output.errors(errors)
+      finally:
+        subsystem.show(exit_, values={
+          'open_output_file': output.file_truncated
+        })
   except yamosse_subsystem.SubsystemExit: pass
   except: _report_thread_exception(exit_, subsystem, *exc_info())
   finally:

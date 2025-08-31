@@ -85,6 +85,7 @@ def make_footer(frame, log_text, open_output_file, done):
 
 def show_yamscan(widgets, values=None):
   window, progressbar, log_text, footer_widgets = widgets
+  open_output_file_button, done_button = footer_widgets
   
   def callback():
     if not window.children: return
@@ -117,17 +118,14 @@ def show_yamscan(widgets, values=None):
       if value not in DONE_VALUES:
         raise ValueError('value must be in %r' % (DONE_VALUES,))
       
-      open_output_file_button, done_button = footer_widgets
-      
-      ok = value == 'OK'
-      open_output_file_button['state'] = tk.NORMAL if ok else tk.DISABLED
-      
       gui.disable_traversal_button(done_button)
       
       try:
         done_button['text'] = value
       finally:
         gui.enable_traversal_button(done_button)
+      
+      ok = value == 'OK'
       
       gui.bind_buttons_window(
         window,
@@ -136,6 +134,11 @@ def show_yamscan(widgets, values=None):
       )
       
       if ok: window.bell()
+    
+    value = values.get('open_output_file')
+    
+    if value is not None:
+      open_output_file_button['state'] = tk.NORMAL if value else tk.DISABLED
   
   return gui.after_window(window, callback)
 
