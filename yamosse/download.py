@@ -3,7 +3,7 @@ from urllib.error import URLError, HTTPError
 from http.server import BaseHTTPRequestHandler
 from shutil import copyfileobj
 
-class DownloadError(URLError): pass
+class DownloadError(Exception): pass
 
 
 def download(url, file):
@@ -13,7 +13,7 @@ def download(url, file):
   except HTTPError as ex:
     code = ex.code
     
-    raise DownloadError("The server couldn't fulfill the request.\nError code: %d\n\n%r" % (
-      code, ': '.join(BaseHTTPRequestHandler.responses[code]))) from ex
+    raise DownloadError("The server couldn't fulfill the request.\nError code: %d\n\n%r" % (code,
+      ': '.join(BaseHTTPRequestHandler.responses[code]))) from ex
   except URLError as ex:
-    raise DownloadError(': '.join(("We failed to reach a server.\nReason", ex.reason))) from ex
+    raise DownloadError("We failed to reach a server.\nReason: %s" % ex.reason) from ex
