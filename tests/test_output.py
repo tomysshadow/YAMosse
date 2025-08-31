@@ -7,6 +7,7 @@ import json
 from threading import Event
 
 import yamosse.output as output
+import yamosse.identification as identification
 import yamosse.options as options
 import yamosse.utils as utils
 
@@ -115,14 +116,14 @@ class TestOutput(ABC):
     o.set(kwargs, strict=False)
     return o
   
-  def _output_file(self, identification=0):
+  def _output_file(self, option=0):
     file = self.file
     
     return output.output(
       file.name,
       Event(),
       MODEL_YAMNET_CLASS_NAMES,
-      identification
+      identification.identification(option=option)
     ), file
 
 
