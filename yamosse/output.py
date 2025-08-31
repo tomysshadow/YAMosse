@@ -5,7 +5,8 @@ from shlex import quote
 import json
 
 import yamosse.utils as yamosse_utils
-import yamosse.identification as yamosse_identification
+
+LINES = ('\r', '\n')
 
 NUMBER_OF_SOUNDS = 'Number of Sounds'
 FILE_NAME = 'File Name'
@@ -13,6 +14,17 @@ DEFAULT_ITEM_DELIMITER = ' '
 DEFAULT_INDENT = '\t'
 
 EXT_JSON = '.json'.casefold()
+
+
+def print_section(name, file=None):
+  if yamosse_utils.intersects(LINES, name):
+    raise ValueError('name must not contain carriage returns or newlines')
+  
+  print('#', name, end='\n\n', file=file)
+
+
+def print_file(name, file=None):
+  print(yamosse_utils.ascii_backslashreplace(quote(name)), file=file)
 
 
 def output(file_name, *args, **kwargs):
@@ -23,8 +35,6 @@ def output(file_name, *args, **kwargs):
         self._seconds = time()
       
       self.subsystem = subsystem
-      
-      identification = yamosse_identification.identification(option=identification)
       
       self.sort_by = identification.key_number_of_sounds
       self.sort_reverse = False
@@ -135,7 +145,7 @@ def output(file_name, *args, **kwargs):
       
       file = self.file
       
-      self.print_section('Options')
+      print_section('Options', file=file)
       options.print(file=file)
       
       print('', file=file)
@@ -153,7 +163,7 @@ def output(file_name, *args, **kwargs):
       file = self.file
       
       # print results
-      self.print_section('Results')
+      print_section('Results', file=file)
       self.identification.print_results_to_output(results, self)
       
       print('', file=file)
@@ -172,26 +182,17 @@ def output(file_name, *args, **kwargs):
       indent = self.indent
       
       # print errors
-      self.print_section('Errors')
+      print_section('Errors', file=file)
       
       # ascii_backslashreplace replaces Unicode characters with ASCII when printing
       # to prevent crash when run in Command Prompt
       for file_name, ex in errors.items():
-        self.print_file(file_name)
+        print_file(file_name, file=file)
         print(indent, yamosse_utils.ascii_backslashreplace(quote(str(ex))), sep='', file=file)
         print('', file=file)
       
       print('', file=file)
       return errors
-    
-    def print_section(self, name):
-      # TODO: carraige return
-      if '\n' in name: raise ValueError('name must not contain newlines')
-      
-      print('#', name, end='\n\n', file=self.file)
-    
-    def print_file(self, name):
-      print(yamosse_utils.ascii_backslashreplace(quote(name)), file=self.file)
   
   class OutputJSON(Output):
     def __init__(self, *args, **kwargs):

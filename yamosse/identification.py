@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import yamosse.utils as yamosse_utils
+import yamosse.output as yamosse_output
 
 
 def identification(option=None):
@@ -185,7 +186,7 @@ def identification(option=None):
       output_scores = output.output_scores
       
       for file_name_result in results:
-        output.print_file(file_name_result['file_name'])
+        yamosse_output.print_file(file_name_result['file_name'], file=file)
         
         class_timestamps = file_name_result['result']
         
@@ -450,7 +451,7 @@ def identification(option=None):
       output_timestamps = output.top_ranked_output_timestamps
       
       for file_name_result in results:
-        output.print_file(file_name_result['file_name'])
+        yamosse_output.print_file(file_name_result['file_name'], file=file)
         
         top_scores = file_name_result['result']
         

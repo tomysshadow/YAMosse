@@ -14,6 +14,7 @@ import yamosse.worker as yamosse_worker
 import yamosse.hiddenfile as yamosse_hiddenfile
 import yamosse.download as yamosse_download
 import yamosse.output as yamosse_output
+import yamosse.identification as yamosse_identification
 import yamosse.subsystem as yamosse_subsystem
 
 
@@ -349,7 +350,7 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         output_file_name,
         exit_,
         model_yamnet_class_names,
-        options.identification,
+        yamosse_identification.identification(option=options.identification),
         subsystem=subsystem
       ) as output
     ):
