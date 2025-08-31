@@ -376,6 +376,9 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         output.results(results)
         output.errors(errors)
       finally:
+        # this is intended to light up the button
+        # even if the file was not written successfully
+        # just as long as it was written to at all
         subsystem.show(exit_, values={
           'open_output_file': output.file_truncated
         })
