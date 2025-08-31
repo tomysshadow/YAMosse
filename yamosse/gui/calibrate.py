@@ -89,7 +89,12 @@ class UndoableMaster(UndoableScale):
     self._tk = scale.tk
     self._command = scale['command']
     
-    self.oldvalues = calibration.oldvalues
+    # self.oldvalues is never actually reassigned
+    # (unless we recenter)
+    # therefore, it must be a copy here
+    # otherwise, it'll mutate the original calibration.oldvalues
+    # which is chucked into undooptions as an undo state
+    self.oldvalues = calibration.oldvalues.copy()
     self.oldvalue = float(scale.get())
     
     scale['command'] = self._master
