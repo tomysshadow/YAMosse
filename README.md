@@ -230,7 +230,7 @@ Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoj
  - A Master slider has been added to the Calibration window that scales every other slider proportionally, and double clicking on it recentres it without affecting the other scales.
  - Drag and drop is fixed on Mac.
  - The progress bar will turn red if an error occurs (in Python 3.13.)
- - A blank output file is no longer left behind if a YAMScan is cancelled or fails with an error.
+ - The output file is no longer overwritten if a YAMScan is cancelled or fails with an error.
  - Fixed a bug where a cancelled YAMScan could come "back to life" after starting a new one.
  - Fixed a bug where the application could hang if it was closed immediately after cancelling a YAMScan.
  
