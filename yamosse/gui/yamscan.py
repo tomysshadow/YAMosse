@@ -112,6 +112,11 @@ def show_yamscan(widgets, values=None):
       finally:
         log_text['state'] = tk.DISABLED
     
+    value = values.get('open_output_file')
+    
+    if value is not None:
+      open_output_file_button['state'] = tk.NORMAL if value else tk.DISABLED
+    
     value = values.get('done')
     
     if value is not None:
@@ -134,11 +139,6 @@ def show_yamscan(widgets, values=None):
       )
       
       if ok: window.bell()
-    
-    value = values.get('open_output_file')
-    
-    if value is not None:
-      open_output_file_button['state'] = tk.NORMAL if value else tk.DISABLED
   
   return gui.after_window(window, callback)
 
