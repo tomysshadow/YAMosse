@@ -72,8 +72,6 @@ class Recorder:
     if str(input_device_variable.get()) not in input_devices:
       input_device_variable.set(input_default_name)
     
-    input_device = str(input_device_variable.get())
-    
     input_devices_combobox = gui.make_combobox(row_frame,
       name='Device:', textvariable=input_device_variable,
       values=list(input_devices.keys()), width=72, state='readonly')[1]
@@ -92,7 +90,7 @@ class Recorder:
     )
     
     # don't allow recording if there are no input devices
-    if input_device not in input_devices:
+    if str(input_device_variable.get()) not in input_devices:
       gui.state_children_widget(frame, tk.DISABLED)
     
     self._window = window

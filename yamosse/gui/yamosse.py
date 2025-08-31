@@ -369,7 +369,7 @@ def make_timespan(frame, variables):
   timespan_span_all_variable = variables['timespan_span_all']
   
   def show_spinbox_frame():
-    normal = not timespan_span_all_variable.get()
+    normal = not bool(timespan_span_all_variable.get())
     
     gui.state_children_widget(
       spinbox_frame,
@@ -436,7 +436,8 @@ def make_sort(frame, variables):
   down_image = photo_images[fsenc('down.gif')]
   
   def show_sort_reverse_checkbutton():
-    sort_reverse_checkbutton['image'] = up_image if sort_reverse_variable.get() else down_image
+    sort_reverse_checkbutton['image'] = up_image if bool(
+      sort_reverse_variable.get()) else down_image
   
   sort_reverse_checkbutton = ttk.Checkbutton(frame, width=1,
     variable=sort_reverse_variable, command=show_sort_reverse_checkbutton)
