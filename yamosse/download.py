@@ -3,7 +3,7 @@ from urllib.error import URLError, HTTPError
 from http.server import BaseHTTPRequestHandler
 from shutil import copyfileobj
 
-class DownloadError(Exception): pass
+class DownloadError(IOError): pass
 
 
 def download(url, file):

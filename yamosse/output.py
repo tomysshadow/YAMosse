@@ -54,7 +54,7 @@ def output(file_name, *args, **kwargs):
     def __enter__(self):
       return self
     
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, exc, val, tb):
       self.close()
     
     def close(self):
@@ -205,14 +205,14 @@ def output(file_name, *args, **kwargs):
       # should be called last so file is opened as last step
       super().__init__(*args, **kwargs)
     
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, exc, val, tb):
       indent = self.indent
       
       # dump anything that is non-empty
       json.dump({key: value for key, value in self._d.items() if value},
         self.file, indent=indent if indent else None)
       
-      super().__exit__(*args, **kwargs)
+      super().__exit__(exc, val, tb)
     
     def options(self, options):
       if not super().options(options):

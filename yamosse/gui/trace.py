@@ -65,5 +65,5 @@ class Trace:
   def __enter__(self):
     return self
   
-  def __exit__(self, *args, **kwargs):
+  def __exit__(self, exc, val, tb):
     self.destroy()
