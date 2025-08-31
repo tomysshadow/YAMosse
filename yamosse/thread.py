@@ -350,7 +350,11 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         output_file_name,
         exit_,
         model_yamnet_class_names,
-        yamosse_identification.identification(option=options.identification),
+        
+        yamosse_identification.identification(
+          option=options.identification
+        ),
+        
         subsystem=subsystem
       ) as output
     ):
