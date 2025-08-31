@@ -157,7 +157,7 @@ class Recording:
     
     try:
       input_default_name = names[input_default]
-    except KeyError:
+    except IndexError:
       input_default_name = ''
     
     return (
