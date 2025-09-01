@@ -49,7 +49,7 @@ def output(file_name, *args, **kwargs):
       
       self._exit = exit_
       self._file_truncated = False
-      self._file = open(file_name, 'r+', encoding=encoding)
+      self._file = open(file_name, 'a+', encoding=encoding)
     
     def __enter__(self):
       return self
@@ -125,7 +125,7 @@ def output(file_name, *args, **kwargs):
     @property
     def file(self):
       if not self._file_truncated:
-        self._file.truncate()
+        self._file.truncate(0)
         self._file_truncated = True
       
       return self._file

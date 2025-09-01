@@ -21,13 +21,13 @@ def main():
   parser.add_argument('-r', '--record',
     action='store_true', default=argparse.SUPPRESS)
   
-  parser.add_argument('-ip', '--import-preset', nargs=1,
+  parser.add_argument('-ip', '--import-preset',
     dest='import_preset_file_name', default=argparse.SUPPRESS)
   
-  parser.add_argument('-ep', '--export-preset', nargs=1,
+  parser.add_argument('-ep', '--export-preset',
     dest='export_preset_file_name', default=argparse.SUPPRESS)
   
-  parser.add_argument('-y', '--yamscan', nargs=1,
+  parser.add_argument('-y', '--yamscan',
     dest='output_file_name', default=argparse.SUPPRESS)
   
   parser.add_argument('-o', '--option', nargs=2,

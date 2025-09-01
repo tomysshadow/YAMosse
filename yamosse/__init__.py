@@ -153,6 +153,12 @@ def _mainloop(**kwargs):
       subsystem.error(MESSAGE_CLASSES_NONE)
       return
     
+    # this event prevents the thread from trying to interact with windows
+    # other than the one it was created for
+    # because it's possible for a window to get "Indiana Jonesed"
+    # and have a new window with the same name as an old one
+    # so the thread doesn't see it exit
+    exit_ = Event()
     child = None
     
     if not output_file_name:
@@ -167,13 +173,6 @@ def _mainloop(**kwargs):
       )
       
       if not output_file_name: return
-      
-      # this event prevents the thread from trying to interact with windows
-      # other than the one it was created for
-      # because it's possible for a window to get "Indiana Jonesed"
-      # and have a new window with the same name as an old one
-      # so the thread doesn't see it exit
-      exit_ = Event()
       
       child, widgets = gui.gui(
         gui_yamscan.make_yamscan,
