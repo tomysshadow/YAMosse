@@ -283,7 +283,6 @@ def worker(file_name):
   shutdown = _shutdown
   if shutdown.is_set(): return None
   
-  result = {}
   step = 0
   
   options = _options
@@ -356,9 +355,9 @@ def worker(file_name):
         
         # Predict YAMNet classes.
         for score in yamnet(waveform)[0]:
-          identification.predict(result, (int(seconds), np.array(score, dtype=float32)))
+          identification.predict((int(seconds), np.array(score, dtype=float32)))
           seconds += patch_hop_seconds
   finally:
     _step_progress(step)
   
-  return identification.timestamps(result, shutdown)
+  return identification.timestamps(shutdown)

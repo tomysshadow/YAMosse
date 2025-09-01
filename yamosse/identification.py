@@ -15,16 +15,18 @@ def identification(option=None):
   HMS_TIMESPAN = ' - '
   
   class Identification(ABC):
+    __slots__ = 'options', 'np'
+    
     def __init__(self, options, np):
       self.options = options
       self.np = np
     
     @abstractmethod
-    def predict(self, result, prediction_score=None):
+    def predict(self, prediction_score=None):
       pass
     
     @abstractmethod
-    def timestamps(self, result, shutdown):
+    def timestamps(self, shutdown):
       pass
     
     @staticmethod
@@ -80,15 +82,18 @@ def identification(option=None):
       return item[0]
   
   class IdentificationConfidenceScore(Identification):
+    __slots__ = '_class_predictions', '_minmax'
+    
     def __init__(self, options, *args, **kwargs):
       super().__init__(options, *args, **kwargs)
       
+      self._class_predictions = {}
       self._minmax = self._max if options.confidence_score_minmax else self._min
     
-    def predict(self, result, prediction_score=None):
+    def predict(self, prediction_score=None):
       if not prediction_score: return
       
-      class_predictions = result
+      class_predictions = self._class_predictions
       prediction, score = prediction_score
       
       options = self.options
@@ -114,14 +119,12 @@ def identification(option=None):
         prediction_scores[prediction] = max(
           prediction_scores.get(prediction, calibrated_score), calibrated_score)
     
-    def timestamps(self, result, shutdown):
+    def timestamps(self, shutdown):
       # create timestamps from predictions/scores
       class_timestamps = {}
       timespan = self.options.timespan
       
-      class_predictions = result
-      
-      for class_, prediction_scores in class_predictions.items():
+      for class_, prediction_scores in self._class_predictions.items():
         if shutdown.is_set(): return None
         
         timestamp_scores = {}
@@ -257,12 +260,15 @@ def identification(option=None):
       
   
   class IdentificationTopRanked(Identification):
+    __slots__ = '_top_scores', '_calibration'
+    
     def __init__(self, options, np):
       super().__init__(options, np)
       
-      self.calibration = np.take(options.calibration, options.classes)
+      self._top_scores = {}
+      self._calibration = np.take(options.calibration, options.classes)
     
-    def predict(self, result, prediction_score=None):
+    def predict(self, prediction_score=None):
       np = self.np
       
       options = self.options
@@ -272,7 +278,7 @@ def identification(option=None):
       # this is what ensures the timer starts at zero
       top = 0
       scores = []
-      top_scores = result
+      top_scores = self._top_scores
       
       # get the last top scores, if any
       # this is so we can convert them into their final dictionary form later
@@ -291,7 +297,7 @@ def identification(option=None):
       # we will be able to get them back later by indexing into the classes array
       if prediction_score:
         prediction, score = prediction_score
-        score = np.minimum(score.take(classes) * self.calibration, 1.0, dtype=np.float32)
+        score = np.minimum(score.take(classes) * self._calibration, 1.0, dtype=np.float32)
         
         # in the span all case, we actually just want to list
         # every class that is ever in the top ranked as one big summary
@@ -361,12 +367,13 @@ def identification(option=None):
       # otherwise add the new score, we'll find the mean of them all later
       default += score
     
-    def timestamps(self, result, shutdown):
-      self.predict(result)
+    def timestamps(self, shutdown):
+      self.predict()
       
-      top_scores = {}
+      result = {}
       timespan = self.options.timespan
       np = self.np
+      top_scores = self._top_scores
       
       class_scores_begin = {}
       class_scores_end = {}
@@ -377,7 +384,7 @@ def identification(option=None):
       score_begin = 0
       score_end = 0
       
-      predictions = list(result.keys())
+      predictions = list(top_scores.keys())
       predictions_len = len(predictions)
       
       scores = []
@@ -387,12 +394,12 @@ def identification(option=None):
         
         if prediction != predictions_len:
           score_end = predictions[prediction]
-          class_scores_end = result[score_end]
+          class_scores_end = top_scores[score_end]
         
         # the first loop iteration is just to initialize scores
         try:
           if scores:
-            class_scores_begin = result[score_begin]
+            class_scores_begin = top_scores[score_begin]
             score_begin += timespan
             
             # check if we are still in a contiguous range of timestamps
@@ -411,7 +418,7 @@ def identification(option=None):
             # it is not necessary to sort here again, as it would be impossible
             # for the order to change as the result of averaging here, because
             # we are only joining timestamps where the keys are in the same order
-            top_scores[timestamp] = dict(zip(class_scores_begin.keys(),
+            result[timestamp] = dict(zip(class_scores_begin.keys(),
               np.mean(scores, axis=0, dtype=np.float32).tolist(), strict=True))
         finally:
           score_begin = score_end
@@ -423,7 +430,7 @@ def identification(option=None):
           begin = score_end
           scores = [np.fromiter(class_scores_end.values(), dtype=np.float32)]
       
-      return top_scores
+      return result
     
     @classmethod
     def restructure_results_for_output(cls, results, output):
