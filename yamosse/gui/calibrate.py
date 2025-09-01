@@ -81,6 +81,7 @@ class UndoableScale(UndoableWidget):
     pass
 
 
+# TODO: this is in major need of simplication
 class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
     super().__init__(undooptions)
@@ -143,8 +144,8 @@ class UndoableMaster(UndoableScale):
     revert = self.revert
     
     self._undooptions(
-      (revert, calibration_oldvalues, oldvalues, oldvalue),
-      (revert, calibration_newvalues, newvalues, newvalue)
+      (revert, calibration_oldvalues.copy(), oldvalues.copy(), oldvalue),
+      (revert, calibration_newvalues.copy(), newvalues.copy(), newvalue)
     )
     
     # copied to avoid mutating redo state
@@ -178,8 +179,9 @@ class UndoableMaster(UndoableScale):
     if widgets is None:
       widgets = self.calibration.scales
     
+    # TODO TODO properly document how this works
     reciprocal = self._reciprocal(value=newvalue)
-    return {w: round(self.oldvalues[w] * reciprocal) for w in widgets}
+    return {w: min(round(self.oldvalues[w] * reciprocal), TO_SCALE_VALUE) for w in widgets}
   
   def _reciprocal(self, value=None):
     # the value of MASTER_LIMIT is such that if the master scale is
