@@ -89,11 +89,8 @@ class UndoableMaster(UndoableScale):
     self._tk = scale.tk
     self._command = scale['command']
     
-    # self.oldvalues is never actually reassigned
-    # (unless we recenter)
-    # therefore, it must be a copy here
-    # otherwise, it'll mutate the original calibration.oldvalues
-    # which is chucked into undooptions as an undo state
+    # editing our own oldvalues should never effect the calibration's oldvalues
+    # so to be safe, we copy here
     self.oldvalues = calibration.oldvalues.copy()
     self.oldvalue = float(scale.get())
     
@@ -128,32 +125,35 @@ class UndoableMaster(UndoableScale):
     
     calibration = self.calibration
     
-    # calibration.oldvalues doesn't need to be copied here
-    # because we will always be reassigning it down below anyway
     calibration_oldvalues = calibration.oldvalues
     oldvalues = self.oldvalues
     
-    # self.oldvalues must be copied if not recentring
-    # because it could be mutated by the normal revert function still
-    # it does not need to be copied in the recentre case
-    # because in that case we will be reassigning self.oldvalues anyway
+    # this is slightly counterintuitive
+    # you would think we'd be putting the weird reciprocal numbers
+    # into our own oldvalues, not the calibration's
+    # the thing is that on revert, when they're shown, the master scales gets set
+    # which causes them to cancel out, so it has to be stored like this
+    # here calibration_oldvalues is copied so we
+    # don't "cross the streams" so to speak
+    # because modifying our own newvalues should not touch
+    # the calibration's oldvalues
     calibration_newvalues = self._new(widgets=oldvalues, newvalue=newvalue)
-    newvalues = calibration_oldvalues if recenter else (oldvalues := oldvalues.copy())
+    newvalues = calibration_oldvalues.copy() if recenter else oldvalues
     
+    # I know, I know. Four separate copies, is it really necessary?
+    # *Trust me.* Don't remove the .copy() calls. Down that path lies madness
     revert = self.revert
     
     self._undooptions(
-      (revert, calibration_oldvalues, oldvalues, oldvalue),
-      (revert, calibration_newvalues, newvalues, newvalue)
+      (revert, calibration_oldvalues.copy(), oldvalues.copy(), oldvalue),
+      (revert, calibration_newvalues.copy(), newvalues.copy(), newvalue)
     )
     
-    # copied to avoid mutating redo state
-    calibration.oldvalues = calibration_newvalues.copy()
+    calibration.oldvalues = calibration_newvalues
     self.oldvalue = newvalue
     
     if recenter:
-      # copied to avoid mutating redo state
-      self.oldvalues = newvalues.copy()
+      self.oldvalues = newvalues
       self._scale.set(newvalue)
     
     return widget, newvalue, oldvalue, recenter
