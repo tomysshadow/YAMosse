@@ -89,6 +89,12 @@ class UndoableMaster(UndoableScale):
     self._tk = scale.tk
     self._command = scale['command']
     
+    # self.oldvalues is never actually reassigned
+    # (unless we recenter)
+    # therefore, it must be a copy here
+    # otherwise, it'll mutate the original calibration.oldvalues
+    # which is chucked into undooptions as an undo state
+    self.oldvalues = calibration.oldvalues.copy()
     self.oldvalue = float(scale.get())
     
     scale['command'] = self._master
@@ -97,10 +103,11 @@ class UndoableMaster(UndoableScale):
     self.calibration = calibration
   
   def revert(self, *args, focus=True):
-    newvalues, newvalue = args
+    calibration_newvalues, newvalues, newvalue = args
     
     # we must copy this here so we don't mutate a redo state
-    self.calibration.oldvalues = newvalues.copy()
+    self.calibration.oldvalues = calibration_newvalues.copy()
+    self.oldvalues = newvalues.copy()
     self.oldvalue = newvalue
     
     # this must happen last, invokes self._master function
@@ -120,24 +127,34 @@ class UndoableMaster(UndoableScale):
     print(f'Undo master scale save {widget} {newvalue} {oldvalue} {recenter}')
     
     calibration = self.calibration
-    oldvalues = calibration.oldvalues
-    newvalues = self._new(widgets=oldvalues, newvalue=newvalue)
     
-    # I know, I know. Four separate copies, is it really necessary?
-    # *Trust me.* Don't remove the .copy() calls. Down that path lies madness
+    # calibration.oldvalues doesn't need to be copied here
+    # because we will always be reassigning it down below anyway
+    calibration_oldvalues = calibration.oldvalues
+    oldvalues = self.oldvalues
+    
+    # self.oldvalues must be copied if not recentring
+    # because it could be mutated by the normal revert function still
+    # it does not need to be copied in the recentre case
+    # because in that case we will be reassigning self.oldvalues anyway
+    calibration_newvalues = self._new(widgets=oldvalues, newvalue=newvalue)
+    newvalues = calibration_oldvalues if recenter else (oldvalues := oldvalues.copy())
+    
     revert = self.revert
     
-    # TODO: we potentially don't need to store our own old/newvalues at all
     self._undooptions(
-      (revert, oldvalues.copy(), oldvalue),
-      (revert, newvalues.copy(), newvalue)
+      (revert, calibration_oldvalues, oldvalues, oldvalue),
+      (revert, calibration_newvalues, newvalues, newvalue)
     )
     
-    calibration.oldvalues = newvalues
+    # copied to avoid mutating redo state
+    calibration.oldvalues = calibration_newvalues.copy()
     self.oldvalue = newvalue
     
     if recenter:
-      widget.set(newvalue)
+      # copied to avoid mutating redo state
+      self.oldvalues = newvalues.copy()
+      self._scale.set(newvalue)
     
     return widget, newvalue, oldvalue, recenter
   
@@ -147,20 +164,11 @@ class UndoableMaster(UndoableScale):
     for widget, newvalue in newvalues.items():
       widget.set(newvalue)
   
-  def get(self):
+  def value(self):
     return float(self._scale.get())
   
-  def divide(self, newvalue, reciprocal=None, value=None):
-    if reciprocal is None:
-      reciprocal = self._reciprocal(value=value)
-    
-    return round(newvalue / reciprocal)
-  
-  def multiply(self, oldvalue, reciprocal=None, value=None):
-    if reciprocal is None:
-      reciprocal = self._reciprocal(value=value)
-    
-    return round(oldvalue * reciprocal)
+  def calibrate(self, widget, newvalue):
+    self.oldvalues[widget] = round(newvalue / self._reciprocal())
   
   def _old(self, widget):
     return self.oldvalue
@@ -171,9 +179,7 @@ class UndoableMaster(UndoableScale):
       widgets = self.calibration.scales
     
     reciprocal = self._reciprocal(value=newvalue)
-    
-    return {w: self.multiply(self.calibration.oldvalues[w], reciprocal=reciprocal
-      ) for w in widgets}
+    return {w: round(self.oldvalues[w] * reciprocal) for w in widgets}
   
   def _reciprocal(self, value=None):
     # the value of MASTER_LIMIT is such that if the master scale is
@@ -181,7 +187,7 @@ class UndoableMaster(UndoableScale):
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
     if value is None:
-      value = self.get()
+      value = self.value()
     
     return value / MASTER_CENTER if value else MASTER_LIMIT
   
@@ -287,10 +293,11 @@ class UndoableCalibration(UndoableScale):
   def show(self, *args, **kwargs):
     widget, newvalue = args
     
-    self.oldvalues[widget] = self.master.divide(newvalue)
+    self.oldvalues[widget] = newvalue
+    self.master.calibrate(widget, newvalue)
   
   def _old(self, widget):
-    return self.master.divide(self.oldvalues[widget])
+    return self.oldvalues[widget]
   
   def _scrollcommand(self, command, *args):
     text = self._text
@@ -327,12 +334,15 @@ class UndoableReset(UndoableWidget):
     ARGS_LEN = 3
     
     args += (None,) * ARGS_LEN
-    calibration_newvalues, master_newvalue = args[:ARGS_LEN]
+    calibration_newvalues, master_newvalues, master_newvalue = args[:ARGS_LEN]
     
     oldvalues = self.oldvalues
     
     if calibration_newvalues is None:
       calibration_newvalues = oldvalues
+    
+    if master_newvalues is None:
+      master_newvalues = oldvalues
     
     if master_newvalue is None:
       master_newvalue = DEFAULT_SCALE_VALUE
@@ -344,12 +354,14 @@ class UndoableReset(UndoableWidget):
     # reverting its master will have the side effect of reverting it anyway
     self.calibration.master.revert(
       calibration_newvalues,
+      master_newvalues,
       master_newvalue,
       focus=False
     )
   
   def _reset(self):
     calibration = self.calibration
+    master = calibration.master
     
     revert = self.revert
     
@@ -360,7 +372,8 @@ class UndoableReset(UndoableWidget):
       (
         revert,
         calibration.oldvalues.copy(),
-        calibration.master.get()
+        master.oldvalues.copy(),
+        master.value()
       ),
       
       (revert,)
