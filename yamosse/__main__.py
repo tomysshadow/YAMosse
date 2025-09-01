@@ -1,4 +1,5 @@
 import sys
+import argparse
 
 import yamosse
 import yamosse.options as yamosse_options
@@ -6,69 +7,50 @@ import yamosse.worker as yamosse_worker
 import yamosse.subsystem as yamosse_subsystem
 
 
-def help_():
-  print(
-    'Usage: python -m yamosse',
-    '[-rd',
-    '-r',
-    '-ip import_preset_file_name',
-    '-ep export_preset_file_name',
-    '-y output_file_name',
-    '-o key value]'
-  )
-
-
-def main(argc, argv):
+def main():
   print(yamosse.TITLE, end='\n\n')
   
-  MIN_ARGC = 1
+  parser = argparse.ArgumentParser(
+    prog=yamosse.__name__,
+    description=yamosse.__doc__
+  )
   
-  if argc < MIN_ARGC:
-    help_()
-    return 2
+  parser.add_argument('-rd', '--restore_defaults',
+    action='store_true', default=argparse.SUPPRESS)
   
-  args = argv[MIN_ARGC:]
-  argc = len(args)
+  parser.add_argument('-r', '--record',
+    action='store_true', default=argparse.SUPPRESS)
   
-  kwargs = {}
-  options_attrs = {}
-  argc2 = argc - 1
-  argc3 = argc - 2
+  parser.add_argument('-ip', '--import-preset', nargs=1,
+    dest='import_preset_file_name', default=argparse.SUPPRESS)
   
-  for a in range(argc):
-    arg = args[a]
-    
-    if arg in ('-h', '--help'):
-      help_()
-      return 2
-    elif arg in ('-rd', '--restore_defaults'):
-      kwargs['restore_defaults'] = True
-    elif arg in ('-r', '--record'):
-      kwargs['record'] = True
-    elif a < argc2:
-      if arg in ('-ip', '--import-preset'):
-        kwargs['import_preset_file_name'] = args[a := a + 1]
-      elif arg in ('-ep', '--export-preset'):
-        kwargs['export_preset_file_name'] = args[a := a + 1]
-      elif arg in ('-y', '--yamscan'):
-        kwargs['output_file_name'] = args[a := a + 1]
-      elif a < argc3:
-        if arg in ('-o',  '--option'):
-          key = args[a := a + 1]
-          
-          try:
-            options_attrs[key] = yamosse_options.json.loads(args[a := a + 1])
-          except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
-            help_()
-            return 2
+  parser.add_argument('-ep', '--export-preset', nargs=1,
+    dest='export_preset_file_name', default=argparse.SUPPRESS)
+  
+  parser.add_argument('-y', '--yamscan', nargs=1,
+    dest='output_file_name', default=argparse.SUPPRESS)
+  
+  parser.add_argument('-o', '--option', nargs=2,
+    action='append', dest='options_attrs', metavar=('KEY', 'VALUE'), default=[])
+  
+  args = parser.parse_args()
+  options_attrs = dict(args.options_attrs)
+  
+  for key, value in options_attrs.items():
+    try:
+      options_attrs[key] = yamosse_options.json.loads(value)
+    except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError) as ex:
+      parser.error(str(ex))
   
   if options_attrs:
-    kwargs['options_attrs'] = options_attrs
+    args.options_attrs = options_attrs
+  else:
+    del args.options_attrs
   
   yamosse_worker.tfhub_cache()
   
   try:
-    yamosse.yamosse(**kwargs)
+    yamosse.yamosse(**vars(args))
   except yamosse_subsystem.SubsystemError as ex:
     print(ex)
     return 1
@@ -76,4 +58,4 @@ def main(argc, argv):
   return 0
 
 
-sys.exit(main(len(sys.argv), sys.argv))
+sys.exit(main())
