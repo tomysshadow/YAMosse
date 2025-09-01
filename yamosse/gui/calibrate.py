@@ -85,15 +85,15 @@ class UndoableMaster(UndoableScale):
   def __init__(self, undooptions, scale, calibration):
     super().__init__(undooptions)
     
-    self._scale = scale
     self._tk = scale.tk
+    self._scale = scale
     self._command = scale['command']
+    scale['command'] = self._master
     
-    # TODO document this
+    # editing our own oldvalues should never affect the calibration's oldvalues
+    # so to be safe, we copy here
     self.oldvalues = calibration.oldvalues.copy()
     self.oldvalue = float(scale.get())
-    
-    scale['command'] = self._master
     self.bind(scale, scale)
     
     self.calibration = calibration
@@ -124,13 +124,20 @@ class UndoableMaster(UndoableScale):
     
     calibration = self.calibration
     
+    oldvalues = self.oldvalues
     calibration_oldvalues = calibration.oldvalues
+    
+    # if recentring, use the calibration oldvalues so that
+    # the master scale moves independently of them
+    # (copy calibration.oldvalues so we don't mutate oldvalues not belonging to us)
+    # otherwise, use our previous oldvalues so we continue
+    # to scale them proportionally
+    newvalues = calibration_oldvalues.copy() if recenter else oldvalues
     calibration_newvalues = self.get_calibration_newvalues(
       widgets=oldvalues, newvalue=newvalue)
     
-    oldvalues = self.oldvalues
-    newvalues = calibration_oldvalues.copy() if recenter else oldvalues
-    
+    # I know, I know. Four separate copies, is it really necessary?
+    # *Trust me.* Don't remove the .copy() calls. Down that path lies madness
     revert = self.revert
     
     self._undooptions(
@@ -139,10 +146,10 @@ class UndoableMaster(UndoableScale):
     )
     
     calibration.oldvalues = calibration_newvalues
+    self.oldvalues = newvalues
     self.oldvalue = newvalue
     
     if recenter:
-      self.oldvalues = newvalues
       self._scale.set(newvalue)
     
     return widget, newvalue, oldvalue, recenter
@@ -161,6 +168,10 @@ class UndoableMaster(UndoableScale):
     if widgets is None:
       widgets = self.calibration.scales
     
+    # get the current calibration scale values
+    # after clicking and dragging the master scale
+    # this must be representative of the actual numbers on the visible scales
+    # which is why we cap it to the TO_SCALE_VALUE
     reciprocal = self._reciprocal(value=newvalue)
     
     return {
@@ -171,6 +182,10 @@ class UndoableMaster(UndoableScale):
     }
   
   def set_oldvalue(self, widget, newvalue):
+    # mirror the calibration scale value so
+    # the master scale moves it proportionally to the others correctly
+    # this is intentionally not capped to the TO_SCALE_VALUE
+    # (numbers in here may get very large!)
     self.oldvalues[widget] = round(newvalue / self._reciprocal())
   
   def _old(self, widget):
@@ -181,6 +196,7 @@ class UndoableMaster(UndoableScale):
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
+    # but return to its original value if the master slider is moved back to zero
     if value is None:
       value = self.value()
     
@@ -222,6 +238,9 @@ class UndoableCalibration(UndoableScale):
     self._text = text
     self._tk = text.tk
     
+    # the calibration oldvalues should contain the "true" state of the scales
+    # at all times. It should never contain numbers larger than TO_SCALE_VALUE (200)
+    # if it does, it probably leaked out of UndoableMaster which is a bug
     oldvalues = self.values(scales.values())
     self.oldvalues = oldvalues
     self.scales = oldvalues
@@ -289,9 +308,7 @@ class UndoableCalibration(UndoableScale):
     widget, newvalue = args
     
     self.oldvalues[widget] = newvalue
-    
-    master = self.master
-    master.set_oldvalue(newvalue)
+    self.master.set_oldvalue(widget, newvalue)
   
   def _old(self, widget):
     return self.oldvalues[widget]
@@ -320,11 +337,9 @@ class UndoableReset(UndoableWidget):
     super().__init__(undooptions)
     
     self._button = button
-    
-    self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
-    
     button['command'] = self._reset
     
+    self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
     self.calibration = calibration
   
   def revert(self, *args, focus=True):
