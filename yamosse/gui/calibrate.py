@@ -17,6 +17,8 @@ MASTER_CENTER = 100.0
 
 
 class UndoableWidget(ABC):
+  __slots__ = '_undooptions',
+  
   def __init__(self, undooptions):
     self._undooptions = undooptions
   
@@ -82,6 +84,8 @@ class UndoableScale(UndoableWidget):
 
 
 class UndoableMaster(UndoableScale):
+  __slots__ = '_tk', '_scale', '_command', 'oldvalues', 'oldvalue', 'calibration'
+  
   def __init__(self, undooptions, scale, calibration):
     super().__init__(undooptions)
     
@@ -232,11 +236,13 @@ class UndoableMaster(UndoableScale):
 # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
 # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
 class UndoableCalibration(UndoableScale):
+  __slots__ = '_tk', '_text', 'oldvalues', 'scales', 'master', 'reset'
+  
   def __init__(self, undooptions, text, scales, master_scale, reset_button):
     super().__init__(undooptions)
     
-    self._text = text
     self._tk = text.tk
+    self._text = text
     
     # the calibration oldvalues should contain the "true" state of the scales
     # at all times. It should never contain numbers larger than TO_SCALE_VALUE (200)
@@ -333,6 +339,8 @@ class UndoableCalibration(UndoableScale):
 
 
 class UndoableReset(UndoableWidget):
+  __slots__ = '_button', 'oldvalues', 'calibration'
+  
   def __init__(self, undooptions, button, calibration):
     super().__init__(undooptions)
     
