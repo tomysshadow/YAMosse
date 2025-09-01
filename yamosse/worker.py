@@ -283,11 +283,11 @@ def worker(file_name):
   shutdown = _shutdown
   if shutdown.is_set(): return None
   
-  step = 0
-  
   options = _options
   identification = options.identification
   background_noise_volume = options.background_noise_volume
+  
+  step = 0
   
   try:
     with sf.SoundFile(file_name) as f:
