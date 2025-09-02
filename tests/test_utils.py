@@ -149,22 +149,6 @@ class TestUtils(unittest.TestCase):
     
     self.assertEqual(d, dict(utils.dict_enumerate(l)))
   
-  def test_dict_once(self):
-    d = {}
-    
-    self.assertTrue(utils.dict_once(d, 'first'))
-    self.assertFalse(utils.dict_once(d, 'first'))
-    
-    self.assertTrue(utils.dict_once(d, 'second'))
-    self.assertFalse(utils.dict_once(d, 'second'))
-    
-    self.assertFalse(utils.dict_once(d, 'first'))
-    
-    self.assertTrue(utils.dict_once(d, 'third'))
-    self.assertFalse(utils.dict_once(d, 'third'))
-    
-    self.assertFalse(utils.dict_once(d, 'second'))
-  
   def test_batched(self):
     b = utils.batched(list(range(200)), 10)
     self.assertEqual(len(list(b)), 20)

@@ -5,6 +5,7 @@ from shlex import quote
 import json
 
 import yamosse.utils as yamosse_utils
+import yamosse.once as yamosse_once
 
 LINES = ('\r', '\n')
 
@@ -136,12 +137,12 @@ def output(file_name, *args, **kwargs):
   
   class OutputText(Output):
     def __init__(self, *args, encoding='ascii', **kwargs):
-      self._d = {}
+      self._once = yamosse_once.Once()
       
       super().__init__(*args, encoding=encoding, **kwargs)
     
     def options(self, options):
-      if not yamosse_utils.dict_once(self._d, 'options'):
+      if not self._once.add('options'):
         return False
       
       if not super().options(options):
@@ -156,7 +157,7 @@ def output(file_name, *args, **kwargs):
       return True
     
     def results(self, results):
-      if not yamosse_utils.dict_once(self._d, 'results'):
+      if not self._once.add('results'):
         return None
       
       if not results:
@@ -174,7 +175,7 @@ def output(file_name, *args, **kwargs):
       return results
     
     def errors(self, errors):
-      if not yamosse_utils.dict_once(self._d, 'errors'):
+      if not self._once.add('errors'):
         return None
       
       if not errors:

@@ -20,6 +20,7 @@ except ImportError:
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
+import yamosse.once as yamosse_once
 import yamosse.progress as yamosse_progress
 
 PADDING = 12
@@ -674,7 +675,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   item_image_width = 0
   
   # get the per-tag padding, fonts, and images
-  tags = {}
+  tags = yamosse_once.Once()
   
   for child in treeview.get_children(item=item):
     for child_tag in treeview.tk.splitlist(treeview.item(child, 'tags')):
@@ -682,7 +683,7 @@ def measure_widths_treeview(treeview, widths, item=None):
       # although it doesn't take very long to query a tag's configuration, it is still
       # worth checking if we've done it yet, as it is likely there are many many columns
       # but only a few tags they are collectively using
-      if not yamosse_utils.dict_once(tags, child_tag):
+      if not tags.add(child_tag):
         continue
       
       # after confirming we have not done the tag yet, query the tag's configuration
