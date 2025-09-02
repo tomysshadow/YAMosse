@@ -20,11 +20,14 @@ LINE = '#' * 80
 VOLUME_NAME = 'Volume:'
 VOLUME_SPEC = '{volume:>4.0%}'
 
-RECORDING_ABORTED = 'Recording aborted'
-RECORDING_FINISHED = 'Recording finished'
+RECORDING_ABORTED_SPEC = 'Recording aborted: {message}'
+RECORDING_FINISHED_SPEC = 'Recording finished: {input}'
 
-NO_INPUT_DEVICES_MESSAGE = ': '.join((RECORDING_ABORTED, 'there are no input devices.'))
-NO_SAVE_MESSAGE = ': '.join((RECORDING_ABORTED, 'the user did not save the recording.'))
+NO_INPUT_DEVICES_MESSAGE = RECORDING_ABORTED_SPEC.format(
+  message='there are no input devices.')
+
+NO_SAVE_MESSAGE = RECORDING_ABORTED_SPEC.format(
+  message='the user did not save the recording.')
 
 
 class Recording:
@@ -140,7 +143,7 @@ class Recording:
         return
       
       input_ = quote(input_)
-      print(RECORDING_FINISHED, ': ', input_, sep='', end='\n\n')
+      print(RECORDING_FINISHED_SPEC.format(input=input_), sep='', end='\n\n')
       
       # a previous iteration of this appended the name instead of replacing it
       # but it was broken because the input field can contain folder names
