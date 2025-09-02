@@ -132,11 +132,9 @@ class Recorder:
     
     # don't start recording if there are no input devices
     if str(self._variables['input_device'].get()) not in self._input_devices:
-      messagebox.showwarning(
-        parent=self._window,
-        title=TITLE,
-        message=yamosse_recording.NO_INPUT_DEVICES_MESSAGE
-      )
+      messagebox.showwarning(parent=self._window, title=TITLE,
+        message=yamosse_recording.NO_INPUT_DEVICES_MESSAGE)
+      
       return
     
     self._recording_button.configure(
