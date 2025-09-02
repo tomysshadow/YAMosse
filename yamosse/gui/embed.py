@@ -247,57 +247,55 @@ def _root_embed():
       try:
         class_, sequence, script = args
       except ValueError:
-        pass
-      else:
-        class_ = str(class_)
-        
-        if class_ == CLASS_TEXT:
-          # we check for the Text class first to avoid an unnecessary lookup on windows
-          # here we need the binding to be applied in advance of calling bind_window
-          # which will copy the resulting class binding onto the windows
-          result = bind(*args)
-          
-          # filter out dead windows so bind_window doesn't die on them
-          # do not remove dead windows from the list! No touching that here
-          # only the window getting destroyed should remove it
-          # ideally dead windows should get auto removed from the dictionary
-          # because it's a WeakKeyDictionary, but in theory something could
-          # still be holding onto its Python reference
-          for window_bindings in _windows.items():
-            if not window_bindings[0].winfo_exists():
-              continue
-            
-            bind_window(window_bindings, name_sequence(sequence))
-          
-          return result
-        
-        # handle the case where you want to put your own binding onto one of these windows
-        # we don't need to worry about if this window is dead
-        # because bind is supposed to fail with an error if it is anyway
-        try:
-          window = root_window.nametowidget(class_)
-          bindings = _windows[window]
-        except KeyError:
-          pass
-        else:
-          name = name_sequence(sequence)
-          scripts = bindings.setdefault(name, [])
-          
-          # if we're not adding this script then clear all previous ones
-          if not script.startswith(ADD):
-            script = ''.join((ADD, script))
-            scripts.clear()
-          
-          scripts.append(script)
-          
-          bind_window((window, bindings), name)
-          return ''
+        return bind(*args)
       
-      return bind(*args)
+      class_ = str(class_)
+      
+      if class_ == CLASS_TEXT:
+        # we check for the Text class first to avoid an unnecessary lookup on windows
+        # here we need the binding to be applied in advance of calling bind_window
+        # which will copy the resulting class binding onto the windows
+        result = bind(*args)
+        
+        # filter out dead windows so bind_window doesn't die on them
+        # do not remove dead windows from the list! No touching that here
+        # only the window getting destroyed should remove it
+        # ideally dead windows should get auto removed from the dictionary
+        # because it's a WeakKeyDictionary, but in theory something could
+        # still be holding onto its Python reference
+        for window_bindings in _windows.items():
+          if not window_bindings[0].winfo_exists():
+            continue
+          
+          bind_window(window_bindings, name_sequence(sequence))
+        
+        return result
+      
+      # handle the case where you want to put your own binding onto one of these windows
+      # we don't need to worry about if this window is dead
+      # because bind is supposed to fail with an error if it is anyway
+      try:
+        window = root_window.nametowidget(class_)
+        bindings = _windows[window]
+      except KeyError:
+        return bind(*args)
+      
+      name = name_sequence(sequence)
+      scripts = bindings.setdefault(name, [])
+      
+      # if we're not adding this script then clear all previous ones
+      if not script.startswith(ADD):
+        script = ''.join((ADD, script))
+        scripts.clear()
+      
+      scripts.append(script)
+      
+      bind_window((window, bindings), name)
+      return ''
     
     tk_.call('interp', 'hide', '', 'bind')
     tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind_alias))
-    return root := (bind, bind_window)
+    return (root := (bind, bind_window))
   
   return get
 

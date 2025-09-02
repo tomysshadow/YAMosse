@@ -610,7 +610,7 @@ def _minwidth_treeview():
     if default != DEFAULT_MINWIDTH:
       return default
     
-    return default := ttk.Treeview().column('#0', 'minwidth')
+    return (default := ttk.Treeview().column('#0', 'minwidth'))
   
   return get
 
