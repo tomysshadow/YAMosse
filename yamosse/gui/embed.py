@@ -179,18 +179,13 @@ def _root_embed():
         # we always need to do the main script
         scripts = bindings.setdefault(name, [])
         
-        if scripts:
-          # set up the bindings that were originally on the window
-          # these scripts *will* already have a + prefix if they need to be added
-          for script in scripts:
-            bind(window, name, script)
-        else:
+        if not scripts:
           # back up the binding that was already on the window before
           # we get this binding from Tk, so it shouldn't begin with a + prefix
           script = bind(window, name)
-          assert not script.startswith(ADD), 'script must not be prefixed'
+          assert not script.startswith(ADD), 'script must not be prefixed with %r' % ADD
           
-          scripts.append(script)
+          scripts.append(''.join((ADD, script)))
         
         # we want to make the arrow keys scroll instantly
         # default behaviour is to move the text marker, which
@@ -202,10 +197,7 @@ def _root_embed():
           # note: the scripts are *not* stripped of leading/trailing whitespace
           # a + after a space is not interpreted as a prefix
           script = bind(CLASS_TEXT, name)
-          assert not script.startswith(ADD), 'script must not be prefixed'
-          
-          # if script is empty, we can skip it entirely
-          if not script: return
+          assert not script.startswith(ADD), 'script must not be prefixed with %r' % ADD
         
         # this is how we "forward" the event from the window to an arbitrary text widget
         # so that we can get the scrolling behaviour of the default bindings whenever the mouse
@@ -224,19 +216,27 @@ def _root_embed():
         # the Text widget, unlike most widgets, will take focus when clicked on
         # even if takefocus is False, and we don't want it to randomly steal focus
         # from the widgets it contains just because the window got an event
-        bind(window, name,
+        if script:
+          bind(window, name,
+            
+            f'''set {W} [{W} %M]
+            if {{${W} == ""}} {{ continue }}
+            
+            interp hide {{}} focus
+            interp alias {{}} focus {{}} {focus_cbname}
+            catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+            
+            interp alias {{}} focus {{}}
+            interp expose {{}} focus
+            return -options $options $result'''
+          )
+        
+        # set up the bindings that were originally on the window
+        # these scripts *will* already have a + prefix
+        for script in scripts:
+          assert script.startswith(ADD), 'script must be prefixed with %r' % ADD
           
-          f'''+set {W} [{W} %M]
-          if {{${W} == ""}} {{ continue }}
-          
-          interp hide {{}} focus
-          interp alias {{}} focus {{}} {focus_cbname}
-          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
-          
-          interp alias {{}} focus {{}}
-          interp expose {{}} focus
-          return -options $options $result'''
-        )
+          bind(window, name, script)
       
       def bind_alias(*args):
         # if we are binding a new script to the Text class
@@ -282,8 +282,9 @@ def _root_embed():
             name = name_sequence(sequence)
             scripts = bindings.setdefault(name, [])
             
-            # technically optional, but a good idea
+            # if we're not adding this script then clear all previous ones
             if not script.startswith(ADD):
+              script = ''.join((ADD, script))
               scripts.clear()
             
             scripts.append(script)

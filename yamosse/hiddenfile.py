@@ -4,11 +4,13 @@ import platform
 import subprocess
 import weakref
 
+import yamosse.utils as yamosse_utils
+
+HIDDEN = '~'
+
 
 class _HiddenFileWrapper:
   def __init__(self, *args, prefix='', **kwargs):
-    HIDDEN = '~'
-    
     self._system = platform.system()
     
     self._args = args
@@ -18,7 +20,7 @@ class _HiddenFileWrapper:
     tmp = NamedTemporaryFile(
       *args,
       delete=False,
-      prefix='%c%s' % (HIDDEN, prefix),
+      prefix=yamosse_utils.str_ensureprefix(prefix, HIDDEN),
       **kwargs
     )
     
