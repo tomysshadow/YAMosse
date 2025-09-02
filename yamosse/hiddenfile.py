@@ -26,11 +26,11 @@ class _HiddenFileWrapper:
     self.save = False
     self._hide(True)
   
-  def close(self, *args, **kwargs):
+  def close(self):
     tmp = self.tmp
     
     self._hide(False)
-    tmp.close(*args, **kwargs)
+    tmp.close()
     save = self.save
     
     if not save:
@@ -76,8 +76,8 @@ class HiddenFile:
   def __exit__(self, exc, val, tb):
     self.__closer()
   
-  def close(self, *args, **kwargs):
-    self.__closer(*args, **kwargs)
+  def close(self):
+    self.__closer()
   
   @property
   def name(self):

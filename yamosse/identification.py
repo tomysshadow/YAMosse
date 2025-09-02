@@ -88,8 +88,8 @@ def identification(option=None):
   class IdentificationConfidenceScore(Identification):
     __slots__ = '_class_predictions', '_minmax'
     
-    def __init__(self, options, *args, **kwargs):
-      super().__init__(options, *args, **kwargs)
+    def __init__(self, options, np):
+      super().__init__(options, np)
       
       self._class_predictions = {}
       self._minmax = self._max if options.confidence_score_minmax else self._min

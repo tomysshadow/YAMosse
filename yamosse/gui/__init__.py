@@ -788,8 +788,8 @@ def measure_widths_treeview(treeview, widths, item=None):
   return measured_widths
 
 
-def configure_widths_treeview(treeview, *args, **kwargs):
-  measured_widths = measure_widths_treeview(treeview, *args, **kwargs)
+def configure_widths_treeview(treeview, widths, item=None):
+  measured_widths = measure_widths_treeview(treeview, widths, item=item)
   
   for cid, width in measured_widths.items():
     treeview.column(cid, width=width, minwidth=width, stretch=False)
@@ -1345,9 +1345,9 @@ def after_wait_window(window, callback):
   # we block until the callback has finished running
   event = Event()
   
-  def set_(*args, **kwargs):
+  def set_():
     try:
-      return callback(*args, **kwargs)
+      return callback()
     finally:
       event.set()
   

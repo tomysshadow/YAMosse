@@ -81,7 +81,7 @@ class Recording:
           device=device,
           samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
           blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
-          callback=lambda indata, *args, **kwargs: indatas.put(indata.copy())
+          callback=lambda indata, frames, time, status: indatas.put(indata.copy())
         )
       ):
         try:

@@ -62,7 +62,8 @@ class Progressbar(ttk.Progressbar):
     
     # variadics are supported in case there is ever a function that uses them
     # (but currently there aren't any)
-    return lambda *args, **kwargs: self.function(name, args=args, kwargs=kwargs)
+    return lambda *args, **kwargs: self.function(
+      name, args=args, kwargs=kwargs)
   
   def configure(self, cnf={}, **kw):
     kw = cnf | kw
@@ -176,7 +177,7 @@ class Progressbar(ttk.Progressbar):
     self._trace = gui_trace.Trace(
       self,
       'write',
-      lambda *args, **kwargs: self._show()
+      lambda name1, name2, op: self._show()
     )
     
     # even though we can get the variable from the trace
