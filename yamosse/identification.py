@@ -22,6 +22,10 @@ def identification(option=None):
       self.np = np
     
     @abstractmethod
+    def clear(self):
+      pass
+    
+    @abstractmethod
     def predict(self, prediction_score=None):
       pass
     
@@ -89,6 +93,9 @@ def identification(option=None):
       
       self._class_predictions = {}
       self._minmax = self._max if options.confidence_score_minmax else self._min
+    
+    def clear(self):
+      self._class_predictions.clear()
     
     def predict(self, prediction_score=None):
       if not prediction_score: return
@@ -267,6 +274,9 @@ def identification(option=None):
       
       self._top_scores = {}
       self._calibration = np.take(options.calibration, options.classes)
+    
+    def clear(self):
+      self._top_scores.clear()
     
     def predict(self, prediction_score=None):
       np = self.np

@@ -298,6 +298,8 @@ def worker(file_name):
       import resampy
       
       # Decode the WAV file.
+      identification.clear()
+      
       seconds = 0.0
       
       sample_rate = _sample_rate
