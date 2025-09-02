@@ -8,9 +8,8 @@ import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
 
 VERSION = 2
-FILE_NAME = '.'.join((__name__, 'pickle'))
 
-_root_file_name = yamosse_root.root(FILE_NAME)
+_root_file_name = yamosse_root.root('.'.join((__name__, 'pickle')))
 
 
 class Options:
