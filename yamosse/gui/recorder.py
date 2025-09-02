@@ -12,7 +12,7 @@ from .. import gui
 from . import progressbar as gui_progressbar
 
 TITLE = 'Recorder'
-RESIZABLE = False
+RESIZABLE = (True, False)
 
 ASK_SAVE_MESSAGE = 'Do you want to save the recording?'
 

@@ -87,6 +87,8 @@ DEFAULT_MINWIDTH = -1
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
+BINDTAG_MINSIZE = 'minsize'
+
 WINDOWS_ICONPHOTO_BUGFIX = True
 
 FSENC_BITMAP = fsenc('Bitmap')
@@ -1171,29 +1173,6 @@ def make_undoable(frame):
   return undooptions, (undo_button, redo_button)
 
 
-def _init_sizegrip_window():
-  sizegrips = WeakKeyDictionary()
-  
-  def sizegrip_window(window, sizegrip=None, resizable=True):
-    if sizegrip:
-      if window not in sizegrips:
-        window.bind_class(bindtag_window(window),
-          '<Destroy>', lambda e: sizegrips.pop(e.widget, None), add=True)
-      
-      sizegrips[window] = sizegrip
-    else:
-      sizegrip = sizegrips[window]
-    
-    if resizable:
-      sizegrip.grid(row=2, column=2, sticky=tk.SE)
-    else:
-      sizegrip.grid_remove()
-  
-  return sizegrip_window
-
-sizegrip_window = _init_sizegrip_window()
-
-
 def _init_root_window():
   root_window = None
   
@@ -1298,6 +1277,56 @@ def _init_root_window():
   return get, owner
 
 get_root_window, owner_root_window = _init_root_window()
+
+
+def _init_minsize_window():
+  binding = None
+  
+  # we can't know a window's width and height until it is mapped
+  # so set up a bindtag to wait until then
+  def map_(e):
+    widget = e.widget
+    
+    bindtags = set(widget.bindtags())
+    bindtags.discard(BINDTAG_MINSIZE)
+    widget.bindtags(bindtags)
+    
+    widget.minsize(widget.winfo_width(), widget.winfo_height())
+  
+  def minsize_window(window):
+    nonlocal binding
+    
+    if not binding:
+      binding = get_root_window().bind_class(BINDTAG_MINSIZE, '<Map>', map_)
+    
+    window.bindtags((BINDTAG_MINSIZE,) + window.bindtags())
+  
+  return minsize_window
+
+minsize_window = _init_minsize_window()
+
+
+def _init_sizegrip_window():
+  sizegrips = WeakKeyDictionary()
+  
+  def sizegrip_window(window, sizegrip=None, resizable=True):
+    if sizegrip:
+      if window not in sizegrips:
+        window.bind_class(bindtag_window(window),
+          '<Destroy>', lambda e: sizegrips.pop(e.widget, None), add=True)
+      
+      sizegrips[window] = sizegrip
+    else:
+      sizegrip = sizegrips[window]
+    
+    if resizable:
+      sizegrip.grid(row=2, column=2, sticky=tk.SE)
+    else:
+      sizegrip.grid_remove()
+  
+  return sizegrip_window
+
+sizegrip_window = _init_sizegrip_window()
 
 
 def after_window(window, callback):
@@ -1450,16 +1479,22 @@ def location_center_window(parent, size):
 
 def customize_window(window, title, resizable=True, size=None, location=None, iconphotos=None):
   window.title(title)
-  window.resizable(resizable, resizable)
+  
+  try:
+    xresizable, yresizable = resizable
+  except TypeError:
+    xresizable, yresizable = resizable, resizable
+  
+  window.resizable(xresizable, yresizable)
   
   if size:
     window.geometry('%dx%d+%d+%d' % (size + location) if location else '%dx%d' % size)
-    
-    if resizable:
-      window.minsize(*size)
   
-  # should be done after setting new window geometry
-  sizegrip_window(window, resizable=resizable)
+  # set the minimum size of the window to its initial width and height
+  # then give it a sizegrip
+  # (should be done after setting new window geometry)
+  minsize_window(window)
+  sizegrip_window(window, resizable=xresizable and yresizable)
   
   if iconphotos:
     if window is get_root_window():
