@@ -607,10 +607,10 @@ def _minwidth_treeview():
     if minwidth != DEFAULT_MINWIDTH:
       return minwidth
     
-    if default == DEFAULT_MINWIDTH:
-      default = ttk.Treeview().column('#0', 'minwidth')
+    if default != DEFAULT_MINWIDTH:
+      return default
     
-    return default
+    return default := ttk.Treeview().column('#0', 'minwidth')
   
   return get
 
@@ -624,8 +624,7 @@ def indents_treeview(treeview, item=None):
     nonlocal item
     
     # must check for empty string specifically (zero should fall through)
-    item = str(treeview.parent(item))
-    return item != ''
+    return '' != (item := str(treeview.parent(item)))
   
   indents = 0
   
@@ -1284,12 +1283,13 @@ def _init_root_window():
   def get():
     nonlocal root_window
     
-    if not root_window:
-      root_window = tkdnd.Tk() if tkdnd else tk.Tk()
-      
-      local.owner = True
-      styles()
+    if root_window:
+      return root_window
     
+    root_window = tkdnd.Tk() if tkdnd else tk.Tk()
+    
+    local.owner = True
+    styles()
     return root_window
   
   def owner():
@@ -1508,69 +1508,71 @@ def _root_images():
   def get():
     nonlocal root_images
     
-    if not root_images:
-      def scandir(path, callback):
-        result = {}
-        
-        with os.scandir(path) as scandir:
-          for scandir_entry in scandir:
-            item = callback(scandir_entry)
-            
-            if not item:
-              continue
-            
-            key, value = item
-            result[key] = value
-        
-        return result
+    if root_images:
+      return root_images
+    
+    def scandir(path, callback):
+      result = {}
       
-      def callback_image(entry, make_image, ext):
-        name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
-        
-        if entry.is_dir():
-          return (name, scandir(entry.path, lambda image_entry: callback_image(
-            image_entry, make_image, ext)))
-        
-        # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
-        if os.path.splitext(name)[1] != ext:
-          return None
-        
-        try:
-          return (name, make_image(file=fsdec(entry.path)))
-        except tk.TclError:
-          return None
+      with os.scandir(path) as scandir:
+        for scandir_entry in scandir:
+          item = callback(scandir_entry)
+          
+          if not item:
+            continue
+          
+          key, value = item
+          result[key] = value
       
-      def callback_images(entry):
-        if not entry.is_dir():
-          return None
-        
-        image = entry.name.title()
-        
-        try:
-          ext = IMAGE_EXTS[image]
-        except KeyError:
-          return None
-        
-        return (image, scandir(entry.path, lambda image_entry: callback_image(
-          image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), ext)))
+      return result
+    
+    def callback_image(entry, make_image, ext):
+      name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
       
-      # getting root window needs to be done first
-      # to avoid popping an empty window in some circumstances
-      # all names/paths here are encoded with fsenc so that they will be compared by ordinal
-      root_window = get_root_window()
-      root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
+      if entry.is_dir():
+        return (name, scandir(entry.path, lambda image_entry: callback_image(
+          image_entry, make_image, ext)))
       
-      # this is done to prevent exceptions
-      # in case the application dies on a thread that isn't the GUI thread
-      # normally the images would have their __del__ method called
-      # only to discover that the Tk interpreter isn't running
-      def destroy(e):
-        nonlocal root_images
-        
-        root_images = None
+      # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
+      if os.path.splitext(name)[1] != ext:
+        return None
       
-      root_window.bind_class(bindtag_window(root_window),
-        '<Destroy>', destroy, add=True)
+      try:
+        return (name, make_image(file=fsdec(entry.path)))
+      except tk.TclError:
+        return None
+    
+    def callback_images(entry):
+      if not entry.is_dir():
+        return None
+      
+      image = entry.name.title()
+      
+      try:
+        ext = IMAGE_EXTS[image]
+      except KeyError:
+        return None
+      
+      return (image, scandir(entry.path, lambda image_entry: callback_image(
+        image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), ext)))
+    
+    # getting root window needs to be done first
+    # to avoid popping an empty window in some circumstances
+    # all names/paths here are encoded with fsenc so that they will be compared by ordinal
+    root_window = get_root_window()
+    root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
+    
+    # this is done to prevent exceptions
+    # in case the application dies on a thread that isn't the GUI thread
+    # normally the images would have their __del__ method called
+    # only to discover that the Tk interpreter isn't running
+    def destroy(e):
+      nonlocal root_images
+      
+      root_images = None
+    
+    root_window.bind_class(bindtag_window(root_window),
+      '<Destroy>', destroy, add=True)
     
     return root_images
   
