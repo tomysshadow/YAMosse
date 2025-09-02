@@ -65,15 +65,16 @@ def insert_embed(text, widget, line=0):
 def _peek_embed(M):
   # if some other widget has already handled this event
   # then don't do anything
-  if not int(M):
-    while _stack:
-      text = _stack[-1]
-      
-      if text.winfo_exists():
-        return text
-      
-      # throw out dead text
-      _stack.pop()
+  stack = _stack if not int(M) else None
+  
+  while stack:
+    text = stack[-1]
+    
+    if text.winfo_exists():
+      return text
+    
+    # throw out dead text
+    stack.pop()
   
   return ''
 
