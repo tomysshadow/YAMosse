@@ -9,11 +9,13 @@ TITLE = 'Calibrate'
 RESIZABLE = True
 SIZE = (520, 500)
 
-DEFAULT_SCALE_VALUE = 100
-TO_SCALE_VALUE = 200
+FROM_SCALE_VALUE = 0.00001
+DEFAULT_SCALE_VALUE = 100.0
+TO_SCALE_VALUE = 200.0
 
-MASTER_LIMIT = 0.00001
-MASTER_CENTER = 100.0
+FROM_SCALE_ROUND = round(FROM_SCALE_VALUE)
+DEFAULT_SCALE_ROUND = round(DEFAULT_SCALE_VALUE)
+TO_SCALE_ROUND = round(TO_SCALE_VALUE)
 
 
 class UndoableWidget(ABC):
@@ -196,7 +198,7 @@ class UndoableMaster(UndoableScale):
     return self.oldvalue
   
   def _reciprocal(self, value=None):
-    # the value of MASTER_LIMIT is such that if the master scale is
+    # the value of FROM_SCALE_VALUE is such that if the master scale is
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
     # percentage (200%) representable by the scales at any other master value
@@ -204,7 +206,10 @@ class UndoableMaster(UndoableScale):
     if value is None:
       value = self.value()
     
-    return value / MASTER_CENTER if value else MASTER_LIMIT
+    return max(
+      value / DEFAULT_SCALE_VALUE,
+      FROM_SCALE_VALUE
+    )
   
   def _master(self, text, *args):
     self.show(newvalue=float(text))
@@ -245,7 +250,7 @@ class UndoableCalibration(UndoableScale):
     self._text = text
     
     # the calibration oldvalues should contain the "true" state of the scales
-    # at all times. It should never contain numbers larger than TO_SCALE_VALUE (200)
+    # at all times. It should never contain numbers larger than TO_SCALE_VALUE (200.0)
     # if it does, it probably leaked out of UndoableMaster which is a bug
     oldvalues = self.values(scales.values())
     self.oldvalues = oldvalues
@@ -444,8 +449,10 @@ def make_calibrate(frame, variables, class_names, attached):
   
   master_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
   master_frame.grid(row=0, sticky=tk.EW)
-  master_scale = gui.make_scale(master_frame, name='Master', to=TO_SCALE_VALUE)[1]
-  master_scale.set(DEFAULT_SCALE_VALUE)
+  master_scale = gui.make_scale(master_frame, name='Master',
+    from_=FROM_SCALE_ROUND, to=TO_SCALE_ROUND)[1]
+  
+  master_scale.set(DEFAULT_SCALE_ROUND)
   
   master_frame.columnconfigure(0, weight=2, uniform='scale_column')
   master_frame.columnconfigure(1, weight=1, uniform='scale_column')
@@ -459,7 +466,7 @@ def make_calibrate(frame, variables, class_names, attached):
   calibration_variable = variables['calibration']
   
   calibration_variable += (
-    [DEFAULT_SCALE_VALUE]
+    [DEFAULT_SCALE_ROUND]
     * (len(class_names) - len(calibration_variable))
   )
   
@@ -473,7 +480,7 @@ def make_calibrate(frame, variables, class_names, attached):
     scale = gui.make_scale(
       scale_frame,
       name='%d. %s' % (int(number), class_name),
-      to=TO_SCALE_VALUE
+      from_=FROM_SCALE_ROUND, to=TO_SCALE_ROUND
     )[1]
     
     scale.set(int(calibration_variable[cid]))
