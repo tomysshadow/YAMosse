@@ -173,10 +173,6 @@ You will know when GPU Acceleration is enabled and working correctly because "GP
 
 The recording feature of YAMosse records sounds in mono at 16000 Hz. This is because it is the sound format that the YAMNet model expects - so any sound at a different quality is resampled as part of the scanning process. In other words, the recording feature is intended for recording in the most optimal format for scans. If you would like to record in a different format, please use a different sound recording application.
 
-## Why is the Recorder window grayed out?
-
-The Recorder window will be grayed out if there are no input devices. Please make sure your microphone is plugged in.
-
 ## What does Calibration do?
 
 The YAMNet model's scores are [not calibrated,](https://groups.google.com/g/audioset-users/c/pRDX6AkaM1s/m/jUYXb4JvAQAJ) meaning that when comparing directly between the scores for one class or another, it may appear to be overconfident about particular sounds or underconfident about others. By clicking the Calibrate button near the Classes list, you can set a percentage to multiply all scores by for a particular class.

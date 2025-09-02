@@ -56,6 +56,7 @@ class Recorder:
     
     gui_progressbar.Progressbar(
       volume_frame,
+      name=yamosse_recording.VOLUME_NAME,
       variable=volume_variable,
       maximum=VOLUME_MAXIMUM,
       task=False
@@ -89,10 +90,6 @@ class Recorder:
       lambda: self.ask_save(window.withdraw)
     )
     
-    # don't allow recording if there are no input devices
-    if str(input_device_variable.get()) not in input_devices:
-      gui.state_children_widget(frame, tk.DISABLED)
-    
     self._window = window
     self._recording_button = recording_button
     self._input_devices_combobox = input_devices_combobox
@@ -106,6 +103,7 @@ class Recorder:
     self._start = Lock()
     self._stop = Event()
     self._recording = None
+    self._input_devices = input_devices
     
     self._volume_frame = volume_frame
     self._volume_variable = volume_variable
@@ -131,6 +129,15 @@ class Recorder:
     recording = self._recording
     
     if recording: return
+    
+    # don't start recording if there are no input devices
+    if str(self._variables['input_device'].get()) not in self._input_devices:
+      messagebox.showwarning(
+        parent=self._window,
+        title=TITLE,
+        message=yamosse_recording.NO_INPUT_DEVICES_MESSAGE
+      )
+      return
     
     self._recording_button.configure(
       text='Stop Recording',

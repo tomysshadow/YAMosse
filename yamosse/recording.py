@@ -16,7 +16,15 @@ DIR = 'My Recordings'
 BLOCKSIZE_SECONDS = 0.1
 
 LINE = '#' * 80
+
+VOLUME_NAME = 'Volume:'
 VOLUME_SPEC = '{volume:>4.0%}'
+
+RECORDING_ABORTED = 'Recording aborted'
+RECORDING_FINISHED = 'Recording finished'
+
+NO_INPUT_DEVICES_MESSAGE = ': '.join((RECORDING_ABORTED, 'there are no input devices.'))
+NO_SAVE_MESSAGE = ': '.join((RECORDING_ABORTED, 'the user did not save the recording.'))
 
 
 class Recording:
@@ -46,7 +54,7 @@ class Recording:
         try:
           device = input_devices[input_device := input_default_name]
         except KeyError:
-          print('Recording aborted: there are no input devices.')
+          print(NO_INPUT_DEVICES_MESSAGE)
           return
         
         options.input_device = input_device
@@ -86,7 +94,7 @@ class Recording:
       ):
         try:
           print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
-          print('Volume:', volume_str, end='', flush=True)
+          print(VOLUME_NAME, volume_str, end='', flush=True)
           
           stop = self._stop
           indata = None
@@ -123,14 +131,16 @@ class Recording:
       hidden.save = self.save
       hidden.close()
       
+      print('')
+      
       input_ = hidden.name
       
       if not input_:
-        print('\nRecording aborted.')
+        print(NO_SAVE_MESSAGE)
         return
       
       input_ = quote(input_)
-      print('\nRecording finished:', input_, end='\n\n')
+      print(RECORDING_FINISHED, ': ', input_, sep='', end='\n\n')
       
       # a previous iteration of this appended the name instead of replacing it
       # but it was broken because the input field can contain folder names
