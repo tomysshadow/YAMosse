@@ -1,15 +1,14 @@
 import pickle
 import json
+import os
 from datetime import datetime
-from os import cpu_count
 
-import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
 
 VERSION = 2
 
-_root_file_name = yamosse_root.root('.'.join((__name__, 'pickle')))
+_pickle_file_name = ''.join((os.path.splitext(__file__)[0], '.pickle'))
 
 
 class Options:
@@ -122,7 +121,7 @@ class Options:
     # unless there are two or less CPU cores, in which case use only one thread
     RESERVED_THREADS = 2
     
-    max_workers = cpu_count()
+    max_workers = os.cpu_count()
     
     if max_workers > RESERVED_THREADS:
       max_workers -= RESERVED_THREADS
@@ -133,7 +132,7 @@ class Options:
   
   @classmethod
   def load(cls):
-    with open(_root_file_name, 'rb') as f:
+    with open(_pickle_file_name, 'rb') as f:
       options = pickle.load(f)
       
       if options.version != VERSION:
@@ -142,7 +141,7 @@ class Options:
       return options
   
   def dump(self):
-    with open(_root_file_name, 'wb') as f:
+    with open(_pickle_file_name, 'wb') as f:
       pickle.dump(self, f)
   
   def set(self, attrs, strict=True):
