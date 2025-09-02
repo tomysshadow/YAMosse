@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
+from collections import namedtuple
 from weakref import WeakKeyDictionary
 import traceback
 import threading
@@ -107,6 +108,8 @@ VARIABLE_TYPES = {
   float: tk.DoubleVar,
   str: tk.StringVar
 }
+
+Widgets = namedtuple('Widgets', ['first', 'middle', 'last'])
 
 
 def _init_report_callback_exception():
@@ -438,7 +441,7 @@ def make_entry(frame, name='', **kwargs):
   
   entry = ttk.Entry(frame, **kwargs)
   entry.grid(row=0, column=1, sticky=tk.EW)
-  return make_name(frame, name), entry
+  return Widgets(make_name(frame, name), entry, None)
 
 
 def _init_validationoptions_spinbox():
@@ -530,7 +533,7 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   if validation:
     spinbox.validate()
   
-  return make_name(frame, name), spinbox, make_unit(frame, unit)
+  return Widgets(make_name(frame, name), spinbox, make_unit(frame, unit))
 
 
 def make_combobox(frame, name='', **kwargs):
@@ -539,7 +542,7 @@ def make_combobox(frame, name='', **kwargs):
   
   combobox = ttk.Combobox(frame, **kwargs)
   combobox.grid(row=0, column=1, sticky=tk.EW)
-  return make_name(frame, name), combobox
+  return Widgets(make_name(frame, name), combobox, None)
 
 
 def make_scale(frame, name='', from_=0, to=100, **kwargs):
@@ -577,7 +580,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
   #scale.bind('<<RangeChanged>>', show)
   
   show(scale.get())
-  return make_name(frame, name), scale, percent_label
+  return Widgets(make_name(frame, name), scale, percent_label)
 
 
 def make_text(frame, name='', width=10, height=10,
@@ -597,7 +600,12 @@ def make_text(frame, name='', width=10, height=10,
     wrap=wrap, font=font if font else FONT, **kwargs)
   
   text.grid(row=0, column=0, sticky=tk.NSEW)
-  return make_name(frame, name), (text, make_scrollbar(text, xscroll, yscroll))
+  
+  return Widgets(
+    make_name(frame, name),
+    (text, make_scrollbar(text, xscroll, yscroll)),
+    None
+  )
 
 
 def _minwidth_treeview():
@@ -931,8 +939,11 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   for button in reversed(buttons):
     button.pack(side=tk.RIGHT, padx=PADX_QW)
   
-  return make_name(name_frame, name), (treeview, make_scrollbar(treeview, xscroll, yscroll)
-    ), (buttons_frame, buttons)
+  return Widgets(
+    make_name(name_frame, name),
+    (treeview, make_scrollbar(treeview, xscroll, yscroll)),
+    (buttons_frame, buttons)
+  )
 
 
 def heading_text_treeview_columns(c):
@@ -1084,7 +1095,7 @@ def make_filedialog(frame, name='',
     
     frame.dnd_bind('<<Drop>>', drop)
   
-  return make_name(name_frame, name), entry, (buttons_frame, buttons)
+  return Widgets(make_name(name_frame, name), entry, (buttons_frame, buttons))
 
 
 def make_undoable(frame):

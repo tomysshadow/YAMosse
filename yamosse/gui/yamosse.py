@@ -76,7 +76,7 @@ def make_input(frame, variables, filetypes, record):
     asks=('directory', 'openfilenames'),
     parent=frame.winfo_toplevel(),
     filetypes=filetypes
-  )[2][0]
+  ).last[0]
   
   recorder_window, recorder = gui.gui(
     gui_recorder.Recorder,
@@ -125,7 +125,7 @@ def make_classes(frame, variables, class_names):
     selectmode=tk.EXTENDED
   )
   
-  buttons_frame = treeview_widgets[2][0]
+  buttons_frame = treeview_widgets.last[0]
   
   attached = {}
   
@@ -150,7 +150,7 @@ def make_classes(frame, variables, class_names):
   find_frame = ttk.Frame(buttons_frame)
   find_frame.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=gui.PADX_HEW)
   
-  find_entry = gui.make_entry(find_frame, name='Find:', validate='key')[1]
+  find_entry = gui.make_entry(find_frame, name='Find:', validate='key').middle
   find_entry.grid(sticky=tk.NSEW, pady=gui.PAD_ALIGN) # fix misalignment with row
   
   erase_button = ttk.Button(
@@ -164,7 +164,7 @@ def make_classes(frame, variables, class_names):
   
   erase_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
   
-  treeview = treeview_widgets[1][0]
+  treeview = treeview_widgets.middle[0]
   
   def sorted_treeview_shown(e):
     nonlocal attached
@@ -466,7 +466,7 @@ def make_items(frame, variables):
     invalidcommand=(item_delimiter_frame.register(invalid_item_delimiter), '%W', '%v'),
     validatecommand=(item_delimiter_frame.register(bool), '%P'),
     validate='focusout'
-  )[1]
+  ).middle
   
   item_delimiter_entry.validate()
   
@@ -623,7 +623,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui.PADDING_HNSEW)
   weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
   weights_entry = gui.make_filedialog(weights_labelframe, textvariable=variables['weights'],
-    parent=frame.winfo_toplevel(), filetypes=weights_filetypes)[1]
+    parent=frame.winfo_toplevel(), filetypes=weights_filetypes).middle
   
   if tfhub_enabled:
     gui.state_widget(weights_labelframe, state=tk.DISABLED)
@@ -632,7 +632,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)
   tips_labelframe.grid(row=3, sticky=tk.NSEW, pady=gui.PADY_QN)
   tips_text = gui.make_text(tips_labelframe, takefocus=False, cursor='', state=tk.DISABLED,
-    undo=True, autoseparators=False, yscroll=False)[1][0]
+    undo=True, autoseparators=False, yscroll=False).middle[0]
   
   gui.prevent_default_widget(tips_text) # no selection when double clicking
   

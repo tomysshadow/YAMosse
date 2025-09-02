@@ -75,7 +75,7 @@ class Recorder:
     
     input_devices_combobox = gui.make_combobox(row_frame,
       name='Device:', textvariable=input_device_variable,
-      values=list(input_devices.keys()), width=72, state='readonly')[1]
+      values=list(input_devices.keys()), width=72, state='readonly').middle
     
     window_bindtag = gui.bindtag_window(window)
     

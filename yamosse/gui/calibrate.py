@@ -450,7 +450,7 @@ def make_calibrate(frame, variables, class_names, attached):
   master_frame = ttk.Frame(frame, borderwidth=BORDERWIDTH)
   master_frame.grid(row=0, sticky=tk.EW)
   master_scale = gui.make_scale(master_frame, name='Master',
-    from_=FROM_SCALE_ROUND, to=TO_SCALE_ROUND)[1]
+    from_=FROM_SCALE_ROUND, to=TO_SCALE_ROUND).middle
   
   master_scale.set(DEFAULT_SCALE_ROUND)
   
@@ -459,7 +459,9 @@ def make_calibrate(frame, variables, class_names, attached):
   
   calibration_frame = ttk.Frame(frame, relief=tk.SUNKEN, borderwidth=BORDERWIDTH)
   calibration_frame.grid(row=1, sticky=tk.NSEW)
-  calibration_text = gui.make_text(calibration_frame, font=('TkDefaultFont', 24))[1][0]
+  calibration_text = gui.make_text(calibration_frame,
+    font=('TkDefaultFont', 24)).middle[0]
+  
   gui_embed.text_embed(calibration_text)
   
   # put in 100% as defaults if the calibration is empty/too short
@@ -481,7 +483,7 @@ def make_calibrate(frame, variables, class_names, attached):
       scale_frame,
       name='%d. %s' % (int(number), class_name),
       from_=FROM_SCALE_ROUND, to=TO_SCALE_ROUND
-    )[1]
+    ).middle
     
     scale.set(int(calibration_variable[cid]))
     scales[cid] = scale
