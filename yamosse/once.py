@@ -15,6 +15,8 @@ class Once:
     return len(self._obj)
   
   def __iter__(self):
+    # for a standard dictionary it would not be necessary to clarify
+    # that I want the keys, but for some custom object maybe
     return iter(self.keys())
   
   def clear(self):
