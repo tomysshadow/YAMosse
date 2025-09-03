@@ -51,6 +51,8 @@ PADDING_QS = (0, 0, 0, PADDING_Q)
 PADDING_QE = (0, 0, PADDING_Q, 0)
 PADDING_QW = (PADDING_Q, 0, 0, 0)
 
+PADDING_ALIGN = 2
+
 PADX_EW = PADDING
 PADX_E = (0, PADDING)
 PADX_W = (PADDING, 0)
@@ -75,7 +77,7 @@ PADY_QNS = PADDING_Q
 PADY_QN = (PADDING_Q, 0)
 PADY_QS = (0, PADDING_Q)
 
-PAD_ALIGN = (2, 2)
+PAD_ALIGN = (PADDING_ALIGN, PADDING_ALIGN)
 
 MINSIZE_ROW_LABELS = 21
 MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
@@ -1655,7 +1657,8 @@ def elements_layout(layout, name):
 
 
 def get_variables_from_attrs(attrs):
-  # this prevents Tkinter from popping an empty window if we haven't created the root window yet
+  # this prevents Tkinter from popping an empty window
+  # if we haven't created the root window yet
   get_root_window()
   
   variable = None
