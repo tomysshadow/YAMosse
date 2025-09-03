@@ -306,7 +306,7 @@ _get_root_embed = _root_embed()
 
 
 def text_embed(text):
-  if str(text.winfo_class()) != CLASS_TEXT:
+  if text.winfo_class() != CLASS_TEXT:
     raise ValueError('text must have class %r' % CLASS_TEXT)
   
   # setdefault is not used here - it's probably not worth the cost of creating a frame

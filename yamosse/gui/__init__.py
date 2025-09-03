@@ -270,7 +270,7 @@ def padding4_widget(widget, padding):
 
 
 def lookup_style_widget(widget, option, element='', state=None, **kwargs):
-  style = widget['style']
+  style = str(widget['style'])
   
   if not style:
     style = widget.winfo_class()
