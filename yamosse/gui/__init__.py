@@ -161,7 +161,7 @@ def after_invalidcommand_widget(widget, validate):
   widget.after_idle(lambda: widget.configure(validate=validate))
 
 
-def bindtags_default_widget(widget, name=True, class_=False, window=True, all_=True):
+def default_bindtags_widget(widget, name=True, class_=True, window=True, all_=True):
   bindtags = []
   
   if name: bindtags.append(widget.winfo_name())

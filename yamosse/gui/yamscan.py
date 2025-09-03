@@ -174,7 +174,7 @@ def make_yamscan(frame, open_output_file, exit_, progressbar_maximum=100):
   log_text = gui.make_text(log_labelframe,
     takefocus=True, cursor='', state=tk.DISABLED).middle[0]
   
-  #gui.bindtags_default_widget(log_text)
+  #gui.default_bindtags_widget(log_text, class_=False)
   
   def select_all_log_text(e):
     # in theory you'd think setting the focus would be enough on its own

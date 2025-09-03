@@ -634,7 +634,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   tips_text = gui.make_text(tips_labelframe, takefocus=False, cursor='', state=tk.DISABLED,
     undo=True, autoseparators=False, yscroll=False).middle[0]
   
-  gui.bindtags_default_widget(tips_text) # no selection when double clicking
+  gui.default_bindtags_widget(tips_text, class_=False) # no selection when double clicking
   
   _link_tips(tips_text, {
     weights_labelframe: TIP_WEIGHTS,
