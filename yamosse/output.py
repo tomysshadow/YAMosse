@@ -14,7 +14,7 @@ FILE_NAME = 'File Name'
 DEFAULT_ITEM_DELIMITER = ' '
 DEFAULT_INDENT = '\t'
 
-EXT_JSON = '.json'.casefold()
+_ext_json = '.'.join(('', json.__name__)).casefold()
 
 
 def print_section(name, file=None):
@@ -230,7 +230,7 @@ def output(file_name, *args, **kwargs):
   
   ext = splitext(file_name)[1]
   
-  if ext.casefold() == EXT_JSON:
+  if ext.casefold() == _ext_json:
     return OutputJSON(file_name, *args, **kwargs)
   
   return OutputText(file_name, *args, **kwargs)

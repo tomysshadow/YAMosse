@@ -8,7 +8,10 @@ import yamosse.identification as yamosse_identification
 
 VERSION = 2
 
-_pickle_file_name = ''.join((os.path.splitext(__file__)[0], '.pickle'))
+_pickle_file_name = '.'.join((
+  os.path.splitext(__file__)[0],
+  pickle.__name__
+))
 
 
 class Options:

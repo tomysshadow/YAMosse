@@ -1,4 +1,4 @@
-from os import mkdir, unlink
+from os import mkdir
 from shlex import quote
 from threading import Lock, Event
 from queue import Queue
