@@ -73,10 +73,10 @@ def _step_progress(worker_step, current_step=1.0):
     step.value += current_step
     next_step = step.value
   
-  previous_progress = int(previous_step / steps * PROGRESSBAR_MAXIMUM)
-  next_progress = int(next_step / steps * PROGRESSBAR_MAXIMUM)
+  previous_progress = int(previous_step / steps * PROGRESSBAR_MAXIMUM) + 1
+  next_progress = int(next_step / steps * PROGRESSBAR_MAXIMUM) + 1
   
-  for current_progress in range(previous_progress + 1, next_progress + 1):
+  for current_progress in range(previous_progress, next_progress):
     _sender.send({
       'progressbar': {'set': {'args': (current_progress,)}},
       'log': '%d%% complete' % current_progress
