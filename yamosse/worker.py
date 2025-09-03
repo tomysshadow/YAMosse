@@ -55,31 +55,31 @@ def _high_priority(psutil=None):
     pass
 
 
-def _step_progress(worker_step, current_worker_step=1.0):
-  current_worker_step = int(current_worker_step * PROGRESSBAR_MAXIMUM) - worker_step
+def _step_progress(worker_step, current_step=1.0):
+  current_step = int(current_step * PROGRESSBAR_MAXIMUM) - worker_step
   
-  if current_worker_step <= 0:
+  if current_step <= 0:
     return worker_step
   
   previous_step = 0
-  worker_step += current_worker_step
-  current_step = 0
+  worker_step += current_step
+  next_step = 0
   
   step = _step
   steps = _steps
   
   with step.get_lock():
     previous_step = step.value
-    step.value += current_worker_step
-    current_step = step.value
+    step.value += current_step
+    next_step = step.value
   
   previous_progress = int(previous_step / steps * PROGRESSBAR_MAXIMUM)
-  current_progress = int(current_step / steps * PROGRESSBAR_MAXIMUM)
+  next_progress = int(next_step / steps * PROGRESSBAR_MAXIMUM)
   
-  for progress in range(previous_progress + 1, current_progress + 1):
+  for current_progress in range(previous_progress + 1, next_progress + 1):
     _sender.send({
-      'progressbar': {'set': {'args': (progress,)}},
-      'log': '%d%% complete' % progress
+      'progressbar': {'set': {'args': (current_progress,)}},
+      'log': '%d%% complete' % current_progress
     })
   
   return worker_step
