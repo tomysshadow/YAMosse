@@ -178,7 +178,7 @@ class UndoableMaster(UndoableScale):
     # after clicking and dragging the master scale
     # this must be representative of the actual numbers on the visible scales
     # which is why we cap it to the TO_SCALE_VALUE
-    reciprocal = self._reciprocal(value=newvalue)
+    reciprocal = self._reciprocal(newvalue)
     
     return {
       w: min(

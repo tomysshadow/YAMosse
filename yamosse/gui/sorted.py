@@ -50,7 +50,7 @@ def treeview_sorted(treeview):
         if key is _key_value:
           children[child] = treeview.set(child, cid)
         
-        move(item=child)
+        move(child)
       
       children = yamosse_utils.dict_sorted(children, key=key, reverse=reverse)
       
@@ -64,12 +64,12 @@ def treeview_sorted(treeview):
       treeview.heading(
         column,
         image=sort_both_small_image,
-        command=lambda column=column: show(cid=column)
+        command=lambda column=column: show(column)
       )
     
     treeview.bind(
       '<<SortedTreeviewShow>>',
-      lambda e, reverse=reverse: show(cid=cid, reverse=reverse)
+      lambda e, reverse=reverse: show(cid, reverse)
     )
     
     if key is _key_value:
@@ -80,7 +80,7 @@ def treeview_sorted(treeview):
       treeview.heading(
         cid,
         image=image,
-        command=lambda: show(cid=cid if reverse else None, reverse=reverse)
+        command=lambda: show(cid if reverse else None, reverse)
       )
     
     treeview.event_generate('<<SortedTreeviewShown>>')

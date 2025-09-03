@@ -175,7 +175,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     options.worker(np, model_yamnet_class_names)
     
     if options.high_priority:
-      _high_priority(psutil=psutil)
+      _high_priority(psutil)
     
     # currently, setting a per-CPU memory limit isn't supported by TensorFlow
     # however in future the 'GPU' argument could be removed if it does ever become supported

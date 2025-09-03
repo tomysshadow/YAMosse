@@ -109,7 +109,7 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
   
   hidden = yamosse_hiddenfile.HiddenFile(
     mode='wb',
-    prefix=''.join((root, '_')), suffix=ext, dir=head
+    prefix='_'.join((root, '')), suffix=ext, dir=head
   )
   
   yamosse_download.download(url, hidden)
