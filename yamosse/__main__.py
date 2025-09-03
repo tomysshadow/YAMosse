@@ -51,5 +51,3 @@ try:
   yamosse.yamosse(**vars(args))
 except yamosse_subsystem.SubsystemError as ex:
   parser.exit(status=1, message=str(ex))
-
-parser.exit()
