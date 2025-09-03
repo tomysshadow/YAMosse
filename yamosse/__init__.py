@@ -63,13 +63,16 @@ def open_file(path):
 
 def sf_input_filetypes():
   available_formats = sf.available_formats()
-  input_filetypes = [('Supported Files', '.'.join(('*', ' *.'.join(available_formats.keys()))))]
   
-  for format_, name in available_formats.items():
-    input_filetypes.append((name, '.'.join(('*', format_))))
-  
-  input_filetypes.append(('All Files', '*.*'))
-  return input_filetypes
+  return (
+    [(
+      'Supported Files',
+      '.'.join(('*', ' *.'.join(available_formats.keys())))
+    )]
+    
+    + [(n, '.'.join(('*', f))) for f, n in available_formats.items()]
+    + [('All Files', '*.*')]
+  )
 
 
 def _mainloop(**kwargs):
