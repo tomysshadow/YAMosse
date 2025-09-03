@@ -634,7 +634,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   tips_text = gui.make_text(tips_labelframe, takefocus=False, cursor='', state=tk.DISABLED,
     undo=True, autoseparators=False, yscroll=False).middle[0]
   
-  gui.prevent_default_widget(tips_text) # no selection when double clicking
+  gui.bindtags_default_widget(tips_text) # no selection when double clicking
   
   _link_tips(tips_text, {
     weights_labelframe: TIP_WEIGHTS,
@@ -716,6 +716,8 @@ def make_yamosse(frame, title, options_variables,
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
     iconphotos=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('emoji_u1f3a4')].values())
+  
+  gui.minsize_window(window)
   
   frame.rowconfigure(1, weight=1) # make options frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout

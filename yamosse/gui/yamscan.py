@@ -150,6 +150,8 @@ def make_yamscan(frame, open_output_file, exit_, progressbar_maximum=100):
   gui.customize_window(window, TITLE, resizable=RESIZABLE, size=SIZE,
     location=gui.location_center_window(parent, SIZE))
   
+  gui.minsize_window(window)
+  
   frame.rowconfigure(1, weight=1) # make log frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -172,7 +174,7 @@ def make_yamscan(frame, open_output_file, exit_, progressbar_maximum=100):
   log_text = gui.make_text(log_labelframe,
     takefocus=True, cursor='', state=tk.DISABLED).middle[0]
   
-  #gui.prevent_default_widget(log_text)
+  #gui.bindtags_default_widget(log_text)
   
   def select_all_log_text(e):
     # in theory you'd think setting the focus would be enough on its own

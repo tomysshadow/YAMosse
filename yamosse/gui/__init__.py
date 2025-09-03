@@ -110,6 +110,7 @@ VARIABLE_TYPES = {
 }
 
 Widgets = namedtuple('Widgets', ['first', 'middle', 'last'])
+Undoable = namedtuple('Undoable', ['undooptions', 'buttons'])
 
 
 def _init_report_callback_exception():
@@ -160,8 +161,10 @@ def after_invalidcommand_widget(widget, validate):
   widget.after_idle(lambda: widget.configure(validate=validate))
 
 
-def prevent_default_widget(widget, class_=False, window=True, all_=True):
-  bindtags = [widget]
+def bindtags_default_widget(widget, name=True, class_=False, window=True, all_=True):
+  bindtags = []
+  
+  if name: bindtags.append(widget.winfo_name())
   if class_: bindtags.append(widget.winfo_class())
   if window: bindtags.append(widget.winfo_toplevel())
   if all_: bindtags.append(tk.ALL)
@@ -1181,7 +1184,7 @@ def make_undoable(frame):
   window = frame.winfo_toplevel()
   window.bind('<Control-z>', lambda e: undolast())
   window.bind('<Control-y>', lambda e: redolast())
-  return undooptions, (undo_button, redo_button)
+  return Undoable(undooptions, (undo_button, redo_button))
 
 
 def _init_root_window():
@@ -1293,24 +1296,34 @@ get_root_window, owner_root_window = _init_root_window()
 def _init_minsize_window():
   binding = None
   
-  # we can't know a window's width and height until it is mapped
-  # so set up a bindtag to wait until then
-  def map_(e):
-    widget = e.widget
+  # we can't know a window's width and height until it is viewable
+  def viewable(widget, map_=False):
+    if not widget.winfo_viewable():
+      raise ValueError('widget must be viewable')
     
-    bindtags = set(widget.bindtags())
-    bindtags.discard(BINDTAG_MINSIZE)
-    widget.bindtags(bindtags)
+    if map_:
+      bindtags = list(widget.bindtags())
+      bindtags.remove(BINDTAG_MINSIZE)
+      widget.bindtags(bindtags)
     
     widget.minsize(widget.winfo_width(), widget.winfo_height())
   
   def minsize_window(window):
     nonlocal binding
     
-    if not binding:
-      binding = get_root_window().bind_class(BINDTAG_MINSIZE, '<Map>', map_)
-    
-    window.bindtags((BINDTAG_MINSIZE,) + window.bindtags())
+    try:
+      viewable(window)
+    except ValueError:
+      if not binding:
+        binding = get_root_window().bind_class(
+          BINDTAG_MINSIZE,
+          '<Map>',
+          lambda e: viewable(e.widget, map_=True)
+        )
+      
+      bindtags = window.bindtags()
+      if BINDTAG_MINSIZE in bindtags: return
+      window.bindtags((BINDTAG_MINSIZE,) + window.bindtags())
   
   return minsize_window
 
@@ -1320,7 +1333,7 @@ minsize_window = _init_minsize_window()
 def _init_sizegrip_window():
   sizegrips = WeakKeyDictionary()
   
-  def sizegrip_window(window, sizegrip=None, resizable=True):
+  def sizegrip_window(window, sizegrip=None):
     if sizegrip:
       if window not in sizegrips:
         window.bind_class(bindtag_window(window),
@@ -1330,7 +1343,9 @@ def _init_sizegrip_window():
     else:
       sizegrip = sizegrips[window]
     
-    if resizable:
+    xresizable, yresizable = window.resizable()
+    
+    if xresizable and yresizable:
       sizegrip.grid(row=2, column=2, sticky=tk.SE)
     else:
       sizegrip.grid_remove()
@@ -1501,11 +1516,9 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
   if size:
     window.geometry('%dx%d+%d+%d' % (size + location) if location else '%dx%d' % size)
   
-  # set the minimum size of the window to its initial width and height
-  # then give it a sizegrip
+  # give the window a sizegrip
   # (should be done after setting new window geometry)
-  minsize_window(window)
-  sizegrip_window(window, resizable=xresizable and yresizable)
+  sizegrip_window(window)
   
   if iconphotos:
     if window is get_root_window():

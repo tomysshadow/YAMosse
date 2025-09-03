@@ -412,7 +412,7 @@ def make_footer(frame, ok, cancel):
   
   undoable_frame = ttk.Frame(frame)
   undoable_frame.grid(row=0, column=0, sticky=tk.W)
-  undooptions = gui.make_undoable(undoable_frame)[0]
+  undooptions = gui.make_undoable(undoable_frame).undooptions
   
   ok_button = ttk.Button(frame, text='OK', underline=0, command=ok, default=tk.ACTIVE)
   ok_button.grid(row=0, column=2, sticky=tk.E, padx=gui.PADX_QW)
@@ -443,6 +443,8 @@ def make_calibrate(frame, variables, class_names, attached):
   
   gui.customize_window(window, TITLE, resizable=RESIZABLE, size=SIZE,
     location=gui.location_center_window(parent, SIZE))
+  
+  gui.minsize_window(window)
   
   frame.rowconfigure(1, weight=1) # make calibration frame vertically resizable
   frame.columnconfigure(0, weight=1) # make calibration frame horizontally resizable

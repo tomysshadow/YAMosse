@@ -230,7 +230,8 @@ def _root_embed():
           
           interp alias {{}} focus {{}}
           interp expose {{}} focus
-          return -options $options $result'''
+          return -options $options $result
+          unset result options'''
         )
       
       # set up the bindings that were originally on the window
@@ -330,7 +331,7 @@ def text_embed(text):
     
     # unbind from Text class so we can't get duplicate events
     # they'll be received from window instead
-    gui.prevent_default_widget(text)
+    gui.bindtags_default_widget(text)
     text.bindtags((BINDTAG,) + text.bindtags())
     
     # delete anything that might've been typed in before the text was passed to us
