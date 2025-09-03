@@ -36,6 +36,7 @@ def identification(option=None):
       # but the worker should still remember to call clear itself
       # in case an exception occurs and we never reach here
       self.clear()
+      return None
     
     @staticmethod
     def _range_timestamp(begin, end, timespan):
