@@ -332,6 +332,14 @@ def text_embed(text):
     
     # unbind from Text class so we can't get duplicate events
     # they'll be received from window instead
+    # a current weakness of this implementation is that
+    # events are not forwarded to individual text widgets, only the Text class
+    # which means there isn't any ability to "break" for a particular event
+    # aside from putting a bindtag/event on every child, and child's child
+    # which of course is the entire thing I'm trying to avoid here
+    # programming that feature would be significantly more complicated
+    # and for this application, I simply don't need that functionality
+    # so basically, embed text will always get Text class events no matter what
     gui.bindtags_default_widget(text)
     text.bindtags((BINDTAG,) + text.bindtags())
     
