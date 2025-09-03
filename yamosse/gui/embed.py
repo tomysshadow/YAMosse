@@ -231,7 +231,7 @@ def _root_embed():
           interp alias {{}} focus {{}}
           interp expose {{}} focus
           return -options $options $result
-          unset result options'''
+          unset {W} result options'''
         )
       
       # set up the bindings that were originally on the window
