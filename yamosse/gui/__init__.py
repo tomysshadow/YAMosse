@@ -1026,16 +1026,11 @@ def make_filedialog(frame, name='',
     
     accept(data)
   
-  buttons = []
-  
-  for ask in asks:
-    button = ttk.Button(
-      buttons_frame,
-      text=ASKS_ALL[ask],
-      command=lambda ask=ask: show(ask)
-    )
-    
-    buttons.append(button)
+  buttons = [ttk.Button(
+    buttons_frame,
+    text=ASKS_ALL[ask],
+    command=lambda ask=ask: show(ask)
+  ) for ask in asks]
   
   # must be done in a separate loop to button creation so tab order is correct
   for button in reversed(buttons):
