@@ -31,7 +31,11 @@ def identification(option=None):
     
     @abstractmethod
     def timestamps(self, shutdown):
-      pass
+      # we clear when getting timestamps because it is invalid to
+      # use this object any further after getting them
+      # but the worker should still remember to call clear itself
+      # in case an exception occurs and we never reach here
+      self.clear()
     
     @staticmethod
     def _range_timestamp(begin, end, timespan):
@@ -166,6 +170,7 @@ def identification(option=None):
         # class is cast to int for same reason as above (it might come from a numpy array)
         class_timestamps[int(class_)] = timestamp_scores
       
+      super().timestamps(shutdown)
       return class_timestamps
     
     @classmethod
@@ -440,6 +445,7 @@ def identification(option=None):
           begin = score_end
           scores = [np.fromiter(class_scores_end.values(), dtype=np.float32)]
       
+      super().timestamps(shutdown)
       return result
     
     @classmethod
