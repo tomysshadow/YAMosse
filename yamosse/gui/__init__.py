@@ -1064,6 +1064,8 @@ def make_filedialog(frame, name='',
       data = [str(d) for d in e.widget.tk.splitlist(e.data)]
       
       # on some platforms we only get data on drop
+      # but if we do have data, refuse it now
+      # so we can show the "not allowed sign"
       if data and refuse(data):
         return tkinterdnd2.REFUSE_DROP
       
