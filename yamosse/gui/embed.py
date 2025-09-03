@@ -231,6 +231,7 @@ def _root_embed():
           interp alias {{}} focus {{}}
           interp expose {{}} focus
           return -options $options $result
+          
           unset {W} result options'''
         )
       
