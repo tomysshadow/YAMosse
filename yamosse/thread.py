@@ -341,14 +341,16 @@ def thread(output_file_name, input_, exit_,
     # then fail because the output file is locked or whatever
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
-    with _download_weights_file_unique(
-      yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
-      yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
-      exit_,
-      subsystem=subsystem,
-      options=options
-    ) if not tfhub_enabled else nullcontext():
-      output = yamosse_output.output(
+    with (
+      _download_weights_file_unique(
+        yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
+        yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
+        exit_,
+        subsystem=subsystem,
+        options=options
+      ) if not tfhub_enabled else nullcontext(),
+      
+      yamosse_output.output(
         output_file_name,
         exit_,
         model_yamnet_class_names,
@@ -358,39 +360,25 @@ def thread(output_file_name, input_, exit_,
         ),
         
         subsystem=subsystem
+      ) as output
+    ):
+      results, errors = _files(
+        input_,
+        exit_,
+        model_yamnet_class_names,
+        tfhub_enabled,
+        subsystem,
+        options
       )
       
-      # this is a try-finally instead of a with statement
-      # specifically because we want to do stuff even if
-      # exceptions occur
-      try:
-        results, errors = _files(
-          input_,
-          exit_,
-          model_yamnet_class_names,
-          tfhub_enabled,
-          subsystem,
-          options
-        )
-        
-        subsystem.show(exit_, values={
-          'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
-          'log': 'Finishing, please wait...\n'
-        })
-        
-        output.options(options)
-        output.results(results)
-        output.errors(errors)
-      finally:
-        output.close()
-        
-        # this is intended to light up the button
-        # even if the file was not written successfully
-        # just as long as it was written to at all
-        # this must happen after closing the output
-        subsystem.show(exit_, values={
-          'open_output_file': output.file_truncated
-        })
+      subsystem.show(exit_, values={
+        'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
+        'log': 'Finishing, please wait...\n'
+      })
+      
+      output.options(options)
+      output.results(results)
+      output.errors(errors)
   except yamosse_subsystem.SubsystemExit: pass
   except: _report_thread_exception(exit_, subsystem, *exc_info())
   finally:

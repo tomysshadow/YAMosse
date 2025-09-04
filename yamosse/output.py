@@ -58,7 +58,12 @@ class _Output(ABC):
     
     if subsystem:
       subsystem.show(self._exit, values={
-        'log': ': '.join(('Elapsed Time', yamosse_utils.hours_minutes(time() - self._seconds)))
+        'log': ': '.join((
+          'Elapsed Time',
+          yamosse_utils.hours_minutes(time() - self._seconds)
+        )),
+        
+        'open_output_file': self._file_truncated
       })
   
   @abstractmethod
@@ -118,15 +123,17 @@ class _Output(ABC):
   
   @property
   def file(self):
-    if not self._file_truncated:
-      self._file.truncate(0)
-      self._file_truncated = True
+    file = self._file
     
-    return self._file
-  
-  @property
-  def file_truncated(self):
-    return self._file_truncated
+    if self._file_truncated:
+      return file
+    
+    if file.closed:
+      return file
+    
+    file.truncate(0)
+    self._file_truncated = True
+    return file
 
 
 class _OutputText(_Output):
