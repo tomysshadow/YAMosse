@@ -234,7 +234,7 @@ Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoj
  - Fixed a bug where you would be asked to download the weights file in the Tensorflow Hub release.
  - Fixed a bug where a cancelled YAMScan could come "back to life" after starting a new one.
  - Fixed a bug where the application could hang if it was closed immediately after cancelling a YAMScan.
- 
- # Version 1.0.0
- 
-  - Initial public release.
+
+## Version 1.0.0
+
+ - Initial public release.
