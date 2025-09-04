@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from contextlib import suppress
 
 import yamosse.utils as yamosse_utils
 import yamosse.output as yamosse_output
@@ -59,10 +60,8 @@ class _Identification(ABC):
       return HMS_ALL
     
     # convert to HMS string and join the timestamps if this is a timespan
-    try:
+    with suppress(TypeError):
       return HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
-    except TypeError:
-      pass
     
     return yamosse_utils.hours_minutes(timestamp)
   

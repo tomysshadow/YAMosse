@@ -4,6 +4,7 @@ from tkinter.font import Font
 from collections import namedtuple
 from weakref import WeakKeyDictionary
 import traceback
+from contextlib import suppress
 import threading
 from threading import Lock, Event
 from math import ceil
@@ -130,11 +131,11 @@ def _init_report_callback_exception():
       if reported: return
       reported = True
     
-    try:
-      with open('traceback.txt', 'w', encoding='utf8') as file:
-        traceback.print_exception(exc, val, tb, file=file)
-    except OSError:
-      pass
+    with (
+      suppress(OSError),
+      open('traceback.txt', 'w', encoding='utf8') as file
+    ):
+      traceback.print_exception(exc, val, tb, file=file)
     
     messagebox.showerror(title='Exception in Tkinter callback',
       message=''.join(traceback.format_exception(exc, val, tb)))
@@ -147,10 +148,8 @@ tk.Tk.report_callback_exception = _init_report_callback_exception()
 
 
 def state_children_widget(widget, state):
-  try:
+  with suppress(tk.TclError):
     widget['state'] = state
-  except tk.TclError:
-    pass
   
   for child_widget in widget.winfo_children():
     state_children_widget(child_widget, state)
@@ -229,10 +228,8 @@ def grid_configure_size_widget(widget, configure, **kwargs):
 
 
 def padding4_widget(widget, padding):
-  try:
+  with suppress(TypeError):
     padding = widget.tk.splitlist(padding)
-  except TypeError:
-    pass
   
   if not padding:
     return [0.0, 0.0, 0.0, 0.0]
@@ -241,7 +238,7 @@ def padding4_widget(widget, padding):
     return [widget.winfo_fpixels(l) for l in lengths]
   
   # should raise TypeError is padding is just an integer
-  try:
+  with suppress(TypeError):
     # should raise ValueError if too many values to unpack
     try:
       left, top, right, bottom = padding
@@ -265,8 +262,6 @@ def padding4_widget(widget, padding):
       return fpixels(horizontal, vertical, horizontal, vertical)
     
     padding, = padding
-  except TypeError:
-    pass
   
   return fpixels(padding, padding, padding, padding)
 
@@ -280,11 +275,9 @@ def lookup_style_widget(widget, option, element='', state=None, **kwargs):
   if element:
     style = '.'.join((style, element))
   
-  try:
-    if state is None:
+  if state is None:
+    with suppress(tk.TclError):
       state = widget.state()
-  except tk.TclError:
-    pass
   
   return ttk.Style(widget).lookup(style, option, state=state, **kwargs)
 
@@ -1215,7 +1208,8 @@ def _init_root_window():
         style.layout(f'{orient}.TProgressbar')
       )
     
-    try:
+    # suppressed in case this is not supported for this platform or version
+    with suppress(tk.TclError):
       for o, orient in enumerate(PROGRESS_ORIENTS):
         fill_progressbar = f'{orient}.Fill.Progressbar'
         
@@ -1255,8 +1249,6 @@ def _init_root_window():
           ]
         }
       })
-    except tk.TclError:
-      pass # not supported for this platform or version
     
     style.configure('Debug.TFrame', background='red', relief=tk.GROOVE)
     style.configure('Title.TLabel', font=('Trebuchet MS', 24))
@@ -1449,10 +1441,9 @@ def release_modal_window(window, destroy=True):
   
   # this must be done before destroying the window
   # otherwise the window behind this one will not take focus back
-  try:
+  # suppressed in case this is not supported on this OS
+  with suppress(tk.TclError):
     parent.attributes('-disabled', False)
-  except tk.TclError:
-    pass # not supported on this OS
   
   window.grab_release() # is not necessary on Windows, but is necessary on other OS's
   parent.focus_set()
@@ -1465,10 +1456,9 @@ def set_modal_window(window, delete_window=release_modal_window):
   window.protocol('WM_DELETE_WINDOW', lambda: delete_window(window))
   
   # make the window behind us play the "bell" sound if we try and interact with it
-  try:
+  # suppressed in case this is not supported on this OS
+  with suppress(tk.TclError):
     window.master.attributes('-disabled', True)
-  except tk.TclError:
-    pass # not supported on this OS
   
   # turns on WM_TRANSIENT_FOR on Linux (X11) which modal dialogs are meant to have
   # this should be done before setting the window type to dialog
@@ -1477,17 +1467,13 @@ def set_modal_window(window, delete_window=release_modal_window):
   
   # disable the minimize and maximize buttons
   # Windows
-  try:
+  with suppress(tk.TclError):
     window.attributes('-toolwindow', True)
-  except tk.TclError:
-    pass # not supported on this OS
   
   # Linux (X11)
   # see type list here: https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#id-1.6.7
-  try:
+  with suppress(tk.TclError):
     window.attributes('-type', 'dialog')
-  except tk.TclError:
-    pass # not supported on this OS
   
   # wait for window to be visible
   # (necessary on Linux, does nothing on Windows but it doesn't matter there)
@@ -1541,10 +1527,8 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
 
 def make_window(window, make_frame, args=None, kwargs=None):
   for child in list(window.children.values()):
-    try:
+    with suppress(tk.TclError):
       child.destroy()
-    except tk.TclError:
-      pass
   
   window.rowconfigure(1, weight=1) # make frame vertically resizable
   window.columnconfigure(1, weight=1) # make frame horizontally resizable

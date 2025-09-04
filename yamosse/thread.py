@@ -5,7 +5,7 @@ from multiprocessing import Value, Pipe, Event
 from threading import Lock
 from sys import exc_info
 from traceback import format_exception
-from contextlib import nullcontext
+from contextlib import nullcontext, suppress
 
 import soundfile as sf
 
@@ -33,10 +33,9 @@ def _file_names_sorted_next(file_names):
 def _connection_flush(connection):
   # prevents BrokenPipeError exceptions in workers
   # (they expect that sent messages WILL be delivered, else cause an exception)
-  try:
-    while True: connection.recv()
-  except EOFError:
-    pass
+  with suppress(EOFError):
+    while True:
+      connection.recv()
 
 
 def _real_relpath(path, start=os.curdir):

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from contextlib import suppress
 
 import yamosse.progress as yamosse_progress
 import yamosse.utils as yamosse_utils
@@ -75,15 +76,11 @@ class Progressbar(ttk.Progressbar):
     if kw_len == 1 and next(iter(kw.values())) is None: # return argument values
       return super().configure(**kw)
     
-    try:
+    with suppress(KeyError):
       self.variable = kw.pop('variable')
-    except KeyError:
-      pass
     
-    try:
+    with suppress(KeyError):
       self.mode = kw.pop('mode')
-    except KeyError:
-      pass
     
     return super().configure(**kw)
   

@@ -2,6 +2,7 @@ from os import mkdir
 from shlex import quote
 from threading import Lock, Event
 from queue import Queue
+from contextlib import suppress
 
 import soundfile as sf
 import sounddevice as sd
@@ -69,10 +70,8 @@ class Recording:
       indatas = Queue()
       
       # try and ensure the directory exists
-      try:
+      with suppress(FileExistsError):
         mkdir(DIR)
-      except FileExistsError:
-        pass
       
       # we don't need to use a with statement for hidden
       # it's designed such that it will free when it goes out of scope

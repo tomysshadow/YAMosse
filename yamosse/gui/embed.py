@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import re
 from weakref import WeakKeyDictionary
+from contextlib import suppress
 
 from .. import gui
 
@@ -39,10 +40,8 @@ def insert_embed(text, widget, line=0):
   
   try:
     # if the placeholder exists, then delete it
-    try:
+    with suppress(tk.TclError):
       text.delete(_texts[text])
-    except tk.TclError:
-      pass
     
     # use the insertion cursor so that it moves from the linestart to the lineend
     text.mark_set(tk.INSERT,
