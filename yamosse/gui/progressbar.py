@@ -8,9 +8,7 @@ import yamosse.utils as yamosse_utils
 from .. import gui
 from . import trace as gui_trace
 
-FUNCTION_RESET_STATES = [
-  s.off() for s in yamosse_progress.State
-]
+FUNCTION_RESET_STATES = [s.off() for s in yamosse_progress.State]
 
 
 class Progressbar(ttk.Progressbar):
