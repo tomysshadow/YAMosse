@@ -557,6 +557,8 @@ def _link_tips(text, tips):
     if stack and widget is stack[-1]:
       return
     
+    stack.append(widget)
+    
     text['state'] = tk.NORMAL
     
     try:
@@ -565,8 +567,6 @@ def _link_tips(text, tips):
       text.edit_separator()
     finally:
       text['state'] = tk.DISABLED
-    
-    stack.append(widget)
   
   text.bind_class(text_bindtag, '<Enter>', enter)
   
