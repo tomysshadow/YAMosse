@@ -87,6 +87,7 @@ def _mainloop(**kwargs):
     options = yamosse_options.Options()
   
   model_yamnet_class_names = yamosse_worker.class_names()
+  tfhub_enabled = yamosse_worker.tfhub_enabled()
   
   def record(start=None, stop=None):
     # this is an optional module
@@ -195,7 +196,7 @@ def _mainloop(**kwargs):
       subsystem.show_callback = gui_yamscan.show_yamscan
       subsystem.widgets = widgets
     
-    if not options.weights:
+    if not tfhub_enabled and not options.weights:
       if not subsystem.confirm(
         MESSAGE_WEIGHTS_NONE,
         default=True,
@@ -220,6 +221,7 @@ def _mainloop(**kwargs):
         input_,
         exit_,
         model_yamnet_class_names,
+        tfhub_enabled,
         subsystem,
         options
       )
@@ -253,7 +255,7 @@ def _mainloop(**kwargs):
           record,
           model_yamnet_class_names,
           WEIGHTS_FILETYPES,
-          yamosse_worker.tfhub_enabled(),
+          tfhub_enabled,
           import_preset,
           export_preset,
           yamscan,

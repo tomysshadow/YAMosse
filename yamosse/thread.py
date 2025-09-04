@@ -5,6 +5,7 @@ from multiprocessing import Value, Pipe, Event
 from threading import Lock
 from sys import exc_info
 from traceback import format_exception
+from contextlib import nullcontext
 
 import soundfile as sf
 
@@ -134,7 +135,8 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
   return file
 
 
-def _files(input_, exit_, model_yamnet_class_names, subsystem, options):
+def _files(input_, exit_, model_yamnet_class_names, tfhub_enabled,
+  subsystem, options):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
   # and it hopefully finishes early, leaving only small files to process
@@ -176,7 +178,7 @@ def _files(input_, exit_, model_yamnet_class_names, subsystem, options):
       max_workers=options.max_workers,
       initializer=yamosse_worker.initializer,
       initargs=(number, step, steps, receiver, sender, shutdown, options,
-        model_yamnet_class_names, yamosse_worker.tfhub_enabled())
+        model_yamnet_class_names, tfhub_enabled)
     )
     
     try:
@@ -329,7 +331,7 @@ def _report_thread_exception(exit_, subsystem, exc, val, tb):
   except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(output_file_name, input_, exit_, model_yamnet_class_names,
+def thread(output_file_name, input_, exit_, model_yamnet_class_names, tfhub_enabled,
   subsystem, options):
   try:
     # we open the output file well in advance of actually using it
@@ -343,7 +345,7 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
       exit_,
       subsystem=subsystem,
       options=options
-    ):
+    ) if not tfhub_enabled else nullcontext():
       output = yamosse_output.output(
         output_file_name,
         exit_,
@@ -356,11 +358,15 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         subsystem=subsystem
       )
       
+      # this is a try-finally instead of a with statement
+      # specifically because we want to do stuff even if
+      # exceptions occur
       try:
         results, errors = _files(
           input_,
           exit_,
           model_yamnet_class_names,
+          tfhub_enabled,
           subsystem,
           options
         )
@@ -379,7 +385,7 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         # this is intended to light up the button
         # even if the file was not written successfully
         # just as long as it was written to at all
-        # this must happen after closing
+        # this must happen after closing the output
         subsystem.show(exit_, values={
           'open_output_file': output.file_truncated
         })
