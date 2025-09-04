@@ -17,15 +17,15 @@ class _HiddenFileWrapper:
     self._prefix = prefix
     self._kwargs = kwargs
     
-    tmp = NamedTemporaryFile(
+    self.save = False
+    
+    self.tmp = NamedTemporaryFile(
       *args,
       delete=False,
       prefix=yamosse_utils.str_ensureprefix(prefix, HIDDEN),
       **kwargs
     )
     
-    self.tmp = tmp
-    self.save = False
     self._hide(True)
   
   def close(self):
@@ -76,7 +76,7 @@ class HiddenFile:
     return self
   
   def __exit__(self, exc, val, tb):
-    self.__closer()
+    self.close()
   
   def close(self):
     self.__closer()
