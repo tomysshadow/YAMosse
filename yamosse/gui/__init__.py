@@ -1596,7 +1596,7 @@ def _root_images():
       except tk.TclError:
         return None
     
-    def callback_images(entry):
+    def callback_image_type(entry):
       if not entry.is_dir():
         return None
       
@@ -1614,7 +1614,7 @@ def _root_images():
     # to avoid popping an empty window in some circumstances
     # all names/paths here are encoded with fsenc so that they will be compared by ordinal
     root_window = get_root_window()
-    root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_images)
+    root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_image_type)
     
     # this is done to prevent exceptions
     # in case the application dies on a thread that isn't the GUI thread
