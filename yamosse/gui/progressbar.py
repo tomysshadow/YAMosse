@@ -8,7 +8,7 @@ import yamosse.utils as yamosse_utils
 from .. import gui
 from . import trace as gui_trace
 
-FUNCTION_RESET_STATES = [s.off() for s in yamosse_progress.State]
+STATES_OFF = [s.off() for s in yamosse_progress.State]
 
 
 class Progressbar(ttk.Progressbar):
@@ -101,7 +101,7 @@ class Progressbar(ttk.Progressbar):
       self.set(self['maximum'])
       if self.state(): return
     elif function == yamosse_progress.Function.RESET:
-      self.state(FUNCTION_RESET_STATES)
+      self.state(STATES_OFF)
       self.mode = yamosse_progress.Mode.DETERMINATE
       self.set(0)
     
