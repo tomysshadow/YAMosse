@@ -68,12 +68,10 @@ class _Output(ABC):
   
   @abstractmethod
   def options(self, options):
-    sort_by = options.sort_by
-    
-    if sort_by == NUMBER_OF_SOUNDS:
-      self.sort_by = self.identification.key_number_of_sounds
-    elif sort_by == FILE_NAME:
-      self.sort_by = self.identification.key_file_name
+    self.sort_by = ({
+      NUMBER_OF_SOUNDS: self.identification.key_number_of_sounds,
+      FILE_NAME: self.identification.key_file_name
+    })[options.sort_by]
     
     self.sort_reverse = options.sort_reverse
     
