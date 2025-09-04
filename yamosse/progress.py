@@ -12,11 +12,10 @@ class Function(Enum):
 
 
 class State(Enum):
-  # order must be reversed for priority levels
-  PARTIAL = ('user3', 4)
-  PAUSED = ('user2', 3)
-  ERROR = ('user1', 2)
   NORMAL = ('', 1)
+  ERROR = ('user1', 2)
+  PAUSED = ('user2', 3)
+  PARTIAL = ('user3', 4)
   
   def on(self):
     return self.value[0]

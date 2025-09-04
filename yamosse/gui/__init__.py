@@ -1199,8 +1199,9 @@ def _init_root_window():
   local = threading.local()
   
   def styles():
+    # the order of the fillstates must be reversed for priority levels
     PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
-    PROGRESS_FILLSTATES = [s.value for s in yamosse_progress.State]
+    PROGRESS_FILLSTATES = [s.value for s in reversed(yamosse_progress.State)]
     
     style = ttk.Style()
     

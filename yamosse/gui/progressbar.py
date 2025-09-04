@@ -121,7 +121,7 @@ class Progressbar(ttk.Progressbar):
     
     # get the highest priority state
     # so the taskbar knows what type to use
-    for state in yamosse_progress.State:
+    for state in reversed(yamosse_progress.State):
       if not self.instate((state.on(),)):
         continue
       
