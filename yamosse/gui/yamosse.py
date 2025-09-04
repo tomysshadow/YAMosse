@@ -571,7 +571,8 @@ def _link_tips(text, tips):
   text.bind_class(text_bindtag, '<Enter>', enter)
   
   def leave(e):
-    if not stack: return
+    if not stack:
+      return
     
     stack.pop()
     
