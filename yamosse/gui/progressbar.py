@@ -111,8 +111,6 @@ class Progressbar(ttk.Progressbar):
       yamosse_progress.Function.RESET: reset,
     })[function]()
     
-    # in future there might be taskbar only functions
-    # so this is outside of the main if...elif block
     self._function_task(function)
   
   def state(self, statespec=None):
