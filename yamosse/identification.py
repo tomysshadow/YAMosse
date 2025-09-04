@@ -329,10 +329,8 @@ class _IdentificationTopRanked(_Identification):
         # as we need to expand it with new scores, so a numpy array wouldn't cut it
         # (or at least, wouldn't be efficient with all the copying of arrays)
         for class_index in class_indices:
-          scores = (
-            class_scores.setdefault(int(classes[class_index]), [])
-            + [score[class_index]]
-          )
+          scores = class_scores.setdefault(int(classes[class_index]), [])
+          scores.append(score[class_index])
         
         return
       
