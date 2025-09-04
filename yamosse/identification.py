@@ -320,7 +320,7 @@ class _IdentificationTopRanked(_Identification):
       # every class that is ever in the top ranked as one big summary
       # so we don't bother with the whole numpy stacking thing
       # we also don't care about timestamps in this case
-      # so the None key is used exclusively
+      # so the TIMESTAMP_ALL key is used exclusively
       if options.timespan_span_all:
         class_scores = top_scores.setdefault(TIMESTAMP_ALL, OrderedDict())
         class_indices = score.argsort()[::-1][:options.top_ranked]
@@ -384,6 +384,7 @@ class _IdentificationTopRanked(_Identification):
       return
     
     # otherwise add the new score, we'll find the mean of them all later
+    # (this mutates default)
     default += score
   
   def timestamps(self, shutdown):
