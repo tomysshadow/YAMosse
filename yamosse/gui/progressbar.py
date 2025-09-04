@@ -127,7 +127,7 @@ class Progressbar(ttk.Progressbar):
       
       state_type = yamosse_progress.types[state]
       
-      if state_type.value is not None:
+      if state_type is not None:
         self._state_type = state_type
         break
     
