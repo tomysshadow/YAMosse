@@ -127,7 +127,7 @@ class TestOutput(ABC):
     ), file
 
 
-class TestOutputText(TestOutput, unittest.TestCase):
+class TestTextOutput(TestOutput, unittest.TestCase):
   def setUp(self):
     super().setUp(SUFFIX_TXT)
   
@@ -359,7 +359,7 @@ class TestOutputText(TestOutput, unittest.TestCase):
     self.assertEqual(f.readline(), '# Errors\n')
 
 
-class TestOutputJSON(TestOutput, unittest.TestCase):
+class TestJSONOutput(TestOutput, unittest.TestCase):
   def setUp(self):
     super().setUp(SUFFIX_JSON)
   
