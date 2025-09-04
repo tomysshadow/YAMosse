@@ -12,7 +12,7 @@ class Function(Enum):
 
 
 class State(Enum):
-  # order matters for priority levels
+  # order must be reversed for priority levels
   PARTIAL = ('user3', 4)
   PAUSED = ('user2', 3)
   ERROR = ('user1', 2)
