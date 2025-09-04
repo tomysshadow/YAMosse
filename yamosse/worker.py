@@ -49,7 +49,7 @@ def _high_priority(psutil=None):
   MIN_NICE = -20
   
   try:
-    for priority in range(os.getpriority(os.PRIO_PROCESS, 0) - 1, MIN_NICE - 1, -1):
+    for priority in reversed(range(MIN_NICE, os.getpriority(os.PRIO_PROCESS, 0))):
       os.setpriority(os.PRIO_PROCESS, 0, priority)
   except OSError:
     pass

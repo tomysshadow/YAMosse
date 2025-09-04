@@ -7,6 +7,7 @@ import weakref
 import yamosse.utils as yamosse_utils
 
 HIDDEN = '~'
+RETRIES = 10
 
 
 class _HiddenFileWrapper:
@@ -33,26 +34,45 @@ class _HiddenFileWrapper:
     
     self._hide(False)
     tmp.close()
-    save = self.save
     
-    if not save:
-      os.unlink(tmp.name)
-      self.name = None
-      return
+    name = None
+    src = tmp.name
     
-    # generate a new visible name to use
-    # we can't just strip the tilde (~) off the current name
-    # because then it wouldn't be guaranteed unique anymore
-    with NamedTemporaryFile(
-      *self._args,
-      delete=False,
-      prefix=self._prefix,
-      **self._kwargs
-    ) as visible:
-      save = visible.name
-    
-    os.replace(tmp.name, save)
-    self.name = save
+    try:
+      if not self.save: return
+      
+      # first try stripping the tilde (~) off the current name
+      dirname, basename = os.path.split(src)
+      dest = os.path.join(dirname, basename.removeprefix(HIDDEN))
+      
+      for r in reversed(range(RETRIES)):
+        try:
+          # this should throw if a file with the same name gets created
+          # before we can rename ours
+          os.rename(src, dest)
+        except OSError as ex:
+          # raise exception if we exhausted all retries
+          if not r: raise ex
+          
+          # generate a new visible name to use
+          # that is guaranteed unique
+          # I basically want mktemp here but that's deprecated
+          # this is safe because rename will fail if the file exists
+          with NamedTemporaryFile(
+            *self._args,
+            delete=True,
+            prefix=self._prefix,
+            **self._kwargs
+          ) as tmp:
+            dest = tmp.name
+        else:
+          name = dest
+          break
+    finally:
+      self.name = name
+      
+      if name is None:
+        os.unlink(src)
   
   def _hide(self, hidden):
     if self._system == 'Windows':
