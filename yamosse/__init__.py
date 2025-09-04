@@ -47,7 +47,7 @@ MESSAGE_INPUT_NONE = 'You must select an input folder or files first.'
 MESSAGE_CLASSES_NONE = 'You must select at least one class first.'
 
 MESSAGE_WEIGHTS_NONE = ('You have not specified the weights file. Would you like to download the '
-  'standard YAMNet weights file now from Google Cloud Storage? If you click No, the YAMScan will '
+  'standard YAMNet weights file now from Google Cloud Storage? If you answer No, the YAMScan will '
   'be cancelled.')
 
 MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
