@@ -135,7 +135,8 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
   return file
 
 
-def _files(input_, exit_, model_yamnet_class_names, tfhub_enabled,
+def _files(input_, exit_,
+  model_yamnet_class_names, tfhub_enabled,
   subsystem, options):
   # the ideal way to sort the files is from largest to smallest
   # this way, we start processing the largest file right at the start
@@ -331,7 +332,8 @@ def _report_thread_exception(exit_, subsystem, exc, val, tb):
   except yamosse_subsystem.SubsystemExit: pass
 
 
-def thread(output_file_name, input_, exit_, model_yamnet_class_names, tfhub_enabled,
+def thread(output_file_name, input_, exit_,
+  model_yamnet_class_names, tfhub_enabled,
   subsystem, options):
   try:
     # we open the output file well in advance of actually using it
