@@ -5,7 +5,7 @@ from multiprocessing import Value, Pipe, Event
 from threading import Lock
 from sys import exc_info
 from traceback import format_exception
-from contextlib import nullcontext, suppress
+from contextlib import suppress, nullcontext
 
 import soundfile as sf
 
