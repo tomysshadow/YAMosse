@@ -80,9 +80,13 @@ class Recorder:
     
     window_bindtag = gui.bindtag_window(window)
     
-    for s, sequence in enumerate(('<Unmap>', '<Destroy>')):
-      window.bind_class(window_bindtag,
-        sequence, lambda e, s=s: self._stop_recording(s), add=True)
+    for destroy, sequence in enumerate(('<Unmap>', '<Destroy>')):
+      window.bind_class(
+        window_bindtag,
+        sequence,
+        lambda e, destroy=destroy: self._stop_recording(destroy),
+        add=True
+      )
     
     window.protocol('WM_SAVE_YOURSELF', self._stop_recording)
     

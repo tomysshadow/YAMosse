@@ -45,7 +45,12 @@ class _UndoableScale(_UndoableWidget):
     # but for spacebar it's just a standard key event
     # (same as pressing a button)
     for sequence in ('<Double-ButtonRelease>', '<Key-space>'):
-      widget.bind_class(class_, sequence, lambda e: self.data(e, recenter=True), add=True)
+      widget.bind_class(
+        class_,
+        sequence,
+        lambda e: data(e, recenter=True),
+        add=True
+      )
   
   @abstractmethod
   def revert(self, *args, focus=True):
