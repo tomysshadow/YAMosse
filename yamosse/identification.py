@@ -20,6 +20,12 @@ class _Identification(ABC):
     self.options = options
     self.np = np
   
+  def __enter__(self):
+    return self
+  
+  def __exit__(self, exc, val, tb):
+    self.clear()
+  
   @abstractmethod
   def clear(self):
     pass

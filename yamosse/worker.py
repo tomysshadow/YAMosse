@@ -290,7 +290,7 @@ def worker(file_name):
   step = 0
   
   try:
-    with sf.SoundFile(file_name) as f:
+    with (identification, sf.SoundFile(file_name) as f):
       # the main offenders for startup time
       # (thankfully doing these imports here doesn't seem to slow down worker performance much)
       import numpy as np
@@ -298,8 +298,6 @@ def worker(file_name):
       import resampy
       
       # Decode the WAV file.
-      identification.clear()
-      
       seconds = 0.0
       
       sample_rate = _sample_rate
@@ -359,7 +357,7 @@ def worker(file_name):
         for score in yamnet(waveform)[0]:
           identification.predict((int(seconds), np.array(score, dtype=float32)))
           seconds += patch_hop_seconds
+      
+      return identification.timestamps(shutdown)
   finally:
     _step_progress(step)
-  
-  return identification.timestamps(shutdown)
