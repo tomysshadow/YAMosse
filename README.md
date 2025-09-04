@@ -231,6 +231,7 @@ Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoj
  - Drag and drop is fixed on Mac.
  - The progress bar will turn red if an error occurs (in Python 3.13.)
  - The output file is no longer overwritten if a YAMScan is cancelled or fails with an error.
+ - Fixed a bug where you would be asked to download the weights file in the Tensorflow Hub release.
  - Fixed a bug where a cancelled YAMScan could come "back to life" after starting a new one.
  - Fixed a bug where the application could hang if it was closed immediately after cancelling a YAMScan.
  
