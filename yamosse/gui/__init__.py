@@ -164,14 +164,14 @@ def after_invalidcommand_widget(widget, validate):
 
 
 def default_bindtags_widget(widget, name=True, class_=True, window=True, all_=True):
-  bindtags = []
+  default_bindtags = []
   
-  if name: bindtags.append(widget.winfo_name())
-  if class_: bindtags.append(widget.winfo_class())
-  if window: bindtags.append(widget.winfo_toplevel())
-  if all_: bindtags.append(tk.ALL)
+  if name: default_bindtags.append(widget.winfo_name())
+  if class_: default_bindtags.append(widget.winfo_class())
+  if window: default_bindtags.append(widget.winfo_toplevel())
+  if all_: default_bindtags.append(tk.ALL)
   
-  widget.bindtags(bindtags)
+  return default_bindtags
 
 
 def bind_truekey_widget(widget, class_='', keysym='',
