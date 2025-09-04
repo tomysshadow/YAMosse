@@ -20,6 +20,8 @@ DONE_VALUES = ('OK', 'Cancel')
 def ask_cancel(window, footer_widgets):
   open_output_file_button, done_button = footer_widgets
   
+  assert open_output_file_button # silence unused variable warning
+  
   # while this may feel like a bit of a hack, doing it this way ensures that
   # there is no possible desync between what the button says and whether the message box appears
   if str(done_button['text']) == 'OK':

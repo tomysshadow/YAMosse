@@ -1,5 +1,5 @@
 class Once:
-  __slots__ = '_obj', '_count'
+  __slots__ = ('_obj', '_count')
   
   def __init__(self, type_=dict):
     # this class is similar to a set

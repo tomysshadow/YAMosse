@@ -14,7 +14,7 @@ HMS_TIMESPAN = ' - '
 
 
 class _Identification(ABC):
-  __slots__ = 'options', 'np'
+  __slots__ = ('options', 'np')
   
   def __init__(self, options, np):
     self.options = options
@@ -38,6 +38,7 @@ class _Identification(ABC):
   
   @classmethod
   def restructure_results_for_output(cls, results, output):
+    assert output # silence unused argument warning
     return results
   
   @classmethod
@@ -86,7 +87,7 @@ class _Identification(ABC):
 
 
 class _IdentificationConfidenceScore(_Identification):
-  __slots__ = '_class_predictions', '_minmax'
+  __slots__ = ('_class_predictions', '_minmax')
   
   def __init__(self, options, np):
     super().__init__(options, np)
@@ -267,7 +268,7 @@ class _IdentificationConfidenceScore(_Identification):
 
 
 class _IdentificationTopRanked(_Identification):
-  __slots__ = '_top_scores', '_calibration'
+  __slots__ = ('_top_scores', '_calibration')
   
   def __init__(self, options, np):
     super().__init__(options, np)

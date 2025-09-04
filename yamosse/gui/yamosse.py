@@ -626,7 +626,7 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
     parent=frame.winfo_toplevel(), filetypes=weights_filetypes).middle
   
   if tfhub_enabled:
-    gui.state_widget(weights_labelframe, state=tk.DISABLED)
+    gui.state_children_widget(weights_labelframe, state=tk.DISABLED)
     weights_entry['cursor'] = ''
   
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)

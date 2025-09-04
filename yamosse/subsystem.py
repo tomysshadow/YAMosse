@@ -73,7 +73,7 @@ class _WindowSubsystem(_Subsystem):
   def error(self, message, *args, parent=None, **kwargs):
     gui.messagebox.showwarning(
       parent=parent if parent else self.window,
-      title=title,
+      title=self.title,
       message=message
     )
   
@@ -83,7 +83,7 @@ class _WindowSubsystem(_Subsystem):
     
     return gui.messagebox.askyesno(
       parent=parent if parent else self.window,
-      title=title,
+      title=self.title,
       message=message,
       default=default
     )
