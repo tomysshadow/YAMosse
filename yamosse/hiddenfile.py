@@ -42,8 +42,8 @@ class _HiddenFileWrapper:
       if not self.save: return
       
       # first try stripping the tilde (~) off the current name
-      dirname, basename = os.path.split(src)
-      dest = os.path.join(dirname, basename.removeprefix(HIDDEN))
+      head, tail = os.path.split(src)
+      dest = os.path.join(head, tail.removeprefix(HIDDEN))
       
       for r in reversed(range(RETRIES)):
         try:
