@@ -32,6 +32,12 @@ class _HiddenFileWrapper:
   def close(self):
     tmp = self.tmp
     
+    # I think this check is technically redundant
+    # because we're called through a finalizer
+    # but who knows
+    if tmp.closed:
+      return
+    
     name = None
     src = tmp.name
     

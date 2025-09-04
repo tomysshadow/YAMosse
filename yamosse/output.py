@@ -47,7 +47,12 @@ class _Output(ABC):
     self.close()
   
   def close(self):
-    self._file.close()
+    file = self._file
+    
+    if file.closed:
+      return
+    
+    file.close()
     
     subsystem = self.subsystem
     
@@ -197,11 +202,16 @@ class _OutputJSON(_Output):
     super().__init__(*args, **kwargs)
   
   def close(self):
+    file = self.file
+    
+    if file.closed:
+      return
+    
     indent = self.indent
     
     # dump anything that is non-empty
     json.dump({key: value for key, value in self._d.items() if value},
-      self.file, indent=indent if indent else None)
+      file, indent=indent if indent else None)
     
     super().close()
   
