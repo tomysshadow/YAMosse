@@ -222,17 +222,20 @@ def _root_embed():
         bind(window, name,
           
           f'''set {W} [{W} %M]
-          if {{${W} == ""}} {{ continue }}
           
-          interp hide {{}} focus
-          interp alias {{}} focus {{}} {focus_cbname}
-          catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+          if {{${W} != ""}} {{
+            interp hide {{}} focus
+            interp alias {{}} focus {{}} {focus_cbname}
+            catch {{{RE_SCRIPT.sub(repl_W, script)}}} result options
+            
+            interp alias {{}} focus {{}}
+            interp expose {{}} focus
+            return -options $options $result
+            
+            unset result options
+          }}
           
-          interp alias {{}} focus {{}}
-          interp expose {{}} focus
-          return -options $options $result
-          
-          unset {W} result options'''
+          unset {W}'''
         )
       
       # set up the bindings that were originally on the window
