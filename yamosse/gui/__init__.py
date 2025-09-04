@@ -914,11 +914,17 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     def select_all():
       treeview.selection_set(get_items_treeview(treeview))
     
+    treeview.bind('<Control-a>', lambda e: select_all())
+    
     def select_none():
       treeview.selection_set(())
     
+    treeview.bind('<Control-d>', lambda e: select_none())
+    
     def invert_selection():
       treeview.selection_toggle(get_items_treeview(treeview))
+    
+    treeview.bind('<Control-i>', lambda e: invert_selection())
     
     buttons += [
       ttk.Button(
