@@ -1703,6 +1703,25 @@ def set_attrs_to_variables(variables, attrs):
     setattr(attrs, key, value)
 
 
+def enter_stack(stack, widget):
+  # it is possible to recieve more than one Enter event before Leave event
+  # (on comboboxes)
+  # so we must check if this is the same widget as the one on top of the stack
+  if stack and stack[-1] is widget:
+    return False
+  
+  stack.append(widget)
+  return True
+
+
+def leave_stack(stack):
+  if not stack:
+    return False
+  
+  stack.pop()
+  return True
+
+
 def threaded():
   assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
 

@@ -107,23 +107,19 @@ def _root_embed():
     
     root_window.bind_class(BINDTAG, '<Configure>', configure, add=True)
     
-    def enter(e):
-      widget = e.widget
-      
-      if _stack and _stack[-1] is widget:
-        return
-      
-      _stack.append(widget)
+    root_window.bind_class(
+      BINDTAG,
+      '<Enter>',
+      lambda e: gui.enter_stack(_stack, e.widget),
+      add=True
+    )
     
-    root_window.bind_class(BINDTAG, '<Enter>', enter, add=True)
-    
-    def leave(e):
-      if not _stack:
-        return
-      
-      _stack.pop()
-    
-    root_window.bind_class(BINDTAG, '<Leave>', leave, add=True)
+    root_window.bind_class(
+      BINDTAG,
+      '<Leave>',
+      lambda e: gui.leave_stack(_stack),
+      add=True
+    )
     
     tk_ = root_window.tk
     

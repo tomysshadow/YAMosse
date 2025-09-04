@@ -551,13 +551,8 @@ def _link_tips(text, tips):
   def enter(e):
     widget = e.widget
     
-    # it is possible to recieve more than one Enter event before Leave event
-    # (on comboboxes)
-    # so we must check if this is the same widget as the one on top of the stack
-    if _stack and _stack[-1] is widget:
+    if not gui.enter_stack(stack, widget):
       return
-    
-    stack.append(widget)
     
     text['state'] = tk.NORMAL
     
@@ -571,10 +566,8 @@ def _link_tips(text, tips):
   text.bind_class(text_bindtag, '<Enter>', enter)
   
   def leave(e):
-    if not stack:
+    if not gui.leave_stack(stack):
       return
-    
-    stack.pop()
     
     text['state'] = tk.NORMAL
     
