@@ -32,11 +32,11 @@ class _HiddenFileWrapper:
   def close(self):
     tmp = self.tmp
     
-    self._hide(False)
-    tmp.close()
-    
     name = None
     src = tmp.name
+    
+    self._hide(False)
+    tmp.close()
     
     try:
       if not self.save: return
