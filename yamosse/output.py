@@ -196,14 +196,14 @@ class _OutputJSON(_Output):
     # should be called last so file is opened as last step
     super().__init__(*args, **kwargs)
   
-  def __exit__(self, exc, val, tb):
+  def close(self):
     indent = self.indent
     
     # dump anything that is non-empty
     json.dump({key: value for key, value in self._d.items() if value},
       self.file, indent=indent if indent else None)
     
-    super().__exit__(exc, val, tb)
+    super().close()
   
   def options(self, options):
     if not super().options(options):

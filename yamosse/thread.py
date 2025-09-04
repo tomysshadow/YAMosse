@@ -337,16 +337,14 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
     # then fail because the output file is locked or whatever
     # we also hold open the weights file
     # so it can't be deleted in the time between now and the workers using it
-    with (
-      _download_weights_file_unique(
-        yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
-        yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
-        exit_,
-        subsystem=subsystem,
-        options=options
-      ),
-      
-      yamosse_output.output(
+    with _download_weights_file_unique(
+      yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
+      yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
+      exit_,
+      subsystem=subsystem,
+      options=options
+    ):
+      output = yamosse_output.output(
         output_file_name,
         exit_,
         model_yamnet_class_names,
@@ -356,8 +354,8 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         ),
         
         subsystem=subsystem
-      ) as output
-    ):
+      )
+      
       try:
         results, errors = _files(
           input_,
@@ -376,9 +374,12 @@ def thread(output_file_name, input_, exit_, model_yamnet_class_names,
         output.results(results)
         output.errors(errors)
       finally:
+        output.close()
+        
         # this is intended to light up the button
         # even if the file was not written successfully
         # just as long as it was written to at all
+        # this must happen after closing
         subsystem.show(exit_, values={
           'open_output_file': output.file_truncated
         })
