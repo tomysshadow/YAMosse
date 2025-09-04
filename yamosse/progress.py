@@ -13,16 +13,16 @@ class Function(Enum):
 
 class State(Enum):
   # order matters for priority levels
-  PARTIAL = (4, 'user3')
-  PAUSED = (3, 'user2')
-  ERROR = (2, 'user1')
-  NORMAL = (1, '')
+  PARTIAL = ('user3', 4)
+  PAUSED = ('user2', 3)
+  ERROR = ('user1', 2)
+  NORMAL = ('', 1)
   
   def on(self):
-    return self.value[1]
+    return self.value[0]
   
   def off(self):
-    value = self.value[1]
+    value = self.value[0]
     
     if not value:
       return ''
