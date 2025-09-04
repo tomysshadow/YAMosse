@@ -134,9 +134,8 @@ class Recording:
       hidden.save = self.save
       hidden.close()
       
-      print('')
-      
       input_ = hidden.name
+      print('')
       
       if not input_:
         print(NO_SAVE_MESSAGE)
