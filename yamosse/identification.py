@@ -330,7 +330,7 @@ class _IdentificationTopRanked(_Identification):
         # (or at least, wouldn't be efficient with all the copying of arrays)
         for class_index in class_indices:
           scores = class_scores.setdefault(int(classes[class_index]), [])
-          scores.append(score[class_index])
+          scores.append(score[class_index]) # must append so it mutates
         
         return
       
