@@ -155,7 +155,7 @@ class Options:
   @classmethod
   def import_preset(cls, file_name):
     with open(file_name, 'r', encoding='utf8') as f:
-      options = Options()
+      options = cls()
       
       # cast JSON types to Python types
       # presets are expected to have every option

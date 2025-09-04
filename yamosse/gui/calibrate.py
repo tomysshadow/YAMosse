@@ -18,7 +18,7 @@ DEFAULT_SCALE_ROUND = round(DEFAULT_SCALE_VALUE)
 TO_SCALE_ROUND = round(TO_SCALE_VALUE)
 
 
-class _UndoableWidget(ABC):
+class _WidgetUndoable(ABC):
   __slots__ = ('_undooptions',)
   
   def __init__(self, undooptions):
@@ -29,7 +29,7 @@ class _UndoableWidget(ABC):
     pass
 
 
-class _UndoableScale(_UndoableWidget):
+class _ScaleUndoable(_WidgetUndoable):
   def bind(self, widget, class_):
     data = self.data
     
@@ -90,7 +90,7 @@ class _UndoableScale(_UndoableWidget):
     pass
 
 
-class _UndoableMaster(_UndoableScale):
+class _MasterUndoable(_ScaleUndoable):
   __slots__ = ('_tk', '_scale', '_command', 'oldvalues', 'oldvalue', 'calibration')
   
   def __init__(self, undooptions, scale, calibration):
@@ -245,7 +245,7 @@ class _UndoableMaster(_UndoableScale):
 # exceptions to the rule that make things difficult. I did think of using variable tracing,
 # but that wouldn't catch if you've clicked a scale but not actually moved it yet, plus
 # it'd also trip when we edit the scales here in code, via undoing/redoing. So, I don't know...
-class _UndoableCalibration(_UndoableScale):
+class _CalibrationUndoable(_ScaleUndoable):
   __slots__ = ('_tk', '_text', 'oldvalues', 'scales', 'master', 'reset')
   
   def __init__(self, undooptions, text, scales, master_scale, reset_button):
@@ -256,7 +256,7 @@ class _UndoableCalibration(_UndoableScale):
     
     # the calibration oldvalues should contain the "true" state of the scales
     # at all times. It should never contain numbers larger than TO_SCALE_VALUE (200.0)
-    # if it does, it probably leaked out of UndoableMaster which is a bug
+    # if it does, it probably leaked out of MasterUndoable which is a bug
     oldvalues = self.values(scales.values())
     self.oldvalues = oldvalues
     self.scales = oldvalues
@@ -283,8 +283,8 @@ class _UndoableCalibration(_UndoableScale):
     
     self.bind(text, text_bindtag)
     
-    self.master = _UndoableMaster(undooptions, master_scale, self)
-    self.reset = _UndoableReset(undooptions, reset_button, self)
+    self.master = _MasterUndoable(undooptions, master_scale, self)
+    self.reset = _ResetUndoable(undooptions, reset_button, self)
   
   def revert(self, *args, focus=True):
     widget, newvalue = args
@@ -348,7 +348,7 @@ class _UndoableCalibration(_UndoableScale):
     return self._tk.call(command, *args)
 
 
-class _UndoableReset(_UndoableWidget):
+class _ResetUndoable(_WidgetUndoable):
   __slots__ = ('_button', 'oldvalues', 'calibration')
   
   def __init__(self, undooptions, button, calibration):
@@ -522,7 +522,7 @@ def make_calibrate(frame, variables, class_names, attached):
     lambda: gui.release_modal_window(window)
   )
   
-  undoable_calibration = _UndoableCalibration(
+  undoable_calibration = _CalibrationUndoable(
     undooptions,
     calibration_text,
     scales,

@@ -256,7 +256,7 @@ def _files(input_, exit_,
         
         if normal:
           subsystem.show(exit_, values={
-            'progressbar': {'configure': {'kwargs': {'mode': yamosse_progress.MODE_DETERMINATE}}}
+            'progressbar': {'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE}}}
           })
           
           clear_done = clear_done_normal
@@ -321,7 +321,7 @@ def _files(input_, exit_,
 def _report_thread_exception(exit_, subsystem, exc, val, tb):
   try:
     subsystem.show(exit_, values={
-      'progressbar': {'state': {'args': ((yamosse_progress.STATE_ERROR,),)}},
+      'progressbar': {'state': {'args': ((yamosse_progress.State.ERROR,),)}},
       
       'log': ':\n'.join((
         'Exception in YAMScan thread',
@@ -371,7 +371,7 @@ def thread(output_file_name, input_, exit_,
       )
       
       subsystem.show(exit_, values={
-        'progressbar': {yamosse_progress.FUNCTION_DONE: {}},
+        'progressbar': {yamosse_progress.Function.DONE.value: {}},
         'log': 'Finishing, please wait...\n'
       })
       

@@ -1192,7 +1192,7 @@ def _init_root_window():
   
   def styles():
     PROGRESS_ORIENTS = ('Horizontal', 'Vertical')
-    PROGRESS_FILLSTATES = tuple(enumerate(yamosse_progress.STATES, start=1))
+    PROGRESS_FILLSTATES = [s.value for s in yamosse_progress.State]
     
     style = ttk.Style()
     

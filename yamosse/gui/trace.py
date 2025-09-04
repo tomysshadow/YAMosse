@@ -20,7 +20,7 @@ class Trace:
     # without creating another reference to self
     # maybe that would have zero impact, but either way
     # it's just easier to keep track of in my head
-    destroy = weakref.finalize(self, Trace.__finalize, tk,
+    destroy = weakref.finalize(self, type(self).__finalize, tk,
       variable, operation, cbname)
     
     # this object should only ever be bound to this one variable

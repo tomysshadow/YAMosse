@@ -1,54 +1,56 @@
+from enum import Enum
+
 try:
   import PyTaskbar
 except ImportError:
   PyTaskbar = None
 
-FUNCTIONS = (
-  'done',
-  'reset'
-)
 
-FUNCTION_DONE, FUNCTION_RESET = FUNCTIONS
-
-STATES = tuple(reversed(( # order matters for priority levels
-  '',
-  'user1',
-  'user2',
-  'user3'
-)))
-
-STATE_PARTIAL, STATE_PAUSED, STATE_ERROR, STATE_NORMAL = STATES
-
-MODES = (
-  'determinate',
-  'indeterminate'
-)
-
-MODE_DETERMINATE, MODE_INDETERMINATE = MODES
-
-types = dict.fromkeys((*FUNCTIONS, *STATES, *MODES))
-
-if PyTaskbar:
-  types = {
-    FUNCTION_DONE: 'flash_done',
-    FUNCTION_RESET: 'reset',
-    
-    STATE_PARTIAL: None,
-    STATE_PAUSED: PyTaskbar.WARNING,
-    STATE_ERROR: PyTaskbar.ERROR,
-    STATE_NORMAL: PyTaskbar.NORMAL,
-    
-    MODE_DETERMINATE: None,
-    MODE_INDETERMINATE: PyTaskbar.LOADING
-  }
+class Function(Enum):
+  DONE = 'done'
+  RESET = 'reset'
 
 
-def not_state(state):
-  if not state:
-    return ''
+class State(Enum):
+  # order matters for priority levels
+  PARTIAL = (4, 'user3')
+  PAUSED = (3, 'user2')
+  ERROR = (2, 'user1')
+  NORMAL = (1, '')
   
-  return '!%s' % state
+  def on(self):
+    return self.value[1]
+  
+  def off(self):
+    value = self.value[1]
+    
+    if not value:
+      return ''
+    
+    return '!%s' % value
+
+
+class Mode(Enum):
+  DETERMINATE = 'determinate'
+  INDETERMINATE = 'indeterminate'
 
 
 def hwnd(window):
   return int(window.wm_frame(), base=16)
+
+
+types = dict.fromkeys((*Function, *State, *Mode))
+
+if PyTaskbar:
+  types = {
+    Function.DONE: 'flash_done',
+    Function.RESET: 'reset',
+    
+    State.NORMAL: PyTaskbar.NORMAL,
+    State.ERROR: PyTaskbar.ERROR,
+    State.PAUSED: PyTaskbar.WARNING,
+    State.PARTIAL: None,
+    
+    Mode.DETERMINATE: None,
+    Mode.INDETERMINATE: PyTaskbar.LOADING
+  }

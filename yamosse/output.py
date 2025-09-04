@@ -136,7 +136,7 @@ class _Output(ABC):
     return file
 
 
-class _OutputText(_Output):
+class _TextOutput(_Output):
   def __init__(self, *args, encoding='ascii', **kwargs):
     self._once = yamosse_once.Once()
     
@@ -201,7 +201,7 @@ class _OutputText(_Output):
     return errors
 
 
-class _OutputJSON(_Output):
+class _JSONOutput(_Output):
   def __init__(self, *args, **kwargs):
     self._d = {}
     
@@ -251,6 +251,6 @@ def output(file_name, *args, **kwargs):
   ext = splitext(file_name)[1]
   
   if ext.casefold() == _ext_json:
-    return _OutputJSON(file_name, *args, **kwargs)
+    return _JSONOutput(file_name, *args, **kwargs)
   
-  return _OutputText(file_name, *args, **kwargs)
+  return _TextOutput(file_name, *args, **kwargs)

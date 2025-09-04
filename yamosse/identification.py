@@ -91,7 +91,7 @@ class _Identification(ABC):
     return item[0]
 
 
-class _IdentificationConfidenceScore(_Identification):
+class _ConfidenceScoreIdentification(_Identification):
   __slots__ = ('_class_predictions', '_minmax')
   
   def __init__(self, options, np):
@@ -272,7 +272,7 @@ class _IdentificationConfidenceScore(_Identification):
     return calibrated_score < confidence_score
 
 
-class _IdentificationTopRanked(_Identification):
+class _TopRankedIdentification(_Identification):
   __slots__ = ('_top_scores', '_calibration')
   
   def __init__(self, options, np):
@@ -527,9 +527,9 @@ class _IdentificationTopRanked(_Identification):
 
 def identification(option=None):
   if option == IDENTIFICATION_CONFIDENCE_SCORE:
-    return _IdentificationConfidenceScore
+    return _ConfidenceScoreIdentification
   
   if option == IDENTIFICATION_TOP_RANKED:
-    return _IdentificationTopRanked
+    return _TopRankedIdentification
   
   return _Identification
