@@ -22,12 +22,12 @@ class State(Enum):
     return self.value[0]
   
   def off(self):
-    spec = self.value[0]
+    statespec = self.value[0]
     
-    if not spec:
+    if not statespec:
       return ''
     
-    return '!%s' % spec
+    return '!%s' % statespec
 
 
 class Mode(Enum):

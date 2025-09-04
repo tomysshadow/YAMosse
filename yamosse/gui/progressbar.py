@@ -82,7 +82,7 @@ class Progressbar(ttk.Progressbar):
       self.variable = kw.pop('variable')
     
     with suppress(KeyError):
-      self.mode = kw.pop('mode')
+      self.mode = yamosse_progress.Mode(str(kw.pop('mode')))
     
     return super().configure(**kw)
   
