@@ -35,7 +35,7 @@ class Recorder:
     
     row_frame.columnconfigure(1, weight=1) # make progressbar frame horizontally resizable
     
-    photo_images = gui.get_root_images()[gui.FSENC_PHOTO]
+    photo_images = gui.get_root_images()[gui.ImageType.PHOTO]
     record_image = photo_images[fsenc('record.gif')]
     stop_image = photo_images[fsenc('stop.gif')]
     

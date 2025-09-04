@@ -156,7 +156,7 @@ def make_classes(frame, variables, class_names):
   erase_button = ttk.Button(
     find_frame,
     width=0, # hack to fix button height on Linux
-    image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('erase.gif')],
+    image=gui.get_root_images()[gui.ImageType.PHOTO][fsenc('erase.gif')],
     compound=tk.CENTER,
     command=lambda: find_entry.delete(0, tk.END),
     state=tk.DISABLED
@@ -431,7 +431,7 @@ def make_sort(frame, variables):
   sort_reverse_checkbutton = None
   sort_reverse_variable = variables['sort_reverse']
   
-  photo_images = gui.get_root_images()[gui.FSENC_PHOTO]
+  photo_images = gui.get_root_images()[gui.ImageType.PHOTO]
   up_image = photo_images[fsenc('up.gif')]
   down_image = photo_images[fsenc('down.gif')]
   
@@ -694,7 +694,7 @@ def make_footer(frame, yamscan, restore_defaults):
     webbrowser.open(URL_ONLINE_HELP)
   
   open_online_help_button = ttk.Button(frame, text='Open Online Help',
-    image=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('help symbol.gif')], compound=tk.LEFT,
+    image=gui.get_root_images()[gui.ImageType.PHOTO][fsenc('help symbol.gif')], compound=tk.LEFT,
     command=open_online_help)
   
   open_online_help_button.grid(row=0, column=0, sticky=tk.W)
@@ -719,7 +719,7 @@ def make_yamosse(frame, title, options_variables,
   import_preset, export_preset, yamscan, restore_defaults):
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
-    iconphotos=gui.get_root_images()[gui.FSENC_PHOTO][fsenc('emoji_u1f3a4')].values())
+    iconphotos=gui.get_root_images()[gui.ImageType.PHOTO][fsenc('emoji_u1f3a4')].values())
   
   gui.minsize_window(window)
   

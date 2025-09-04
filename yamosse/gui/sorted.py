@@ -32,7 +32,7 @@ def treeview_sorted(treeview):
   
   treeview.bind('<Destroy>', lambda e: _treeviews.discard(e.widget), add=True)
   
-  table_sort_icons_images = gui.get_root_images()[gui.FSENC_BITMAP][fsenc('table sort icons')]
+  table_sort_icons_images = gui.get_root_images()[gui.ImageType.BITMAP][fsenc('table sort icons')]
   sort_both_small_image = table_sort_icons_images[fsenc('sort_both_small.xbm')]
   sort_up_small_image = table_sort_icons_images[fsenc('sort_up_small.xbm')]
   sort_down_small_image = table_sort_icons_images[fsenc('sort_down_small.xbm')]

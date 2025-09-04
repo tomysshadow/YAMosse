@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from tkinter.font import Font
 from collections import namedtuple
+from enum import Enum
 from weakref import WeakKeyDictionary
 import traceback
 from contextlib import suppress
@@ -95,15 +96,7 @@ BINDTAG_MINSIZE = 'minsize'
 
 WINDOWS_ICONPHOTO_BUGFIX = True
 
-FSENC_BITMAP = fsenc('Bitmap')
-FSENC_PHOTO = fsenc('Photo')
-
 IMAGES_DIR = 'images'
-
-IMAGE_EXTS = {
-  FSENC_BITMAP: fsenc('.xbm'),
-  FSENC_PHOTO: fsenc('.gif')
-}
 
 VARIABLE_TYPES = {
   bool: tk.BooleanVar,
@@ -114,6 +107,19 @@ VARIABLE_TYPES = {
 
 Widgets = namedtuple('Widgets', ['first', 'middle', 'last'])
 Undoable = namedtuple('Undoable', ['undooptions', 'buttons'])
+
+
+class ImageType(Enum):
+  BITMAP = fsenc('Bitmap')
+  PHOTO = fsenc('Photo')
+  
+  def ext(self):
+    cls = type(self)
+    
+    return ({
+      cls.BITMAP: fsenc('.xbm'),
+      cls.PHOTO: fsenc('.gif')
+    })[self]
 
 
 def _init_report_callback_exception():
@@ -1165,7 +1171,7 @@ def make_undoable(frame):
     
     enable()
   
-  photo_images = get_root_images()[FSENC_PHOTO]
+  photo_images = get_root_images()[ImageType.PHOTO]
   
   undo_button = ttk.Button(frame, text='Undo', width=WIDTH,
     image=photo_images[fsenc('undo.gif')], compound=tk.LEFT,
@@ -1259,7 +1265,7 @@ def _init_root_window():
     # the align element ensures that all buttons are large enough
     # to fit a 16x16 icon
     style.element_create('align', 'image',
-      get_root_images()[FSENC_BITMAP][fsenc('align.xbm')])
+      get_root_images()[ImageType.BITMAP][fsenc('align.xbm')])
     
     layout = style.layout('TButton')
     elements = elements_layout(layout, 'Button.padding')
@@ -1597,12 +1603,12 @@ def _root_images():
       image = entry.name.title()
       
       try:
-        ext = IMAGE_EXTS[image]
-      except KeyError:
+        type_ = ImageType(image)
+      except ValueError:
         return None
       
-      return (image, scandir(entry.path, lambda image_entry: callback_image(
-        image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), ext)))
+      return (type_, scandir(entry.path, lambda image_entry: callback_image(
+        image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext())))
     
     # getting root window needs to be done first
     # to avoid popping an empty window in some circumstances

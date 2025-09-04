@@ -371,7 +371,7 @@ def thread(output_file_name, input_, exit_,
       )
       
       subsystem.show(exit_, values={
-        'progressbar': {yamosse_progress.Function.DONE.value: {}},
+        'progressbar': {'done': {}},
         'log': 'Finishing, please wait...\n'
       })
       

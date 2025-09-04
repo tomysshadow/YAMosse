@@ -22,12 +22,12 @@ class State(Enum):
     return self.value[0]
   
   def off(self):
-    value = self.value[0]
+    spec = self.value[0]
     
-    if not value:
+    if not spec:
       return ''
     
-    return '!%s' % value
+    return '!%s' % spec
 
 
 class Mode(Enum):
@@ -38,8 +38,6 @@ class Mode(Enum):
 def hwnd(window):
   return int(window.wm_frame(), base=16)
 
-
-types = dict.fromkeys((*Function, *State, *Mode))
 
 if PyTaskbar:
   types = {
@@ -54,3 +52,9 @@ if PyTaskbar:
     Mode.DETERMINATE: None,
     Mode.INDETERMINATE: PyTaskbar.LOADING
   }
+else:
+  types = dict.fromkeys((
+    *Function,
+    *State,
+    *Mode
+  ))
