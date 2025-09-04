@@ -96,14 +96,20 @@ class Progressbar(ttk.Progressbar):
     # the taskbar should only flash in the normal state
     # because it also resets the progress type
     # so it would become out of sync with the progress bar otherwise
-    if function == yamosse_progress.Function.DONE:
+    def done():
       self.mode = yamosse_progress.Mode.DETERMINATE
       self.set(self['maximum'])
       if self.state(): return
-    elif function == yamosse_progress.Function.RESET:
+    
+    def reset():
       self.state(STATES_OFF)
       self.mode = yamosse_progress.Mode.DETERMINATE
       self.set(0)
+    
+    ({
+      yamosse_progress.Function.DONE: done,
+      yamosse_progress.Function.RESET: reset,
+    })[function]()
     
     # in future there might be taskbar only functions
     # so this is outside of the main if...elif block
