@@ -526,10 +526,7 @@ class _TopRankedIdentification(_Identification):
 
 
 def identification(option=None):
-  if option == IDENTIFICATION_CONFIDENCE_SCORE:
-    return _ConfidenceScoreIdentification
-  
-  if option == IDENTIFICATION_TOP_RANKED:
-    return _TopRankedIdentification
-  
-  return _Identification
+  return ({
+    IDENTIFICATION_CONFIDENCE_SCORE: _ConfidenceScoreIdentification,
+    IDENTIFICATION_TOP_RANKED: _TopRankedIdentification
+  }).get(option, _Identification)
