@@ -726,7 +726,7 @@ def measure_widths_treeview(treeview, widths):
   
   heading_configuration = Configuration()
   
-  # ensure there is at least one (default) configuration
+  # a set of configurations with at least one (default) configuration
   item_configurations = (
     {heading_configuration}
     | item_configurations_treeview(treeview, indent, Configuration)
