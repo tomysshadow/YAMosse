@@ -672,12 +672,14 @@ def measure_widths_treeview(treeview, widths, item=None):
   
   fonts = {font}
   
+  heading_padding_width = 0
+  
   # get the per-heading padding and font, but only if the heading is shown
   show_headings = 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]
   
   if show_headings:
-    padding_width = max(padding_width, width_padding(
-      lookup_style_widget(treeview, 'padding', element='Heading')))
+    heading_padding_width = width_padding(
+      lookup_style_widget(treeview, 'padding', element='Heading'))
     
     font = str(lookup_style_widget(treeview, 'font', element='Heading'))
     
@@ -785,13 +787,17 @@ def measure_widths_treeview(treeview, widths, item=None):
     
     if cid == '#0':
       space_width += (
-        item_padding_width
+        max(item_padding_width, heading_padding_width)
         + max(item_image_width, heading_image_width)
         + minwidth
         + (indent * indents_treeview(treeview, item=item))
       )
     else:
-      space_width += cell_padding_width + heading_image_width
+      space_width += (
+        max(cell_padding_width, heading_padding_width)
+        + heading_image_width
+      )
+      
       text_width = max(text_width, minwidth - space_width)
     
     # get the text width for the font that would take up the most space in the column
