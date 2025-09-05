@@ -1448,6 +1448,9 @@ def bind_buttons_window(window, ok_button=None, cancel_button=None):
 def release_modal_window(window, destroy=True):
   parent = window.master
   
+  if not parent:
+    raise ValueError('window must be a child window')
+  
   # this must be done before destroying the window
   # otherwise the window behind this one will not take focus back
   # suppressed in case this is not supported on this OS
@@ -1461,13 +1464,18 @@ def release_modal_window(window, destroy=True):
 
 
 def set_modal_window(window, delete_window=release_modal_window):
+  parent = window.master
+  
+  if not parent:
+    raise ValueError('window must be a child window')
+  
   # call the release function when the close button is clicked
   window.protocol('WM_DELETE_WINDOW', lambda: delete_window(window))
   
   # make the window behind us play the "bell" sound if we try and interact with it
   # suppressed in case this is not supported on this OS
   with suppress(tk.TclError):
-    window.master.attributes('-disabled', True)
+    parent.attributes('-disabled', True)
   
   # turns on WM_TRANSIENT_FOR on Linux (X11) which modal dialogs are meant to have
   # this should be done before setting the window type to dialog
@@ -1492,6 +1500,10 @@ def set_modal_window(window, delete_window=release_modal_window):
   window.lift()
   window.focus_set()
   window.grab_set()
+  
+  # allow the event that created this window to finish with after_idle
+  # then prevent events from getting queued in the parent while this window is open
+  window.after_idle(lambda: parent.wait_window(window))
 
 
 def location_center_window(parent, size):
