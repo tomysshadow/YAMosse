@@ -1435,17 +1435,21 @@ def bind_buttons_window(window, ok_button=None, cancel_button=None):
     window.unbind(name)
   
   if ok_button:
-    assert window is ok_button.winfo_toplevel(), 'ok_button window mismatch'
+    if window is not ok_button.winfo_toplevel():
+      raise ValueError('ok_button window mismatch')
+    
     ok_button['default'] = tk.ACTIVE
     window.bind('<Return>', lambda e: ok_button.invoke())
   
   if cancel_button:
-    assert window is cancel_button.winfo_toplevel(), 'cancel_button window mismatch'
+    if window is not cancel_button.winfo_toplevel():
+      raise ValueError('cancel_button window mismatch')
+    
     cancel_button['default'] = tk.NORMAL
     window.bind('<Escape>', lambda e: cancel_button.invoke())
 
 
-def release_modal_window(window, destroy=True):
+def release_modal_window(window, close='destroy'):
   parent = window.master
   
   if not parent:
@@ -1460,7 +1464,8 @@ def release_modal_window(window, destroy=True):
   window.grab_release() # is not necessary on Windows, but is necessary on other OS's
   parent.focus_set()
   
-  if destroy: window.destroy()
+  if close:
+    getattr(window, close)()
 
 
 def set_modal_window(window, delete_window=release_modal_window):
@@ -1488,7 +1493,8 @@ def set_modal_window(window, delete_window=release_modal_window):
     window.attributes('-toolwindow', True)
   
   # Linux (X11)
-  # see type list here: https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#id-1.6.7
+  # see type list here:
+  # https://specifications.freedesktop.org/wm-spec/latest/ar01s05.html#id-1.6.7
   with suppress(tk.TclError):
     window.attributes('-type', 'dialog')
   
