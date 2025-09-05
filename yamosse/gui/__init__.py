@@ -23,7 +23,6 @@ except ImportError:
 
 import yamosse.root as yamosse_root
 import yamosse.utils as yamosse_utils
-import yamosse.once as yamosse_once
 import yamosse.progress as yamosse_progress
 
 PADDING = 12
@@ -153,6 +152,11 @@ def _init_report_callback_exception():
   return report_callback_exception
 
 tk.Tk.report_callback_exception = _init_report_callback_exception()
+
+
+def _width_padding_widget(widget, padding):
+  left, top, right, bottom = padding4_widget(widget, padding)
+  return left + right
 
 
 def state_children_widget(widget, state):
@@ -633,24 +637,74 @@ def _minwidth_treeview():
 get_minwidth_treeview = _minwidth_treeview()
 
 
-def indents_treeview(treeview, item=None):
-  if item is None: return 0
+def item_configurations_treeview(treeview, indent, configuration, item='', _parents=0):
+  configurations = set()
   
-  def parent():
-    nonlocal item
+  indent_width = indent * _parents
+  
+  # get the per-child padding, fonts, and images
+  for child in treeview.get_children(item=item):
+    configurations |= item_configurations_treeview(
+      treeview,
+      indent,
+      configuration,
+      child,
+      _parents + 1
+    )
     
-    # must check for empty string specifically (zero should fall through)
-    return '' != (item := str(treeview.parent(item)))
+    # get the per-child image and tags
+    child_image = treeview.item(child, 'image')
+    child_tags = treeview.tk.splitlist(treeview.item(child, 'tags'))
+    
+    # if this child has an image and no tags
+    # create a configuration just for this child
+    if not child_tags:
+      configurations.add(configuration(
+        image_width=indent_width + _width_image(child_image)
+      ))
+      continue
+    
+    for child_tag in child_tags:
+      # get default values
+      image_width, padding_width, font = configuration()
+      
+      # query the tag's configuration
+      # ideally, this would only get the "active" tag
+      # but there isn't any way to tell what is the top tag in the stacking order
+      # even in the worst case scenario of a conflict though, the column will always be wide enough
+      if child_image:
+        image_width = _width_image(child_image)
+      else:
+        try:
+          tag_image = treeview.tag_configure(child_tag, 'image')
+        except tk.TclError:
+          pass # not supported in this version
+        else:
+          image_width = _width_image(tag_image)
+      
+      # indents occupy the same space as images
+      image_width = indent_width + image_width
+      
+      try:
+        tag_padding = treeview.tag_configure(child_tag, 'padding')
+      except tk.TclError:
+        pass # not supported in this version
+      else:
+        padding_width = _width_padding_widget(treeview, tag_padding)
+      
+      try:
+        tag_font = str(treeview.tag_configure(child_tag, 'font'))
+      except tk.TclError:
+        pass # not supported in this version
+      else:
+        if tag_font: font = tag_font
+      
+      configurations.add(configuration(image_width, padding_width, font))
   
-  indents = 0
-  
-  while parent():
-    indents += 1
-  
-  return indents
+  return configurations
 
 
-def measure_widths_treeview(treeview, widths, item=None):
+def measure_widths_treeview(treeview, widths):
   # get the per-treeview indent, padding and font
   indent = lookup_style_widget(treeview, 'indent')
   
@@ -659,90 +713,43 @@ def measure_widths_treeview(treeview, widths, item=None):
   except tk.TclError:
     indent = DEFAULT_TREEVIEW_INDENT
   
-  def width_padding(padding):
-    left, top, right, bottom = padding4_widget(treeview, padding)
-    return left + right
-  
-  padding_width = width_padding(DEFAULT_TREEVIEW_CELL_PADDING)
-  
+  image_width = 0
+  padding_width = _width_padding_widget(treeview, DEFAULT_TREEVIEW_CELL_PADDING)
   font = str(lookup_style_widget(treeview, 'font'))
   
   if not font:
     font = 'TkDefaultFont'
   
-  fonts = {font}
+  Configuration = namedtuple(
+    'Configuration',
+    ['image_width', 'padding_width', 'font'],
+    defaults=(image_width, padding_width, font)
+  )
   
-  heading_padding_width = None
-  heading_font = None
+  configurations = {Configuration()}
   
   # get the per-heading padding and font, but only if the heading is shown
-  show_headings = 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]
-  
-  if show_headings:
-    # the heading padding is added to the default treeview padding
-    # it isn't possible to put tags on a heading so this is unaffected by tags
-    heading_padding_width = padding_width + width_padding(
+  if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
+    image_width = None # can't find this out until looping the columns
+    
+    # the heading padding is added to the treeview padding
+    padding_width = padding_width + _width_padding_widget(treeview,
       lookup_style_widget(treeview, 'padding', element='Heading'))
     
-    heading_font = str(lookup_style_widget(treeview, 'font', element='Heading'))
+    font = str(lookup_style_widget(treeview, 'font', element='Heading'))
     
-    if not heading_font:
-      heading_font = 'TkDefaultFont'
-  
-  def width_image(image):
-    if not image:
-      return 0
+    if not font:
+      font = 'TkDefaultFont'
     
-    return int(treeview.tk.call('image', 'width', image))
+    configurations.add(Configuration(image_width, padding_width, font))
   
-  item_image_width = 0
-  
-  # get the per-tag padding, fonts, and images
-  tags = yamosse_once.Once()
-  
-  for child in treeview.get_children(item=item):
-    for child_tag in treeview.tk.splitlist(treeview.item(child, 'tags')):
-      # first check if we've already done this tag before
-      # although it doesn't take very long to query a tag's configuration, it is still
-      # worth checking if we've done it yet, as it is likely there are many many items
-      # but only a few tags they are collectively using
-      if not tags.add(child_tag):
-        continue
-      
-      # after confirming we have not done the tag yet, query the tag's configuration
-      # ideally, this would only get the "active" tag
-      # but there isn't any way to tell what is the top tag in the stacking order
-      # even in the worst case scenario of a conflict though, the column will always be wide enough
-      try:
-        padding = treeview.tag_configure(child_tag, 'padding')
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        padding_width = max(padding_width, width_padding(padding))
-      
-      try:
-        font = str(treeview.tag_configure(child_tag, 'font'))
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        if font: fonts.add(font)
-      
-      try:
-        image = treeview.tag_configure(child_tag, 'image')
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        item_image_width = max(item_image_width, width_image(image))
-    
-    # get the per-item image
-    item_image_width = max(item_image_width,
-      width_image(treeview.item(child, 'image')))
+  configurations |= item_configurations_treeview(treeview, indent, Configuration)
   
   # get the per-element (item/cell) padding
-  item_padding_width = width_padding(
+  item_padding_width = _width_padding_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Item'))
   
-  cell_padding_width = width_padding(
+  cell_padding_width = _width_padding_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Cell'))
   
   # measure the widths
@@ -772,15 +779,6 @@ def measure_widths_treeview(treeview, widths, item=None):
     # manually specified as DEFAULT_MINWIDTH, explicitly meaning to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
-    heading_width = 0
-    
-    # get the heading width, but only if the heading is shown
-    if show_headings:
-      heading_image_width = width_image(treeview.heading(cid, 'image'))
-      heading_space_width = heading_padding_width + heading_image_width
-      heading_text_width = measure_text_width_widget(treeview, width, heading_font)
-      heading_width = heading_space_width + heading_text_width
-    
     # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
     # so here we do the same
     # for column #0, we need to worry about indents
@@ -794,36 +792,57 @@ def measure_widths_treeview(treeview, widths, item=None):
     # this ensures the column won't be smaller than the minwidth (but may be equal to it)
     # if the space width fills the entire minwidth, this is undesirable for the measured result
     # so in that case, the text width is, in effect, initially zero
-    space_width = padding_width
-    text_width = 0
+    measured_width = 0
     
-    if cid == '#0':
-      space_width += (
-        item_padding_width
-        + item_image_width
-        + minwidth
-        + (indent * indents_treeview(treeview, item=item))
-      )
-    else:
-      space_width += cell_padding_width
+    for configuration in configurations:
+      # asdict is not an internal method
+      # per Python docs, it just has an underscore
+      # to avoid naming conflicts with tuple members
+      configuration = configuration._asdict()
       
-      text_width = max(text_width, minwidth - space_width)
-    
-    # get the text width for the font that would take up the most space in the column
-    for font in fonts:
-      text_width = max(text_width, measure_text_width_widget(treeview, width, font))
+      image_width = configuration['image_width']
+      
+      if image_width is None: # heading
+        image_width = _width_image(treeview.heading(cid, 'image'))
+        space_width = image_width + configuration['padding_width']
+        text_width = 0
+      elif cid == '#0': # item
+        space_width = (
+          minwidth
+          + image_width
+          + item_padding_width
+          + configuration['padding_width']
+        )
+        
+        text_width = 0
+      else: # cell
+        space_width = (
+          cell_padding_width
+          + configuration['padding_width']
+        )
+        
+        text_width = minwidth - space_width
+      
+      text_width = max(
+        text_width,
+        
+        measure_text_width_widget(
+          treeview,
+          width,
+          configuration['font']
+        )
+      )
+      
+      measured_width = max(measured_width, space_width + text_width)
     
     # must use ceil here because these widths may be floats; Tk doesn't want a float for the width
-    measured_widths[cid] = ceil(max(
-      space_width + text_width,
-      heading_width
-    ))
+    measured_widths[cid] = ceil(measured_width)
   
   return measured_widths
 
 
-def configure_widths_treeview(treeview, widths, item=None):
-  measured_widths = measure_widths_treeview(treeview, widths, item=item)
+def configure_widths_treeview(treeview, widths):
+  measured_widths = measure_widths_treeview(treeview, widths)
   
   for cid, width in measured_widths.items():
     treeview.column(cid, width=width, minwidth=width, stretch=False)
@@ -1668,6 +1687,13 @@ def _root_images():
   return get
 
 get_root_images = _root_images()
+
+
+def _width_image(image):
+  if not image:
+    return 0
+  
+  return int(get_root_window().tk.call('image', 'width', image))
 
 
 def elements_layout(layout, name):
