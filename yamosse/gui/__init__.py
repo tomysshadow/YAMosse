@@ -774,12 +774,9 @@ def measure_widths_treeview(treeview, widths, item=None):
     # get the heading width, but only if the heading is shown
     if show_headings:
       heading_image_width = width_image(treeview.heading(cid, 'image'))
-      
-      heading_width = (
-        heading_padding_width
-        + heading_image_width
-        + measure_text_width_widget(treeview, width, heading_font)
-      )
+      heading_space_width = heading_padding_width + heading_image_width
+      heading_text_width = measure_text_width_widget(treeview, width, heading_font)
+      heading_width = heading_space_width + heading_text_width
     
     # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
     # so here we do the same
