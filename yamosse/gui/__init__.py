@@ -729,7 +729,7 @@ def measure_widths_treeview(treeview, widths):
   heading_configuration = Configuration()
   
   # ensure there is at least one (default) configuration
-  configurations = (
+  item_configurations = (
     {heading_configuration}
     | item_configurations_treeview(treeview, indent, Configuration)
   )
@@ -802,11 +802,11 @@ def measure_widths_treeview(treeview, widths):
     text_width = measure_text_width_widget(treeview, width, configuration['font'])
     measured_width = space_width + text_width
     
-    for configuration in configurations:
+    for item_configuration in item_configurations:
       # asdict is not an internal method
       # per Python docs, it just has an underscore
       # to avoid naming conflicts with tuple members
-      configuration = configuration._asdict()
+      configuration = item_configuration._asdict()
       
       if cid == '#0': # item
         space_width = (
