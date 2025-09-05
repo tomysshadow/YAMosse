@@ -665,7 +665,7 @@ def measure_widths_treeview(treeview, widths, item=None):
   
   padding_width = width_padding(DEFAULT_TREEVIEW_CELL_PADDING)
   
-  font = lookup_style_widget(treeview, 'font')
+  font = str(lookup_style_widget(treeview, 'font'))
   
   if not font:
     font = 'TkDefaultFont'
@@ -679,7 +679,7 @@ def measure_widths_treeview(treeview, widths, item=None):
     padding_width = max(padding_width, width_padding(
       lookup_style_widget(treeview, 'padding', element='Heading')))
     
-    font = lookup_style_widget(treeview, 'font', element='Heading')
+    font = str(lookup_style_widget(treeview, 'font', element='Heading'))
     
     if font:
       fonts.add(font)
@@ -713,7 +713,7 @@ def measure_widths_treeview(treeview, widths, item=None):
         padding_width = max(padding_width, width_padding(padding))
       
       try:
-        font = treeview.tag_configure(child_tag, 'font')
+        font = str(treeview.tag_configure(child_tag, 'font'))
       except tk.TclError:
         pass # not supported in this version
       else:
