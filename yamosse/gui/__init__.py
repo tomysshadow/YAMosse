@@ -1506,10 +1506,6 @@ def set_modal_window(window, delete_window=release_modal_window):
   window.lift()
   window.focus_set()
   window.grab_set()
-  
-  # allow the event that created this window to finish with after_idle
-  # then prevent events from getting queued in the parent while this window is open
-  parent.after_idle(lambda: parent.wait_window(window))
 
 
 def location_center_window(parent, size):
