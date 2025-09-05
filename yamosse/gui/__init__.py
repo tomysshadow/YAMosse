@@ -724,13 +724,13 @@ def measure_widths_treeview(treeview, widths):
     defaults=(image_width, padding_width, font)
   )
   
-  heading_configuration = Configuration()
-  
   # a set of configurations with at least one (default) configuration
   item_configurations = (
-    {heading_configuration}
+    {Configuration()}
     | item_configurations_treeview(treeview, indent, Configuration)
   )
+  
+  heading_configuration = None
   
   # get the per-heading padding and font, but only if the heading is shown
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
@@ -792,10 +792,13 @@ def measure_widths_treeview(treeview, widths):
     # this ensures the column won't be smaller than the minwidth (but may be equal to it)
     # if the space width fills the entire minwidth, this is undesirable for the measured result
     # so in that case, the text width is, in effect, initially zero
-    image_width = _width_image(treeview.heading(cid, 'image'))
-    space_width = image_width + heading_configuration.padding_width
-    text_width = measure_text_width_widget(treeview, width, heading_configuration.font)
-    measured_width = space_width + text_width
+    measured_width = 0
+    
+    if heading_configuration is not None:
+      image_width = _width_image(treeview.heading(cid, 'image'))
+      space_width = image_width + heading_configuration.padding_width
+      text_width = measure_text_width_widget(treeview, width, heading_configuration.font)
+      measured_width = space_width + text_width
     
     is_item = cid == '#0'
     
