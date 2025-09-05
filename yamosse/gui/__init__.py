@@ -779,9 +779,6 @@ def measure_widths_treeview(treeview, widths):
     # manually specified as DEFAULT_MINWIDTH, explicitly meaning to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
-    # heading
-    configuration = heading_configuration._asdict()
-    
     # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
     # so here we do the same
     # for column #0, we need to worry about indents
@@ -796,30 +793,25 @@ def measure_widths_treeview(treeview, widths):
     # if the space width fills the entire minwidth, this is undesirable for the measured result
     # so in that case, the text width is, in effect, initially zero
     image_width = _width_image(treeview.heading(cid, 'image'))
-    space_width = image_width + configuration['padding_width']
-    text_width = measure_text_width_widget(treeview, width, configuration['font'])
+    space_width = image_width + heading_configuration.padding_width
+    text_width = measure_text_width_widget(treeview, width, heading_configuration.font)
     measured_width = space_width + text_width
     
     is_item = cid == '#0'
     
     for item_configuration in item_configurations:
-      # asdict is not an internal method
-      # per Python docs, it just has an underscore
-      # to avoid naming conflicts with tuple members
-      configuration = item_configuration._asdict()
-      
-      if is_item: # item
+      if is_item:
         space_width = (
-          configuration['image_width']
-          + configuration['padding_width']
+          item_configuration.image_width
+          + item_configuration.padding_width
           + item_padding_width
           + minwidth
         )
         
         text_width = 0
-      else: # cell
+      else:
         space_width = (
-          configuration['padding_width']
+          item_configuration.padding_width
           + cell_padding_width
         )
         
@@ -831,7 +823,7 @@ def measure_widths_treeview(treeview, widths):
         measure_text_width_widget(
           treeview,
           width,
-          configuration['font']
+          item_configuration.font
         )
       )
       
