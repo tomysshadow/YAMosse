@@ -726,7 +726,13 @@ def measure_widths_treeview(treeview, widths):
     defaults=(image_width, padding_width, font)
   )
   
-  cell_configurations = {Configuration()}
+  heading_configuration = Configuration()
+  
+  # ensure there is at least one (default) configuration
+  configurations = (
+    {heading_configuration}
+    | item_configurations_treeview(treeview, indent, Configuration)
+  )
   
   # get the per-heading padding and font, but only if the heading is shown
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
@@ -740,10 +746,6 @@ def measure_widths_treeview(treeview, widths):
       font = 'TkDefaultFont'
     
     heading_configuration = Configuration(padding_width=padding_width, font=font)
-  else:
-    heading_configuration = Configuration()
-  
-  item_configurations = item_configurations_treeview(treeview, indent, Configuration)
   
   # get the per-element (item/cell) padding
   item_padding_width = _width_padding_widget(treeview,
@@ -800,47 +802,40 @@ def measure_widths_treeview(treeview, widths):
     text_width = measure_text_width_widget(treeview, width, configuration['font'])
     measured_width = space_width + text_width
     
-    if cid == '#0': # item
-      for item_configuration in item_configurations:
-        # asdict is not an internal method
-        # per Python docs, it just has an underscore
-        # to avoid naming conflicts with tuple members
-        configuration = item_configuration._asdict()
-        
+    for configuration in configurations:
+      # asdict is not an internal method
+      # per Python docs, it just has an underscore
+      # to avoid naming conflicts with tuple members
+      configuration = configuration._asdict()
+      
+      if cid == '#0': # item
         space_width = (
-          minwidth
-          + configuration['image_width']
+          configuration['image_width']
           + configuration['padding_width']
           + item_padding_width
+          + minwidth
         )
         
-        text_width = measure_text_width_widget(
-          treeview,
-          width,
-          configuration['font']
-        )
-        
-        measured_width = max(measured_width, space_width + text_width)
-    else: # cell
-      for cell_configuration in cell_configurations:
-        configuration = cell_configuration._asdict()
-        
+        text_width = 0
+      else: # cell
         space_width = (
           configuration['padding_width']
           + cell_padding_width
         )
         
-        text_width = max(
-          minwidth - space_width,
-          
-          measure_text_width_widget(
-            treeview,
-            width,
-            configuration['font']
-          )
-        )
+        text_width = minwidth - space_width
+      
+      text_width = max(
+        text_width,
         
-        measured_width = max(measured_width, space_width + text_width)
+        measure_text_width_widget(
+          treeview,
+          width,
+          configuration['font']
+        )
+      )
+      
+      measured_width = max(measured_width, space_width + text_width)
     
     # must use ceil here because these widths may be floats; Tk doesn't want a float for the width
     measured_widths[cid] = ceil(measured_width)
