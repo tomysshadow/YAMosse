@@ -690,7 +690,10 @@ def measure_widths_treeview(treeview, widths, item=None):
       heading_font = 'TkDefaultFont'
   
   def width_image(image):
-    return int(treeview.tk.call('image', 'width', image)) if image else 0
+    if not image:
+      return 0
+    
+    return int(treeview.tk.call('image', 'width', image))
   
   item_image_width = 0
   
