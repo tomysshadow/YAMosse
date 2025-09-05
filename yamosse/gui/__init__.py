@@ -802,13 +802,15 @@ def measure_widths_treeview(treeview, widths):
     text_width = measure_text_width_widget(treeview, width, configuration['font'])
     measured_width = space_width + text_width
     
+    is_item = cid == '#0'
+    
     for item_configuration in item_configurations:
       # asdict is not an internal method
       # per Python docs, it just has an underscore
       # to avoid naming conflicts with tuple members
       configuration = item_configuration._asdict()
       
-      if cid == '#0': # item
+      if is_item: # item
         space_width = (
           configuration['image_width']
           + configuration['padding_width']
