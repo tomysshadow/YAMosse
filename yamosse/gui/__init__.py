@@ -159,8 +159,8 @@ def state_children_widget(widget, state):
   with suppress(tk.TclError):
     widget['state'] = state
   
-  for child_widget in widget.winfo_children():
-    state_children_widget(child_widget, state)
+  for child in widget.winfo_children():
+    state_children_widget(child, state)
 
 
 def after_invalidcommand_widget(widget, validate):
