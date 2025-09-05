@@ -660,7 +660,7 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
     # create a configuration just for this child
     if not child_tags:
       configurations.add(configuration(
-        image_width=indent_width + _width_image(child_image)
+        image_width=_width_image(child_image) + indent_width
       ))
       continue
     
@@ -682,9 +682,6 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
         else:
           image_width = _width_image(tag_image)
       
-      # indents occupy the same space as images
-      image_width = indent_width + image_width
-      
       try:
         tag_padding = treeview.tag_configure(child_tag, 'padding')
       except tk.TclError:
@@ -699,7 +696,8 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
       else:
         if tag_font: font = tag_font
       
-      configurations.add(configuration(image_width, padding_width, font))
+      # indents occupy the same space as images
+      configurations.add(configuration(image_width + indent_width, padding_width, font))
   
   return configurations
 
