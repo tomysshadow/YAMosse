@@ -797,7 +797,17 @@ def measure_widths_treeview(treeview, widths):
     if heading_configuration is not None:
       image_width = _width_image(treeview.heading(cid, 'image'))
       space_width = image_width + heading_configuration.padding_width
-      text_width = measure_text_width_widget(treeview, width, heading_configuration.font)
+      
+      text_width = max(
+        minwidth - space_width,
+        
+        measure_text_width_widget(
+          treeview,
+          width,
+          heading_configuration.font
+        )
+      )
+      
       measured_width = space_width + text_width
     
     if cid == '#0':
