@@ -148,7 +148,8 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     _shutdown = shutdown
     if shutdown.is_set(): return
     
-    assert _tfhub_enabled == tfhub_enabled, 'tfhub_enabled mismatch'
+    if _tfhub_enabled != tfhub_enabled:
+      raise ValueError('tfhub_enabled mismatch')
     
     # seperated out because loading the worker dependencies (mainly TensorFlow) in
     # the main process consumes a non-trivial amount of memory for no benefit
@@ -239,8 +240,8 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
     
     if tfhub_enabled:
       # confirm that the model has the same classes we expect
-      assert class_names(yamnet.class_map_path().numpy()
-        ) == model_yamnet_class_names, 'model_yamnet_class_names mismatch'
+      if class_names(yamnet.class_map_path().numpy()) != model_yamnet_class_names:
+        raise ValueError('model_yamnet_class_names mismatch')
     else:
       params = yamnet_params.Params()
       _sample_rate = params.sample_rate

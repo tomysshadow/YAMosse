@@ -1730,7 +1730,8 @@ def leave_stack(stack):
 
 
 def threaded():
-  assert tk.Tcl().eval('set tcl_platform(threaded)'), 'Non-threaded builds are not supported.'
+  if not tk.Tcl().eval('set tcl_platform(threaded)'):
+    raise NotImplementedError('Non-threaded builds are not supported.')
 
 
 def bindtag(obj):
