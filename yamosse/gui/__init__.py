@@ -644,13 +644,13 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
   
   # get the per-child padding, fonts, and images
   for child in treeview.get_children(item=item):
-    configurations |= item_configurations_treeview(
+    configurations.update(item_configurations_treeview(
       treeview,
       indent,
       configuration,
       child,
       _parents + 1
-    )
+    ))
     
     # get the per-child image and tags
     child_image = treeview.item(child, 'image')
