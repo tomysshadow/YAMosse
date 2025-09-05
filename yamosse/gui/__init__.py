@@ -730,8 +730,6 @@ def measure_widths_treeview(treeview, widths):
   
   # get the per-heading padding and font, but only if the heading is shown
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
-    image_width = None # can't find this out until looping the columns
-    
     # the heading padding is added to the treeview padding
     padding_width = padding_width + _width_padding_widget(treeview,
       lookup_style_widget(treeview, 'padding', element='Heading'))
@@ -741,7 +739,7 @@ def measure_widths_treeview(treeview, widths):
     if not font:
       font = 'TkDefaultFont'
     
-    heading_configuration = Configuration(image_width, padding_width, font)
+    heading_configuration = Configuration(padding_width=padding_width, font=font)
   else:
     heading_configuration = Configuration()
   
