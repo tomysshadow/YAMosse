@@ -672,19 +672,22 @@ def measure_widths_treeview(treeview, widths, item=None):
   
   fonts = {font}
   
-  heading_padding_width = 0
+  heading_padding_width = None
+  heading_font = None
   
   # get the per-heading padding and font, but only if the heading is shown
   show_headings = 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]
   
   if show_headings:
-    heading_padding_width = width_padding(
+    # the heading padding is added to the default treeview padding
+    # it isn't possible to put tags on a heading so this is unaffected by tags
+    heading_padding_width = padding_width + width_padding(
       lookup_style_widget(treeview, 'padding', element='Heading'))
     
-    font = str(lookup_style_widget(treeview, 'font', element='Heading'))
+    heading_font = str(lookup_style_widget(treeview, 'font', element='Heading'))
     
-    if font:
-      fonts.add(font)
+    if not heading_font:
+      heading_font = 'TkDefaultFont'
   
   def width_image(image):
     return int(treeview.tk.call('image', 'width', image)) if image else 0
@@ -698,7 +701,7 @@ def measure_widths_treeview(treeview, widths, item=None):
     for child_tag in treeview.tk.splitlist(treeview.item(child, 'tags')):
       # first check if we've already done this tag before
       # although it doesn't take very long to query a tag's configuration, it is still
-      # worth checking if we've done it yet, as it is likely there are many many columns
+      # worth checking if we've done it yet, as it is likely there are many many items
       # but only a few tags they are collectively using
       if not tags.add(child_tag):
         continue
@@ -766,8 +769,17 @@ def measure_widths_treeview(treeview, widths, item=None):
     # manually specified as DEFAULT_MINWIDTH, explicitly meaning to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
-    # get the per-heading image, but only if the heading is shown
-    heading_image_width = width_image(treeview.heading(cid, 'image')) if show_headings else 0
+    heading_width = 0
+    
+    # get the heading width, but only if the heading is shown
+    if show_headings:
+      heading_image_width = width_image(treeview.heading(cid, 'image'))
+      
+      heading_width = (
+        heading_padding_width
+        + heading_image_width
+        + measure_text_width_widget(treeview, width, heading_font)
+      )
     
     # the element (item/cell) padding is added on top of the treeview/tag padding by Tk
     # so here we do the same
@@ -787,16 +799,13 @@ def measure_widths_treeview(treeview, widths, item=None):
     
     if cid == '#0':
       space_width += (
-        max(item_padding_width, heading_padding_width)
-        + max(item_image_width, heading_image_width)
+        item_padding_width
+        + item_image_width
         + minwidth
         + (indent * indents_treeview(treeview, item=item))
       )
     else:
-      space_width += (
-        max(cell_padding_width, heading_padding_width)
-        + heading_image_width
-      )
+      space_width += cell_padding_width
       
       text_width = max(text_width, minwidth - space_width)
     
@@ -805,7 +814,10 @@ def measure_widths_treeview(treeview, widths, item=None):
       text_width = max(text_width, measure_text_width_widget(treeview, width, font))
     
     # must use ceil here because these widths may be floats; Tk doesn't want a float for the width
-    measured_widths[cid] = ceil(space_width + text_width)
+    measured_widths[cid] = ceil(max(
+      space_width + text_width,
+      heading_width
+    ))
   
   return measured_widths
 
