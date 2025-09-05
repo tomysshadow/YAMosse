@@ -204,7 +204,7 @@ def _mainloop(**kwargs):
       ):
         subsystem.show(exit_, values={
           'progressbar': {
-            'state': {'args': ((yamosse_progress.State.ERROR.value,),)},
+            'state': {'args': ((yamosse_progress.State.ERROR.on(),),)},
             'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
           },
           
