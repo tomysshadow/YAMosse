@@ -800,10 +800,8 @@ def measure_widths_treeview(treeview, widths):
       text_width = measure_text_width_widget(treeview, width, heading_configuration.font)
       measured_width = space_width + text_width
     
-    is_item = cid == '#0'
-    
-    for item_configuration in item_configurations:
-      if is_item:
+    if cid == '#0':
+      for item_configuration in item_configurations:
         space_width = (
           item_configuration.image_width
           + item_configuration.padding_width
@@ -811,26 +809,31 @@ def measure_widths_treeview(treeview, widths):
           + minwidth
         )
         
-        text_width = 0
-      else:
+        text_width = measure_text_width_widget(
+          treeview,
+          width,
+          item_configuration.font
+        )
+        
+        measured_width = max(measured_width, space_width + text_width)
+    else:
+      for item_configuration in item_configurations:
         space_width = (
           item_configuration.padding_width
           + cell_padding_width
         )
         
-        text_width = minwidth - space_width
-      
-      text_width = max(
-        text_width,
-        
-        measure_text_width_widget(
-          treeview,
-          width,
-          item_configuration.font
+        text_width = max(
+          minwidth - space_width,
+          
+          measure_text_width_widget(
+            treeview,
+            width,
+            item_configuration.font
+          )
         )
-      )
-      
-      measured_width = max(measured_width, space_width + text_width)
+        
+        measured_width = max(measured_width, space_width + text_width)
     
     # must use ceil here because these widths may be floats; Tk doesn't want a float for the width
     measured_widths[cid] = ceil(measured_width)
