@@ -697,19 +697,23 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
         if tag_font: font = tag_font
       
       # indents occupy the same space as images
-      configurations.add(configuration(image_width + indent_width, padding_width, font))
+      configurations.add(configuration(
+        image_width + indent_width,
+        padding_width,
+        font
+      ))
   
   return configurations
 
 
 def measure_widths_treeview(treeview, widths):
   # get the per-treeview indent, padding and font
-  indent = lookup_style_widget(treeview, 'indent')
-  
   try:
-    indent = treeview.winfo_fpixels(indent)
+    indent = lookup_style_widget(treeview, 'indent')
   except tk.TclError:
     indent = DEFAULT_TREEVIEW_INDENT
+  
+  indent = treeview.winfo_fpixels(indent)
   
   image_width = 0
   padding_width = _width_padding_widget(treeview, DEFAULT_TREEVIEW_CELL_PADDING)
