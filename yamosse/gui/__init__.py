@@ -838,7 +838,7 @@ def measure_widths_treeview(treeview, widths):
       ))
     
     # must use ceil here because these widths may be floats
-    # Tk doesn't want a float for the width
+    # and Tk doesn't want a float for the width
     measured_widths[cid] = ceil(measured_width)
   
   return measured_widths
