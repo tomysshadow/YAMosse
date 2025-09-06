@@ -772,7 +772,7 @@ def measure_widths_treeview(treeview, widths):
       text = texts.setdefault(font, measure_text_widget(treeview, font))
     
     # at least zero, in case space is greater than minwidth
-    return space + max(0, text * width, minwidth - space)
+    return space + max(0, width * text, minwidth - space)
   
   measured_width = 0
   measured_widths = {}
