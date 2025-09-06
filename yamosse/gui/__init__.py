@@ -294,14 +294,14 @@ def lookup_style_widget(widget, option, element='', state=None, **kwargs):
   return ttk.Style(widget).lookup(style, option, state=state, **kwargs)
 
 
-def measure_text_width_widget(widget, width, font):
+def measure_text_widget(widget, font):
   # cast font descriptors to font objects
   if not isinstance(font, Font):
     font = Font(font=font)
   
   # find average width using '0' character like Tk does
   # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
-  return width * font.measure('0', displayof=widget)
+  return font.measure('0', displayof=widget)
 
 
 def make_widgets(frame, make_widget, items=None,
@@ -763,11 +763,16 @@ def measure_widths_treeview(treeview, widths):
     heading_configuration = Configuration(font, padding_width)
   
   # measure the widths
+  texts = {}
+  
   def measure_width(width, font, space, minwidth=0):
-    return space + max(
-      minwidth - space, 0, # at least zero, in case space is greater than minwidth
-      measure_text_width_widget(treeview, width, font)
-    )
+    try:
+      text = texts[font]
+    except KeyError:
+      text = texts.setdefault(font, measure_text_widget(treeview, font))
+    
+    # at least zero, in case space is greater than minwidth
+    return space + max(0, text * width, minwidth - space)
   
   measured_width = 0
   measured_widths = {}
