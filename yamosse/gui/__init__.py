@@ -735,7 +735,7 @@ def measure_widths_treeview(treeview, widths):
   # get the per-heading padding and font, but only if the heading is shown
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
     # the heading padding is added to the treeview padding
-    padding_width = padding_width + _width_padding_widget(treeview,
+    padding_width += _width_padding_widget(treeview,
       lookup_style_widget(treeview, 'padding', element='Heading'))
     
     font = str(lookup_style_widget(treeview, 'font', element='Heading'))
@@ -743,7 +743,10 @@ def measure_widths_treeview(treeview, widths):
     if not font:
       font = 'TkDefaultFont'
     
-    heading_configuration = Configuration(padding_width=padding_width, font=font)
+    heading_configuration = Configuration(
+      padding_width=padding_width,
+      font=font
+    )
   
   # get the per-element (item/cell) padding
   item_padding_width = _width_padding_widget(treeview,
@@ -753,6 +756,13 @@ def measure_widths_treeview(treeview, widths):
     lookup_style_widget(treeview, 'padding', element='Cell'))
   
   # measure the widths
+  def measure_width(width, font, space, minwidth=0):
+    return space + max(
+      0, minwidth - space,
+      measure_text_width_widget(treeview, width, font)
+    )
+  
+  measured_width = 0
   measured_widths = {}
   
   for cid, width in widths.items():
@@ -792,60 +802,44 @@ def measure_widths_treeview(treeview, widths):
     # this ensures the column won't be smaller than the minwidth (but may be equal to it)
     # if the space width fills the entire minwidth, this is undesirable for the measured result
     # so in that case, the text width is, in effect, initially zero
-    measured_width = 0
-    
-    if heading_configuration is not None:
-      image_width = _width_image(treeview.heading(cid, 'image'))
-      space_width = image_width + heading_configuration.padding_width
-      
-      text_width = max(
-        minwidth - space_width,
+    if cid == '#0': # item
+      measured_width = max(measure_width(
+        width,
+        item_configuration.font,
         
-        measure_text_width_widget(
-          treeview,
-          width,
-          heading_configuration.font
-        )
-      )
-      
-      measured_width = space_width + text_width
-    
-    if cid == '#0':
-      for item_configuration in item_configurations:
-        space_width = (
+        (
           item_configuration.image_width
           + item_configuration.padding_width
           + item_padding_width
-          + minwidth
-        )
+        ) +
         
-        text_width = measure_text_width_widget(
-          treeview,
-          width,
-          item_configuration.font
-        )
+        minwidth
+      ) for item_configuration in item_configurations)
+    else: # cell
+      measured_width = max(measure_width(
+        width,
+        item_configuration.font,
         
-        measured_width = max(measured_width, space_width + text_width)
-    else:
-      for item_configuration in item_configurations:
-        space_width = (
+        (
           item_configuration.padding_width
           + cell_padding_width
-        )
+        ),
         
-        text_width = max(
-          minwidth - space_width,
-          
-          measure_text_width_widget(
-            treeview,
-            width,
-            item_configuration.font
-          )
-        )
-        
-        measured_width = max(measured_width, space_width + text_width)
+        minwidth
+      ) for item_configuration in item_configurations)
     
-    # must use ceil here because these widths may be floats; Tk doesn't want a float for the width
+    if heading_configuration: # heading
+      image_width = _width_image(treeview.heading(cid, 'image'))
+      
+      measured_width = max(measured_width, measure_width(
+        width,
+        heading_configuration.font,
+        image_width + heading_configuration.padding_width,
+        minwidth
+      ))
+    
+    # must use ceil here because these widths may be floats
+    # Tk doesn't want a float for the width
     measured_widths[cid] = ceil(measured_width)
   
   return measured_widths
