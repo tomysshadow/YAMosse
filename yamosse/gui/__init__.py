@@ -726,10 +726,8 @@ def measure_widths_treeview(treeview, widths):
   
   # this is the set of item configurations
   # must have at least one configuration in it (the default)
-  item_configurations = (
-    {Configuration()}
-    | item_configurations_treeview(treeview, indent, Configuration)
-  )
+  item_configurations = item_configurations_treeview(treeview, indent, Configuration)
+  item_configurations.add(Configuration())
   
   item_padding_width = _width_padding_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Item'))
