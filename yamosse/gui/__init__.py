@@ -637,7 +637,7 @@ def _minwidth_treeview():
 get_minwidth_treeview = _minwidth_treeview()
 
 
-def item_configurations_treeview(treeview, indent, configuration, item='',
+def _item_configurations_treeview(treeview, indent, configuration, item='',
   _tags=None, _parents=0):
   if _tags is None:
     _tags = {}
@@ -648,7 +648,7 @@ def item_configurations_treeview(treeview, indent, configuration, item='',
   
   # get the per-child configuration
   for child in treeview.get_children(item=item):
-    configurations.update(item_configurations_treeview(
+    configurations.update(_item_configurations_treeview(
       treeview,
       indent,
       configuration,
@@ -738,7 +738,7 @@ def measure_widths_treeview(treeview, widths):
   
   # this is the set of item configurations
   # must have at least one configuration in it (the default)
-  item_configurations = item_configurations_treeview(treeview,
+  item_configurations = _item_configurations_treeview(treeview,
     indent, Configuration)
   
   item_configurations.add(Configuration())
