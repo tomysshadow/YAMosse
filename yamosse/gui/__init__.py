@@ -786,7 +786,7 @@ def measure_widths_treeview(treeview, widths):
     minwidth = get_minwidth_treeview(minwidth)
     
     # the element (item/cell) padding is
-    # added on top of the treeview/tag padding by Tk
+    # added on top of the treeview/tag (item configuration) padding by Tk
     # so here we do the same
     if cid == '#0': # item
       # for column #0, we need to worry about indents
