@@ -637,7 +637,11 @@ def _minwidth_treeview():
 get_minwidth_treeview = _minwidth_treeview()
 
 
-def item_configurations_treeview(treeview, indent, configuration, item='', _parents=0):
+def item_configurations_treeview(treeview, indent, configuration, item='',
+  _tags=None, _parents=0):
+  if _tags is None:
+    _tags = {}
+  
   configurations = set()
   
   indent_width = indent * _parents
@@ -649,6 +653,7 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
       indent,
       configuration,
       child,
+      _tags,
       _parents + 1
     ))
     
@@ -665,37 +670,44 @@ def item_configurations_treeview(treeview, indent, configuration, item='', _pare
     
     # get the per-child-tag configuration
     for child_tag in child_tags:
-      font, padding_width, image_width = configuration()
-      
-      # query the tag's configuration
-      # ideally, this would only get the "active" tag
-      # but there isn't any way to tell
-      # what is the top tag in the stacking order
-      # even in the worst case scenario of a conflict though
-      # the column will always be wide enough
-      try:
-        tag_font = str(treeview.tag_configure(child_tag, 'font'))
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        if tag_font: font = tag_font
+      child_tag = str(child_tag)
       
       try:
-        tag_padding = treeview.tag_configure(child_tag, 'padding')
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        padding_width = _width_padding_widget(treeview, tag_padding)
-      
-      if child_image:
-        image_width = _width_image(child_image)
-      else:
+        font, padding_width, image_width = _tags[child_tag]
+      except KeyError:
+        font, padding_width, image_width = configuration()
+        
+        # query the tag's configuration
+        # ideally, this would only get the "active" tag
+        # but there isn't any way to tell
+        # what is the top tag in the stacking order
+        # even in the worst case scenario of a conflict though
+        # the column will always be wide enough
+        try:
+          tag_font = str(treeview.tag_configure(child_tag, 'font'))
+        except tk.TclError:
+          pass # not supported in this version
+        else:
+          if tag_font: font = tag_font
+        
+        try:
+          tag_padding = treeview.tag_configure(child_tag, 'padding')
+        except tk.TclError:
+          pass # not supported in this version
+        else:
+          padding_width = _width_padding_widget(treeview, tag_padding)
+        
         try:
           tag_image = treeview.tag_configure(child_tag, 'image')
         except tk.TclError:
           pass # not supported in this version
         else:
           image_width = _width_image(tag_image)
+        
+        _tags[child_tag] = configuration(font, padding_width, image_width)
+      
+      if child_image:
+        image_width = _width_image(child_image)
       
       # indents occupy the same space as images
       configurations.add(configuration(
