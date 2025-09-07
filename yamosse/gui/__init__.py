@@ -649,6 +649,8 @@ def _item_configurations_treeview(treeview, indent, configuration, tags,
     child_tags = treeview.tk.splitlist(treeview.item(child, 'tags'))
     
     if not child_tags:
+      image_width = configuration().image_width
+      
       if child_image:
         image_width = _width_image(child_image)
       
