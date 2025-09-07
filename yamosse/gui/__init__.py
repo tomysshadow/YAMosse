@@ -637,74 +637,61 @@ def _minwidth_treeview():
 get_minwidth_treeview = _minwidth_treeview()
 
 
-def _item_configurations_treeview(treeview, indent, configuration, item='',
-  _tags=None, _parents=0):
-  if _tags is None:
-    _tags = {}
-  
+def _item_configurations_treeview(treeview, indent, configuration, tags,
+  item='', _parents=0):
   configurations = set()
   
   indent_width = indent * _parents
   
   # get the per-child configuration
   for child in treeview.get_children(item=item):
-    configurations.update(_item_configurations_treeview(
-      treeview,
-      indent,
-      configuration,
-      child,
-      _tags,
-      _parents + 1
-    ))
-    
     child_image = treeview.item(child, 'image')
-    child_tags = treeview.tk.splitlist(treeview.item(child, 'tags'))
-    
-    # if this child has an image and no tags
-    # create a configuration just for this child
-    if not child_tags:
-      configurations.add(configuration(
-        image_width=_width_image(child_image) + indent_width
-      ))
-      continue
     
     # get the per-child-tag configuration
-    for child_tag in child_tags:
-      child_tag = str(child_tag)
+    # but if this child has no tags
+    # create a configuration just for this child
+    for child_tag in treeview.tk.splitlist(treeview.item(child, 'tags')) or {None}:
+      image_width = 0
       
-      try:
-        font, padding_width, image_width = _tags[child_tag]
-      except KeyError:
-        font, padding_width, image_width = configuration()
-        
-        # query the tag's configuration
-        # ideally, this would only get the "active" tag
-        # but there isn't any way to tell
-        # what is the top tag in the stacking order
-        # even in the worst case scenario of a conflict though
-        # the column will always be wide enough
-        try:
-          tag_font = str(treeview.tag_configure(child_tag, 'font'))
-        except tk.TclError:
-          pass # not supported in this version
-        else:
-          if tag_font: font = tag_font
+      if child_tag is not None:
+        child_tag = str(child_tag)
         
         try:
-          tag_padding = treeview.tag_configure(child_tag, 'padding')
-        except tk.TclError:
-          pass # not supported in this version
-        else:
-          padding_width = _width_padding_widget(treeview, tag_padding)
-        
-        try:
-          tag_image = treeview.tag_configure(child_tag, 'image')
-        except tk.TclError:
-          pass # not supported in this version
-        else:
-          image_width = _width_image(tag_image)
-        
-        _tags[child_tag] = configuration(font, padding_width, image_width)
+          font, padding_width, image_width = tags[child_tag]
+        except KeyError:
+          font, padding_width, image_width = configuration()
+          
+          # query the tag's configuration
+          # ideally, this would only get the "active" tag
+          # but there isn't any way to tell
+          # what is the top tag in the stacking order
+          # even in the worst case scenario of a conflict though
+          # the column will always be wide enough
+          try:
+            tag_font = str(treeview.tag_configure(child_tag, 'font'))
+          except tk.TclError:
+            pass # not supported in this version
+          else:
+            if tag_font:
+              font = tag_font
+          
+          try:
+            tag_padding = str(treeview.tag_configure(child_tag, 'padding'))
+          except tk.TclError:
+            pass # not supported in this version
+          else:
+            if tag_padding:
+              padding_width = _width_padding_widget(treeview, tag_padding)
+          
+          try:
+            tag_image = str(treeview.tag_configure(child_tag, 'image'))
+          except tk.TclError:
+            pass # not supported in this version
+          else:
+            if tag_image:
+              image_width = _width_image(tag_image)
+          
+          tags[child_tag] = configuration(font, padding_width, image_width)
       
       if child_image:
         image_width = _width_image(child_image)
@@ -715,6 +702,15 @@ def _item_configurations_treeview(treeview, indent, configuration, item='',
         padding_width,
         image_width + indent_width
       ))
+    
+    configurations.update(_item_configurations_treeview(
+      treeview,
+      indent,
+      configuration,
+      tags,
+      child,
+      _parents + 1
+    ))
   
   return configurations
 
@@ -737,11 +733,9 @@ def measure_widths_treeview(treeview, widths):
     indent = DEFAULT_TREEVIEW_INDENT
   
   # this is the set of item configurations
-  # must have at least one configuration in it (the default)
+  # will be empty if there are no items
   item_configurations = _item_configurations_treeview(treeview,
-    indent, Configuration)
-  
-  item_configurations.add(Configuration())
+    indent, Configuration, {})
   
   item_padding_width = _width_padding_widget(treeview,
     lookup_style_widget(treeview, 'padding', element='Item'))
@@ -765,16 +759,15 @@ def measure_widths_treeview(treeview, widths):
   # measure the widths
   texts = {}
   
-  def measure_width(width, font, space, minwidth=0):
+  def measure_width(width, font, space, minwidth=0.0):
     try:
       text = texts[font]
     except KeyError:
       text = texts.setdefault(font, measure_text_widget(treeview, font))
     
     # at least zero, in case space is greater than minwidth
-    return space + max(0, width * text, minwidth - space)
+    return space + max(0.0, width * text, minwidth - space)
   
-  measured_width = 0
   measured_widths = {}
   
   for cid, width in widths.items():
@@ -805,47 +798,53 @@ def measure_widths_treeview(treeview, widths):
     # the element (item/cell) padding is
     # added on top of the treeview/tag (item configuration) padding by Tk
     # so here we do the same
-    if cid == '#0': # item
-      # for column #0, we need to worry about indents
-      # on top of that, we include the minwidth in the space
-      # this is because the indicator has
-      # a dynamic width which we can't directly get
-      # but it is probably okay to assume it is
-      # safely contained in the minwidth
-      # (otherwise, it'd get cut off when the column is at its minwidth)
-      # so the space width (including the minwidth)
-      # is added on top of the text width
-      measured_width = max(measure_width(
-        width,
-        item_configuration.font,
-        
-        (
-          item_configuration.image_width
-          + item_configuration.padding_width
-          + item_padding_width
-        ) +
-        
-        minwidth
-      ) for item_configuration in item_configurations)
-    else: # cell
-      # for all other columns (not #0,) the minimum measured width
-      # is the minwidth, but excluding the part of it filled by space
-      # this ensures the column won't be smaller
-      # than the minwidth (but may be equal to it)
-      measured_width = max(measure_width(
-        width,
-        item_configuration.font,
-        
-        (
-          item_configuration.padding_width
-          + cell_padding_width
-        ),
-        
-        minwidth
-      ) for item_configuration in item_configurations)
+    measured_width = 0.0
+    
+    if item_configurations:
+      if cid == '#0': # item
+        # for column #0, we need to worry about indents
+        # on top of that, we include the minwidth in the space
+        # this is because the indicator has
+        # a dynamic width which we can't directly get
+        # but it is probably okay to assume it is
+        # safely contained in the minwidth
+        # (otherwise, it'd get cut off when the column is at its minwidth)
+        # so the space width (including the minwidth)
+        # is added on top of the text width
+        measured_width = max(measure_width(
+          width,
+          item_configuration.font,
+          
+          (
+            item_configuration.image_width
+            + item_configuration.padding_width
+            + item_padding_width
+          ) +
+          
+          minwidth
+        ) for item_configuration in item_configurations)
+      else: # cell
+        # for all other columns (not #0,) the minimum measured width
+        # is the minwidth, but excluding the part of it filled by space
+        # this ensures the column won't be smaller
+        # than the minwidth (but may be equal to it)
+        measured_width = max(measure_width(
+          width,
+          item_configuration.font,
+          
+          (
+            item_configuration.padding_width
+            + cell_padding_width
+          ),
+          
+          minwidth
+        ) for item_configuration in item_configurations)
     
     if heading_configuration: # heading
-      image_width = _width_image(treeview.heading(cid, 'image'))
+      image_width = heading_configuration.image_width
+      
+      if (heading_image := treeview.heading(cid, 'image')):
+        image_width = _width_image(heading_image)
       
       measured_width = max(measured_width, measure_width(
         width,
@@ -1710,9 +1709,6 @@ get_root_images = _root_images()
 
 
 def _width_image(image):
-  if not image:
-    return 0
-  
   return int(get_root_window().tk.call('image', 'width', image))
 
 
