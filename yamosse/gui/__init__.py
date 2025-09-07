@@ -638,10 +638,8 @@ get_minwidth_treeview = _minwidth_treeview()
 
 
 def _item_configurations_treeview(treeview, indent, configuration, tags,
-  item='', _parents=0):
+  item='', _indent_width=0.0):
   configurations = set()
-  
-  indent_width = indent * _parents
   
   # get the per-child configuration
   for child in treeview.get_children(item=item):
@@ -651,7 +649,7 @@ def _item_configurations_treeview(treeview, indent, configuration, tags,
       configuration,
       tags,
       child,
-      _parents + 1
+      _indent_width + indent
     ))
     
     child_image = treeview.item(child, 'image')
@@ -665,7 +663,7 @@ def _item_configurations_treeview(treeview, indent, configuration, tags,
       
       # indents occupy the same space as images
       configurations.add(configuration(
-        image_width=image_width + indent_width
+        image_width=image_width + _indent_width
       ))
       continue
     
@@ -719,7 +717,7 @@ def _item_configurations_treeview(treeview, indent, configuration, tags,
       configurations.add(configuration(
         font,
         padding_width,
-        image_width + indent_width
+        image_width + _indent_width
       ))
   
   return configurations
