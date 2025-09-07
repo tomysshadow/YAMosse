@@ -645,6 +645,15 @@ def _item_configurations_treeview(treeview, indent, configuration, tags,
   
   # get the per-child configuration
   for child in treeview.get_children(item=item):
+    configurations.update(_item_configurations_treeview(
+      treeview,
+      indent,
+      configuration,
+      tags,
+      child,
+      _parents + 1
+    ))
+    
     child_image = treeview.item(child, 'image')
     child_tags = treeview.tk.splitlist(treeview.item(child, 'tags'))
     
@@ -712,15 +721,6 @@ def _item_configurations_treeview(treeview, indent, configuration, tags,
         padding_width,
         image_width + indent_width
       ))
-    
-    configurations.update(_item_configurations_treeview(
-      treeview,
-      indent,
-      configuration,
-      tags,
-      child,
-      _parents + 1
-    ))
   
   return configurations
 
