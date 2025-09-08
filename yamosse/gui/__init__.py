@@ -754,11 +754,9 @@ def measure_widths_treeview(treeview, widths):
   
   kwargs = {}
   
-  try:
+  with suppress(tk.TclError):
     kwargs['indent'] = treeview.winfo_fpixels(
       lookup_style_widget(treeview, 'indent'))
-  except tk.TclError:
-    pass
   
   # this is the set of item configurations
   # will be empty if there are no items
