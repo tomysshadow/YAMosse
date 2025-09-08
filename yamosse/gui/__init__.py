@@ -739,7 +739,7 @@ def measure_widths_treeview(treeview, widths):
     @staticmethod
     @lru_cache
     def measure_image(image):
-      return int(treeview.tk.call('image', 'width', image))
+      return treeview.tk.getint(treeview.tk.call('image', 'width', image))
   
   font = str(lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
   
