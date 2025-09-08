@@ -48,7 +48,7 @@ class Recording:
     
     with self._start:
       options = self.options
-      input_devices, input_default_name = type(self).input_devices()
+      input_devices, input_default_name = self.input_devices()
       
       input_device = options.input_device
       

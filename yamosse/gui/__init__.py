@@ -112,7 +112,7 @@ class ImageType(Enum):
   PHOTO = fsenc('Photo')
   
   def ext(self):
-    return type(self)._EXTS[self]
+    return self._EXTS[self]
 
 # defined out here so it is a nonmember
 # (workaround for Python 3.10)

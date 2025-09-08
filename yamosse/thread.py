@@ -166,7 +166,7 @@ def _files(input_, exit_,
   
   number = Value('i', 0)
   step = Value('i', 0)
-  steps = file_names_len * yamosse_worker.PROGRESSBAR_MAXIMUM
+  steps = file_names_len * yamosse_worker.Progress.MAXIMUM
   
   shutdown = Event()
   

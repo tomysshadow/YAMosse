@@ -7,8 +7,6 @@ import soundfile as sf
 
 import yamosse.root as yamosse_root
 
-PROGRESSBAR_MAXIMUM = 100
-
 MODEL_YAMNET_DIR = os.path.join('models', 'research', 'audioset', 'yamnet')
 MODEL_YAMNET_CLASS_MAP_CSV = 'yamnet_class_map.csv'
 MODEL_YAMNET_WEIGHTS_URL = 'https://storage.googleapis.com/audioset/yamnet.h5'
@@ -21,8 +19,7 @@ MONO = 1
 
 _initializer_ex = None
 
-_step = None
-_steps = None
+_progress = None
 _sender = None
 
 _shutdown = None
@@ -36,6 +33,57 @@ _yamnet = None
 
 _root_model_yamnet_dir = yamosse_root.root(MODEL_YAMNET_DIR)
 _tfhub_enabled = not os.path.isdir(_root_model_yamnet_dir)
+
+
+class Progress:
+  MAXIMUM = 100
+  
+  def __init__(self, step, steps):
+    self._step = step
+    self._steps = steps
+    
+    self._current_step = 0
+  
+  def __enter__(self):
+    self._current_step = 0
+    return self
+  
+  def __exit__(self, exc, val, tb):
+    self.step()
+  
+  def step(self, current_step=1.0):
+    MAXIMUM = self.MAXIMUM
+    
+    current_step = int(current_step * MAXIMUM) - self._current_step
+    
+    if current_step <= 0:
+      return
+    
+    previous_step = 0
+    self._current_step += current_step
+    next_step = 0
+    
+    step = self._step
+    
+    with step.get_lock():
+      previous_step = step.value
+      step.value += current_step
+      next_step = step.value
+    
+    steps = self._steps
+    previous_progress = int(previous_step / steps * MAXIMUM) + 1
+    next_progress = int(next_step / steps * MAXIMUM) + 1
+    
+    for current_progress in range(previous_progress, next_progress):
+      _sender.send({
+        'progressbar': {
+          'set': {'args': (current_progress,)}
+        },
+        
+        'log': '%d%% complete' % current_progress
+      })
+    
+    return
 
 
 def _high_priority(psutil=None):
@@ -53,39 +101,6 @@ def _high_priority(psutil=None):
       os.setpriority(os.PRIO_PROCESS, 0, priority)
   except OSError:
     pass
-
-
-def _step_progress(worker_step, current_step=1.0):
-  current_step = int(current_step * PROGRESSBAR_MAXIMUM) - worker_step
-  
-  if current_step <= 0:
-    return worker_step
-  
-  previous_step = 0
-  worker_step += current_step
-  next_step = 0
-  
-  step = _step
-  steps = _steps
-  
-  with step.get_lock():
-    previous_step = step.value
-    step.value += current_step
-    next_step = step.value
-  
-  previous_progress = int(previous_step / steps * PROGRESSBAR_MAXIMUM) + 1
-  next_progress = int(next_step / steps * PROGRESSBAR_MAXIMUM) + 1
-  
-  for current_progress in range(previous_progress, next_progress):
-    _sender.send({
-      'progressbar': {
-        'set': {'args': (current_progress,)}
-      },
-      
-      'log': '%d%% complete' % current_progress
-    })
-  
-  return worker_step
 
 
 def class_names(class_map_csv=''):
@@ -124,8 +139,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
   model_yamnet_class_names, tfhub_enabled):
   global _initializer_ex
   
-  global _step
-  global _steps
+  global _progress
   global _sender
   
   global _shutdown
@@ -267,8 +281,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
       
       yamnet.load_weights(weights)
     
-    _step = step
-    _steps = steps
+    _progress = Progress(step, steps)
     _sender = sender
     
     _options = options
@@ -288,80 +301,78 @@ def worker(file_name):
   if shutdown.is_set(): return None
   
   options = _options
-  identification = options.identification
-  background_noise_volume = options.background_noise_volume
   
-  step = 0
-  
-  try:
-    with (identification, sf.SoundFile(file_name) as f):
-      # the main offenders for startup time
-      # (thankfully doing these imports here doesn't seem to slow down worker performance much)
-      import numpy as np
-      import tensorflow as tf
-      import resampy
+  with (
+    _progress as progress,
+    options.identification as identification,
+    sf.SoundFile(file_name) as f
+  ):
+    # the main offenders for startup time
+    # (thankfully doing these imports here doesn't seem to slow down worker performance much)
+    import numpy as np
+    import tensorflow as tf
+    import resampy
+    
+    # Decode the WAV file.
+    seconds = 0.0
+    background_noise_volume = options.background_noise_volume
+    
+    sample_rate = _sample_rate
+    patch_window_seconds = _patch_window_seconds
+    patch_hop_seconds = _patch_hop_seconds
+    
+    yamnet = _yamnet
+    
+    # blocks() expects number of samples
+    # so convert the seconds values into the equivalent number of samples
+    # this should truncate to int, don't round the number
+    # otherwise YAMNet may get confused and think it's two patches when it's meant to be one
+    sr = f.samplerate
+    seconds_steps = f.frames / sr
+    overlap = int(sr * patch_hop_seconds)
+    blocksize = int(sr * patch_window_seconds) + overlap
+    
+    # dtypes
+    int16_tf = tf.int16
+    int16 = int16_tf.as_numpy_dtype
+    float32 = np.float32
+    float32_int16_max = float32(int16_tf.max)
+    
+    # reading the entire sound file at once can cause an out of memory error
+    # so instead we read it in blocks that match YAMNet's patch size
+    # we request int16 so the sound is normalized
+    # (because we want it to be, and it won't be if float64/float32 are requested)
+    # then we convert it back to float via division
+    for waveform in f.blocks(overlap=overlap, blocksize=blocksize, dtype=int16):
+      # should I check this every loop? Would a variable to keep track actually save time...?
+      if shutdown.is_set(): return None
       
-      # Decode the WAV file.
-      seconds = 0.0
+      progress.step(seconds / seconds_steps)
       
-      sample_rate = _sample_rate
-      patch_window_seconds = _patch_window_seconds
-      patch_hop_seconds = _patch_hop_seconds
+      assert waveform.dtype == int16, 'Bad sample type: %r' % waveform.dtype
       
-      yamnet = _yamnet
+      # Convert to mono and the sample rate expected by YAMNet.
+      if waveform.ndim == MONO:
+        waveform = np.divide(waveform, float32_int16_max, dtype=float32)
+      else:
+        waveform = waveform.mean(axis=MONO, dtype=float32)
+        np.divide(waveform, float32_int16_max, out=waveform)
       
-      # blocks() expects number of samples
-      # so convert the seconds values into the equivalent number of samples
-      # this should truncate to int, don't round the number
-      # otherwise YAMNet may get confused and think it's two patches when it's meant to be one
-      sr = f.samplerate
-      seconds_steps = f.frames / sr
-      overlap = int(sr * patch_hop_seconds)
-      blocksize = int(sr * patch_window_seconds) + overlap
+      if sr != sample_rate:
+        waveform = resampy.resample(waveform, sr, sample_rate)
       
-      # dtypes
-      int16_tf = tf.int16
-      int16 = int16_tf.as_numpy_dtype
-      float32 = np.float32
-      float32_int16_max = float32(int16_tf.max)
+      # skip background noise
+      # this isn't strictly necessary but dramatically boosts performance
+      # this must be done here in this function, because this is a super hot path
+      # (calling another function here, even an inner function, causes significant overhead)
+      if background_noise_volume and not np.greater_equal(
+        np.abs(waveform), background_noise_volume).any():
+        seconds += patch_window_seconds
+        continue
       
-      # reading the entire sound file at once can cause an out of memory error
-      # so instead we read it in blocks that match YAMNet's patch size
-      # we request int16 so the sound is normalized
-      # (because we want it to be, and it won't be if float64/float32 are requested)
-      # then we convert it back to float via division
-      for waveform in f.blocks(overlap=overlap, blocksize=blocksize, dtype=int16):
-        # should I check this every loop? Would a variable to keep track actually save time...?
-        if shutdown.is_set(): return None
-        
-        step = _step_progress(step, seconds / seconds_steps)
-        
-        assert waveform.dtype == int16, 'Bad sample type: %r' % waveform.dtype
-        
-        # Convert to mono and the sample rate expected by YAMNet.
-        if waveform.ndim == MONO:
-          waveform = np.divide(waveform, float32_int16_max, dtype=float32)
-        else:
-          waveform = waveform.mean(axis=MONO, dtype=float32)
-          np.divide(waveform, float32_int16_max, out=waveform)
-        
-        if sr != sample_rate:
-          waveform = resampy.resample(waveform, sr, sample_rate)
-        
-        # skip background noise
-        # this isn't strictly necessary but dramatically boosts performance
-        # this must be done here in this function, because this is a super hot path
-        # (calling another function here, even an inner function, causes significant overhead)
-        if background_noise_volume and not np.greater_equal(
-          np.abs(waveform), background_noise_volume).any():
-          seconds += patch_window_seconds
-          continue
-        
-        # Predict YAMNet classes.
-        for score in yamnet(waveform)[0]:
-          identification.predict((int(seconds), np.array(score, dtype=float32)))
-          seconds += patch_hop_seconds
-      
-      return identification.timestamps(shutdown)
-  finally:
-    _step_progress(step)
+      # Predict YAMNet classes.
+      for score in yamnet(waveform)[0]:
+        identification.predict((int(seconds), np.array(score, dtype=float32)))
+        seconds += patch_hop_seconds
+    
+    return identification.timestamps(shutdown)
