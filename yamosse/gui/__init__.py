@@ -653,7 +653,7 @@ def _item_configurations_treeview(treeview, configuration,
           pass # not supported in this version
         else:
           if tag_font:
-            tag_font_width = configuration.width_font(tag_font)
+            tag_font_width = configuration.measure_font(tag_font)
         
         try:
           tag_padding = str(treeview.tag_configure(tag, 'padding'))
@@ -661,7 +661,7 @@ def _item_configurations_treeview(treeview, configuration,
           pass # not supported in this version
         else:
           if tag_padding:
-            tag_padding_width = configuration.width_padding(tag_padding)
+            tag_padding_width = configuration.measure_padding(tag_padding)
         
         try:
           tag_image = str(treeview.tag_configure(tag, 'image'))
@@ -669,7 +669,7 @@ def _item_configurations_treeview(treeview, configuration,
           pass # not supported in this version
         else:
           if tag_image:
-            tag_image_width = configuration.width_image(tag_image)
+            tag_image_width = configuration.measure_image(tag_image)
         
         tag_configurations[tag] = configuration(
           tag_font_width,
@@ -695,7 +695,7 @@ def _item_configurations_treeview(treeview, configuration,
       image_width = indent_width
       
       if image:
-        image_width += configuration.width_image(image)
+        image_width += configuration.measure_image(image)
       else:
         image_width += tag_configuration.image_width
       
@@ -719,7 +719,7 @@ def measure_widths_treeview(treeview, widths):
     @classmethod
     @staticmethod
     @lru_cache
-    def width_font(font):
+    def measure_font(font):
       # cast font descriptors to font objects
       if not isinstance(font, Font):
         font = Font(font=font)
@@ -731,21 +731,21 @@ def measure_widths_treeview(treeview, widths):
     @classmethod
     @staticmethod
     @lru_cache
-    def width_padding(padding):
+    def measure_padding(padding):
       left, top, right, bottom = padding4_widget(treeview, padding)
       return left + right
     
     @classmethod
     @staticmethod
     @lru_cache
-    def width_image(image):
+    def measure_image(image):
       return int(treeview.tk.call('image', 'width', image))
   
   font = str(lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
   
   Configuration.__new__.__defaults__ = (
-    Configuration.width_font(font),
-    Configuration.width_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+    Configuration.measure_font(font),
+    Configuration.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
     0.0
   )
   
@@ -762,10 +762,10 @@ def measure_widths_treeview(treeview, widths):
   item_configurations = _item_configurations_treeview(treeview,
     Configuration, **kwargs)
   
-  item_padding_width = Configuration.width_padding(
+  item_padding_width = Configuration.measure_padding(
     lookup_style_widget(treeview, 'padding', element='Item'))
   
-  cell_padding_width = Configuration.width_padding(
+  cell_padding_width = Configuration.measure_padding(
     lookup_style_widget(treeview, 'padding', element='Cell'))
   
   # get the per-heading configuration, but only if the heading is shown
@@ -776,8 +776,8 @@ def measure_widths_treeview(treeview, widths):
       'font', element='Heading')) or font
     
     # the heading padding is added to the treeview padding
-    font_width = Configuration.width_font(font)
-    padding_width = Configuration().padding_width + Configuration.width_padding(
+    font_width = Configuration.measure_font(font)
+    padding_width = Configuration().padding_width + Configuration.measure_padding(
       lookup_style_widget(treeview, 'padding', element='Heading'))
     
     heading_configuration = Configuration(font_width, padding_width)
@@ -863,7 +863,7 @@ def measure_widths_treeview(treeview, widths):
       image_width = heading_configuration.image_width
       
       if (heading_image := str(treeview.heading(cid, 'image'))):
-        image_width = Configuration.width_image(heading_image)
+        image_width = Configuration.measure_image(heading_image)
       
       measured_width = max(measured_width, measure_width(
         width,
