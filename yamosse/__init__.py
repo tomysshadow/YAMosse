@@ -189,7 +189,7 @@ def _mainloop(**kwargs):
         ),
         
         kwargs={
-          'progressbar_maximum': yamosse_worker.Progress.MAXIMUM
+          'progressbar_maximum': yamosse_progress.Progress.MAXIMUM
         }
       )
       

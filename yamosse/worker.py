@@ -35,57 +35,6 @@ _root_model_yamnet_dir = yamosse_root.root(MODEL_YAMNET_DIR)
 _tfhub_enabled = not os.path.isdir(_root_model_yamnet_dir)
 
 
-class Progress:
-  MAXIMUM = 100
-  
-  def __init__(self, step, steps):
-    self._step = step
-    self._steps = steps
-    
-    self._current_step = 0
-  
-  def __enter__(self):
-    self._current_step = 0
-    return self
-  
-  def __exit__(self, exc, val, tb):
-    self.step()
-  
-  def step(self, current_step=1.0):
-    MAXIMUM = self.MAXIMUM
-    
-    current_step = int(current_step * MAXIMUM) - self._current_step
-    
-    if current_step <= 0:
-      return
-    
-    previous_step = 0
-    self._current_step += current_step
-    next_step = 0
-    
-    step = self._step
-    
-    with step.get_lock():
-      previous_step = step.value
-      step.value += current_step
-      next_step = step.value
-    
-    steps = self._steps
-    previous_progress = int(previous_step / steps * MAXIMUM) + 1
-    next_progress = int(next_step / steps * MAXIMUM) + 1
-    
-    for current_progress in range(previous_progress, next_progress):
-      _sender.send({
-        'progressbar': {
-          'set': {'args': (current_progress,)}
-        },
-        
-        'log': '%d%% complete' % current_progress
-      })
-    
-    return
-
-
 def _high_priority(psutil=None):
   if psutil:
     psutil.Process().nice(psutil.HIGH_PRIORITY_CLASS)
@@ -135,7 +84,7 @@ def tfhub_cache(dir_='tfhub_modules'):
   return root_tfhub_cache_dir
 
 
-def initializer(number, step, steps, receiver, sender, shutdown, options,
+def initializer(number, progress, receiver, sender, shutdown, options,
   model_yamnet_class_names, tfhub_enabled):
   global _initializer_ex
   
@@ -281,7 +230,7 @@ def initializer(number, step, steps, receiver, sender, shutdown, options,
       
       yamnet.load_weights(weights)
     
-    _progress = Progress(step, steps)
+    _progress = progress
     _sender = sender
     
     _options = options

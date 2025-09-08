@@ -165,19 +165,18 @@ def _files(input_, exit_,
   batch = 0
   
   number = Value('i', 0)
-  step = Value('i', 0)
-  steps = file_names_len * yamosse_worker.Progress.MAXIMUM
-  
   shutdown = Event()
   
   # created immediately before with statement so that these will definitely get closed
   receiver, sender = Pipe(duplex=False)
   
   with receiver, sender:
+    progress = yamosse_progress.Progress(Value('i', 0), file_names_len, sender)
+    
     process_pool_executor = ProcessPoolExecutor(
       max_workers=options.max_workers,
       initializer=yamosse_worker.initializer,
-      initargs=(number, step, steps, receiver, sender, shutdown, options,
+      initargs=(number, progress, receiver, sender, shutdown, options,
         model_yamnet_class_names, tfhub_enabled)
     )
     

@@ -57,3 +57,58 @@ else:
     *State,
     *Mode
   ))
+
+
+class Progress:
+  __slots__ = ('_step', '_steps', '_sender', '_current_step')
+  
+  MAXIMUM = 100
+  
+  def __init__(self, step, steps, sender):
+    self._step = step
+    self._steps = self.MAXIMUM * steps
+    self._sender = sender
+    
+    self._current_step = 0
+  
+  def __enter__(self):
+    self._current_step = 0
+    return self
+  
+  def __exit__(self, exc, val, tb):
+    self.step()
+  
+  def step(self, current_step=1.0):
+    MAXIMUM = self.MAXIMUM
+    
+    current_step = int(MAXIMUM * current_step) - self._current_step
+    
+    if current_step <= 0:
+      return
+    
+    previous_step = 0
+    self._current_step += current_step
+    next_step = 0
+    
+    step = self._step
+    
+    with step.get_lock():
+      previous_step = step.value
+      step.value += current_step
+      next_step = step.value
+    
+    steps = MAXIMUM / self._steps
+    
+    previous_progress = int(previous_step * steps) + 1
+    next_progress = int(next_step * steps) + 1
+    
+    sender = self._sender
+    
+    for current_progress in range(previous_progress, next_progress):
+      sender.send({
+        'progressbar': {
+          'set': {'args': (current_progress,)}
+        },
+        
+        'log': '%d%% complete' % current_progress
+      })
