@@ -634,6 +634,7 @@ def _item_configurations_treeview(treeview, configuration,
     font_width = padding_width = image_width = 0.0
     
     for tag in tags:
+      # ensure is hashable to be used as dict key
       tag = str(tag)
       
       try:
