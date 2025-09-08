@@ -750,7 +750,7 @@ def measure_widths_treeview(treeview, widths):
       0.0
     )
   )):
-    __slots__ = ()
+    __slots__ = () # prevents mutation on object (namedtuple meant to be immutable)
   
   kwargs = {}
   
