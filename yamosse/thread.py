@@ -221,8 +221,8 @@ def _files(input_, exit_,
           try:
             results[file_name] = future.result()
             status = 'Done'
-          except sf.LibsndfileError as ex:
-            errors[file_name] = ex
+          except sf.LibsndfileError as exc:
+            errors[file_name] = exc
             status = 'Done (with errors)'
           
           file_names_pos += 1

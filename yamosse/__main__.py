@@ -37,8 +37,8 @@ options_attrs = dict(args.options_attrs)
 for key, value in options_attrs.items():
   try:
     options_attrs[key] = yamosse_options.json.loads(value)
-  except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError) as ex:
-    parser.error(str(ex))
+  except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError) as exc:
+    parser.error(str(exc))
 
 if options_attrs:
   args.options_attrs = options_attrs
@@ -49,5 +49,5 @@ yamosse_worker.tfhub_cache()
 
 try:
   yamosse.yamosse(**vars(args))
-except yamosse_subsystem.SubsystemError as ex:
-  parser.exit(status=1, message=str(ex))
+except yamosse_subsystem.SubsystemError as exc:
+  parser.exit(status=1, message=str(exc))

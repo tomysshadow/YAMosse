@@ -56,9 +56,9 @@ class _HiddenFileWrapper:
           # this should throw if a file with the same name gets created
           # before we can rename ours
           os.rename(src, dest)
-        except OSError as ex:
+        except OSError as exc:
           # raise exception if we exhausted all retries
-          if not r: raise ex
+          if not r: raise exc
           
           # generate a new visible name to use
           # that is guaranteed unique

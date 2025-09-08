@@ -10,10 +10,10 @@ def download(url, file):
   try:
     with urlopen(url) as response:
       copyfileobj(response, file)
-  except HTTPError as ex:
-    code = ex.code
+  except HTTPError as exc:
+    code = exc.code
     
     raise DownloadError("The server couldn't fulfill the request.\nError code: %d\n\n%r" % (code,
-      ': '.join(BaseHTTPRequestHandler.responses[code]))) from ex
-  except URLError as ex:
-    raise DownloadError("We failed to reach a server.\nReason: %s" % ex.reason) from ex
+      ': '.join(BaseHTTPRequestHandler.responses[code]))) from exc
+  except URLError as exc:
+    raise DownloadError("We failed to reach a server.\nReason: %s" % exc.reason) from exc
