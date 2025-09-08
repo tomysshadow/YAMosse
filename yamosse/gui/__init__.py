@@ -779,8 +779,8 @@ def measure_widths_treeview(treeview, widths):
     
     padding_width = (
       Configuration._field_defaults['padding_width']
-      + Configuration.measure_padding(lookup_style_widget(treeview,
-        'padding', element='Heading'))
+      + Configuration.measure_padding(
+        lookup_style_widget(treeview,'padding', element='Heading'))
     )
     
     heading_configuration = Configuration(font_width, padding_width)
