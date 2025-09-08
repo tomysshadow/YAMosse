@@ -768,7 +768,7 @@ def measure_widths_treeview(treeview, widths):
   cell_padding_width = Configuration.measure_padding(
     lookup_style_widget(treeview, 'padding', element='Cell'))
   
-  # get the per-heading configuration, but only if the heading is shown
+  # get the heading configuration, but only if the heading is shown
   heading_configuration = None
   
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
@@ -863,15 +863,17 @@ def measure_widths_treeview(treeview, widths):
         ) for item_configuration in item_configurations)
     
     if heading_configuration: # heading
-      image_width = heading_configuration.image_width
+      space_width = heading_configuration.padding_width
       
       if (heading_image := str(treeview.heading(cid, 'image'))):
-        image_width = Configuration.measure_image(heading_image)
+        space_width += Configuration.measure_image(heading_image)
+      else:
+        space_width += heading_configuration.image_width
       
       measured_width = max(measured_width, measure_width(
         width,
         heading_configuration.font_width,
-        image_width + heading_configuration.padding_width,
+        space_width,
         minwidth
       ))
     
