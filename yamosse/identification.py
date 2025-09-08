@@ -5,16 +5,13 @@ from contextlib import suppress
 import yamosse.utils as yamosse_utils
 import yamosse.output as yamosse_output
 
-IDENTIFICATION_CONFIDENCE_SCORE = 0
-IDENTIFICATION_TOP_RANKED = 1
-
-TIMESTAMP_ALL = -1
-
-HMS_ALL = 'All'
-HMS_TIMESPAN = ' - '
-
 
 class _Identification(ABC):
+  TIMESTAMP_ALL = -1
+  
+  HMS_ALL = 'All'
+  HMS_TIMESPAN = ' - '
+  
   __slots__ = ('options', 'np')
   
   def __init__(self, options, np):
@@ -56,12 +53,12 @@ class _Identification(ABC):
   @classmethod
   def hms(cls, timestamp):
     # substitute TIMESTAMP_ALL for HMS_ALL
-    if timestamp == TIMESTAMP_ALL:
-      return HMS_ALL
+    if timestamp == cls.TIMESTAMP_ALL:
+      return cls.HMS_ALL
     
     # convert to HMS string and join the timestamps if this is a timespan
     with suppress(TypeError):
-      return HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+      return cls.HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
     
     return yamosse_utils.hours_minutes(timestamp)
   
@@ -114,7 +111,7 @@ class _ConfidenceScoreIdentification(_Identification):
     confidence_score = options.confidence_score
     
     if options.timespan_span_all:
-      prediction = TIMESTAMP_ALL
+      prediction = self.TIMESTAMP_ALL
     
     # this is pretty self explanatory
     # check if the score we got is above the confidence score
@@ -225,12 +222,12 @@ class _ConfidenceScoreIdentification(_Identification):
           
           if output_scores:
             for t, timestamp_score in enumerate(timestamps):
-              if timestamp_score['timestamp'] == TIMESTAMP_ALL:
+              if timestamp_score['timestamp'] == cls.TIMESTAMP_ALL:
                 all_timestamp = (class_name, timestamps.pop(t))
                 break
           else:
             try:
-              timestamps.remove(TIMESTAMP_ALL)
+              timestamps.remove(cls.TIMESTAMP_ALL)
             except ValueError:
               pass
             else:
@@ -285,6 +282,8 @@ class _TopRankedIdentification(_Identification):
     self._top_scores.clear()
   
   def predict(self, prediction_score=None):
+    TIMESTAMP_ALL = self.TIMESTAMP_ALL
+    
     np = self.np
     
     options = self.options
@@ -526,7 +525,7 @@ class _TopRankedIdentification(_Identification):
 
 
 def identification(option=None):
-  return ({
-    IDENTIFICATION_CONFIDENCE_SCORE: _ConfidenceScoreIdentification,
-    IDENTIFICATION_TOP_RANKED: _TopRankedIdentification
-  }).get(option, _Identification)
+  if option is None:
+    return _Identification
+  
+  return ([_ConfidenceScoreIdentification, _TopRankedIdentification])[option]

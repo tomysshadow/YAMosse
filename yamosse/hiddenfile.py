@@ -6,11 +6,11 @@ import weakref
 
 import yamosse.utils as yamosse_utils
 
-HIDDEN = '~'
-RETRIES = 10
-
 
 class _HiddenFileWrapper:
+  HIDDEN = '~'
+  RETRIES = 10
+  
   def __init__(self, *args, prefix='', **kwargs):
     self._system = platform.system()
     
@@ -23,7 +23,7 @@ class _HiddenFileWrapper:
     self.tmp = NamedTemporaryFile(
       *args,
       delete=False,
-      prefix=yamosse_utils.str_ensureprefix(prefix, HIDDEN),
+      prefix=yamosse_utils.str_ensureprefix(prefix, self.HIDDEN),
       **kwargs
     )
     
@@ -49,9 +49,9 @@ class _HiddenFileWrapper:
       
       # first try stripping the tilde (~) off the current name
       head, tail = os.path.split(src)
-      dest = os.path.join(head, tail.removeprefix(HIDDEN))
+      dest = os.path.join(head, tail.removeprefix(self.HIDDEN))
       
-      for r in reversed(range(RETRIES)):
+      for r in reversed(range(self.RETRIES)):
         try:
           # this should throw if a file with the same name gets created
           # before we can rename ours

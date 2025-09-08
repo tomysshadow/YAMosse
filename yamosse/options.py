@@ -6,8 +6,6 @@ from datetime import datetime
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
 
-VERSION = 2
-
 _pickle_file_name = '.'.join((
   os.path.splitext(__file__)[0],
   pickle.__name__
@@ -15,6 +13,8 @@ _pickle_file_name = '.'.join((
 
 
 class Options:
+  VERSION = 2
+  
   class VersionError(ValueError):
     def __init__(self):
       super().__init__('version mismatch')
@@ -40,7 +40,7 @@ class Options:
     if classes is None: classes = []
     if calibration is None: calibration = []
     
-    self.version = VERSION
+    self.version = self.VERSION
     
     self.input = input
     self.input_device = input_device
@@ -138,7 +138,7 @@ class Options:
     with open(_pickle_file_name, 'rb') as f:
       options = pickle.load(f)
       
-      if options.version != VERSION:
+      if options.version != cls.VERSION:
         raise cls.VersionError
       
       return options
@@ -163,7 +163,7 @@ class Options:
       # and likewise, a TypeError if the type couldn't be casted
       options.set(json.load(f))
       
-      if options.version != VERSION:
+      if options.version != cls.VERSION:
         raise cls.VersionError
       
       return options

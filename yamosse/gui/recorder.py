@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from threading import Lock, Event
+from contextlib import ExitStack
 from os import fsencode as fsenc
 
 try:
@@ -57,7 +58,7 @@ class Recorder:
     
     gui_progressbar.Progressbar(
       volume_frame,
-      name=yamosse_recording.VOLUME_NAME,
+      name=yamosse_recording.Recording.VOLUME_NAME,
       variable=volume_variable,
       maximum=VOLUME_MAXIMUM,
       task=False
@@ -99,6 +100,8 @@ class Recorder:
     self._recording_button = recording_button
     self._input_devices_combobox = input_devices_combobox
     
+    self._ask = Lock()
+    
     self._record_image = record_image
     self._stop_image = stop_image
     
@@ -113,22 +116,37 @@ class Recorder:
     self._volume_frame = volume_frame
     self._volume_variable = volume_variable
     self._volume_after = None
-    self._volume_after_ms = int(yamosse_recording.BLOCKSIZE_SECONDS * 1000)
+    self._volume_after_ms = int(yamosse_recording.Recording.BLOCKSIZE_SECONDS * 1000)
   
   def ask_save(self, close):
-    if yamosse_recording:
+    with ExitStack() as exit_stack:
+      exit_stack.callback(close)
+      
+      if not yamosse_recording:
+        return
+      
       recording = self._recording
       
-      if recording:
-        save = messagebox.askyesnocancel(parent=self._window,
-          title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
-        
-        if save is None:
-          return
-        
-        recording.save = save
-    
-    close()
+      if not recording:
+        return
+      
+      ask = self._ask
+      
+      # if the dialog is already open, focus the existing one
+      if not ask.acquire(blocking=False):
+        self._window.focus_force()
+        exit_stack.pop_all()
+        return
+      
+      exit_stack.callback(ask.release)
+      
+      save = messagebox.askyesnocancel(parent=self._window,
+        title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
+      
+      if save is None:
+        return
+      
+      recording.save = save
   
   def _start_recording(self):
     recording = self._recording
@@ -138,7 +156,7 @@ class Recorder:
     # don't start recording if there are no input devices
     if str(self._variables['input_device'].get()) not in self._input_devices:
       messagebox.showwarning(parent=self._window, title=TITLE,
-        message=yamosse_recording.NO_INPUT_DEVICES_MESSAGE)
+        message=yamosse_recording.Recording.NO_INPUT_DEVICES_MESSAGE)
       
       return
     

@@ -10,28 +10,28 @@ import sounddevice as sd
 import yamosse.worker as yamosse_worker
 import yamosse.hiddenfile as yamosse_hiddenfile
 
-PREFIX = 'Recording_'
-SUFFIX = '.wav'
-DIR = 'My Recordings'
-
-BLOCKSIZE_SECONDS = 0.1
-
-LINE = '#' * 80
-
-VOLUME_NAME = 'Volume:'
-VOLUME_SPEC = '{volume:>4.0%}'
-
-RECORDING_ABORTED_SPEC = 'Recording aborted: {message}'
-RECORDING_FINISHED_SPEC = 'Recording finished: {input}'
-
-NO_INPUT_DEVICES_MESSAGE = RECORDING_ABORTED_SPEC.format(
-  message='there are no input devices.')
-
-NO_SAVE_MESSAGE = RECORDING_ABORTED_SPEC.format(
-  message='the user did not save the recording.')
-
 
 class Recording:
+  PREFIX = 'Recording_'
+  SUFFIX = '.wav'
+  DIR = 'My Recordings'
+  
+  BLOCKSIZE_SECONDS = 0.1
+  
+  LINE = '#' * 80
+  
+  VOLUME_NAME = 'Volume:'
+  VOLUME_SPEC = '{volume:>4.0%}'
+  
+  RECORDING_ABORTED_SPEC = 'Recording aborted: {message}'
+  RECORDING_FINISHED_SPEC = 'Recording finished: {input}'
+  
+  NO_INPUT_DEVICES_MESSAGE = RECORDING_ABORTED_SPEC.format(
+    message='there are no input devices.')
+  
+  NO_SAVE_MESSAGE = RECORDING_ABORTED_SPEC.format(
+    message='the user did not save the recording.')
+  
   def __init__(self, subsystem, options, start=None, stop=None):
     self.save = True
     self.options = options
@@ -58,10 +58,12 @@ class Recording:
         try:
           device = input_devices[input_device := input_default_name]
         except KeyError:
-          print(NO_INPUT_DEVICES_MESSAGE)
+          print(self.NO_INPUT_DEVICES_MESSAGE)
           return
         
         options.input_device = input_device
+      
+      VOLUME_SPEC = self.VOLUME_SPEC
       
       volume = 0.0
       volume_str = VOLUME_SPEC.format(volume=volume)
@@ -71,13 +73,13 @@ class Recording:
       
       # try and ensure the directory exists
       with suppress(FileExistsError):
-        mkdir(DIR)
+        mkdir(self.DIR)
       
       # we don't need to use a with statement for hidden
       # it's designed such that it will free when it goes out of scope
       hidden = yamosse_hiddenfile.HiddenFile(
         mode='wb',
-        prefix=PREFIX, suffix=SUFFIX, dir=DIR
+        prefix=self.PREFIX, suffix=self.SUFFIX, dir=self.DIR
       )
       
       # Make sure the file is opened before recording anything:
@@ -90,13 +92,15 @@ class Recording:
         sd.InputStream(
           device=device,
           samplerate=yamosse_worker.SAMPLE_RATE, channels=yamosse_worker.MONO,
-          blocksize=int(yamosse_worker.SAMPLE_RATE * BLOCKSIZE_SECONDS),
+          blocksize=int(yamosse_worker.SAMPLE_RATE * self.BLOCKSIZE_SECONDS),
           callback=lambda indata, frames, time, status: indatas.put(indata.copy())
         )
       ):
         try:
+          LINE = self.LINE
+          
           print(LINE, 'press Ctrl+C to stop the recording', LINE, sep='\n', end='\n\n')
-          print(VOLUME_NAME, volume_str, end='', flush=True)
+          print(self.VOLUME_NAME, volume_str, end='', flush=True)
           
           stop = self._stop
           indata = None
@@ -137,11 +141,11 @@ class Recording:
       print('')
       
       if not input_:
-        print(NO_SAVE_MESSAGE)
+        print(self.NO_SAVE_MESSAGE)
         return
       
       input_ = quote(input_)
-      print(RECORDING_FINISHED_SPEC.format(input=input_), sep='', end='\n\n')
+      print(self.RECORDING_FINISHED_SPEC.format(input=input_), sep='', end='\n\n')
       
       # a previous iteration of this appended the name instead of replacing it
       # but it was broken because the input field can contain folder names
