@@ -691,10 +691,9 @@ def _item_configurations_treeview(treeview, configuration,
         treeview.item(child, 'tags'))
       
       # images and indents occupy the same space
-      image = treeview.item(child, 'image')
       image_width = indent_width
       
-      if image:
+      if (image := treeview.item(child, 'image')):
         image_width += configuration.measure_image(image)
       else:
         image_width += tag_configuration.image_width
@@ -741,7 +740,8 @@ def measure_widths_treeview(treeview, widths):
     def measure_image(image):
       return treeview.tk.getint(treeview.tk.call('image', 'width', image))
   
-  font = str(lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
+  font = str(lookup_style_widget(treeview,
+    'font')) or 'TkDefaultFont'
   
   Configuration.__new__.__defaults__ = (
     Configuration.measure_font(font),
@@ -785,7 +785,7 @@ def measure_widths_treeview(treeview, widths):
   # measure the widths
   def measure_width(width, font_width, space_width, minwidth=0.0):
     # at least zero, in case space width is greater than minwidth
-    return space_width + max(0.0, width * font_width, minwidth - space_width)
+    return space_width + max(width * font_width, minwidth - space_width, 0.0)
   
   measured_widths = {}
   
