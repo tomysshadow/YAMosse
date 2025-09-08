@@ -774,16 +774,16 @@ def measure_widths_treeview(treeview, widths):
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
     font = str(lookup_style_widget(treeview,'font', element='Heading')) or font
     
-    font_width = Configuration.measure_font(font)
-    
     # the heading padding is added to the treeview padding
-    padding_width = (
-      Configuration._field_defaults['padding_width']
-      + Configuration.measure_padding(
-        lookup_style_widget(treeview,'padding', element='Heading'))
+    heading_configuration = Configuration(
+      Configuration.measure_font(font),
+      
+      (
+        Configuration._field_defaults['padding_width']
+        + Configuration.measure_padding(
+          lookup_style_widget(treeview,'padding', element='Heading'))
+      )
     )
-    
-    heading_configuration = Configuration(font_width, padding_width)
   
   # measure the widths
   def measure_width(width, font_width, space_width, minwidth=0.0):
