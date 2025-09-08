@@ -688,8 +688,7 @@ def _item_configurations_treeview(treeview, configuration,
   
   def items(item, indent_width=0.0):
     for child in treeview.get_children(item=item):
-      tag_configuration = tags(
-        treeview.item(child, 'tags'))
+      tag_configuration = tags(treeview.item(child, 'tags'))
       
       # images and indents occupy the same space
       image_width = indent_width
