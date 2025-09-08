@@ -85,8 +85,6 @@ MINSIZE_ROW_RADIOBUTTONS = MINSIZE_ROW_LABELS
 
 VALIDATIONOPTIONS = ('validatecommand', 'invalidcommand', 'validate', 'vcmd')
 
-DEFAULT_MINWIDTH = -1
-
 # these default numbers come from the Tk Treeview documentation
 DEFAULT_TREEVIEW_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
@@ -619,15 +617,15 @@ def make_text(frame, name='', width=10, height=10,
 
 
 def _minwidth_treeview():
-  default = DEFAULT_MINWIDTH
+  default = None
   
-  def get(minwidth=DEFAULT_MINWIDTH):
+  def get(minwidth=None):
     nonlocal default
     
-    if minwidth != DEFAULT_MINWIDTH:
+    if minwidth is not None:
       return minwidth
     
-    if default != DEFAULT_MINWIDTH:
+    if default is not None:
       return default
     
     return (default := ttk.Treeview().column('#0', 'minwidth'))
@@ -779,7 +777,7 @@ def measure_widths_treeview(treeview, widths):
   measured_widths = {}
   
   for cid, width in widths.items():
-    minwidth = DEFAULT_MINWIDTH
+    minwidth = None
     
     # the width can be a sequence like (width, minwidth) which we unpack here
     # if the sequence is too short, just get the width and use default minwidth
@@ -799,7 +797,7 @@ def measure_widths_treeview(treeview, widths):
     # then it would stack if this function were called multiple times
     # so here we get the real default
     # this is done after the try block above, because minwidth can be
-    # manually specified as DEFAULT_MINWIDTH, explicitly meaning
+    # manually specified as None, explicitly meaning
     # to use the default
     minwidth = get_minwidth_treeview(minwidth)
     
