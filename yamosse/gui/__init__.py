@@ -635,99 +635,91 @@ def _minwidth_treeview():
 get_minwidth_treeview = _minwidth_treeview()
 
 
-def _item_tags_configuration_treeview(treeview, configuration, tags, item=''):
-  item_tags = treeview.tk.splitlist(treeview.item(item, 'tags'))
-  
-  if not item_tags:
-    return configuration()
-  
-  font_width = padding_width = image_width = 0.0
-  
-  for item_tag in item_tags:
-    item_tag = str(item_tag)
-    
-    try:
-      tag_font_width, tag_padding_width, tag_image_width = tags[item_tag]
-    except KeyError:
-      tag_font_width, tag_padding_width, tag_image_width = configuration()
-      
-      # query the tag's configuration
-      # ideally, this would only get the "active" tag
-      # but there isn't any way to tell
-      # what is the top tag in the stacking order
-      # even in the worst case scenario of a conflict though
-      # the column will always be wide enough
-      try:
-        tag_font = str(treeview.tag_configure(item_tag, 'font'))
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        if tag_font:
-          tag_font_width = _width_font_widget(treeview, tag_font)
-      
-      try:
-        tag_padding = str(treeview.tag_configure(item_tag, 'padding'))
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        if tag_padding:
-          tag_padding_width = _width_padding_widget(treeview, tag_padding)
-      
-      try:
-        tag_image = str(treeview.tag_configure(item_tag, 'image'))
-      except tk.TclError:
-        pass # not supported in this version
-      else:
-        if tag_image:
-          tag_image_width = _width_image(tag_image)
-      
-      tags[item_tag] = configuration(
-        tag_font_width,
-        tag_padding_width,
-        tag_image_width
-      )
-    
-    font_width = max(font_width, tag_font_width)
-    padding_width = max(padding_width, tag_padding_width)
-    image_width = max(image_width, tag_image_width)
-  
-  return configuration(font_width, padding_width, image_width)
-
-
 def _item_configurations_treeview(treeview, configuration,
   indent=DEFAULT_TREEVIEW_ITEM_INDENT, item=''):
-  def children(item, tags, indent_width):
-    configurations = set()
+  tag_configurations = {}
+  
+  def tags(tags):
+    tags = treeview.tk.splitlist(tags)
     
+    if not tags:
+      return configuration()
+    
+    font_width = padding_width = image_width = 0.0
+    
+    for tag in tags:
+      tag = str(tag)
+      
+      try:
+        tag_font_width, tag_padding_width, tag_image_width = tag_configurations[tag]
+      except KeyError:
+        tag_font_width, tag_padding_width, tag_image_width = configuration()
+        
+        # query the tag's configuration
+        # ideally, this would only get the "active" tag
+        # but there isn't any way to tell
+        # what is the top tag in the stacking order
+        # even in the worst case scenario of a conflict though
+        # the column will always be wide enough
+        try:
+          tag_font = str(treeview.tag_configure(tag, 'font'))
+        except tk.TclError:
+          pass # not supported in this version
+        else:
+          if tag_font:
+            tag_font_width = _width_font_widget(treeview, tag_font)
+        
+        try:
+          tag_padding = str(treeview.tag_configure(tag, 'padding'))
+        except tk.TclError:
+          pass # not supported in this version
+        else:
+          if tag_padding:
+            tag_padding_width = _width_padding_widget(treeview, tag_padding)
+        
+        try:
+          tag_image = str(treeview.tag_configure(tag, 'image'))
+        except tk.TclError:
+          pass # not supported in this version
+        else:
+          if tag_image:
+            tag_image_width = _width_image(tag_image)
+        
+        tag_configurations[tag] = configuration(
+          tag_font_width,
+          tag_padding_width,
+          tag_image_width
+        )
+      
+      font_width = max(font_width, tag_font_width)
+      padding_width = max(padding_width, tag_padding_width)
+      image_width = max(image_width, tag_image_width)
+    
+    return configuration(font_width, padding_width, image_width)
+  
+  item_configurations = set()
+  
+  def items(item, indent_width=0.0):
     # get the per-child configuration
     for child in treeview.get_children(item=item):
-      font_width, padding_width, image_width = _item_tags_configuration_treeview(
-        treeview,
-        configuration,
-        tags,
-        child
-      )
+      font_width, padding_width, image_width = tags(
+        treeview.item(child, 'tags'))
       
-      child_image = treeview.item(child, 'image')
+      image = treeview.item(child, 'image')
       
-      if child_image:
-        image_width = _width_image(child_image)
+      if image:
+        image_width = _width_image(image)
       
-      configurations.add(configuration(
+      item_configurations.add(configuration(
         font_width,
         padding_width,
         image_width + indent_width
       ))
       
-      configurations.update(children(
-        child,
-        tags,
-        indent + indent_width
-      ))
-    
-    return configurations
+      items(child, indent + indent_width)
   
-  return children(item, {}, 0.0)
+  items(item)
+  return item_configurations
 
 
 def measure_widths_treeview(treeview, widths):
