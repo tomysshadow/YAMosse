@@ -711,10 +711,7 @@ def _item_configurations_treeview(treeview, configuration,
 def measure_widths_treeview(treeview, widths):
   # this class must be in here
   # so that the caches are cleared for each call
-  class Configuration(namedtuple(
-    'Configuration',
-    ['font_width', 'padding_width', 'image_width']
-  )):
+  class WidthMeasurer:
     @classmethod
     @staticmethod
     @lru_cache
@@ -743,11 +740,17 @@ def measure_widths_treeview(treeview, widths):
   font = str(lookup_style_widget(treeview,
     'font')) or 'TkDefaultFont'
   
-  Configuration.__new__.__defaults__ = (
-    Configuration.measure_font(font),
-    Configuration.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
-    0.0
-  )
+  class Configuration(WidthMeasurer, namedtuple(
+    'Configuration',
+    ['font_width', 'padding_width', 'image_width'],
+    
+    defaults=(
+      WidthMeasurer.measure_font(font),
+      WidthMeasurer.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+      0.0
+    )
+  )):
+    __slots__ = ()
   
   kwargs = {}
   
