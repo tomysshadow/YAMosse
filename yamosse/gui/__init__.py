@@ -5,9 +5,10 @@ from collections import namedtuple
 from enum import Enum
 from weakref import WeakKeyDictionary
 import traceback
-from contextlib import suppress
 import threading
 from threading import Lock, Event
+from contextlib import suppress
+from functools import lru_cache
 from math import ceil
 import shlex
 import os
@@ -150,21 +151,6 @@ def _init_report_callback_exception():
   return report_callback_exception
 
 tk.Tk.report_callback_exception = _init_report_callback_exception()
-
-
-def _width_font_widget(widget, font):
-  # cast font descriptors to font objects
-  if not isinstance(font, Font):
-    font = Font(font=font)
-  
-  # find average width using '0' character like Tk does
-  # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
-  return font.measure('0', displayof=widget)
-
-
-def _width_padding_widget(widget, padding):
-  left, top, right, bottom = padding4_widget(widget, padding)
-  return left + right
 
 
 def state_children_widget(widget, state):
@@ -667,7 +653,7 @@ def _item_configurations_treeview(treeview, configuration,
           pass # not supported in this version
         else:
           if tag_font:
-            tag_font_width = _width_font_widget(treeview, tag_font)
+            tag_font_width = configuration.width_font(tag_font)
         
         try:
           tag_padding = str(treeview.tag_configure(tag, 'padding'))
@@ -675,7 +661,7 @@ def _item_configurations_treeview(treeview, configuration,
           pass # not supported in this version
         else:
           if tag_padding:
-            tag_padding_width = _width_padding_widget(treeview, tag_padding)
+            tag_padding_width = configuration.width_padding(tag_padding)
         
         try:
           tag_image = str(treeview.tag_configure(tag, 'image'))
@@ -683,7 +669,7 @@ def _item_configurations_treeview(treeview, configuration,
           pass # not supported in this version
         else:
           if tag_image:
-            tag_image_width = _width_image(tag_image)
+            tag_image_width = configuration.width_image(tag_image)
         
         tag_configurations[tag] = configuration(
           tag_font_width,
@@ -700,20 +686,21 @@ def _item_configurations_treeview(treeview, configuration,
   item_configurations = set()
   
   def items(item, indent_width=0.0):
-    # get the per-child configuration
     for child in treeview.get_children(item=item):
-      font_width, padding_width, image_width = tags(
+      tag_configuration = tags(
         treeview.item(child, 'tags'))
       
+      # images and indents occupy the same space
       image = treeview.item(child, 'image')
+      image_width = indent_width
       
       if image:
-        image_width = _width_image(image)
+        image_width += configuration.width_image(image)
+      else:
+        image_width += tag_configuration.image_width
       
-      item_configurations.add(configuration(
-        font_width,
-        padding_width,
-        image_width + indent_width
+      item_configurations.add(tag_configuration._replace(
+        image_width=image_width
       ))
       
       items(child, indent + indent_width)
@@ -723,17 +710,43 @@ def _item_configurations_treeview(treeview, configuration,
 
 
 def measure_widths_treeview(treeview, widths):
-  # get the per-treeview configuration
+  # this class must be in here
+  # so that the caches are cleared for each call
+  class Configuration(namedtuple(
+    'Configuration',
+    ['font_width', 'padding_width', 'image_width']
+  )):
+    @classmethod
+    @staticmethod
+    @lru_cache
+    def width_font(font):
+      # cast font descriptors to font objects
+      if not isinstance(font, Font):
+        font = Font(font=font)
+      
+      # find average width using '0' character like Tk does
+      # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
+      return font.measure('0', displayof=treeview)
+    
+    @classmethod
+    @staticmethod
+    @lru_cache
+    def width_padding(padding):
+      left, top, right, bottom = padding4_widget(treeview, padding)
+      return left + right
+    
+    @classmethod
+    @staticmethod
+    @lru_cache
+    def width_image(image):
+      return int(treeview.tk.call('image', 'width', image))
+  
   font = str(lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
   
-  font_width = _width_font_widget(treeview, font)
-  padding_width = _width_padding_widget(treeview, DEFAULT_TREEVIEW_CELL_PADDING)
-  image_width = 0.0
-  
-  Configuration = namedtuple(
-    'Configuration',
-    ['font_width', 'padding_width', 'image_width'],
-    defaults=(font_width, padding_width, image_width)
+  Configuration.__new__.__defaults__ = (
+    Configuration.width_font(font),
+    Configuration.width_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+    0.0
   )
   
   kwargs = {}
@@ -749,10 +762,10 @@ def measure_widths_treeview(treeview, widths):
   item_configurations = _item_configurations_treeview(treeview,
     Configuration, **kwargs)
   
-  item_padding_width = _width_padding_widget(treeview,
+  item_padding_width = Configuration.width_padding(
     lookup_style_widget(treeview, 'padding', element='Item'))
   
-  cell_padding_width = _width_padding_widget(treeview,
+  cell_padding_width = Configuration.width_padding(
     lookup_style_widget(treeview, 'padding', element='Cell'))
   
   # get the per-heading configuration, but only if the heading is shown
@@ -763,8 +776,8 @@ def measure_widths_treeview(treeview, widths):
       'font', element='Heading')) or font
     
     # the heading padding is added to the treeview padding
-    font_width = _width_font_widget(treeview, font)
-    padding_width += _width_padding_widget(treeview,
+    font_width = Configuration.width_font(font)
+    padding_width = Configuration().padding_width + Configuration.width_padding(
       lookup_style_widget(treeview, 'padding', element='Heading'))
     
     heading_configuration = Configuration(font_width, padding_width)
@@ -849,8 +862,8 @@ def measure_widths_treeview(treeview, widths):
     if heading_configuration: # heading
       image_width = heading_configuration.image_width
       
-      if (heading_image := treeview.heading(cid, 'image')):
-        image_width = _width_image(heading_image)
+      if (heading_image := str(treeview.heading(cid, 'image'))):
+        image_width = Configuration.width_image(heading_image)
       
       measured_width = max(measured_width, measure_width(
         width,
@@ -1712,10 +1725,6 @@ def _root_images():
   return get
 
 get_root_images = _root_images()
-
-
-def _width_image(image):
-  return int(get_root_window().tk.call('image', 'width', image))
 
 
 def elements_layout(layout, name):
