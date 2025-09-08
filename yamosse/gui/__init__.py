@@ -693,7 +693,7 @@ def _item_configurations_treeview(treeview, configuration,
       # images and indents occupy the same space
       image_width = indent_width
       
-      if (image := treeview.item(child, 'image')):
+      if (image := str(treeview.item(child, 'image'))):
         image_width += configuration.measure_image(image)
       else:
         image_width += tag_configuration.image_width
@@ -763,16 +763,17 @@ def measure_widths_treeview(treeview, widths):
     Configuration, **kwargs)
   
   item_padding_width = Configuration.measure_padding(
-    lookup_style_widget(treeview, 'padding', element='Item'))
+    str(lookup_style_widget(treeview, 'padding', element='Item')))
   
   cell_padding_width = Configuration.measure_padding(
-    lookup_style_widget(treeview, 'padding', element='Cell'))
+    str(lookup_style_widget(treeview, 'padding', element='Cell')))
   
   # get the heading configuration, but only if the heading is shown
   heading_configuration = None
   
   if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
     font = str(lookup_style_widget(treeview,'font', element='Heading')) or font
+    padding = str(lookup_style_widget(treeview,'padding', element='Heading'))
     
     # the heading padding is added to the treeview padding
     heading_configuration = Configuration(
@@ -780,8 +781,7 @@ def measure_widths_treeview(treeview, widths):
       
       (
         Configuration._field_defaults['padding_width']
-        + Configuration.measure_padding(
-          lookup_style_widget(treeview,'padding', element='Heading'))
+        + Configuration.measure_padding(padding)
       )
     )
   
