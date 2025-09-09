@@ -207,5 +207,8 @@ class Options:
     self.confidence_score /= 100.0
     
     # identification options
+    identification = self.identification
+    assert identification is not None, 'identification must not be None'
+    
     self.identification = yamosse_identification.identification(
-      option=self.identification)(self, np)
+      option=identification)(self, np)

@@ -115,7 +115,7 @@ class ImageType(Enum):
     return self._EXTS[self]
 
 # defined out here so it is a nonmember
-# (workaround for Python 3.10)
+# (workaround for Python 3.10 not having @nonmember decorator)
 ImageType._EXTS = {
   ImageType.BITMAP: fsenc('.xbm'),
   ImageType.PHOTO: fsenc('.gif')
@@ -776,6 +776,8 @@ def measure_widths_treeview(treeview, widths):
     padding = str(lookup_style_widget(treeview,'padding', element='Heading'))
     
     # the heading padding is added to the treeview padding
+    # _field_defaults is not an internal member
+    # per docs, it is just called that to avoid naming conflicts
     heading_configuration = Configuration(
       Configuration.measure_font(font),
       
