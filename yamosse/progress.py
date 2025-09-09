@@ -34,31 +34,6 @@ class Mode(Enum):
   INDETERMINATE = 'indeterminate'
 
 
-def hwnd(window):
-  return int(window.wm_frame(), base=16)
-
-
-if PyTaskbar:
-  types = {
-    Function.DONE: 'flash_done',
-    Function.RESET: 'reset',
-    
-    State.NORMAL: PyTaskbar.NORMAL,
-    State.ERROR: PyTaskbar.ERROR,
-    State.PAUSED: PyTaskbar.WARNING,
-    State.PARTIAL: None,
-    
-    Mode.DETERMINATE: None,
-    Mode.INDETERMINATE: PyTaskbar.LOADING
-  }
-else:
-  types = dict.fromkeys((
-    *Function,
-    *State,
-    *Mode
-  ))
-
-
 class Progress:
   __slots__ = ('_step', '_steps', '_sender', '_current_step')
   
@@ -112,3 +87,28 @@ class Progress:
         
         'log': '%d%% complete' % current_progress
       })
+
+
+def hwnd(window):
+  return int(window.wm_frame(), base=16)
+
+
+if PyTaskbar:
+  types = {
+    Function.DONE: 'flash_done',
+    Function.RESET: 'reset',
+    
+    State.NORMAL: PyTaskbar.NORMAL,
+    State.ERROR: PyTaskbar.ERROR,
+    State.PAUSED: PyTaskbar.WARNING,
+    State.PARTIAL: None,
+    
+    Mode.DETERMINATE: None,
+    Mode.INDETERMINATE: PyTaskbar.LOADING
+  }
+else:
+  types = dict.fromkeys((
+    *Function,
+    *State,
+    *Mode
+  ))
