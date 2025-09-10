@@ -748,7 +748,7 @@ def measure_widths_treeview(treeview, widths):
       return treeview.tk.getint(treeview.tk.call('image', 'width', image[0]))
   
   font = splitstrt_widget(treeview,
-    lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
+    lookup_style_widget(treeview, 'font')) or ('TkDefaultFont',)
   
   class Configuration(WidthMeasurer, namedtuple(
     'Configuration',
@@ -784,7 +784,7 @@ def measure_widths_treeview(treeview, widths):
   
   if 'headings' in splitstrl_widget(treeview, treeview['show']):
     font = splitstrt_widget(treeview,
-      lookup_style_widget(treeview, 'font', element='Heading')) or 'TkHeadingFont'
+      lookup_style_widget(treeview, 'font', element='Heading')) or ('TkHeadingFont',)
     
     padding = splitstrt_widget(treeview,
       lookup_style_widget(treeview, 'padding', element='Heading'))
