@@ -739,6 +739,8 @@ def measure_widths_treeview(treeview, widths):
     @staticmethod
     @lru_cache
     def measure_image(image):
+      # the first image determines the width
+      # other image states are padded to fit the width of the first image
       return treeview.tk.getint(treeview.tk.call('image', 'width', image[0]))
   
   font = splitstrs_widget(treeview,
