@@ -153,6 +153,10 @@ def _init_report_callback_exception():
 tk.Tk.report_callback_exception = _init_report_callback_exception()
 
 
+def splitstrs_widget(widget, l):
+  return (*(str(s) for s in widget.tk.splitlist(l)),)
+
+
 def state_children_widget(widget, state):
   with suppress(tk.TclError):
     widget['state'] = state
@@ -626,7 +630,7 @@ def _item_configurations_treeview(treeview, configuration,
   tag_configurations = {}
   
   def tags(tags):
-    tags = treeview.tk.splitlist(tags)
+    tags = splitstrs_widget(treeview, tags)
     
     if not tags:
       return configuration()
@@ -634,9 +638,6 @@ def _item_configurations_treeview(treeview, configuration,
     font_width = padding_width = image_width = 0.0
     
     for tag in tags:
-      # ensure is hashable to be used as dict key
-      tag = str(tag)
-      
       try:
         tag_font_width, tag_padding_width, tag_image_width = tag_configurations[tag]
       except KeyError:
@@ -649,7 +650,8 @@ def _item_configurations_treeview(treeview, configuration,
         # even in the worst case scenario of a conflict though
         # the column will always be wide enough
         try:
-          tag_font = str(treeview.tag_configure(tag, 'font'))
+          tag_font = splitstrs_widget(treeview,
+            treeview.tag_configure(tag, 'font'))
         except tk.TclError:
           pass # not supported in this version
         else:
@@ -657,7 +659,8 @@ def _item_configurations_treeview(treeview, configuration,
             tag_font_width = configuration.measure_font(tag_font)
         
         try:
-          tag_padding = str(treeview.tag_configure(tag, 'padding'))
+          tag_padding = splitstrs_widget(treeview,
+            treeview.tag_configure(tag, 'padding'))
         except tk.TclError:
           pass # not supported in this version
         else:
@@ -665,7 +668,8 @@ def _item_configurations_treeview(treeview, configuration,
             tag_padding_width = configuration.measure_padding(tag_padding)
         
         try:
-          tag_image = str(treeview.tag_configure(tag, 'image'))
+          tag_image = splitstrs_widget(treeview,
+            treeview.tag_configure(tag, 'image'))
         except tk.TclError:
           pass # not supported in this version
         else:
@@ -693,7 +697,7 @@ def _item_configurations_treeview(treeview, configuration,
       # images and indents occupy the same space
       image_width = indent_width
       
-      if (image := str(treeview.item(child, 'image'))):
+      if (image := splitstrs_widget(treeview, treeview.item(child, 'image'))):
         image_width += configuration.measure_image(image)
       else:
         image_width += tag_configuration.image_width
@@ -735,9 +739,10 @@ def measure_widths_treeview(treeview, widths):
     @staticmethod
     @lru_cache
     def measure_image(image):
-      return treeview.tk.getint(treeview.tk.call('image', 'width', image))
+      return treeview.tk.getint(treeview.tk.call('image', 'width', image[0]))
   
-  font = str(lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
+  font = splitstrs_widget(treeview,
+    lookup_style_widget(treeview, 'font')) or 'TkDefaultFont'
   
   class Configuration(WidthMeasurer, namedtuple(
     'Configuration',
@@ -762,18 +767,21 @@ def measure_widths_treeview(treeview, widths):
   item_configurations = _item_configurations_treeview(treeview,
     Configuration, **kwargs)
   
-  item_padding_width = Configuration.measure_padding(
-    str(lookup_style_widget(treeview, 'padding', element='Item')))
+  item_padding_width = Configuration.measure_padding(splitstrs_widget(treeview,
+    lookup_style_widget(treeview, 'padding', element='Item')))
   
-  cell_padding_width = Configuration.measure_padding(
-    str(lookup_style_widget(treeview, 'padding', element='Cell')))
+  cell_padding_width = Configuration.measure_padding(splitstrs_widget(treeview,
+    lookup_style_widget(treeview, 'padding', element='Cell')))
   
   # get the heading configuration, but only if the heading is shown
   heading_configuration = None
   
-  if 'headings' in [str(s) for s in treeview.tk.splitlist(treeview['show'])]:
-    font = str(lookup_style_widget(treeview,'font', element='Heading')) or font
-    padding = str(lookup_style_widget(treeview,'padding', element='Heading'))
+  if 'headings' in splitstrs_widget(treeview, treeview['show']):
+    font = splitstrs_widget(treeview,
+      lookup_style_widget(treeview,'font', element='Heading')) or font
+    
+    padding = splitstrs_widget(treeview,
+      lookup_style_widget(treeview,'padding', element='Heading'))
     
     # the heading padding is added to the treeview padding
     # _field_defaults is not an internal member
@@ -867,7 +875,7 @@ def measure_widths_treeview(treeview, widths):
     if heading_configuration: # heading
       space_width = heading_configuration.padding_width
       
-      if (heading_image := str(treeview.heading(cid, 'image'))):
+      if (heading_image := splitstrs_widget(treeview, treeview.heading(cid, 'image'))):
         space_width += Configuration.measure_image(heading_image)
       else:
         space_width += heading_configuration.image_width
@@ -908,9 +916,9 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   columns = yamosse_utils.dict_enumerate(columns) if columns else {}
   
   if show is None:
-    show = ['tree', 'headings']
+    show = ('tree', 'headings')
   else:
-    show = [str(s) for s in frame.tk.splitlist(show)]
+    show = splitstrs_widget(frame, show)
   
   frame.rowconfigure(0, weight=1) # make scrollbar frame vertically resizable
   frame.columnconfigure(0, weight=1) # make scrollbar frame horizontally resizable
@@ -1152,7 +1160,7 @@ def make_filedialog(frame, name='',
     frame.drop_target_register(tkinterdnd2.DND_FILES)
     
     def drop_enter(e):
-      data = [str(d) for d in e.widget.tk.splitlist(e.data)]
+      data = splitstrs_widget(e.widget, e.data)
       
       # on some platforms we only get data on drop
       # but if we do have data, refuse it now
@@ -1173,7 +1181,7 @@ def make_filedialog(frame, name='',
     frame.dnd_bind('<<DropLeave>>', drop_leave)
     
     def drop(e):
-      data = [str(d) for d in e.widget.tk.splitlist(e.data)]
+      data = splitstrs_widget(e.widget, e.data)
       
       entry.selection_clear()
       
