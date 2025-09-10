@@ -724,7 +724,7 @@ def measure_widths_treeview(treeview, widths):
     @staticmethod
     @lru_cache
     def measure_font(font):
-      # cast font descriptors to font objects
+      # cast font descriptions to font objects
       if not isinstance(font, Font):
         font = Font(font=font)
       
