@@ -743,6 +743,7 @@ def measure_widths_treeview(treeview, widths):
     @staticmethod
     @lru_cache
     def measure_image(image):
+      # it's possible to specify multiple images for different states
       # the first image determines the width
       # other image states are padded to fit the width of the first image
       return treeview.tk.getint(treeview.tk.call('image', 'width', image[0]))
@@ -1665,8 +1666,7 @@ def make_window(window, make_frame, args=None, kwargs=None):
   
   assert window.children, 'window must have children'
   
-  args, kwargs = yamosse_utils.arguments(args, kwargs)
-  return window, make_frame(frame, *args, **kwargs)
+  return window, make_frame(frame, *(args or ()), **(kwargs or {}))
 
 
 def _root_images():

@@ -61,8 +61,7 @@ class _WindowSubsystem(_Subsystem):
     gui.threaded()
     
     # start a thread so the GUI isn't blocked
-    args, kwargs = yamosse_utils.arguments(args, kwargs)
-    Thread(target=target, args=args, kwargs=kwargs).start()
+    Thread(target=target, args=args or (), kwargs=kwargs or {}).start()
   
   def show(self, exit_, values=None):
     super().show(exit_, values=values)
@@ -125,8 +124,7 @@ class _WindowSubsystem(_Subsystem):
 class _ConsoleSubsystem(_Subsystem):
   @staticmethod
   def start(target, args=None, kwargs=None):
-    args, kwargs = yamosse_utils.arguments(args, kwargs)
-    target(*args, **kwargs)
+    target(*(args or ()), **(kwargs or {}))
   
   def show(self, exit_, values=None):
     super().show(exit_, values=values)

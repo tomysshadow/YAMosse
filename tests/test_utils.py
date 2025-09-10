@@ -152,24 +152,6 @@ class TestUtils(unittest.TestCase):
   def test_batched(self):
     b = utils.batched(list(range(200)), 10)
     self.assertEqual(len(list(b)), 20)
-  
-  def test_arguments(self):
-    ARGS = ('a', 'b', 'c')
-    KWARGS = {'d': 0, 'e': 1, 'f': 2}
-    
-    args, kwargs = utils.arguments(ARGS, KWARGS)
-    
-    self.assertIs(args, ARGS)
-    self.assertIs(kwargs, KWARGS)
-  
-  def test_arguments_none(self):
-    ARGS = None
-    KWARGS = None
-    
-    args, kwargs = utils.arguments(ARGS, KWARGS)
-    
-    self.assertEqual(args, ())
-    self.assertEqual(kwargs, {})
 
 
 if __name__ == '__main__': unittest.main()

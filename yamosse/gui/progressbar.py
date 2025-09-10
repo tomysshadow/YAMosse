@@ -249,8 +249,7 @@ class Progressbar(ttk.Progressbar):
     if type_ is None:
       return
     
-    args, kwargs = yamosse_utils.arguments(args, kwargs)
-    getattr(taskbar, type_)(*args, **kwargs)
+    getattr(taskbar, type_)(*(args or ()), **(kwargs or {}))
   
   def _state_mode_task(self):
     taskbar = self.taskbar
