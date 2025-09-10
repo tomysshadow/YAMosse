@@ -784,10 +784,10 @@ def measure_widths_treeview(treeview, widths):
   
   if 'headings' in splitstrl_widget(treeview, treeview['show']):
     font = splitstrt_widget(treeview,
-      lookup_style_widget(treeview,'font', element='Heading')) or font
+      lookup_style_widget(treeview, 'font', element='Heading')) or 'TkHeadingFont'
     
     padding = splitstrt_widget(treeview,
-      lookup_style_widget(treeview,'padding', element='Heading'))
+      lookup_style_widget(treeview, 'padding', element='Heading'))
     
     # the heading padding is added to the treeview padding
     # _field_defaults is not an internal member
