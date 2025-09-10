@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from contextlib import suppress
+from weakref import WeakValueDictionary
 
 import yamosse.progress as yamosse_progress
 import yamosse.utils as yamosse_utils
@@ -12,6 +13,8 @@ STATES_OFF = [s.off() for s in yamosse_progress.State]
 
 
 class Progressbar(ttk.Progressbar):
+  _hwnds = WeakValueDictionary()
+  
   def __init__(self, frame, name='', variable=None,
   mode=yamosse_progress.Mode.DETERMINATE,
   parent=None, task=False, percent=True, **kwargs):
@@ -30,9 +33,15 @@ class Progressbar(ttk.Progressbar):
       if not parent:
         parent = frame.winfo_toplevel()
       
-      taskbar = yamosse_progress.PyTaskbar.Progress(
-        hwnd=yamosse_progress.hwnd(parent)
-      )
+      hwnd = yamosse_progress.hwnd(parent)
+      hwnds = self._hwnds
+      
+      if hwnds.setdefault(hwnd, self) is not self:
+        raise RuntimeError('hwnd must not have multiple Progressbar tasks')
+      
+      self.bind('<Destroy>', lambda e: hwnds.pop(hwnd, None), add=True)
+      
+      taskbar = yamosse_progress.PyTaskbar.Progress(hwnd=hwnd)
     
     self._taskbar = taskbar
     
