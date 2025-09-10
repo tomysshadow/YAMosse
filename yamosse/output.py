@@ -79,7 +79,7 @@ class _Output(ABC):
     item_delimiter = yamosse_utils.latin1_unescape(options.item_delimiter).encode(
       self._file.encoding, 'backslashreplace').decode()
     
-    self.item_delimiter = item_delimiter if item_delimiter else DEFAULT_ITEM_DELIMITER
+    self.item_delimiter = item_delimiter or DEFAULT_ITEM_DELIMITER
     self.indent = DEFAULT_INDENT * options.indent
     self.output_scores = options.output_scores
     
@@ -216,7 +216,7 @@ class _JSONOutput(_Output):
     
     # dump anything that is non-empty
     json.dump({key: value for key, value in self._d.items() if value},
-      file, indent=indent if indent else None)
+      file, indent=indent or None)
     
     super().close()
   

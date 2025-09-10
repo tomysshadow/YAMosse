@@ -599,7 +599,7 @@ def make_text(frame, name='', width=10, height=10,
   scrollbar_frame.columnconfigure(0, weight=1) # make text horizontally resizable
   
   text = tk.Text(scrollbar_frame, width=width, height=height,
-    wrap=wrap, font=font if font else FONT, **kwargs)
+    wrap=wrap, font=font or FONT, **kwargs)
   
   text.grid(row=0, column=0, sticky=tk.NSEW)
   
@@ -645,14 +645,14 @@ def _item_configurations_treeview(treeview, configuration,
       try:
         tag_font_width, tag_padding_width, tag_image_width = tag_configurations[tag]
       except KeyError:
-        tag_font_width, tag_padding_width, tag_image_width = configuration()
-        
         # query the tag's configuration
         # ideally, this would only get the "active" tag
         # but there isn't any way to tell
         # what is the top tag in the stacking order
         # even in the worst case scenario of a conflict though
         # the column will always be wide enough
+        tag_font_width, tag_padding_width, tag_image_width = configuration()
+        
         try:
           tag_font = splitstrt_widget(treeview,
             treeview.tag_configure(tag, 'font'))
@@ -949,14 +949,9 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
     if column:
       treeview.column(cid, **column)
     
-    heading = options.get('heading')
-    
     # left align the heading by default
-    if not heading:
-      heading = {}
-    
+    heading = options.get('heading') or {}
     heading.setdefault(tk.ANCHOR, tk.W)
-    
     treeview.heading(cid, **heading)
   
   def insert(items, parent=''):
