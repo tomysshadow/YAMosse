@@ -562,7 +562,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
     showing = True
     
     try:
-      value = int(value)
+      value = int(float(value))
       scale.set(value) # this is so we increment in steps instead of a smooth scroll
       percent_label['text'] = '%d%%' % value
     finally:
@@ -572,7 +572,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
   # but I prefer my implementation anyway, so I just kept it
   scale = ttk.Scale(frame,
     from_=from_, to=to, orient=tk.HORIZONTAL,
-    command=lambda text: show(float(text)), **kwargs)
+    command=lambda text: show(text), **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
   #scale.bind('<<RangeChanged>>', show)

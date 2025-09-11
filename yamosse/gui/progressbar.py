@@ -96,10 +96,10 @@ class Progressbar(ttk.Progressbar):
     return super().configure(**kw)
   
   def get(self):
-    return int(self.getvar(str(self.variable)))
+    return int(float(self.getvar(str(self.variable))))
   
   def set(self, value):
-    self.setvar(str(self.variable), int(value))
+    self.setvar(str(self.variable), int(float(value)))
   
   def function(self, function, args=None, kwargs=None):
     # these functions return True if the associated taskbar
