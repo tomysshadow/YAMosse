@@ -718,8 +718,8 @@ def measure_widths_treeview(treeview, widths):
   class WidthMeasurer:
     @classmethod
     @staticmethod
-    def splittuple_str(l):
-      return tuple(splitlist_str_widget(treeview, l))
+    def splittuple_str(t):
+      return tuple(splitlist_str_widget(treeview, t))
     
     @classmethod
     def lookup(cls, style, element=None):
