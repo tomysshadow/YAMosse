@@ -716,10 +716,7 @@ def measure_widths_treeview(treeview, widths):
   # this class must be in here
   # so that the caches are cleared for each call
   class WidthMeasurer:
-    @classmethod
-    def lookup(cls, style, element=None):
-      return lookup_style_widget(treeview, style, element=element)
-    
+    @staticmethod
     @strsplittuple
     @lru_cache
     def measure_font(font):
@@ -731,12 +728,14 @@ def measure_widths_treeview(treeview, widths):
       # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
       return font.measure('0', displayof=treeview)
     
+    @staticmethod
     @strsplittuple
     @lru_cache
     def measure_padding(padding):
       left, top, right, bottom = padding4_widget(treeview, padding)
       return left + right
     
+    @staticmethod
     @strsplittuple
     @lru_cache
     def measure_image(image):
@@ -745,7 +744,10 @@ def measure_widths_treeview(treeview, widths):
       # other image states are padded to fit the width of the first image
       return treeview.tk.getint(treeview.tk.call('image', 'width', image[0]))
   
-  font = WidthMeasurer.lookup('font') or ('TkDefaultFont',)
+  def lookup_style(style, element=None):
+    return lookup_style_widget(treeview, style, element=element)
+  
+  font = lookup_style('font') or ('TkDefaultFont',)
   
   class Configuration(WidthMeasurer, namedtuple(
     'Configuration',
@@ -762,26 +764,25 @@ def measure_widths_treeview(treeview, widths):
   kwargs = {}
   
   with suppress(tk.TclError):
-    kwargs['indent'] = treeview.winfo_fpixels(
-      Configuration.lookup('indent'))
+    kwargs['indent'] = treeview.winfo_fpixels(lookup_style('indent'))
   
   # this is the set of item configurations
   # will be empty if there are no items
   item_configurations = _item_configurations_treeview(treeview,
     Configuration, **kwargs)
   
-  item_padding_width = Configuration.measure_padding(
-    Configuration.lookup('padding', element='Item'))
+  padding = lookup_style('padding', element='Item')
+  item_padding_width = Configuration.measure_padding(padding)
   
-  cell_padding_width = Configuration.measure_padding(
-    Configuration.lookup('padding', element='Cell'))
+  padding = lookup_style('padding', element='Cell')
+  cell_padding_width = Configuration.measure_padding(padding)
   
   # get the heading configuration, but only if the heading is shown
   heading_configuration = None
   
   if 'headings' in strsplitlist_widget(treeview, treeview['show']):
-    font = Configuration.lookup('font', element='Heading') or ('TkHeadingFont',)
-    padding = Configuration.lookup('padding', element='Heading')
+    font = lookup_style('font', element='Heading') or ('TkHeadingFont',)
+    padding = lookup_style('padding', element='Heading')
     
     # the heading padding is added to the treeview padding
     # _field_defaults is not an internal member
