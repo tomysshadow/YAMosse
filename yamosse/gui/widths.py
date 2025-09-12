@@ -165,6 +165,12 @@ def measure_treeview_widths(widths, treeview):
   def lookup_style(style, element=None):
     return gui.lookup_style_widget(treeview, style, element=element)
   
+  item_padding_width = Configuration.measure_padding(
+    lookup_style('padding', element='Item'))
+  
+  cell_padding_width = Configuration.measure_padding(
+    lookup_style('padding', element='Cell'))
+  
   default_cell_padding_width = Configuration.measure_padding(
     DEFAULT_TREEVIEW_CELL_PADDING)
   
@@ -262,12 +268,6 @@ def measure_treeview_widths(widths, treeview):
   # will be empty here if there are no items
   configurations = _treeview_item_configurations(ItemConfiguration,
     treeview, **kwargs)
-  
-  item_padding_width = ItemConfiguration.measure_padding(
-    lookup_style('padding', element='Item'))
-  
-  cell_padding_width = ItemConfiguration.measure_padding(
-    lookup_style('padding', element='Cell'))
   
   # add the heading configuration, but only if the heading is shown
   if 'headings' in gui.strsplitlist_widget(treeview, treeview['show']):
