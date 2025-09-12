@@ -296,11 +296,11 @@ def measure_treeview_widths(widths, treeview):
     # otherwise, if the minwidth was set to the result of this function
     # then it would stack if this function were called multiple times
     # so we use get_treeview_minwidth to get the real default
-    minwidth = get_treeview_minwidth(minwidth)
-    
     # this is done after the try block above, because minwidth can be
     # manually specified as None, explicitly meaning
     # to use the default
+    minwidth = get_treeview_minwidth(minwidth)
+    
     # must use ceil here because these widths may be floats
     # and Tk doesn't want a float for the width
     measured_widths[cid] = ceil(max(
