@@ -129,7 +129,7 @@ def measure_treeview_widths(widths, treeview):
       return hash((type(self).__name__, tuple(self)))
     
     @abstractmethod
-    def measure_cid(self, cid, width, minwidth=0.0):
+    def measure_cid(self, cid, width, minwidth):
       pass
     
     @staticmethod
@@ -182,7 +182,7 @@ def measure_treeview_widths(widths, treeview):
   )):
     __slots__ = () # prevents mutation on object (namedtuple meant to be immutable)
     
-    def measure_cid(self, cid, width, minwidth=0.0):
+    def measure_cid(self, cid, width, minwidth):
       # the element (item/cell) padding is
       # added on top of the treeview/tag (item configuration) padding by Tk
       # so here we do the same
@@ -242,7 +242,7 @@ def measure_treeview_widths(widths, treeview):
   )):
     __slots__ = () # prevents mutation on object (namedtuple meant to be immutable)
     
-    def measure_cid(self, cid, width, minwidth=0.0):
+    def measure_cid(self, cid, width, minwidth):
       space_width = self.padding_width
       
       if (image := treeview.heading(cid, 'image')):
