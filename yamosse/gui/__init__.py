@@ -1706,7 +1706,7 @@ def _root_images():
       if not entry.is_dir():
         return None
       
-      image = entry.name.title()
+      image = entry.name.capitalize()
       
       try:
         type_ = ImageType(image)
