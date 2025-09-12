@@ -119,6 +119,7 @@ def _treeview_item_configurations(configuration, treeview,
 
 def measure_treeview_widths(widths, treeview):
   def strsplittuple(func):
+    # this decorator ensures hashability, for use by lru_cache
     return lambda t: func(tuple(gui.strsplitlist_widget(treeview, t)))
   
   # this class must be in here
