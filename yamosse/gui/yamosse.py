@@ -9,6 +9,7 @@ import yamosse.output as yamosse_output
 from .. import gui
 from . import recorder as gui_recorder
 from . import sorted as gui_sorted
+from . import widths as gui_widths
 from . import calibrate as gui_calibrate
 
 RESIZABLE = True
@@ -216,7 +217,7 @@ def make_classes(frame, variables, class_names):
   treeview.bind('<<TreeviewSelect>>', select_treeview)
   treeview.bind('<Control-f>', lambda e: find_entry.focus_set())
   gui_sorted.treeview_sorted(treeview)
-  gui.configure_widths_treeview(treeview, {0: 3})
+  gui_widths.widths_treeview(treeview, {0: 3})
   
   # fix tab order
   for widget in (find_frame, calibrate_button):
