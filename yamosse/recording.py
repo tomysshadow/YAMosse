@@ -156,7 +156,6 @@ class Recording:
   def volume(self):
     return self._volume
   
-  @classmethod
   @staticmethod
   def input_devices():
     input_default = sd.default.device[0]

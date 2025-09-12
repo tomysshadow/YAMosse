@@ -46,7 +46,6 @@ class Trace:
     tk.call('trace', 'add', 'variable',
       variable, operation, cbname)
   
-  @classmethod
   @staticmethod
   def __finalize(tk, variable, operation, cbname):
     # this must be a classmethod so that we

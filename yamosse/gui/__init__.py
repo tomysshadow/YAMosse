@@ -716,7 +716,6 @@ def measure_widths_treeview(treeview, widths):
   # this class must be in here
   # so that the caches are cleared for each call
   class WidthMeasurer:
-    @classmethod
     @staticmethod
     def splittuple_str(t):
       return tuple(splitlist_str_widget(treeview, t))
@@ -726,7 +725,6 @@ def measure_widths_treeview(treeview, widths):
       return tuple(cls.splittuple_str(lookup_style_widget(
         treeview, style, element=element)))
     
-    @classmethod
     @staticmethod
     @lru_cache
     def measure_font(font):
@@ -738,14 +736,12 @@ def measure_widths_treeview(treeview, widths):
       # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
       return font.measure('0', displayof=treeview)
     
-    @classmethod
     @staticmethod
     @lru_cache
     def measure_padding(padding):
       left, top, right, bottom = padding4_widget(treeview, padding)
       return left + right
     
-    @classmethod
     @staticmethod
     @lru_cache
     def measure_image(image):
