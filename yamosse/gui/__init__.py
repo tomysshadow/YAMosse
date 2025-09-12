@@ -630,7 +630,7 @@ def _item_configurations_treeview(treeview, configuration,
   tag_configurations = {}
   
   def tags(tags):
-    tags = configuration.strsplittuple(tags)
+    tags = strsplitlist_widget(treeview, tags)
     
     if not tags:
       return configuration()
@@ -650,8 +650,7 @@ def _item_configurations_treeview(treeview, configuration,
         tag_font_width, tag_padding_width, tag_image_width = configuration()
         
         try:
-          tag_font = configuration.strsplittuple(
-            treeview.tag_configure(tag, 'font'))
+          tag_font = treeview.tag_configure(tag, 'font')
         except tk.TclError:
           pass # not supported in this version
         else:
@@ -659,8 +658,7 @@ def _item_configurations_treeview(treeview, configuration,
             tag_font_width = configuration.measure_font(tag_font)
         
         try:
-          tag_padding = configuration.strsplittuple(
-            treeview.tag_configure(tag, 'padding'))
+          tag_padding = treeview.tag_configure(tag, 'padding')
         except tk.TclError:
           pass # not supported in this version
         else:
@@ -668,8 +666,7 @@ def _item_configurations_treeview(treeview, configuration,
             tag_padding_width = configuration.measure_padding(tag_padding)
         
         try:
-          tag_image = configuration.strsplittuple(
-            treeview.tag_configure(tag, 'image'))
+          tag_image = treeview.tag_configure(tag, 'image')
         except tk.TclError:
           pass # not supported in this version
         else:
@@ -697,7 +694,7 @@ def _item_configurations_treeview(treeview, configuration,
       # images and indents occupy the same space
       image_width = indent_width
       
-      if (image := configuration.strsplittuple(treeview.item(child, 'image'))):
+      if (image := treeview.item(child, 'image')):
         image_width += configuration.measure_image(image)
       else:
         image_width += tag_configuration.image_width
@@ -713,22 +710,17 @@ def _item_configurations_treeview(treeview, configuration,
 
 
 def measure_widths_treeview(treeview, widths):
-  def strsplittedtuple(func):
-    return lambda t: func(WidthMeasurer.strsplittuple(t))
+  def strsplittuple(func):
+    return lambda t: func(tuple(strsplitlist_widget(treeview, t)))
   
   # this class must be in here
   # so that the caches are cleared for each call
   class WidthMeasurer:
-    @staticmethod
-    def strsplittuple(t):
-      return tuple(strsplitlist_widget(treeview, t))
-    
     @classmethod
     def lookup(cls, style, element=None):
-      return tuple(cls.strsplittuple(lookup_style_widget(
-        treeview, style, element=element)))
+      return lookup_style_widget(treeview, style, element=element)
     
-    @strsplittedtuple
+    @strsplittuple
     @lru_cache
     def measure_font(font):
       # cast font descriptions to font objects
@@ -739,13 +731,13 @@ def measure_widths_treeview(treeview, widths):
       # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
       return font.measure('0', displayof=treeview)
     
-    @strsplittedtuple
+    @strsplittuple
     @lru_cache
     def measure_padding(padding):
       left, top, right, bottom = padding4_widget(treeview, padding)
       return left + right
     
-    @strsplittedtuple
+    @strsplittuple
     @lru_cache
     def measure_image(image):
       # it's possible to specify multiple images for different states
@@ -883,7 +875,7 @@ def measure_widths_treeview(treeview, widths):
     if heading_configuration: # heading
       space_width = heading_configuration.padding_width
       
-      if (image := Configuration.strsplittuple(treeview.heading(cid, 'image'))):
+      if (image := treeview.heading(cid, 'image')):
         space_width += Configuration.measure_image(image)
       else:
         space_width += heading_configuration.image_width
