@@ -90,7 +90,7 @@ class Progress:
 
 
 def hwnd(window):
-  return int(window.wm_frame(), base=16)
+  return int(window.frame(), base=16)
 
 
 if PyTaskbar:
