@@ -125,8 +125,8 @@ def measure_treeview_widths(widths, treeview):
   # so that the caches are cleared for each call
   class Configuration(ABC):
     def __hash__(self):
-      # hash differently based on what class we are
-      return hash((tuple(self), type(self).__name__))
+      # hash differently depending on what class we are
+      return hash((type(self).__name__, tuple(self)))
     
     @abstractmethod
     def measure_cid(self, cid, width, minwidth=0.0):
@@ -141,13 +141,10 @@ def measure_treeview_widths(widths, treeview):
     @strsplittuple
     @lru_cache
     def measure_font(font):
-      # cast font descriptions to font objects
-      if not isinstance(font, Font):
-        font = Font(font=font)
-      
-      # find average width using '0' character like Tk does
+      # cast font description to font object
+      # then find average width using '0' character like Tk does
       # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
-      return font.measure('0', displayof=treeview)
+      return Font(font=font).measure('0', displayof=treeview)
     
     @staticmethod
     @strsplittuple
@@ -168,13 +165,18 @@ def measure_treeview_widths(widths, treeview):
   def lookup_style(style, element=None):
     return gui.lookup_style_widget(treeview, style, element=element)
   
+  default_cell_padding_width = Configuration.measure_padding(
+    DEFAULT_TREEVIEW_CELL_PADDING)
+  
   class ItemConfiguration(Configuration, namedtuple(
     'ItemConfiguration',
     ['font_width', 'padding_width', 'image_width'],
     
     defaults=(
-      Configuration.measure_font(lookup_style('font') or ('TkDefaultFont',)),
-      Configuration.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+      Configuration.measure_font(
+        lookup_style('font') or ('TkDefaultFont',)),
+      
+      default_cell_padding_width,
       0.0
     )
   )):
@@ -184,7 +186,7 @@ def measure_treeview_widths(widths, treeview):
       # the element (item/cell) padding is
       # added on top of the treeview/tag (item configuration) padding by Tk
       # so here we do the same
-      if cid == '#0': # item
+      if cid == '#0':
         # for column #0, we need to worry about indents
         # on top of that, we include the minwidth in the space
         # this is because the indicator has
@@ -206,30 +208,35 @@ def measure_treeview_widths(widths, treeview):
           
           minwidth
         )
-      else: # cell
-        # for all other columns (not #0,) the minimum measured width
-        # is the minwidth, but excluding the part of it filled by space
-        # this ensures the column won't be smaller
-        # than the minwidth (but may be equal to it)
-        return self.measure_width(
-          width,
-          self.font_width,
-          
-          (
-            self.padding_width
-            + cell_padding_width
-          ),
-          
-          minwidth
-        )
+      
+      # for all other columns (not #0,) the minimum measured width
+      # is the minwidth, but excluding the part of it filled by space
+      # this ensures the column won't be smaller
+      # than the minwidth (but may be equal to it)
+      return self.measure_width(
+        width,
+        self.font_width,
+        
+        (
+          self.padding_width
+          + cell_padding_width
+        ),
+        
+        minwidth
+      )
   
+  # the heading padding is added to the default cell padding
   class HeadingConfiguration(Configuration, namedtuple(
     'HeadingConfiguration',
     ['font_width', 'padding_width', 'image_width'],
     
     defaults=(
-      Configuration.measure_font(('TkHeadingFont',)),
-      Configuration.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+      Configuration.measure_font(
+        lookup_style('font', element='Heading') or ('TkHeadingFont',)),
+      
+      default_cell_padding_width + Configuration.measure_padding(
+        lookup_style('padding', element='Heading')),
+      
       0.0
     )
   )):
@@ -248,38 +255,23 @@ def measure_treeview_widths(widths, treeview):
   kwargs = {}
   
   with suppress(tk.TclError):
-    kwargs['indent'] = treeview.winfo_fpixels(lookup_style('indent'))
+    kwargs['indent'] = treeview.winfo_fpixels(
+      lookup_style('indent'))
   
   # this is the set of configurations
   # will be empty here if there are no items
   configurations = _treeview_item_configurations(ItemConfiguration,
     treeview, **kwargs)
   
-  padding = lookup_style('padding', element='Item')
-  item_padding_width = ItemConfiguration.measure_padding(padding)
+  item_padding_width = ItemConfiguration.measure_padding(
+    lookup_style('padding', element='Item'))
   
-  padding = lookup_style('padding', element='Cell')
-  cell_padding_width = ItemConfiguration.measure_padding(padding)
+  cell_padding_width = ItemConfiguration.measure_padding(
+    lookup_style('padding', element='Cell'))
   
-  # get the heading configuration, but only if the heading is shown
+  # add the heading configuration, but only if the heading is shown
   if 'headings' in gui.strsplitlist_widget(treeview, treeview['show']):
-    font = lookup_style('font', element='Heading')
-    padding = lookup_style('padding', element='Heading')
-    
-    # the heading padding is added to the treeview padding
-    # _field_defaults is not an internal member
-    # per docs, it is just called that to avoid naming conflicts
-    configurations.add(HeadingConfiguration(
-      (
-        HeadingConfiguration.measure_font(font)
-        if font else HeadingConfiguration._field_defaults['font_width']
-      ),
-      
-      (
-        HeadingConfiguration.measure_padding(padding)
-        + HeadingConfiguration._field_defaults['padding_width']
-      )
-    ))
+    configurations.add(HeadingConfiguration())
   
   # measure the widths
   measured_widths = {}
@@ -304,6 +296,8 @@ def measure_treeview_widths(widths, treeview):
     # otherwise, if the minwidth was set to the result of this function
     # then it would stack if this function were called multiple times
     # so we use get_treeview_minwidth to get the real default
+    minwidth = get_treeview_minwidth(minwidth)
+    
     # this is done after the try block above, because minwidth can be
     # manually specified as None, explicitly meaning
     # to use the default
@@ -313,7 +307,7 @@ def measure_treeview_widths(widths, treeview):
       configuration.measure_cid(
         cid,
         width,
-        get_treeview_minwidth(minwidth)
+        minwidth
       ) for configuration in configurations
     ) if configurations else 0.0)
   
