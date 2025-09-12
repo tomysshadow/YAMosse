@@ -8,6 +8,7 @@ import traceback
 import threading
 from threading import Lock, Event
 from contextlib import suppress
+from abc import ABC, abstractmethod
 from functools import lru_cache
 from math import ceil
 import shlex
@@ -715,7 +716,20 @@ def measure_widths_treeview(treeview, widths):
   
   # this class must be in here
   # so that the caches are cleared for each call
-  class WidthMeasurer:
+  class Configuration(ABC):
+    def __hash__(self):
+      # hash differently based on what class we are
+      return hash((tuple(self), type(self).__name__))
+    
+    @abstractmethod
+    def measure_cid(self, cid, width, minwidth=0.0):
+      pass
+    
+    @staticmethod
+    def measure_width(width, font_width, space_width, minwidth=0.0):
+      # at least zero, in case space width is greater than minwidth
+      return space_width + max(width * font_width, minwidth - space_width, 0.0)
+    
     @staticmethod
     @strsplittuple
     @lru_cache
@@ -747,60 +761,120 @@ def measure_widths_treeview(treeview, widths):
   def lookup_style(style, element=None):
     return lookup_style_widget(treeview, style, element=element)
   
-  font = lookup_style('font') or ('TkDefaultFont',)
-  
-  class Configuration(WidthMeasurer, namedtuple(
-    'Configuration',
+  class ItemConfiguration(Configuration, namedtuple(
+    'ItemConfiguration',
     ['font_width', 'padding_width', 'image_width'],
     
     defaults=(
-      WidthMeasurer.measure_font(font),
-      WidthMeasurer.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+      Configuration.measure_font(lookup_style('font') or ('TkDefaultFont',)),
+      Configuration.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
       0.0
     )
   )):
     __slots__ = () # prevents mutation on object (namedtuple meant to be immutable)
+    
+    def measure_cid(self, cid, width, minwidth=0.0):
+      # the element (item/cell) padding is
+      # added on top of the treeview/tag (item configuration) padding by Tk
+      # so here we do the same
+      if cid == '#0': # item
+        # for column #0, we need to worry about indents
+        # on top of that, we include the minwidth in the space
+        # this is because the indicator has
+        # a dynamic width which we can't directly get
+        # but it is probably okay to assume it is
+        # safely contained in the minwidth
+        # (otherwise, it'd get cut off when the column is at its minwidth)
+        # so the space width (including the minwidth)
+        # is added on top of the text width
+        return self.measure_width(
+          width,
+          self.font_width,
+          
+          (
+            self.image_width
+            + self.padding_width
+            + item_padding_width
+          ) +
+          
+          minwidth
+        )
+      else: # cell
+        # for all other columns (not #0,) the minimum measured width
+        # is the minwidth, but excluding the part of it filled by space
+        # this ensures the column won't be smaller
+        # than the minwidth (but may be equal to it)
+        return self.measure_width(
+          width,
+          self.font_width,
+          
+          (
+            self.padding_width
+            + cell_padding_width
+          ),
+          
+          minwidth
+        )
+  
+  class HeadingConfiguration(Configuration, namedtuple(
+    'HeadingConfiguration',
+    ['font_width', 'padding_width', 'image_width'],
+    
+    defaults=(
+      Configuration.measure_font(('TkHeadingFont',)),
+      Configuration.measure_padding(DEFAULT_TREEVIEW_CELL_PADDING),
+      0.0
+    )
+  )):
+    __slots__ = () # prevents mutation on object (namedtuple meant to be immutable)
+    
+    def measure_cid(self, cid, width, minwidth=0.0):
+      space_width = self.padding_width
+      
+      if (image := treeview.heading(cid, 'image')):
+        space_width += self.measure_image(image)
+      else:
+        space_width += self.image_width
+      
+      return self.measure_width(width, self.font_width, space_width, minwidth)
   
   kwargs = {}
   
   with suppress(tk.TclError):
     kwargs['indent'] = treeview.winfo_fpixels(lookup_style('indent'))
   
-  # this is the set of item configurations
-  # will be empty if there are no items
-  item_configurations = _item_configurations_treeview(treeview,
-    Configuration, **kwargs)
+  # this is the set of configurations
+  # will be empty here if there are no items
+  configurations = _item_configurations_treeview(treeview,
+    ItemConfiguration, **kwargs)
   
   padding = lookup_style('padding', element='Item')
-  item_padding_width = Configuration.measure_padding(padding)
+  item_padding_width = ItemConfiguration.measure_padding(padding)
   
   padding = lookup_style('padding', element='Cell')
-  cell_padding_width = Configuration.measure_padding(padding)
+  cell_padding_width = ItemConfiguration.measure_padding(padding)
   
   # get the heading configuration, but only if the heading is shown
-  heading_configuration = None
-  
   if 'headings' in strsplitlist_widget(treeview, treeview['show']):
-    font = lookup_style('font', element='Heading') or ('TkHeadingFont',)
+    font = lookup_style('font', element='Heading')
     padding = lookup_style('padding', element='Heading')
     
     # the heading padding is added to the treeview padding
     # _field_defaults is not an internal member
     # per docs, it is just called that to avoid naming conflicts
-    heading_configuration = Configuration(
-      Configuration.measure_font(font),
+    configurations.add(HeadingConfiguration(
+      (
+        HeadingConfiguration.measure_font(font)
+        if font else HeadingConfiguration._field_defaults['font_width']
+      ),
       
       (
-        Configuration._field_defaults['padding_width']
-        + Configuration.measure_padding(padding)
+        HeadingConfiguration.measure_padding(padding)
+        + HeadingConfiguration._field_defaults['padding_width']
       )
-    )
+    ))
   
   # measure the widths
-  def measure_width(width, font_width, space_width, minwidth=0.0):
-    # at least zero, in case space width is greater than minwidth
-    return space_width + max(width * font_width, minwidth - space_width, 0.0)
-  
   measured_widths = {}
   
   for cid, width in widths.items():
@@ -822,75 +896,19 @@ def measure_widths_treeview(treeview, widths):
     # we can't just get the minwidth of the current column to use here
     # otherwise, if the minwidth was set to the result of this function
     # then it would stack if this function were called multiple times
-    # so here we get the real default
+    # so we use get_minwidth_treeview to get the real default
     # this is done after the try block above, because minwidth can be
     # manually specified as None, explicitly meaning
     # to use the default
-    minwidth = get_minwidth_treeview(minwidth)
-    
-    # the element (item/cell) padding is
-    # added on top of the treeview/tag (item configuration) padding by Tk
-    # so here we do the same
-    measured_width = 0.0
-    
-    if item_configurations:
-      if cid == '#0': # item
-        # for column #0, we need to worry about indents
-        # on top of that, we include the minwidth in the space
-        # this is because the indicator has
-        # a dynamic width which we can't directly get
-        # but it is probably okay to assume it is
-        # safely contained in the minwidth
-        # (otherwise, it'd get cut off when the column is at its minwidth)
-        # so the space width (including the minwidth)
-        # is added on top of the text width
-        measured_width = max(measure_width(
-          width,
-          item_configuration.font_width,
-          
-          (
-            item_configuration.image_width
-            + item_configuration.padding_width
-            + item_padding_width
-          ) +
-          
-          minwidth
-        ) for item_configuration in item_configurations)
-      else: # cell
-        # for all other columns (not #0,) the minimum measured width
-        # is the minwidth, but excluding the part of it filled by space
-        # this ensures the column won't be smaller
-        # than the minwidth (but may be equal to it)
-        measured_width = max(measure_width(
-          width,
-          item_configuration.font_width,
-          
-          (
-            item_configuration.padding_width
-            + cell_padding_width
-          ),
-          
-          minwidth
-        ) for item_configuration in item_configurations)
-    
-    if heading_configuration: # heading
-      space_width = heading_configuration.padding_width
-      
-      if (image := treeview.heading(cid, 'image')):
-        space_width += Configuration.measure_image(image)
-      else:
-        space_width += heading_configuration.image_width
-      
-      measured_width = max(measured_width, measure_width(
-        width,
-        heading_configuration.font_width,
-        space_width,
-        minwidth
-      ))
-    
     # must use ceil here because these widths may be floats
     # and Tk doesn't want a float for the width
-    measured_widths[cid] = ceil(measured_width)
+    measured_widths[cid] = ceil(max(
+      configuration.measure_cid(
+        cid,
+        width,
+        get_minwidth_treeview(minwidth)
+      ) for configuration in configurations
+    ) if configurations else 0.0)
   
   return measured_widths
 
