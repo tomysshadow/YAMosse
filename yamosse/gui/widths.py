@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.font import Font
-from abc import ABC, abstractmethod
-from collections import namedtuple
 from contextlib import suppress
+from abc import ABC, abstractmethod
 from functools import lru_cache
+from collections import namedtuple
 from math import ceil
 
 from .. import gui
