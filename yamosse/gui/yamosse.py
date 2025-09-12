@@ -217,7 +217,7 @@ def make_classes(frame, variables, class_names):
   treeview.bind('<<TreeviewSelect>>', select_treeview)
   treeview.bind('<Control-f>', lambda e: find_entry.focus_set())
   gui_sorted.treeview_sorted(treeview)
-  gui_widths.widths_treeview(treeview, {0: 3})
+  gui_widths.treeview_widths({0: 3}, treeview)
   
   # fix tab order
   for widget in (find_frame, calibrate_button):

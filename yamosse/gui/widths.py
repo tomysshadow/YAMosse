@@ -14,7 +14,7 @@ DEFAULT_TREEVIEW_ITEM_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
 
-def _minwidth_treeview():
+def _treeview_minwidth():
   default = None
   
   def get(minwidth=None):
@@ -30,10 +30,10 @@ def _minwidth_treeview():
   
   return get
 
-get_minwidth_treeview = _minwidth_treeview()
+get_treeview_minwidth = _treeview_minwidth()
 
 
-def _item_configurations_treeview(treeview, configuration,
+def _treeview_item_configurations(configuration, treeview,
   indent=DEFAULT_TREEVIEW_ITEM_INDENT, item=''):
   tag_configurations = {}
   
@@ -117,7 +117,7 @@ def _item_configurations_treeview(treeview, configuration,
   return item_configurations
 
 
-def measure_widths_treeview(treeview, widths):
+def measure_treeview_widths(widths, treeview):
   def strsplittuple(func):
     return lambda t: func(tuple(gui.strsplitlist_widget(treeview, t)))
   
@@ -252,8 +252,8 @@ def measure_widths_treeview(treeview, widths):
   
   # this is the set of configurations
   # will be empty here if there are no items
-  configurations = _item_configurations_treeview(treeview,
-    ItemConfiguration, **kwargs)
+  configurations = _treeview_item_configurations(ItemConfiguration,
+    treeview, **kwargs)
   
   padding = lookup_style('padding', element='Item')
   item_padding_width = ItemConfiguration.measure_padding(padding)
@@ -303,7 +303,7 @@ def measure_widths_treeview(treeview, widths):
     # we can't just get the minwidth of the current column to use here
     # otherwise, if the minwidth was set to the result of this function
     # then it would stack if this function were called multiple times
-    # so we use get_minwidth_treeview to get the real default
+    # so we use get_treeview_minwidth to get the real default
     # this is done after the try block above, because minwidth can be
     # manually specified as None, explicitly meaning
     # to use the default
@@ -313,15 +313,15 @@ def measure_widths_treeview(treeview, widths):
       configuration.measure_cid(
         cid,
         width,
-        get_minwidth_treeview(minwidth)
+        get_treeview_minwidth(minwidth)
       ) for configuration in configurations
     ) if configurations else 0.0)
   
   return measured_widths
 
 
-def widths_treeview(treeview, widths):
-  measured_widths = measure_widths_treeview(treeview, widths)
+def treeview_widths(widths, treeview):
+  measured_widths = measure_treeview_widths(widths, treeview)
   
   for cid, width in measured_widths.items():
     treeview.column(cid, width=width, minwidth=width, stretch=False)
