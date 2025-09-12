@@ -713,6 +713,9 @@ def _item_configurations_treeview(treeview, configuration,
 
 
 def measure_widths_treeview(treeview, widths):
+  def splittedtuple_str(func):
+    return lambda t: func(WidthMeasurer.splittuple_str(t))
+  
   # this class must be in here
   # so that the caches are cleared for each call
   class WidthMeasurer:
@@ -725,7 +728,7 @@ def measure_widths_treeview(treeview, widths):
       return tuple(cls.splittuple_str(lookup_style_widget(
         treeview, style, element=element)))
     
-    @staticmethod
+    @splittedtuple_str
     @lru_cache
     def measure_font(font):
       # cast font descriptions to font objects
@@ -736,13 +739,13 @@ def measure_widths_treeview(treeview, widths):
       # see: https://www.tcl-lang.org/man/tcl8.6/TkCmd/text.htm#M21
       return font.measure('0', displayof=treeview)
     
-    @staticmethod
+    @splittedtuple_str
     @lru_cache
     def measure_padding(padding):
       left, top, right, bottom = padding4_widget(treeview, padding)
       return left + right
     
-    @staticmethod
+    @splittedtuple_str
     @lru_cache
     def measure_image(image):
       # it's possible to specify multiple images for different states
