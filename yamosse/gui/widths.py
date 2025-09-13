@@ -127,7 +127,7 @@ def measure_treeview_widths(widths, treeview):
   class Configuration(ABC):
     def __hash__(self):
       # hash differently depending on what class we are
-      return hash((type(self).__name__, tuple(self)))
+      return hash((repr(id(type(self))), tuple(self)))
     
     @abstractmethod
     def measure_cid(self, cid, width, minwidth):
