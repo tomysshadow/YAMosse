@@ -256,7 +256,7 @@ class _ConfidenceScoreIdentification(_Identification):
           # in this case we want to print the class names and scores, but not timestamps
           if output_scores:
             all_timestamps = [cls.NAME_SCORE_SPEC.format(
-              name=c, score=["score"]
+              name=c, score=t["score"]
             ) for c, t in all_timestamps]
           
           print(indent, item_delimiter.join(all_timestamps), sep='', file=file)
