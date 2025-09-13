@@ -110,13 +110,13 @@ class HiddenFile:
     self.__closer()
   
   @property
-  def name(self):
-    return self.__wrapper.name
-  
-  @property
   def save(self):
     return self.__wrapper.save
   
   @save.setter
   def save(self, value):
     self.__wrapper.save = value
+  
+  @property
+  def name(self):
+    return self.__wrapper.name
