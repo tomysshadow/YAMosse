@@ -117,13 +117,18 @@ class _MasterUndoable(_ScaleUndoable):
     self.oldvalues = newvalues.copy()
     self.oldvalue = newvalue
     
-    # this must happen last, invokes self._master function
+    # this must happen next, invokes self._master function
+    # calling show, while slightly redundant is necessary
+    # because it is possible to edit offscreen scales with keyboard
+    # if they're focused, so reverting must update everything
+    # so they don't fall out of sync with their oldvalues
     scale = self._scale
+    scale.set(newvalue)
+    self.show(widgets=newvalues, newvalue=newvalue)
     
+    # this must happen last, to prevent sketchiness with events
     if focus:
       scale.focus_set()
-    
-    scale.set(newvalue)
   
   def data(self, e, recenter=False):
     try:
@@ -289,15 +294,14 @@ class _CalibrationUndoable(_ScaleUndoable):
   def revert(self, *args, focus=True):
     widget, newvalue = args
     
+    widget.set(newvalue)
+    self.show(widget, newvalue)
+    
     # look at and focus the widget so the user notices what's just changed
     self._text.see(widget.master)
     
     if focus:
       widget.focus_set()
-    
-    widget.set(newvalue)
-    
-    self.show(widget, newvalue)
   
   def data(self, e, recenter=False):
     try:
@@ -377,9 +381,6 @@ class _ResetUndoable(_WidgetUndoable):
     if master_newvalue is None:
       master_newvalue = DEFAULT_SCALE_VALUE
     
-    if focus:
-      self._button.focus_set()
-    
     # we don't need to revert the calibration directly
     # reverting its master will have the side effect of reverting it anyway
     self.calibration.master.revert(
@@ -388,6 +389,9 @@ class _ResetUndoable(_WidgetUndoable):
       master_newvalue,
       focus=False
     )
+    
+    if focus:
+      self._button.focus_set()
   
   def _reset(self):
     calibration = self.calibration
