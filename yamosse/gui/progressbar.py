@@ -4,7 +4,6 @@ from contextlib import suppress
 from weakref import WeakValueDictionary
 
 import yamosse.progress as yamosse_progress
-import yamosse.utils as yamosse_utils
 
 from .. import gui
 from . import trace as gui_trace

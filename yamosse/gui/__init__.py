@@ -565,7 +565,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
   # but I prefer my implementation anyway, so I just kept it
   scale = ttk.Scale(frame,
     from_=from_, to=to, orient=tk.HORIZONTAL,
-    command=lambda text: show(text), **kwargs)
+    command=show, **kwargs)
   
   scale.grid(row=0, column=1, sticky=tk.EW)
   #scale.bind('<<RangeChanged>>', show)
