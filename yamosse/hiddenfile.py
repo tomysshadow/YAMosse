@@ -20,13 +20,15 @@ class _HiddenFileWrapper:
     
     self.save = False
     
-    self.tmp = NamedTemporaryFile(
+    tmp = NamedTemporaryFile(
       *args,
       delete=False,
       prefix=yamosse_utils.str_ensureprefix(prefix, self.HIDDEN),
       **kwargs
     )
     
+    self.tmp = tmp
+    self.name = tmp.name
     self._hide(True)
   
   def close(self):
@@ -109,10 +111,7 @@ class HiddenFile:
   
   @property
   def name(self):
-    try:
-      return self.__wrapper.name
-    except AttributeError:
-      return self.__wrapper.tmp.name
+    return self.__wrapper.name
   
   @property
   def save(self):
