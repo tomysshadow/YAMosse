@@ -169,10 +169,11 @@ class TestTextOutput(TestOutput, unittest.TestCase):
         self.assertEqual(f.readline(), ''.join((indent, MODEL_YAMNET_CLASS_NAMES[class_], ':\n')))
         
         if output_scores:
-          timestamps = [f'{o.identification.hms(t["timestamp"])} ({t["score"]:.0%})' \
-            for t in timestamps]
+          timestamps = [o.identification.NAME_SCORE_SPEC.format(
+            name=o.identification.timestamp_name(t["timestamp"]), score=t["score"]
+          ) for t in timestamps]
         else:
-          timestamps = [o.identification.hms(t) for t in timestamps]
+          timestamps = [o.identification.timestamp_name(t) for t in timestamps]
         
         self.assertEqual(f.readline(), ''.join((indent2, item_delimiter.join(timestamps), '\n')))
       
@@ -256,13 +257,14 @@ class TestTextOutput(TestOutput, unittest.TestCase):
         classes = top_score['classes']
         
         if output_scores:
-          classes = [f'{MODEL_YAMNET_CLASS_NAMES[c]} ({s:.0%})' for c, s in classes.items()]
+          classes = [o.identification.NAME_SCORE_SPEC.format(
+            name=MODEL_YAMNET_CLASS_NAMES[c], score=s) for c, s in classes.items()]
         else:
           classes = [MODEL_YAMNET_CLASS_NAMES[c] for c in classes]
         
         if output_timestamps:
           self.assertEqual(f.readline(), ''.join((indent,
-            o.identification.hms(top_score['timestamp']), ': ',
+            o.identification.timestamp_name(top_score['timestamp']), ': ',
             item_delimiter.join(classes), '\n')))
         else:
           self.assertEqual(f.readline(), ''.join((indent, item_delimiter.join(classes), '\n')))

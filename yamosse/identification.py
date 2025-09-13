@@ -9,8 +9,10 @@ import yamosse.output as yamosse_output
 class _Identification(ABC):
   TIMESTAMP_ALL = -1
   
-  HMS_ALL = 'All'
-  HMS_TIMESPAN = ' - '
+  TIMESTAMP_NAME_ALL = 'All'
+  TIMESTAMP_NAME_TIMESPAN = ' - '
+  
+  NAME_SCORE_SPEC = '{name} ({score:.0%})'
   
   __slots__ = ('options', 'np')
   
@@ -36,10 +38,6 @@ class _Identification(ABC):
   def timestamps(self, shutdown):
     pass
   
-  @staticmethod
-  def _range_timestamp(begin, end, timespan):
-    return (begin, end) if timespan and begin + timespan < end else begin
-  
   @classmethod
   def restructure_results_for_output(cls, results, output):
     assert output # silence unused argument warning
@@ -51,14 +49,15 @@ class _Identification(ABC):
     raise NotImplementedError
   
   @classmethod
-  def hms(cls, timestamp):
-    # substitute TIMESTAMP_ALL for HMS_ALL
+  def timestamp_name(cls, timestamp):
+    # substitute TIMESTAMP_ALL for TIMESTAMP_NAME_ALL
     if timestamp == cls.TIMESTAMP_ALL:
-      return cls.HMS_ALL
+      return cls.TIMESTAMP_NAME_ALL
     
-    # convert to HMS string and join the timestamps if this is a timespan
+    # convert to timestamp name string and join the timestamps if this is a timespan
     with suppress(TypeError):
-      return cls.HMS_TIMESPAN.join(yamosse_utils.hours_minutes(t) for t in timestamp)
+      return cls.TIMESTAMP_NAME_TIMESPAN.join(
+        yamosse_utils.hours_minutes(t) for t in timestamp)
     
     return yamosse_utils.hours_minutes(timestamp)
   
@@ -86,6 +85,10 @@ class _Identification(ABC):
     # to sort the column of results that's tabbed in once (one column to the right of file names)
     # that is, classes in Confidence Score mode, or timestamps in Top Ranked mode
     return item[0]
+  
+  @staticmethod
+  def _range_timestamp(begin, end, timespan):
+    return (begin, end) if timespan and begin + timespan < end else begin
 
 
 class _ConfidenceScoreIdentification(_Identification):
@@ -240,9 +243,11 @@ class _ConfidenceScoreIdentification(_Identification):
             continue
           
           if output_scores:
-            timestamps = [f'{cls.hms(t["timestamp"])} ({t["score"]:.0%})' for t in timestamps]
+            timestamps = [cls.NAME_SCORE_SPEC.format(
+              name=cls.timestamp_name(t["timestamp"]), score=t["score"]
+            ) for t in timestamps]
           else:
-            timestamps = [cls.hms(t) for t in timestamps]
+            timestamps = [cls.timestamp_name(t) for t in timestamps]
           
           print(indent, class_name, ':\n', indent2,
             item_delimiter.join(timestamps), sep='', file=file)
@@ -250,7 +255,9 @@ class _ConfidenceScoreIdentification(_Identification):
         if all_timestamps:
           # in this case we want to print the class names and scores, but not timestamps
           if output_scores:
-            all_timestamps = [f'{c} ({t["score"]:.0%})' for c, t in all_timestamps]
+            all_timestamps = [cls.NAME_SCORE_SPEC.format(
+              name=c, score=["score"]
+            ) for c, t in all_timestamps]
           
           print(indent, item_delimiter.join(all_timestamps), sep='', file=file)
       finally:
@@ -494,15 +501,16 @@ class _TopRankedIdentification(_Identification):
           # we don't want to sort classes here
           # it should already be sorted as intended by this point
           if output_scores:
-            classes = item_delimiter.join(
-              [f'{model_yamnet_class_names[c]} ({s:.0%})' for c, s in classes.items()])
+            classes = item_delimiter.join([cls.NAME_SCORE_SPEC.format(
+              name=model_yamnet_class_names[c], score=s
+            ) for c, s in classes.items()])
           else:
             classes = item_delimiter.join([model_yamnet_class_names[c] for c in classes])
           
           print(indent, end='', file=file)
           
           if output_timestamps:
-            print(cls.hms(top_score['timestamp']), end=': ', sep='', file=file)
+            print(cls.timestamp_name(top_score['timestamp']), end=': ', sep='', file=file)
           
           print(classes, file=file)
       finally:
