@@ -188,11 +188,11 @@ class _MasterUndoable(_ScaleUndoable):
     # after clicking and dragging the master scale
     # this must be representative of the actual numbers on the visible scales
     # which is why we cap it to the TO_SCALE_VALUE
-    reciprocal = self._reciprocal(newvalue)
+    fraction = self._fraction(newvalue)
     
     return {
       w: min(
-        round(self.oldvalues[w] * reciprocal),
+        round(self.oldvalues[w] * fraction),
         TO_SCALE_VALUE
       ) for w in widgets
     }
@@ -202,15 +202,15 @@ class _MasterUndoable(_ScaleUndoable):
     # the master scale moves it proportionally to the others correctly
     # this is intentionally not capped to the TO_SCALE_VALUE
     # (numbers in here may get very large!)
-    # self.oldvalue is used as the value for reciprocal
+    # self.oldvalue is used as the value for fraction
     # because if we're in the middle of a master edit that's not committed
     # then that should be disregarded here
-    self.oldvalues[widget] = round(newvalue / self._reciprocal(self.oldvalue))
+    self.oldvalues[widget] = round(newvalue / self._fraction(self.oldvalue))
   
   def _old(self, widget):
     return self.oldvalue
   
-  def _reciprocal(self, value=None):
+  def _fraction(self, value=None):
     # the value of FROM_SCALE_VALUE is such that if the master scale is
     # set to zero, then another scale has its value changed from zero
     # to any non-zero number, it will jump to the highest possible
