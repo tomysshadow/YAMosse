@@ -138,15 +138,19 @@ class Recorder:
         exit_stack.pop_all()
         return
       
-      exit_stack.callback(ask.release)
-      
-      save = messagebox.askyesnocancel(parent=self._window,
-        title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
-      
-      if save is None:
-        return
-      
-      recording.save = save
+      # this try-finally can't be incorporated into the exit stack
+      # the release here needs to always happen
+      try:
+        save = messagebox.askyesnocancel(parent=self._window,
+          title=TITLE, message=ASK_SAVE_MESSAGE, default=messagebox.YES)
+        
+        if save is None:
+          exit_stack.pop_all()
+          return
+        
+        recording.save = save
+      finally:
+        ask.release()
   
   def _start_recording(self):
     recording = self._recording
