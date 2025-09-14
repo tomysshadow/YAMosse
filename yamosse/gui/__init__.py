@@ -1371,7 +1371,7 @@ def _root_images():
         for scandir_entry in scandir:
           item = callback(scandir_entry)
           
-          if not item:
+          if item is None:
             continue
           
           key, value = item

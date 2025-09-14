@@ -170,7 +170,8 @@ def make_classes(frame, variables, class_names):
   def sorted_treeview_shown(e):
     nonlocal attached
     
-    attached = {int(c): treeview.item(c, 'values') for c in treeview.get_children(item=ATTACHED)}
+    attached = {int(c): treeview.item(
+      c, 'values') for c in treeview.get_children(item=ATTACHED)}
   
   treeview.bind('<<SortedTreeviewShown>>', sorted_treeview_shown)
   
