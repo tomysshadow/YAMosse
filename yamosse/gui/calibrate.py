@@ -202,7 +202,10 @@ class _MasterUndoable(_ScaleUndoable):
     # the master scale moves it proportionally to the others correctly
     # this is intentionally not capped to the TO_SCALE_VALUE
     # (numbers in here may get very large!)
-    self.oldvalues[widget] = round(newvalue / self._reciprocal())
+    # self.oldvalue is used as the value for reciprocal
+    # because if we're in the middle of a master edit that's not committed
+    # then that should be disregarded here
+    self.oldvalues[widget] = round(newvalue / self._reciprocal(self.oldvalue))
   
   def _old(self, widget):
     return self.oldvalue
