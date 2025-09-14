@@ -96,16 +96,20 @@ VARIABLE_TYPES = {
   str: tk.StringVar
 }
 
+_root_images_dir = fsenc(yamosse_root.root(IMAGES_DIR))
+
 Widgets = namedtuple('Widgets', ['first', 'middle', 'last'])
 Undoable = namedtuple('Undoable', ['undooptions', 'buttons'])
 
 
-class ImageType(bytes, Enum):
-  BITMAP = (fsenc('Bitmap'), fsenc('.xbm'))
-  PHOTO = (fsenc('Photo'), fsenc('.gif'))
+class ImageType(type(_root_images_dir), Enum):
+  BITMAP = ('Bitmap', '.xbm')
+  PHOTO = ('Photo', '.gif')
   
-  def __new__(cls, value, ext):
-    obj = bytes.__new__(cls, value)
+  def __new__(cls, *args):
+    value, ext = map(fsenc, args)
+    
+    obj = type(value).__new__(cls, value)
     obj._value_ = value
     obj.ext = ext
     return obj
@@ -1409,7 +1413,7 @@ def _root_images():
     # to avoid popping an empty window in some circumstances
     # all names/paths here are encoded with fsenc so that they will be compared by ordinal
     root_window = get_root_window()
-    root_images = scandir(fsenc(yamosse_root.root(IMAGES_DIR)), callback_image_type)
+    root_images = scandir(_root_images_dir, callback_image_type)
     
     # this is done to prevent exceptions
     # in case the application dies on a thread that isn't the GUI thread
