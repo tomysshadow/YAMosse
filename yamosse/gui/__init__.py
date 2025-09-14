@@ -104,15 +104,19 @@ class ImageType(Enum):
   BITMAP = fsenc('Bitmap')
   PHOTO = fsenc('Photo')
   
+  @classmethod
+  def init(cls):
+    # defined in here so it is a nonmember
+    # (workaround for Python 3.10 not having @nonmember decorator)
+    cls.__EXTS = {
+      cls.BITMAP: fsenc('.xbm'),
+      cls.PHOTO: fsenc('.gif')
+    }
+  
   def ext(self):
-    return self._EXTS[self]
+    return self.__EXTS[self]
 
-# defined out here so it is a nonmember
-# (workaround for Python 3.10 not having @nonmember decorator)
-ImageType._EXTS = {
-  ImageType.BITMAP: fsenc('.xbm'),
-  ImageType.PHOTO: fsenc('.gif')
-}
+ImageType.init()
 
 
 def _init_report_callback_exception():
