@@ -100,23 +100,15 @@ Widgets = namedtuple('Widgets', ['first', 'middle', 'last'])
 Undoable = namedtuple('Undoable', ['undooptions', 'buttons'])
 
 
-class ImageType(Enum):
-  BITMAP = fsenc('Bitmap')
-  PHOTO = fsenc('Photo')
+class ImageType(bytes, Enum):
+  BITMAP = (fsenc('Bitmap'), fsenc('.xbm'))
+  PHOTO = (fsenc('Photo'), fsenc('.gif'))
   
-  @classmethod
-  def init(cls):
-    # defined in here so it is a nonmember
-    # (workaround for Python 3.10 not having @nonmember decorator)
-    cls.__EXTS = {
-      cls.BITMAP: fsenc('.xbm'),
-      cls.PHOTO: fsenc('.gif')
-    }
-  
-  def ext(self):
-    return self.__EXTS[self]
-
-ImageType.init()
+  def __new__(cls, value, ext):
+    obj = bytes.__new__(cls, value)
+    obj._value_ = value
+    obj.ext = ext
+    return obj
 
 
 def _init_report_callback_exception():
@@ -1411,7 +1403,7 @@ def _root_images():
         return None
       
       return (type_, scandir(entry.path, lambda image_entry: callback_image(
-        image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext())))
+        image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext)))
     
     # getting root window needs to be done first
     # to avoid popping an empty window in some circumstances
