@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from time import time
+from time import monotonic
 from os.path import splitext
 from shlex import quote
 import json
@@ -21,7 +21,7 @@ class _Output(ABC):
   def __init__(self, file_name, exit_, model_yamnet_class_names, identification,
     subsystem=None, encoding='utf8'):
     if subsystem:
-      self._seconds = time()
+      self._seconds = monotonic()
     
     self.subsystem = subsystem
     
@@ -60,7 +60,7 @@ class _Output(ABC):
       subsystem.show(self._exit, values={
         'log': ': '.join((
           'Elapsed Time',
-          yamosse_utils.hours_minutes(time() - self._seconds)
+          yamosse_utils.hours_minutes(monotonic() - self._seconds)
         )),
         
         'open_output_file': self._file_truncated
