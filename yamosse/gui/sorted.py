@@ -15,7 +15,13 @@ _treeviews = yamosse_once.Once(type_=WeakKeyDictionary)
 # uses "natural" sorting - the values being sorted here are often numbers
 # https://nedbatchelder.com/blog/200712/human_sorting.html
 def _key_natural(value):
-  return [yamosse_utils.try_int(v) for v in RE_NATURAL.split(value)]
+  casefolded = value.casefold()
+  
+  return (
+    [yamosse_utils.try_int(v) for v in RE_NATURAL.split(casefolded)],
+    casefolded, # tiebreaker for equivalent integers
+    value # tiebreaker for case-insensitivity
+  )
 
 
 def _key_child(item):
