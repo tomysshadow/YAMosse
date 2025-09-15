@@ -323,7 +323,8 @@ def _report_thread_exception(exit_, subsystem, exc, val, tb):
   try:
     subsystem.show(exit_, values={
       'progressbar': {
-        'state': {'args': ((yamosse_progress.State.ERROR.on(),),)}
+        'state': {'args': ((yamosse_progress.State.ERROR.on(),),)},
+        'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
       },
       
       'log': ':\n'.join((
