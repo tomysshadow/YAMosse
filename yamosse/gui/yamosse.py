@@ -192,7 +192,9 @@ def make_classes(frame, variables, class_names):
       
       show |= found
     
-    treeview.event_generate('<<SortedTreeviewShow>>' if show else '<<SortedTreeviewShown>>')
+    treeview.event_generate(
+      '<<SortedTreeviewShow>>' if show else '<<SortedTreeviewShown>>'
+    )
     return True
   
   find_entry['validatecommand'] = (find_entry.register(find_validatecommand), '%P')
