@@ -265,62 +265,61 @@ def _mainloop(**kwargs):
     else:
       kwargs['output_file_name'] = input('Please enter the output file name:\n')
   
-  subsystem = yamosse_subsystem.subsystem(window, NAME, variables)
-  
-  def call(function, *keywords):
-    # only call function if all keyword arguments specified
-    args = []
-    
-    for keyword in keywords:
-      kwarg = kwargs.get(keyword)
+  with yamosse_subsystem.subsystem(window, NAME, variables) as subsystem:
+    def call(function, *keywords):
+      # only call function if all keyword arguments specified
+      args = []
       
-      if kwarg is None:
-        return None
+      for keyword in keywords:
+        kwarg = kwargs.get(keyword)
+        
+        if kwarg is None:
+          return None
+        
+        args.append(kwarg)
       
-      args.append(kwarg)
+      return function(*args)
     
-    return function(*args)
-  
-  if kwargs:
-    call(
-      lambda restore_defaults_: restore_defaults() if restore_defaults_ else None,
-      'restore_defaults'
-    )
-    
-    call(import_preset, 'import_preset_file_name')
-    
-    call(
-      lambda options_attrs: options.set(options_attrs, strict=False),
-      'options_attrs'
-    )
-  
-  options.print()
-  
-  if kwargs:
-    call(
-      lambda record_: record() if record_ else None,
-      'record'
-    )
-    
-    call(export_preset, 'export_preset_file_name')
-  
-  if window: window.mainloop()
-  
-  # try and ensure we dump the options
-  # even if we crash during a YAMScan
-  # we don't do this up above during the operations that manipulate the options
-  # in case they would leave it in an invalid state
-  # and we don't do it for the window mainloop
-  # because that can also change the options and leave it in an invalid state
-  try:
     if kwargs:
-      call(yamscan, 'output_file_name')
-      return None
-  finally:
-    subsystem.attrs_to_variables(options)
-    options.dump()
-  
-  return window.children
+      call(
+        lambda restore_defaults_: restore_defaults() if restore_defaults_ else None,
+        'restore_defaults'
+      )
+      
+      call(import_preset, 'import_preset_file_name')
+      
+      call(
+        lambda options_attrs: options.set(options_attrs, strict=False),
+        'options_attrs'
+      )
+    
+    options.print()
+    
+    if kwargs:
+      call(
+        lambda record_: record() if record_ else None,
+        'record'
+      )
+      
+      call(export_preset, 'export_preset_file_name')
+    
+    if window: window.mainloop()
+    
+    # try and ensure we dump the options
+    # even if we crash during a YAMScan
+    # we don't do this up above during the operations that manipulate the options
+    # in case they would leave it in an invalid state
+    # and we don't do it for the window mainloop
+    # because that can also change the options and leave it in an invalid state
+    try:
+      if kwargs:
+        call(yamscan, 'output_file_name')
+        return None
+    finally:
+      subsystem.attrs_to_variables(options)
+      options.dump()
+    
+    return window.children
 
 
 def yamosse(**kwargs):

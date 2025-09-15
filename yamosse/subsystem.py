@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from threading import Thread
+import weakref
 
 import yamosse.utils as yamosse_utils
 
@@ -13,9 +14,8 @@ class SubsystemError(Exception): pass
 
 
 class _Subsystem(ABC):
-  @staticmethod
   @abstractmethod
-  def start(target, args=None, kwargs=None):
+  def start(self, target, args=None, kwargs=None):
     pass
   
   @abstractmethod
@@ -45,23 +45,65 @@ class _Subsystem(ABC):
   def quit(self):
     pass
 
+
+class _WindowSubsystemWrapper:
+  def __init__(self, window):
+    self.window = window
+    
+    self._threads = []
+  
+  def start(self, target, args=None, kwargs=None):
+    # filter out dead threads
+    self._threads = threads = list(filter(
+      lambda thread: thread.is_alive(),
+      self._threads
+    ))
+    
+    # start a thread so the GUI isn't blocked
+    thread = Thread(target=target, args=args or (), kwargs=kwargs or {})
+    thread.start()
+    
+    # after starting the thread so it is alive, append it to the threads list
+    threads.append(thread)
+  
+  def close(self):
+    # if we are just quitting don't do anything
+    if self.window.children: return
+    
+    # ensure we are the last thread to be alive
+    for thread in self._threads:
+      thread.join()
+
+
 class _WindowSubsystem(_Subsystem):
   def __init__(self, window, title, variables):
     assert gui, 'gui module must be loaded'
     
-    self.window = window
-    self.title = title
-    self.variables = variables
+    #self._window = window
+    self._title = title
+    self._variables = variables
     
     self.show_callback = None
     self.widgets = None
+    
+    wrapper = _WindowSubsystemWrapper(window)
+    
+    self.__wrapper = wrapper
+    self.__closer = weakref.finalize(self, wrapper.close)
   
-  @staticmethod
-  def start(target, args=None, kwargs=None):
+  def __enter__(self):
+    return self
+  
+  def __exit__(self, exc, val, tb):
+    self.close()
+  
+  def close(self):
+    self.__closer()
+  
+  def start(self, target, args=None, kwargs=None):
     gui.threaded()
     
-    # start a thread so the GUI isn't blocked
-    Thread(target=target, args=args or (), kwargs=kwargs or {}).start()
+    self.__wrapper.start(target, args=args, kwargs=kwargs)
   
   def show(self, exit_, values=None):
     super().show(exit_, values=values)
@@ -71,8 +113,8 @@ class _WindowSubsystem(_Subsystem):
   
   def error(self, message, *args, parent=None, **kwargs):
     gui.messagebox.showwarning(
-      parent=parent or self.window,
-      title=self.title,
+      parent=parent or self.__wrapper.window,
+      title=self._title,
       message=message
     )
   
@@ -81,20 +123,20 @@ class _WindowSubsystem(_Subsystem):
       default = gui.messagebox.YES if default else gui.messagebox.NO
     
     return gui.messagebox.askyesno(
-      parent=parent or self.window,
-      title=self.title,
+      parent=parent or self.__wrapper.window,
+      title=self._title,
       message=message,
       default=default
     )
   
   def variables_from_attrs(self, attrs):
-    self.variables = gui.get_variables_from_attrs(attrs)
+    self._variables = gui.get_variables_from_attrs(attrs)
   
   def attrs_to_variables(self, attrs):
     # we don't expose copy_attrs_to_variables which should only be used by the GUI
     # because it does not handle for the scenario where
     # attrs has a different variable type than the existing variable
-    gui.set_attrs_to_variables(self.variables, attrs)
+    gui.set_attrs_to_variables(self._variables, attrs)
   
   def get_variable_or_attr(self, attrs, key):
     # it is expected this function will not be called from the GUI thread
@@ -105,25 +147,24 @@ class _WindowSubsystem(_Subsystem):
     def callback():
       nonlocal value
       
-      value = self.variables[key].get()
+      value = self._variables[key].get()
     
-    gui.after_wait_window(self.window, callback)
+    gui.after_wait_window(self.__wrapper.window, callback)
     return value
   
   def set_variable_and_attr(self, attrs, key, value):
     super().set_variable_and_attr(attrs, key, value)
     
     gui.after_wait_window(
-      self.window,
-      lambda: self.variables[key].set(value)
+      self.__wrapper.window,
+      lambda: self._variables[key].set(value)
     )
   
   def quit(self):
-    self.window.quit()
+    self.__wrapper.window.quit()
 
 class _ConsoleSubsystem(_Subsystem):
-  @staticmethod
-  def start(target, args=None, kwargs=None):
+  def start(self, target, args=None, kwargs=None):
     target(*(args or ()), **(kwargs or {}))
   
   def show(self, exit_, values=None):
