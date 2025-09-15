@@ -69,7 +69,7 @@ class Progressbar(ttk.Progressbar):
     try:
       function = yamosse_progress.Function(name)
     except ValueError as exc:
-      raise AttributeError from exc
+      raise AttributeError(name) from exc
     
     # variadics are supported in case there is ever a function that uses them
     # (but currently there aren't any)
