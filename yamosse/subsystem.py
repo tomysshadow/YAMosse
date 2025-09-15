@@ -86,9 +86,7 @@ class _WindowSubsystem(_Subsystem):
     self.show_callback = None
     self.widgets = None
     
-    wrapper = _WindowSubsystemWrapper(window)
-    
-    self.__wrapper = wrapper
+    self.__wrapper = wrapper = _WindowSubsystemWrapper(window)
     self.__closer = weakref.finalize(self, wrapper.close)
   
   def __enter__(self):

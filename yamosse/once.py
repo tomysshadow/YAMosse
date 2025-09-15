@@ -34,8 +34,7 @@ class Once:
     # it's not strictly necessary to reset count
     # particularly in Python, where we can't overflow it anyway
     # but the hope is that it keeps the count in a somewhat reasonable range
-    count = self._count + 1 if obj else 1
-    self._count = count
+    self._count = count = self._count + 1 if obj else 1
     return self._obj.setdefault(key, count) == count
   
   def discard(self, key):

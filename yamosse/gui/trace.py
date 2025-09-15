@@ -11,23 +11,20 @@ class Trace:
     # or if the widget is destroyed
     # (and thus the command registered on it ceases to exist)
     tk = widget.tk
-    
-    variable = widget['variable']
     cbname = widget.register(callback)
+    
+    # this object should only ever be bound to this one variable
+    # swapping this to a different variable would defeat the point
+    # so the variable is internal, with a getter only
+    self._variable = variable = widget['variable']
     
     # this is created as a local variable
     # so we can use it in the event bound to the widget
     # without creating another reference to self
     # maybe that would have zero impact, but either way
     # it's just easier to keep track of in my head
-    destroy = weakref.finalize(self, self.__finalize, tk,
+    self._destroy = destroy = weakref.finalize(self, self.__finalize, tk,
       variable, operation, cbname)
-    
-    # this object should only ever be bound to this one variable
-    # swapping this to a different variable would defeat the point
-    # so the variable is internal, with a getter only
-    self._variable = variable
-    self._destroy = destroy
     
     # the <Destroy> event fires UNDER the call to destroy() on widgets
     # as if the event was generated with when='now'

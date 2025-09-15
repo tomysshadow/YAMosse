@@ -20,14 +20,13 @@ class _HiddenFileWrapper:
     
     self.save = False
     
-    tmp = NamedTemporaryFile(
+    self.tmp = tmp = NamedTemporaryFile(
       *args,
       delete=False,
       prefix=yamosse_utils.str_ensureprefix(prefix, self.HIDDEN),
       **kwargs
     )
     
-    self.tmp = tmp
     self.name = tmp.name
     self._hide(True)
   
@@ -92,9 +91,7 @@ class _HiddenFileWrapper:
 
 class HiddenFile:
   def __init__(self, *args, **kwargs):
-    wrapper = _HiddenFileWrapper(*args, **kwargs)
-    
-    self.__wrapper = wrapper
+    self.__wrapper = wrapper = _HiddenFileWrapper(*args, **kwargs)
     self.__closer = weakref.finalize(self, wrapper.close)
   
   def __getattr__(self, name):
