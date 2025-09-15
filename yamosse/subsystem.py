@@ -14,6 +14,15 @@ class SubsystemError(Exception): pass
 
 
 class _Subsystem(ABC):
+  def __enter__(self):
+    return self
+  
+  def __exit__(self, exc, val, tb):
+    self.close()
+  
+  def close(self):
+    pass
+  
   @abstractmethod
   def start(self, target, args=None, kwargs=None):
     pass
@@ -88,12 +97,6 @@ class _WindowSubsystem(_Subsystem):
     
     self.__wrapper = wrapper = _WindowSubsystemWrapper(window)
     self.__closer = weakref.finalize(self, wrapper.close)
-  
-  def __enter__(self):
-    return self
-  
-  def __exit__(self, exc, val, tb):
-    self.close()
   
   def close(self):
     self.__closer()
