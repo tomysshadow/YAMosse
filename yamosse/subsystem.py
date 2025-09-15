@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from threading import Thread
-import weakref
 
 import yamosse.utils as yamosse_utils
 
@@ -55,13 +54,30 @@ class _Subsystem(ABC):
     pass
 
 
-class _WindowSubsystemWrapper:
-  def __init__(self, window):
-    self.window = window
+class _WindowSubsystem(_Subsystem):
+  def __init__(self, window, title, variables):
+    assert gui, 'gui module must be loaded'
+    
+    self._window = window
+    self._title = title
+    self._variables = variables
     
     self._threads = []
+    
+    self.show_callback = None
+    self.widgets = None
+  
+  def close(self):
+    # if we are just quitting don't do anything
+    if self._window.children: return
+    
+    # ensure we are the last thread to be alive
+    for thread in self._threads:
+      thread.join()
   
   def start(self, target, args=None, kwargs=None):
+    gui.threaded()
+    
     # filter out dead threads
     self._threads = threads = list(filter(
       lambda thread: thread.is_alive(),
@@ -75,37 +91,6 @@ class _WindowSubsystemWrapper:
     # after starting the thread so it is alive, append it to the threads list
     threads.append(thread)
   
-  def close(self):
-    # if we are just quitting don't do anything
-    if self.window.children: return
-    
-    # ensure we are the last thread to be alive
-    for thread in self._threads:
-      thread.join()
-
-
-class _WindowSubsystem(_Subsystem):
-  def __init__(self, window, title, variables):
-    assert gui, 'gui module must be loaded'
-    
-    #self._window = window
-    self._title = title
-    self._variables = variables
-    
-    self.show_callback = None
-    self.widgets = None
-    
-    self.__wrapper = wrapper = _WindowSubsystemWrapper(window)
-    self.__closer = weakref.finalize(self, wrapper.close)
-  
-  def close(self):
-    self.__closer()
-  
-  def start(self, target, args=None, kwargs=None):
-    gui.threaded()
-    
-    self.__wrapper.start(target, args=args, kwargs=kwargs)
-  
   def show(self, exit_, values=None):
     super().show(exit_, values=values)
     
@@ -114,7 +99,7 @@ class _WindowSubsystem(_Subsystem):
   
   def error(self, message, *args, parent=None, **kwargs):
     gui.messagebox.showwarning(
-      parent=parent or self.__wrapper.window,
+      parent=parent or self.indow,
       title=self._title,
       message=message
     )
@@ -124,7 +109,7 @@ class _WindowSubsystem(_Subsystem):
       default = gui.messagebox.YES if default else gui.messagebox.NO
     
     return gui.messagebox.askyesno(
-      parent=parent or self.__wrapper.window,
+      parent=parent or self._window,
       title=self._title,
       message=message,
       default=default
@@ -150,19 +135,19 @@ class _WindowSubsystem(_Subsystem):
       
       value = self._variables[key].get()
     
-    gui.after_wait_window(self.__wrapper.window, callback)
+    gui.after_wait_window(self._window, callback)
     return value
   
   def set_variable_and_attr(self, attrs, key, value):
     super().set_variable_and_attr(attrs, key, value)
     
     gui.after_wait_window(
-      self.__wrapper.window,
+      self._window,
       lambda: self._variables[key].set(value)
     )
   
   def quit(self):
-    self.__wrapper.window.quit()
+    self._window.quit()
 
 
 class _ConsoleSubsystem(_Subsystem):
