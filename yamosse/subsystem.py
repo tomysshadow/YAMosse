@@ -164,6 +164,7 @@ class _WindowSubsystem(_Subsystem):
   def quit(self):
     self.__wrapper.window.quit()
 
+
 class _ConsoleSubsystem(_Subsystem):
   def start(self, target, args=None, kwargs=None):
     target(*(args or ()), **(kwargs or {}))
