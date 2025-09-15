@@ -1412,22 +1412,8 @@ def _root_images():
     # getting root window needs to be done first
     # to avoid popping an empty window in some circumstances
     # all names/paths here are encoded with fsenc so that they will be compared by ordinal
-    root_window = get_root_window()
-    root_images = scandir(_root_images_dir, callback_image_type)
-    
-    # this is done to prevent exceptions
-    # in case the application dies on a thread that isn't the GUI thread
-    # normally the images would have their __del__ method called
-    # only to discover that the Tk interpreter isn't running
-    def destroy(e):
-      nonlocal root_images
-      
-      root_images = None
-    
-    root_window.bind_class(bindtag_window(root_window),
-      '<Destroy>', destroy, add=True)
-    
-    return root_images
+    get_root_window()
+    return (root_images := scandir(_root_images_dir, callback_image_type))
   
   return get
 
