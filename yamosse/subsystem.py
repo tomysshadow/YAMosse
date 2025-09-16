@@ -72,6 +72,9 @@ class _WindowSubsystem(_Subsystem):
     if self._window.children: return
     
     # ensure we are the last thread to be alive
+    # this is desirable because Tkinter expects
+    # that the interpreter is still running when the program exits
+    # so that it can perform cleanup on variables
     for thread in self._threads:
       thread.join()
   
