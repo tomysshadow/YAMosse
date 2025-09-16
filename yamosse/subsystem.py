@@ -99,7 +99,7 @@ class _WindowSubsystem(_Subsystem):
   
   def error(self, message, *args, parent=None, **kwargs):
     gui.messagebox.showwarning(
-      parent=parent or self.indow,
+      parent=parent or self._window,
       title=self._title,
       message=message
     )
