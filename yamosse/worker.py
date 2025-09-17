@@ -2,6 +2,7 @@ import sys
 import atexit
 import os
 import csv
+from functools import cache
 
 import soundfile as sf
 
@@ -52,6 +53,7 @@ def _high_priority(psutil=None):
     pass
 
 
+@cache
 def class_names(class_map_csv=''):
   if not class_map_csv:
     if _tfhub_enabled:

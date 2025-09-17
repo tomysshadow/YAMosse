@@ -70,13 +70,13 @@ def make_header(frame, title):
   ttk.Label(frame, text=title, style='Title.TLabel').grid()
 
 
-def make_input(frame, variables, filetypes, record):
+def make_input(frame, yamosse, variables):
   buttons_frame = gui.make_filedialog(
     frame,
     textvariable=variables['input'],
     asks=('directory', 'openfilenames'),
     parent=frame.winfo_toplevel(),
-    filetypes=filetypes
+    filetypes=yamosse.input_filetypes()
   ).last[0]
   
   recorder_window, recorder = gui.gui(
@@ -85,7 +85,7 @@ def make_input(frame, variables, filetypes, record):
     
     args=(
       variables,
-      record
+      yamosse.record
     )
   )
   
@@ -295,7 +295,7 @@ def make_identification_options(frame, variables, class_names):
     frame.lift()
 
 
-def make_presets(frame, import_, export):
+def make_presets(frame, yamosse):
   frame.rowconfigure((0, 1), weight=1) # make buttons vertically centered
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -304,8 +304,8 @@ def make_presets(frame, import_, export):
     ttk.Button,
     
     items=[
-      {'text': 'Import...', 'command': import_},
-      {'text': 'Export...', 'command': export}
+      {'text': 'Import...', 'command': yamosse.import_preset},
+      {'text': 'Export...', 'command': yamosse.export_preset}
     ],
     
     orient=tk.VERTICAL,
@@ -314,9 +314,7 @@ def make_presets(frame, import_, export):
   )
 
 
-def make_general(frame, variables,
-  input_filetypes, record, class_names,
-  import_preset, export_preset):
+def make_general(frame, yamosse, variables):
   frame.rowconfigure(1, weight=1) # make classes frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -324,7 +322,9 @@ def make_general(frame, variables,
     padding=gui.PADDING_HNSEW)
   
   input_labelframe.grid(row=0, sticky=tk.NSEW)
-  recorder_ask_save = make_input(input_labelframe, variables, input_filetypes, record)
+  recorder_ask_save = make_input(input_labelframe, yamosse, variables)
+  
+  class_names = yamosse.model_yamnet_class_names
   
   classes_labelframe = ttk.Labelframe(frame, text='Classes',
     padding=gui.PADDING_HNSEW)
@@ -347,7 +347,7 @@ def make_general(frame, variables,
     padding=gui.PADDING_HNSEW)
   
   presets_labelframe.grid(row=0, column=1, sticky=(tk.N, tk.S, tk.E), padx=gui.PADX_HW)
-  make_presets(presets_labelframe, import_preset, export_preset)
+  make_presets(presets_labelframe, yamosse)
   return recorder_ask_save
 
 
@@ -588,7 +588,7 @@ def _link_tips(text, tips):
     widget.bindtags((text_bindtag,) + widget.bindtags())
 
 
-def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
+def make_advanced(frame, yamosse, variables):
   frame.rowconfigure(3, weight=1) # make tips frame vertically resizable
   frame.columnconfigure(0, weight=1) # one column layout
   
@@ -630,9 +630,9 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   weights_labelframe = ttk.Labelframe(frame, text='Weights', padding=gui.PADDING_HNSEW)
   weights_labelframe.grid(row=2, sticky=tk.NSEW, pady=gui.PADY_QN)
   weights_entry = gui.make_filedialog(weights_labelframe, textvariable=variables['weights'],
-    parent=frame.winfo_toplevel(), filetypes=weights_filetypes).middle
+    parent=frame.winfo_toplevel(), filetypes=yamosse.WEIGHTS_FILETYPES).middle
   
-  if tfhub_enabled:
+  if yamosse.tfhub_enabled:
     gui.state_children_widget(weights_labelframe, state=tk.DISABLED)
     weights_entry['cursor'] = ''
   
@@ -667,31 +667,26 @@ def make_advanced(frame, variables, weights_filetypes, tfhub_enabled):
   })
 
 
-def make_options(notebook, variables,
-  input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
-  import_preset, export_preset):
+def make_options(notebook, yamosse, variables):
   notebook['style'] = 'Raised.TNotebook'
   
   general_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
-  recorder_ask_save = make_general(general_frame, variables,
-    input_filetypes, record, class_names,
-    import_preset, export_preset)
-  
+  recorder_ask_save = make_general(general_frame, yamosse, variables)
   notebook.add(general_frame, text='General', underline=0, sticky=tk.NSEW)
   
   advanced_frame = ttk.Frame(notebook, padding=gui.PADDING_NSEW,
     style='Raised.TNotebook > .TFrame')
   
-  make_advanced(advanced_frame, variables, weights_filetypes, tfhub_enabled)
+  make_advanced(advanced_frame, yamosse, variables)
   notebook.add(advanced_frame, text='Advanced', underline=0, sticky=tk.NSEW)
   
   notebook.enable_traversal()
   return recorder_ask_save
 
 
-def make_footer(frame, yamscan, restore_defaults):
+def make_footer(frame, yamosse):
   frame.columnconfigure(1, weight=1)
   
   def open_online_help():
@@ -705,12 +700,12 @@ def make_footer(frame, yamscan, restore_defaults):
   open_online_help_button.winfo_toplevel().bind('<F1>', lambda e: open_online_help())
   
   yamscan_button = ttk.Button(frame, text='YAMScan!', underline=0,
-    command=yamscan)
+    command=yamosse.yamscan)
   
   yamscan_button.grid(row=0, column=2, sticky=tk.E)
   
   restore_defaults_button = ttk.Button(frame, text='Restore Defaults', underline=0,
-    command=restore_defaults)
+    command=yamosse.restore_defaults)
   
   restore_defaults_button.grid(row=0, column=3, sticky=tk.E, padx=gui.PADX_QW)
   
@@ -718,9 +713,7 @@ def make_footer(frame, yamscan, restore_defaults):
     gui.enable_traversal_button(button)
 
 
-def make_yamosse(frame, title, options_variables,
-  input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
-  import_preset, export_preset, yamscan, restore_defaults):
+def make_yamosse(frame, yamosse, options_variables, title):
   window = frame.master
   gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
     iconphotos=gui.get_root_images()[gui.ImageType.PHOTO][fsenc('emoji_u1f3a4')].values())
@@ -736,13 +729,11 @@ def make_yamosse(frame, title, options_variables,
   
   options_notebook = ttk.Notebook(frame)
   options_notebook.grid(row=1, sticky=tk.NSEW, pady=gui.PADY_N)
-  recorder_ask_save = make_options(options_notebook, options_variables,
-    input_filetypes, record, class_names, weights_filetypes, tfhub_enabled,
-    import_preset, export_preset)
+  recorder_ask_save = make_options(options_notebook, yamosse, options_variables)
   
   footer_frame = ttk.Frame(frame)
   footer_frame.grid(row=2, sticky=tk.EW, pady=gui.PADY_N)
-  make_footer(footer_frame, yamscan, restore_defaults)
+  make_footer(footer_frame, yamosse)
   
   window.protocol('WM_DELETE_WINDOW', lambda: recorder_ask_save(window.destroy))
   return recorder_ask_save
