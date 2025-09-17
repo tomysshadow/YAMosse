@@ -29,8 +29,8 @@ TITLE = ' '.join((NAME, VERSION))
 
 class _YAMosse:
   __slots__ = (
-    'window', 'subsystem', 'options',
-    'model_yamnet_class_names', 'tfhub_enabled'
+    '_window', '_subsystem', '_options',
+    '_model_yamnet_class_names', '_tfhub_enabled'
   )
   
   WEIGHTS_FILETYPES = (
@@ -63,27 +63,27 @@ class _YAMosse:
   MESSAGE_ASK_RESTORE_DEFAULTS = 'Are you sure you want to restore the defaults?'
   
   def __init__(self):
-    self.window = None
-    self.subsystem = None
+    self._window = None
+    self._subsystem = None
     
     # try and load the options file first
     # if failed to load options file, reset to defaults
     try:
-      self.options = yamosse_options.Options.load()
+      self._options = yamosse_options.Options.load()
     except Exception:
-      self.options = yamosse_options.Options()
+      self._options = yamosse_options.Options()
     
-    self.model_yamnet_class_names = yamosse_worker.class_names()
-    self.tfhub_enabled = yamosse_worker.tfhub_enabled()
+    self._model_yamnet_class_names = yamosse_worker.class_names()
+    self._tfhub_enabled = yamosse_worker.tfhub_enabled()
   
   def mainloop(self, **kwargs):
     variables = None
     
     if not kwargs:
       if gui:
-        variables = gui.get_variables_from_attrs(self.options)
+        variables = gui.get_variables_from_attrs(self._options)
         
-        self.window = gui.gui(
+        self._window = gui.gui(
           gui_yamosse.make_yamosse,
           
           args=(self, variables, TITLE)
@@ -91,10 +91,10 @@ class _YAMosse:
       else:
         kwargs['output_file_name'] = input('Please enter the output file name:\n')
     
-    window = self.window
+    window = self._window
     
     with yamosse_subsystem.subsystem(window, NAME, variables) as subsystem:
-      self.subsystem = subsystem
+      self._subsystem = subsystem
       
       def call(function, *keywords):
         # only call function if all keyword arguments specified
@@ -119,11 +119,11 @@ class _YAMosse:
         call(self.import_preset, 'import_preset_file_name')
         
         call(
-          lambda o: self.options.set(o, strict=False),
+          lambda o: self._options.set(o, strict=False),
           'options_attrs'
         )
       
-      self.options.print()
+      self._options.print()
       
       if kwargs:
         call(
@@ -146,7 +146,7 @@ class _YAMosse:
           call(self.yamscan, 'output_file_name')
           return None
       finally:
-        options = self.options
+        options = self._options
         subsystem.attrs_to_variables(options)
         options.dump()
       
@@ -156,12 +156,12 @@ class _YAMosse:
     # this is an optional module
     # so we only import it if we are going to attempt recording
     import yamosse.recording as yamosse_recording
-    return yamosse_recording.Recording(self.subsystem, self.options,
+    return yamosse_recording.Recording(self._subsystem, self._options,
       start=start, stop=stop)
   
   def import_preset(self, file_name=''):
     if not file_name:
-      window = self.window
+      window = self._window
       
       assert window, 'file_name must not be empty if there is no window'
       
@@ -173,10 +173,10 @@ class _YAMosse:
       
       if not file_name: return
     
-    subsystem = self.subsystem
+    subsystem = self._subsystem
     
     try:
-      self.options = options = yamosse_options.Options.import_preset(file_name)
+      self._options = options = yamosse_options.Options.import_preset(file_name)
     except yamosse_options.Options.VersionError:
       subsystem.error(self.MESSAGE_IMPORT_PRESET_VERSION)
     except (yamosse_options.json.JSONDecodeError, UnicodeDecodeError):
@@ -189,7 +189,7 @@ class _YAMosse:
   
   def export_preset(self, file_name=''):
     if not file_name:
-      window = self.window
+      window = self._window
       
       assert window, 'file_name must not be empty if there is no window'
       
@@ -203,8 +203,8 @@ class _YAMosse:
       
       if not file_name: return
     
-    options = self.options
-    self.subsystem.attrs_to_variables(options)
+    options = self._options
+    self._subsystem.attrs_to_variables(options)
     options.export_preset(file_name)
   
   def yamscan(self, output_file_name=''):
@@ -217,8 +217,8 @@ class _YAMosse:
     INITIALDIR = 'My YAMScans'
     DEFAULTEXTENSION = '.txt' # must start with period on Linux
     
-    subsystem = self.subsystem
-    options = self.options
+    subsystem = self._subsystem
+    options = self._options
     subsystem.attrs_to_variables(options)
     
     input_ = shlex.split(options.input)
@@ -240,7 +240,7 @@ class _YAMosse:
     child = None
     
     if not output_file_name:
-      window = self.window
+      window = self._window
       
       assert window, 'output_file_name must not be empty if there is no window'
       
@@ -271,8 +271,8 @@ class _YAMosse:
       subsystem.show_callback = gui_yamscan.show_yamscan
       subsystem.widgets = widgets
     
-    model_yamnet_class_names = self.model_yamnet_class_names
-    tfhub_enabled = self.tfhub_enabled
+    model_yamnet_class_names = self._model_yamnet_class_names
+    tfhub_enabled = self._tfhub_enabled
     
     if not tfhub_enabled and not options.weights:
       if not subsystem.confirm(
@@ -306,14 +306,14 @@ class _YAMosse:
     )
   
   def restore_defaults(self):
-    subsystem = self.subsystem
+    subsystem = self._subsystem
     
     if not subsystem.confirm(
       self.MESSAGE_ASK_RESTORE_DEFAULTS,
       default=False
     ): return
     
-    self.options = options = yamosse_options.Options()
+    self._options = options = yamosse_options.Options()
     subsystem.variables_from_attrs(options)
     subsystem.quit()
   
@@ -342,6 +342,14 @@ class _YAMosse:
     # because if we did, it would block
     # until the application that opens the file closed
     Popen(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
+  
+  @property
+  def model_yamnet_class_names(self):
+    return self._model_yamnet_class_names
+  
+  @property
+  def tfhub_enabled(self):
+    return self._tfhub_enabled
 
 
 def yamosse(**kwargs):
