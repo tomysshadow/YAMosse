@@ -338,6 +338,9 @@ class _YAMosse:
       os.startfile(path)
       return
     
+    # this doesn't use with
+    # because if we did, it would block
+    # until the application that opens the file closed
     Popen(('open' if platform.system() == 'Darwin' else 'xdg-open', path))
 
 
