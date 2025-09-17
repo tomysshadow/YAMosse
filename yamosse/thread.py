@@ -26,8 +26,12 @@ def _key_getsize(file_name):
     return 0
 
 
-def _file_names_sorted_next(file_names):
-  return sorted(next(file_names), key=_key_getsize, reverse=True)
+def _file_names_next(file_names):
+  try:
+    return sorted(next(file_names),
+      key=_key_getsize, reverse=True), file_names
+  except StopIteration:
+    return None, None
 
 
 def _connection_flush(connection):
@@ -280,38 +284,32 @@ def _files(input_, exit_,
         'log': 'Created Process Pool Executor'
       })
       
-      file_names_batched = yamosse_utils.batched(file_names, BATCH_SIZE)
+      file_names_sorted, file_names_batched = _file_names_next(
+        yamosse_utils.batched(file_names, BATCH_SIZE))
       
-      try:
-        file_names_sorted = _file_names_sorted_next(file_names_batched)
-      except StopIteration:
-        pass # not recursive but files only in subfolders
-      else:
-        while file_names_batched:
-          for file_name in file_names_sorted:
-            process_pool_executor.submit(
-              yamosse_worker.worker,
-              file_name
-            ).add_done_callback(
-              lambda future, file_name=file_name: insert_done(future, file_name)
-            )
-          
-          # while the workers are booting up, sort the next batch
-          # this allows both tasks to be done at once
-          # although any individual batch should not take longer than a few seconds to sort
-          try:
-            file_names_sorted = _file_names_sorted_next(file_names_batched)
-          except StopIteration:
-            file_names_batched = None
-          
-          while next_ and file_names_pos < file_names_len:
-            # waits for incoming values so they'll be instantly shown when they arrive
-            # we wait for up to a second so we aren't busy waiting
-            # if we didn't get any values, we still want to clear the done futures
-            receiver.poll(timeout=1)
-            clear_done()
-          
-          next_ = NEXT_SUBMITTING
+      while file_names_batched:
+        for file_name in file_names_sorted:
+          process_pool_executor.submit(
+            yamosse_worker.worker,
+            file_name
+          ).add_done_callback(
+            lambda future, file_name=file_name: insert_done(future, file_name)
+          )
+        
+        # while the workers are booting up, sort the next batch
+        # this allows both tasks to be done at once
+        # although any individual batch should not take longer than a few seconds to sort
+        file_names_sorted, file_names_batched = _file_names_next(
+          file_names_batched)
+        
+        while next_ and file_names_pos < file_names_len:
+          # waits for incoming values so they'll be instantly shown when they arrive
+          # we wait for up to a second so we aren't busy waiting
+          # if we didn't get any values, we still want to clear the done futures
+          receiver.poll(timeout=1)
+          clear_done()
+        
+        next_ = NEXT_SUBMITTING
     finally:
       # process pool executor must be shut down first
       # so that no exception can prevent it from getting shut down
