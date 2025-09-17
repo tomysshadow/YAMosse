@@ -168,7 +168,7 @@ def after_invalidcommand_widget(widget, validate):
 def default_bindtags_widget(widget, name=True, class_=True, toplevel=True, all_=True):
   default_bindtags = []
   
-  if name: default_bindtags.append(widget.winfo_name())
+  if name: default_bindtags.append(str(widget))
   if class_: default_bindtags.append(widget.winfo_class())
   if toplevel: default_bindtags.append(widget.winfo_toplevel())
   if all_: default_bindtags.append(tk.ALL)
@@ -215,9 +215,9 @@ def bind_truekey_widget(widget, class_='', keysym='',
   )
   
   if class_:
-    return [widget.bind_class(class_, s, c, add=add) for s, c in keys]
+    return {s: widget.bind_class(class_, s, c, add=add) for s, c in keys}
   
-  return [widget.bind(s, c, add=add) for s, c in keys]
+  return {s: widget.bind(s, c, add=add) for s, c in keys}
 
 
 def grid_configure_size_widget(widget, configure, **kwargs):

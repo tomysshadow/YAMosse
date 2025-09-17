@@ -51,6 +51,14 @@ class _ScaleUndoable(_WidgetUndoable):
         lambda e: data(e, recenter=True),
         add=True
       )
+    
+    #sequence = '<Destroy>'
+    #
+    #bindings[sequence] = widget.bind(
+    #  sequence,
+    #  lambda e: self._unbind(e.widget, class_, bindings),
+    #  add=True
+    #)
   
   @abstractmethod
   def revert(self, *args, focus=True):
@@ -85,6 +93,11 @@ class _ScaleUndoable(_WidgetUndoable):
   def values(scales):
     return {s: float(s.get()) for s in scales}
   
+  #def _unbind(self, widget, class_, bindings):
+  #  for sequence, binding in bindings.items():
+  #    widget.unbind_class(class_, sequence)
+  #    widget.deletecommand(binding)
+  
   @abstractmethod
   def _old(self, widget):
     pass
@@ -108,6 +121,8 @@ class _MasterUndoable(_ScaleUndoable):
     self.bind(scale, scale)
     
     self.calibration = calibration
+    
+    #scale.bind('<Destroy>', self._destroy, add=True)
   
   def revert(self, *args, focus=True):
     calibration_newvalues, newvalues, newvalue = args
@@ -166,7 +181,7 @@ class _MasterUndoable(_ScaleUndoable):
     self.oldvalue = newvalue
     
     if recenter:
-      self._scale.set(newvalue)
+      widget.set(newvalue)
     
     return widget, newvalue, oldvalue, recenter
   
@@ -233,6 +248,10 @@ class _MasterUndoable(_ScaleUndoable):
       return ''
     
     return self._tk.call(command, text, *args)
+  
+  #def _destroy(self, e):
+  #  del self._scale
+  #  del self.calibration
 
 
 # There are a couple known issues with this:
@@ -286,13 +305,17 @@ class _CalibrationUndoable(_ScaleUndoable):
       command = text[scrollcommand]
       if not command: continue
       
-      def scroll(*args, command=command): return self._scrollcommand(command, *args)
+      def scroll(*args, command=command):
+        return self._scrollcommand(command, *args)
+      
       text[scrollcommand] = scroll
     
     self.bind(text, text_bindtag)
     
     self.master = _MasterUndoable(undooptions, master_scale, self)
     self.reset = _ResetUndoable(undooptions, reset_button, self)
+    
+    #text.bind('<Destroy>', self._destroy, add=True)
   
   def revert(self, *args, focus=True):
     widget, newvalue = args
@@ -353,6 +376,9 @@ class _CalibrationUndoable(_ScaleUndoable):
     # while editing the master (like by pressing the arrow keys)
     self.master.show()
     return self._tk.call(command, *args)
+  
+  #def _destroy(self, e):
+  #  del self._text
 
 
 class _ResetUndoable(_WidgetUndoable):
@@ -366,6 +392,8 @@ class _ResetUndoable(_WidgetUndoable):
     
     self.oldvalues = {s: DEFAULT_SCALE_VALUE for s in calibration.oldvalues}
     self.calibration = calibration
+    
+    #button.bind('<Destroy>', self._destroy, add=True)
   
   def revert(self, *args, focus=True):
     ARGS_LEN = 3
@@ -417,6 +445,10 @@ class _ResetUndoable(_WidgetUndoable):
     )
     
     revert(focus=False)
+  
+  #def _destroy(self, e):
+  #  del self._button
+  #  del self.calibration
 
 
 def make_footer(frame, ok, cancel):
