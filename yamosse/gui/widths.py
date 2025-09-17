@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter.font import Font
 from contextlib import suppress
 from abc import ABC, abstractmethod
-from functools import lru_cache
+from functools import cache, lru_cache
 from collections import namedtuple
 from math import ceil
 
@@ -14,23 +14,9 @@ DEFAULT_TREEVIEW_ITEM_INDENT = 20
 DEFAULT_TREEVIEW_CELL_PADDING = (4, 0)
 
 
-def _treeview_minwidth():
-  default = None
-  
-  def get(minwidth=None):
-    nonlocal default
-    
-    if minwidth is not None:
-      return minwidth
-    
-    if default is not None:
-      return default
-    
-    return (default := ttk.Treeview().column('#0', 'minwidth'))
-  
-  return get
-
-get_treeview_minwidth = _treeview_minwidth()
+@cache
+def get_treeview_minwidth():
+  return ttk.Treeview().column('#0', 'minwidth')
 
 
 def _treeview_item_configurations(configuration, treeview,
@@ -291,7 +277,8 @@ def measure_treeview_widths(widths, treeview):
       pass
     
     # a width of None means don't do this column
-    if width is None: continue
+    if width is None:
+      continue
     
     # we can't just get the minwidth of the current column to use here
     # otherwise, if the minwidth was set to the result of this function
@@ -300,7 +287,8 @@ def measure_treeview_widths(widths, treeview):
     # this is done after the try block above, because minwidth can be
     # manually specified as None, explicitly meaning
     # to use the default
-    minwidth = get_treeview_minwidth(minwidth)
+    if minwidth is None:
+      minwidth = get_treeview_minwidth()
     
     # must use ceil here because these widths may be floats
     # and Tk doesn't want a float for the width

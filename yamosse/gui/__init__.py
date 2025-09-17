@@ -7,6 +7,7 @@ import traceback
 import threading
 from threading import Lock, Event
 from contextlib import suppress
+from functools import cache
 import shlex
 import os
 from os import fsencode as fsenc
@@ -1355,69 +1356,58 @@ def make_window(window, make_frame, args=None, kwargs=None):
   return window, make_frame(frame, *(args or ()), **(kwargs or {}))
 
 
-def _root_images():
-  root_images = None
+@cache
+def get_root_images():
+  def scandir(path, callback):
+    result = {}
+    
+    with os.scandir(path) as scandir:
+      for scandir_entry in scandir:
+        item = callback(scandir_entry)
+        
+        if item is None:
+          continue
+        
+        key, value = item
+        result[key] = value
+    
+    return result
   
-  def get():
-    nonlocal root_images
+  def callback_image(entry, make_image, ext):
+    name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
     
-    if root_images:
-      return root_images
+    if entry.is_dir():
+      return (name, scandir(entry.path, lambda image_entry: callback_image(
+        image_entry, make_image, ext)))
     
-    def scandir(path, callback):
-      result = {}
-      
-      with os.scandir(path) as scandir:
-        for scandir_entry in scandir:
-          item = callback(scandir_entry)
-          
-          if item is None:
-            continue
-          
-          key, value = item
-          result[key] = value
-      
-      return result
+    # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
+    if os.path.splitext(name)[1] != ext:
+      return None
     
-    def callback_image(entry, make_image, ext):
-      name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
-      
-      if entry.is_dir():
-        return (name, scandir(entry.path, lambda image_entry: callback_image(
-          image_entry, make_image, ext)))
-      
-      # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
-      if os.path.splitext(name)[1] != ext:
-        return None
-      
-      try:
-        return (name, make_image(file=fsdec(entry.path)))
-      except tk.TclError:
-        return None
-    
-    def callback_image_type(entry):
-      if not entry.is_dir():
-        return None
-      
-      image = entry.name.capitalize()
-      
-      try:
-        type_ = ImageType(image)
-      except ValueError:
-        return None
-      
-      return (type_, scandir(entry.path, lambda image_entry: callback_image(
-        image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext)))
-    
-    # getting root window needs to be done first
-    # to avoid popping an empty window in some circumstances
-    # all names/paths here are encoded with fsenc so that they will be compared by ordinal
-    get_root_window()
-    return (root_images := scandir(_root_images_dir, callback_image_type))
+    try:
+      return (name, make_image(file=fsdec(entry.path)))
+    except tk.TclError:
+      return None
   
-  return get
-
-get_root_images = _root_images()
+  def callback_image_type(entry):
+    if not entry.is_dir():
+      return None
+    
+    image = entry.name.capitalize()
+    
+    try:
+      type_ = ImageType(image)
+    except ValueError:
+      return None
+    
+    return (type_, scandir(entry.path, lambda image_entry: callback_image(
+      image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext)))
+  
+  # getting root window needs to be done first
+  # to avoid popping an empty window in some circumstances
+  # all names/paths here are encoded with fsenc so that they will be compared by ordinal
+  get_root_window()
+  return scandir(_root_images_dir, callback_image_type)
 
 
 def elements_layout(layout, name):

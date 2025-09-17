@@ -182,7 +182,13 @@ def _files(input_, exit_,
     
     try:
       def show_received():
-        while receiver.poll(): subsystem.show(exit_, values=receiver.recv())
+        shown = receiver.poll()
+        
+        while shown:
+          subsystem.show(exit_, values=receiver.recv())
+          shown = receiver.poll()
+        
+        return shown
       
       # the done dictionary is keyed by future, not file name
       # it doesn't really matter which is the key since we loop through everything
@@ -235,7 +241,9 @@ def _files(input_, exit_,
             'log': log
           })
         
-        show_received()
+        # ensure we call show every second
+        if not show_received() and not log:
+          subsystem.show(exit_)
       
       clear_done = None
       
