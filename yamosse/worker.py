@@ -86,8 +86,7 @@ def tfhub_cache(dir_='tfhub_modules'):
   return root_tfhub_cache_dir
 
 
-def initializer(number, progress, receiver, sender, shutdown, options,
-  model_yamnet_class_names, tfhub_enabled):
+def initializer(files):
   global _initializer_ex
   
   global _progress
@@ -107,13 +106,13 @@ def initializer(number, progress, receiver, sender, shutdown, options,
     # so the receiver instance must be closed explicitly here
     # as for the sender... supposedly it would get garbage collected
     # (somehow I don't trust it, would rather just do it explicitly)
-    atexit.register(sender.close)
-    receiver.close()
+    atexit.register(files.sender.close)
+    files.receiver.close()
     
-    _shutdown = shutdown
+    _shutdown = files.shutdown
     if shutdown.is_set(): return
     
-    if _tfhub_enabled != tfhub_enabled:
+    if _tfhub_enabled != files.tfhub_enabled:
       raise ValueError('tfhub_enabled mismatch')
     
     # seperated out because loading the worker dependencies (mainly TensorFlow) in
@@ -141,6 +140,8 @@ def initializer(number, progress, receiver, sender, shutdown, options,
     if os.name != 'posix':
       import psutil
     
+    options = files.options
+    model_yamnet_class_names = files.model_yamnet_class_names
     options.worker(np, model_yamnet_class_names)
     
     if options.high_priority:
@@ -162,7 +163,7 @@ def initializer(number, progress, receiver, sender, shutdown, options,
           logical_device_configuration
         )
     
-    if tfhub_enabled:
+    if files.tfhub_enabled:
       import tensorflow_hub as tfhub
     else:
       # this sucks but I can't do anything about it
@@ -174,10 +175,14 @@ def initializer(number, progress, receiver, sender, shutdown, options,
       import params as yamnet_params
       import yamnet as yamnet_model
     
+    progress = files.progress
+    sender = files.sender
+    
     yamnet = None
+    number = files.number
     
     with number.get_lock():
-      if tfhub_enabled:
+      if files.tfhub_enabled:
         if not number.value:
           # the first time YAMNet is downloaded it may have to download and extract
           # so print a message then so the user knows what's going on
@@ -203,7 +208,7 @@ def initializer(number, progress, receiver, sender, shutdown, options,
           'Enabled' if gpus else 'Disabled')
       })
     
-    if tfhub_enabled:
+    if files.tfhub_enabled:
       # confirm that the model has the same classes we expect
       if class_names(yamnet.class_map_path().numpy()) != model_yamnet_class_names:
         raise ValueError('model_yamnet_class_names mismatch')

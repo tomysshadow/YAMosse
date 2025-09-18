@@ -6,6 +6,7 @@ from threading import Lock
 from sys import exc_info
 from traceback import format_exception
 from contextlib import suppress, nullcontext
+from functools import cache
 
 import soundfile as sf
 
@@ -19,79 +20,304 @@ import yamosse.identification as yamosse_identification
 import yamosse.subsystem as yamosse_subsystem
 
 
-def _key_getsize(file_name):
-  try:
-    return os.path.getsize(file_name)
-  except OSError:
-    return 0
-
-
-def _file_names_next(file_names):
-  try:
-    return sorted(next(file_names),
-      key=_key_getsize, reverse=True), file_names
-  except StopIteration:
-    return None, None
-
-
-def _connection_flush(connection):
-  # prevents BrokenPipeError exceptions in workers
-  # (they expect that sent messages WILL be delivered, else cause an exception)
-  with suppress(EOFError):
-    while True:
-      connection.recv()
-
-
-def _real_relpath(path, start=os.curdir):
-  # make path relative if it's within our current directory
-  # (just looks nicer in the output)
-  real_path = os.path.realpath(path)
-  real_start = os.path.realpath(start)
+class _Done:
+  __slots__ = ('_d', '_lock', 'files', 'exit_', 'clear', 'next_', 'batch')
   
-  try:
-    if os.path.commonpath((real_path, real_start)) != real_start:
-      return real_path
-  except ValueError:
-    return real_path
+  NEXT_SUBMITTING = -1
+  NEXT_SUBMITTED = -2
   
-  return os.path.relpath(real_path, start=real_start)
-
-
-def _input_file_names(input_, recursive=True):
-  if not input_:
-    raise ValueError('input must not be empty')
+  BATCH_SIZE = 2 ** 10 # must be a power of two
+  BATCH_MASK = BATCH_SIZE - 1
   
-  if not isinstance(input_, str):
-    try:
-      input_, = input_
-    except ValueError:
-      return set(input_)
+  def __init__(self, files, exit_):
+    self._d = {}
+    self._lock = Lock()
+    
+    self.files = files
+    self.exit_ = exit_
+    self.clear = self._clear_loading
+    
+    self.next_ = self.NEXT_SUBMITTING
+    self.batch = 0
   
-  path = _real_relpath(input_)
-  file_names = set()
+  # the done dictionary is keyed by future, not file name
+  # it doesn't really matter which is the key since we loop through everything
+  # but this way, we guarantee there are no duplicate or dropped futures
+  # we don't get the future's results here because
+  # if an exception occurs, we want it to occur in the YAMScan thread
+  def insert(self, future, name):
+    with self._lock:
+      self._d[future] = name
   
-  # assume path is a directory path, and if it turns out it isn't, then assume it is a file path
-  try:
-    if recursive:
-      # get a flat listing of every file in the directory and its subdirectories
-      for walk_root_dir_name, walk_dir_names, walk_file_names in os.walk(path):
-        for walk_file_name in walk_file_names:
-          file_names.add(os.path.join(walk_root_dir_name, walk_file_name))
+  # show any value received by the receiver
+  # then show progress and logs for the futures that are done
+  def _clear_normal(self):
+    log = ''
+    
+    if self.next_ == self.NEXT_SUBMITTING:
+      self.next_ = self.NEXT_SUBMITTED
+      self.batch += 1
       
-      # walk does not error if path is not a directory
-      if not file_names and not os.path.isdir(path):
-        raise NotADirectoryError
-    else:
-      # get a flat listing of every file in the directory but not its subdirectories
-      with os.scandir(path) as scandir:
-        for scandir_entry in scandir:
-          if scandir_entry.is_file():
-            file_names.add(scandir_entry.path)
-  except NotADirectoryError:
-    # not a directory, just a regular file
-    file_names.add(path)
+      log = '\nBatch #%d\n' % self.batch
+    
+    # just copy it out first so we aren't holding the lock
+    # during all the nonsense we have to do below
+    with self._lock:
+      d = self._d
+      d_copy = d.copy()
+      d.clear()
+    
+    for future, name in d_copy.items():
+      try:
+        results[name] = future.result()
+        status = 'Done'
+      except sf.LibsndfileError as exc:
+        errors[name] = exc
+        status = 'Done (with errors)'
+      
+      files = self.files
+      files.names_pos += 1
+      
+      names_pos = files.names_pos
+      names_len = files.names_len
+      
+      self.next_ = names_pos & self.BATCH_MASK
+      
+      # quote function is used here to match file name format used in output files
+      log = f'{log}{status} {names_pos}/{names_len}: {quote(name)}\n'
+    
+    exit_ = self.exit_
+    
+    if log := log.removesuffix('\n'):
+      files.subsystem.show(exit_, values={
+        'log': log
+      })
+    
+    # ensure we call show every second
+    if not files.show_received(exit_) and not log:
+      files.subsystem.show(exit_)
   
-  return file_names
+  # if we are in the loading state
+  # set the progress bar to normal if the worker has started
+  # or if there is a future that is done
+  # then change into the normal state so we don't have to continually check this
+  def _clear_loading(self):
+    # we're just reading an int here, not writing it so we don't need to lock this (I think?)
+    normal = files.number.value
+    
+    if not normal:
+      with self._lock:
+        normal = self._d
+    
+    files = self.files
+    exit_ = self.exit_
+    
+    if normal:
+      files.subsystem.show(exit_, values={
+        'progressbar': {
+          'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
+        }
+      })
+      
+      self.clear = self.clear_normal
+      self.clear_normal()
+      return
+    
+    if not files.show_received(exit_):
+      files.subsystem.show(exit_)
+
+
+class _Files:
+  def __init__(self, input_,
+  model_yamnet_class_names, tfhub_enabled,
+  subsystem, options):
+    names = list(self._input_names(input_, recursive=options.input_recursive))
+    
+    self.names = names
+    self.names_pos = 0
+    self.names_len = len(names)
+    
+    self.model_yamnet_class_names = model_yamnet_class_names
+    self.tfhub_enabled = tfhub_enabled
+    
+    self.number = Value('i', 0)
+    self.progress = None
+    self.receiver = None
+    self.sender = None
+    self.subsystem = subsystem
+    self.shutdown = Event()
+    self.options = options
+  
+  def show_received(self, exit_):
+    receiver = self.receiver
+    subsystem = self.subsystem
+    
+    shown = receiver.poll()
+    
+    while shown:
+      subsystem.show(exit_, values=receiver.recv())
+      shown = receiver.poll()
+    
+    return shown
+  
+  @cache
+  def results_and_errors(self, exit_):
+    # the ideal way to sort the files is from largest to smallest
+    # this way, we start processing the largest file right at the start
+    # and it hopefully finishes early, leaving only small files to process
+    # and allowing us to exit sooner
+    # that is, they only take a couple seconds each so we don't spend a lot of time
+    # just waiting on one large file to finish in one worker
+    # however, if many files were queued, finding the file size for all of them
+    # may itself take a while, so we do it in batches and simultaneously submit the work
+    results = {}
+    errors = {}
+    
+    shutdown = self.shutdown
+    receiver, sender = Pipe(duplex=False)
+    
+    # TODO: why doesn't this work with syntax like
+    # with Pipe(duplex=False) as (receiver, sender)
+    # ???
+    with (receiver, sender):
+      self.progress = yamosse_progress.Progress(Value('i', 0), self.names_len, sender)
+      self.receiver = receiver
+      self.sender = sender
+      
+      process_pool_executor = ProcessPoolExecutor(
+        max_workers=self.options.max_workers,
+        initializer=yamosse_worker.initializer,
+        initargs=(self,)
+      )
+      
+      try:
+        self.subsystem.show(exit_, values={
+          'log': 'Created Process Pool Executor'
+        })
+        
+        done = _Done(self, exit_)
+        
+        names_sorted, names_batched = self._sort_names_batched(
+          yamosse_utils.batched(self.names, done.BATCH_SIZE)
+        )
+        
+        while names_batched:
+          for name in names_sorted:
+            process_pool_executor.submit(
+              yamosse_worker.worker,
+              name
+            ).add_done_callback(
+              lambda future, name=name: done.insert(future, name)
+            )
+          
+          # while the workers are booting up, sort the next batch
+          # this allows both tasks to be done at once
+          # although any individual batch should not take longer than a few seconds to sort
+          names_sorted, names_batched = self._sort_names_batched(names_batched)
+          
+          while done.next_ and self.names_pos < self.names_len:
+            # waits for incoming values so they'll be instantly shown when they arrive
+            # we wait for up to a second so we aren't busy waiting
+            # if we didn't get any values, we still want to clear the done futures
+            receiver.poll(timeout=1)
+            done.clear()
+          
+          done.next_ = done.NEXT_SUBMITTING
+      finally:
+        # process pool executor must be shut down first
+        # so that no exception can prevent it from getting shut down
+        # we want to shut it down with wait=False which is not the default
+        # so we can't just put it in a with statement
+        # sender must be closed before connection flush or else we'll hang indefinitely
+        # but we can't just close sender immediately after creating it
+        # because it needs to be alive when the workers are submitted, so we close it here instead
+        # but it and receiver are still handled by the with block, in case an exception occurs here
+        # (that would cause a further BrokenPipeError, but at that point that's expected)
+        # connection flush must obviously happen last
+        # that just leaves shutdown.set, which can happen before or after sender.close
+        # but if we put it after and it causes an exception for some reason
+        # that'll just mean sender gets closed twice, redundantly
+        # so it goes before sender.close
+        process_pool_executor.shutdown(wait=False, cancel_futures=True)
+        shutdown.set()
+        sender.close()
+        self._connection_flush()
+    
+    return results, errors
+  
+  def _connection_flush(self):
+    # prevents BrokenPipeError exceptions in workers
+    # (they expect that sent messages WILL be delivered, else cause an exception)
+    with suppress(EOFError):
+      while True:
+        self.receiver.recv()
+  
+  @staticmethod
+  def _key_getsize(name):
+    try:
+      return os.path.getsize(name)
+    except OSError:
+      return 0
+  
+  @classmethod
+  def _sort_names_batched(cls, names_batched):
+    try:
+      return sorted(next(names_batched),
+        key=cls._key_getsize, reverse=True), names_batched
+    except StopIteration:
+      return None, None
+  
+  @staticmethod
+  def _real_relpath(path, start=os.curdir):
+    # make path relative if it's within our current directory
+    # (just looks nicer in the output)
+    real_path = os.path.realpath(path)
+    real_start = os.path.realpath(start)
+    
+    try:
+      if os.path.commonpath((real_path, real_start)) != real_start:
+        return real_path
+    except ValueError:
+      return real_path
+    
+    return os.path.relpath(real_path, start=real_start)
+  
+  @classmethod
+  def _input_names(cls, input_, recursive=True):
+    if not input_:
+      raise ValueError('input must not be empty')
+    
+    if not isinstance(input_, str):
+      try:
+        input_, = input_
+      except ValueError:
+        return set(input_)
+    
+    path = cls._real_relpath(input_)
+    names = set()
+    
+    # assume path is a directory path, and if it turns out it isn't, then assume it is a file path
+    try:
+      if recursive:
+        # get a flat listing of every file in the directory and its subdirectories
+        for walk_root_dir_name, walk_dir_names, walk_file_names in os.walk(path):
+          for walk_file_name in walk_file_names:
+            names.add(os.path.join(walk_root_dir_name, walk_file_name))
+        
+        # walk does not error if path is not a directory
+        if not names and not os.path.isdir(path):
+          raise NotADirectoryError
+      else:
+        # get a flat listing of every file in the directory but not its subdirectories
+        with os.scandir(path) as scandir:
+          for scandir_entry in scandir:
+            if scandir_entry.is_file():
+              names.add(scandir_entry.path)
+    except NotADirectoryError:
+      # not a directory, just a regular file
+      names.add(path)
+    
+    return names
 
 
 def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None):
@@ -136,202 +362,6 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
     raise
   
   return file
-
-
-def _files(input_, exit_,
-  model_yamnet_class_names, tfhub_enabled,
-  subsystem, options):
-  # the ideal way to sort the files is from largest to smallest
-  # this way, we start processing the largest file right at the start
-  # and it hopefully finishes early, leaving only small files to process
-  # and allowing us to exit sooner
-  # that is, they only take a couple seconds each so we don't spend a lot of time
-  # just waiting on one large file to finish in one worker
-  # however, if many files were queued, finding the file size for all of them
-  # may itself take a while, so we do it in batches and simultaneously submit the work
-  NEXT_SUBMITTING = -1
-  NEXT_SUBMITTED = -2
-  
-  BATCH_SIZE = 2 ** 10 # must be a power of two
-  BATCH_MASK = BATCH_SIZE - 1
-  
-  results = {}
-  errors = {}
-  
-  done = {}
-  done_lock = Lock()
-  
-  file_names = list(_input_file_names(input_, recursive=options.input_recursive))
-  file_names_pos = 0
-  file_names_len = len(file_names)
-  
-  next_ = NEXT_SUBMITTING
-  batch = 0
-  
-  number = Value('i', 0)
-  shutdown = Event()
-  
-  # created immediately before with statement so that these will definitely get closed
-  receiver, sender = Pipe(duplex=False)
-  
-  with receiver, sender:
-    progress = yamosse_progress.Progress(Value('i', 0), file_names_len, sender)
-    
-    process_pool_executor = ProcessPoolExecutor(
-      max_workers=options.max_workers,
-      initializer=yamosse_worker.initializer,
-      initargs=(number, progress, receiver, sender, shutdown, options,
-        model_yamnet_class_names, tfhub_enabled)
-    )
-    
-    try:
-      def show_received():
-        shown = receiver.poll()
-        
-        while shown:
-          subsystem.show(exit_, values=receiver.recv())
-          shown = receiver.poll()
-        
-        return shown
-      
-      # the done dictionary is keyed by future, not file name
-      # it doesn't really matter which is the key since we loop through everything
-      # but this way, we guarantee there are no duplicate or dropped futures
-      # we don't get the future's results here because
-      # if an exception occurs, we want it to occur in the YAMScan thread
-      def insert_done(future, file_name):
-        with done_lock:
-          done[future] = file_name
-      
-      # show any value received by the receiver
-      # then show progress and logs for the futures that are done
-      def clear_done_normal():
-        nonlocal file_names_pos
-        nonlocal file_names_len
-        
-        nonlocal next_
-        nonlocal batch
-        
-        log = ''
-        
-        if next_ == NEXT_SUBMITTING:
-          next_ = NEXT_SUBMITTED
-          batch += 1
-          
-          log = '\nBatch #%d\n' % batch
-        
-        # just copy it out first so we aren't holding the lock
-        # during all the nonsense we have to do below
-        with done_lock:
-          done_copy = done.copy()
-          done.clear()
-        
-        for future, file_name in done_copy.items():
-          try:
-            results[file_name] = future.result()
-            status = 'Done'
-          except sf.LibsndfileError as exc:
-            errors[file_name] = exc
-            status = 'Done (with errors)'
-          
-          file_names_pos += 1
-          next_ = file_names_pos & BATCH_MASK
-          
-          # quote function is used here to match file name format used in output files
-          log = f'{log}{status} {file_names_pos}/{file_names_len}: {quote(file_name)}\n'
-        
-        if log := log.removesuffix('\n'):
-          subsystem.show(exit_, values={
-            'log': log
-          })
-        
-        # ensure we call show every second
-        if not show_received() and not log:
-          subsystem.show(exit_)
-      
-      clear_done = None
-      
-      # if we are in the loading state
-      # set the progress bar to normal if the worker has started
-      # or if there is a future that is done
-      # then change into the normal state so we don't have to continually check this
-      def clear_done_loading():
-        nonlocal clear_done
-        
-        # we're just reading an int here, not writing it so we don't need to lock this (I think?)
-        normal = number.value
-        
-        if not normal:
-          with done_lock:
-            normal = done
-        
-        if normal:
-          subsystem.show(exit_, values={
-            'progressbar': {
-              'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
-            }
-          })
-          
-          clear_done = clear_done_normal
-          clear_done_normal()
-          return
-        
-        if not show_received():
-          subsystem.show(exit_)
-      
-      clear_done = clear_done_loading
-      
-      subsystem.show(exit_, values={
-        'log': 'Created Process Pool Executor'
-      })
-      
-      file_names_sorted, file_names_batched = _file_names_next(
-        yamosse_utils.batched(file_names, BATCH_SIZE))
-      
-      while file_names_batched:
-        for file_name in file_names_sorted:
-          process_pool_executor.submit(
-            yamosse_worker.worker,
-            file_name
-          ).add_done_callback(
-            lambda future, file_name=file_name: insert_done(future, file_name)
-          )
-        
-        # while the workers are booting up, sort the next batch
-        # this allows both tasks to be done at once
-        # although any individual batch should not take longer than a few seconds to sort
-        file_names_sorted, file_names_batched = _file_names_next(
-          file_names_batched)
-        
-        while next_ and file_names_pos < file_names_len:
-          # waits for incoming values so they'll be instantly shown when they arrive
-          # we wait for up to a second so we aren't busy waiting
-          # if we didn't get any values, we still want to clear the done futures
-          receiver.poll(timeout=1)
-          clear_done()
-        
-        next_ = NEXT_SUBMITTING
-    finally:
-      # process pool executor must be shut down first
-      # so that no exception can prevent it from getting shut down
-      # we want to shut it down with wait=False which is not the default
-      # so we can't just put it in a with statement
-      # sender must be closed before connection flush or else we'll hang indefinitely
-      # but we can't just close sender immediately after creating it
-      # because it needs to be alive when the workers are submitted, so we close it here instead
-      # but it and receiver are still handled by the with block, in case an exception occurs here
-      # (that would cause a further BrokenPipeError, but at that point that's expected)
-      # connection flush must obviously happen last
-      # that just leaves shutdown.set, which can happen before or after sender.close
-      # but if we put it after and it causes an exception for some reason
-      # that'll just mean sender gets closed twice, redundantly
-      # so it goes before sender.close
-      process_pool_executor.shutdown(wait=False, cancel_futures=True)
-      shutdown.set()
-      sender.close()
-      _connection_flush(receiver)
-  
-  return results, errors
 
 
 def _report_thread_exception(exit_, subsystem, exc, val, tb):
@@ -380,14 +410,13 @@ def thread(output_file_name, input_, exit_,
         subsystem=subsystem
       ) as output
     ):
-      results, errors = _files(
+      results, errors = _Files(
         input_,
-        exit_,
         model_yamnet_class_names,
         tfhub_enabled,
         subsystem,
         options
-      )
+      ).results_and_errors(exit_)
       
       subsystem.show(exit_, values={
         'progressbar': {
