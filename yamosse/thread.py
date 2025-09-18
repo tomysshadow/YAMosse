@@ -130,8 +130,8 @@ class _Done:
         }
       })
       
-      self.clear = self._clear_normal
-      self._clear_normal()
+      self.clear = clear = self._clear_normal
+      clear()
       return
     
     files.show_receiver(subsystem, exit_)
