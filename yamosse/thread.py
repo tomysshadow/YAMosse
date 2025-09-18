@@ -276,7 +276,8 @@ def _files(input_, exit_,
           clear_done_normal()
           return
         
-        show_received()
+        if not show_received():
+          subsystem.show(exit_)
       
       clear_done = clear_done_loading
       
