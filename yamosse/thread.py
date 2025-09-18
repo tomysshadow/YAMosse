@@ -190,7 +190,12 @@ class _Files:
     
     # this is done immediately after opening the pipe to ensure it closes
     with (receiver, sender):
-      self.progress = yamosse_progress.Progress(Value('i', 0), self.names_len, sender)
+      self.progress = yamosse_progress.Progress(
+        Value('i', 0),
+        self.names_len,
+        sender
+      )
+      
       self.receiver = receiver
       self.sender = sender
       
