@@ -107,8 +107,7 @@ class _Done:
       })
     
     # ensure we call show every second
-    if not files.show_received(subsystem, exit_) and not log:
-      subsystem.show(exit_)
+    files.show_received(subsystem, exit_, log)
   
   # if we are in the loading state
   # set the progress bar to normal if the worker has started
@@ -137,8 +136,7 @@ class _Done:
       self._clear_normal()
       return
     
-    if not files.show_received(subsystem, exit_):
-      subsystem.show(exit_)
+    files.show_received(subsystem, exit_)
 
 
 class _Files:
@@ -160,17 +158,6 @@ class _Files:
     self.sender = None
     self.shutdown = Event()
     self.options = options
-  
-  def show_received(self, subsystem, exit_):
-    receiver = self.receiver
-    
-    shown = receiver.poll()
-    
-    while shown:
-      subsystem.show(exit_, values=receiver.recv())
-      shown = receiver.poll()
-    
-    return shown
   
   @cache
   def results_and_errors(self, subsystem, exit_):
@@ -259,6 +246,19 @@ class _Files:
         self._connection_flush()
     
     return results, errors
+  
+  def show_received(self, subsystem, exit_, force=False):
+    receiver = self.receiver
+    
+    shown = receiver.poll()
+    
+    if not shown and force:
+      subsystem.show(exit_)
+      return
+    
+    while shown:
+      subsystem.show(exit_, values=receiver.recv())
+      shown = receiver.poll()
   
   def _connection_flush(self):
     # prevents BrokenPipeError exceptions in workers
