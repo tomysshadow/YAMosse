@@ -20,11 +20,7 @@ MONO = 1
 
 _initializer_ex = None
 
-_progress = None
-_sender = None
-
-_shutdown = None
-_options = None
+_files = None
 
 _sample_rate = float(SAMPLE_RATE)
 _patch_window_seconds = 0.96
@@ -89,11 +85,7 @@ def tfhub_cache(dir_='tfhub_modules'):
 def initializer(files):
   global _initializer_ex
   
-  global _progress
-  global _sender
-  
-  global _shutdown
-  global _options
+  global _files
   
   global _sample_rate
   global _patch_window_seconds
@@ -109,8 +101,7 @@ def initializer(files):
     atexit.register(files.sender.close)
     files.receiver.close()
     
-    shutdown = files.shutdown
-    if shutdown.is_set(): return
+    if files.shutdown.is_set(): return
     
     if _tfhub_enabled != files.tfhub_enabled:
       raise ValueError('tfhub_enabled mismatch')
@@ -141,8 +132,7 @@ def initializer(files):
       import psutil
     
     options = files.options
-    model_yamnet_class_names = files.model_yamnet_class_names
-    options.worker(np, model_yamnet_class_names)
+    options.worker(np, files.model_yamnet_class_names)
     
     if options.high_priority:
       _high_priority(psutil)
@@ -175,11 +165,10 @@ def initializer(files):
       import params as yamnet_params
       import yamnet as yamnet_model
     
-    progress = files.progress
+    number = files.number
     sender = files.sender
     
     yamnet = None
-    number = files.number
     
     with number.get_lock():
       if files.tfhub_enabled:
@@ -210,7 +199,7 @@ def initializer(files):
     
     if files.tfhub_enabled:
       # confirm that the model has the same classes we expect
-      if class_names(yamnet.class_map_path().numpy()) != model_yamnet_class_names:
+      if class_names(yamnet.class_map_path().numpy()) != files.model_yamnet_class_names:
         raise ValueError('model_yamnet_class_names mismatch')
     else:
       params = yamnet_params.Params()
@@ -237,12 +226,7 @@ def initializer(files):
       
       yamnet.load_weights(weights)
     
-    _progress = progress
-    _sender = sender
-    
-    _shutdown = shutdown
-    _options = options
-    
+    _files = files
     _yamnet = yamnet
   except:
     _initializer_ex = sys.exc_info()
@@ -255,13 +239,15 @@ def worker(file_name):
     exc, val, tb = _initializer_ex
     raise val
   
-  shutdown = _shutdown
+  files = _files
+  
+  shutdown = files.shutdown
   if shutdown.is_set(): return None
   
-  options = _options
+  options = files.options
   
   with (
-    _progress as progress,
+    files.progress as progress,
     options.identification as identification,
     sf.SoundFile(file_name) as f
   ):

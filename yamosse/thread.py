@@ -138,6 +138,13 @@ class _Done:
 
 
 class _Files:
+  __slots__ = (
+    'names', 'names_pos', 'names_len',
+    'model_yamnet_class_names', 'tfhub_enabled',
+    'number', 'progress', 'receiver', 'sender', 'shutdown', 'options',
+    '_results_errors'
+  )
+  
   def __init__(self, input_, model_yamnet_class_names, tfhub_enabled, options):
     names = list(self._input_names(input_, recursive=options.input_recursive))
     
