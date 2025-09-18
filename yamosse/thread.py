@@ -106,8 +106,7 @@ class _Done:
         'log': log
       })
     
-    # ensure we call show every second
-    files.show_received(subsystem, exit_, log)
+    files.receiver_show(subsystem, exit_, log)
   
   # if we are in the loading state
   # set the progress bar to normal if the worker has started
@@ -136,7 +135,7 @@ class _Done:
       self._clear_normal()
       return
     
-    files.show_received(subsystem, exit_)
+    files.receiver_show(subsystem, exit_)
 
 
 class _Files:
@@ -160,7 +159,7 @@ class _Files:
     self.options = options
   
   @cache
-  def results_and_errors(self, subsystem, exit_):
+  def process(self, subsystem, exit_):
     # the ideal way to sort the files is from largest to smallest
     # this way, we start processing the largest file right at the start
     # and it hopefully finishes early, leaving only small files to process
@@ -214,7 +213,8 @@ class _Files:
           
           # while the workers are booting up, sort the next batch
           # this allows both tasks to be done at once
-          # although any individual batch should not take longer than a few seconds to sort
+          # although any individual batch should not take longer
+          # than a few seconds to sort
           names_sorted, names_batched = self._sort_names_batched(names_batched)
           
           while done.next_ and self.names_pos < self.names_len:
@@ -232,8 +232,10 @@ class _Files:
         # so we can't just put it in a with statement
         # sender must be closed before connection flush or else we'll hang indefinitely
         # but we can't just close sender immediately after creating it
-        # because it needs to be alive when the workers are submitted, so we close it here instead
-        # but it and receiver are still handled by the with block, in case an exception occurs here
+        # because it needs to be alive when the workers are submitted
+        # so we close it here instead
+        # but it and receiver are still handled by the with block
+        # in case an exception occurs here
         # (that would cause a further BrokenPipeError, but at that point that's expected)
         # connection flush must obviously happen last
         # that just leaves shutdown.set, which can happen before or after sender.close
@@ -243,11 +245,11 @@ class _Files:
         process_pool_executor.shutdown(wait=False, cancel_futures=True)
         shutdown.set()
         sender.close()
-        self._connection_flush()
+        self.receiver_flush()
     
     return results, errors
   
-  def show_received(self, subsystem, exit_, force=True):
+  def receiver_show(self, subsystem, exit_, force=True):
     receiver = self.receiver
     
     shown = receiver.poll()
@@ -260,12 +262,14 @@ class _Files:
       subsystem.show(exit_, values=receiver.recv())
       shown = receiver.poll()
   
-  def _connection_flush(self):
+  def receiver_flush(self):
     # prevents BrokenPipeError exceptions in workers
     # (they expect that sent messages WILL be delivered, else cause an exception)
+    receiver = self.receiver
+    
     with suppress(EOFError):
       while True:
-        self.receiver.recv()
+        receiver.recv()
   
   @staticmethod
   def _key_getsize(name):
@@ -430,7 +434,7 @@ def thread(output_file_name, input_, exit_,
         model_yamnet_class_names,
         tfhub_enabled,
         options
-      ).results_and_errors(subsystem, exit_)
+      ).process(subsystem, exit_)
       
       subsystem.show(exit_, values={
         'progressbar': {
