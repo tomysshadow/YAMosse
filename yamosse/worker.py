@@ -20,7 +20,7 @@ MONO = 1
 
 _initializer_ex = None
 
-_files = None
+_yamscan = None
 
 _sample_rate = float(SAMPLE_RATE)
 _patch_window_seconds = 0.96
@@ -82,10 +82,10 @@ def tfhub_cache(dir_='tfhub_modules'):
   return root_tfhub_cache_dir
 
 
-def initializer(files):
+def initializer(yamscan):
   global _initializer_ex
   
-  global _files
+  global _yamscan
   
   global _sample_rate
   global _patch_window_seconds
@@ -98,12 +98,12 @@ def initializer(files):
     # so the receiver instance must be closed explicitly here
     # as for the sender... supposedly it would get garbage collected
     # (somehow I don't trust it, would rather just do it explicitly)
-    atexit.register(files.sender.close)
-    files.receiver.close()
+    atexit.register(yamscan.sender.close)
+    yamscan.receiver.close()
     
-    if files.shutdown.is_set(): return
+    if yamscan.shutdown.is_set(): return
     
-    if _tfhub_enabled != files.tfhub_enabled:
+    if _tfhub_enabled != yamscan.tfhub_enabled:
       raise ValueError('tfhub_enabled mismatch')
     
     # seperated out because loading the worker dependencies (mainly TensorFlow) in
@@ -131,8 +131,8 @@ def initializer(files):
     if os.name != 'posix':
       import psutil
     
-    options = files.options
-    options.worker(np, files.model_yamnet_class_names)
+    options = yamscan.options
+    options.worker(np, yamscan.model_yamnet_class_names)
     
     if options.high_priority:
       _high_priority(psutil)
@@ -153,7 +153,7 @@ def initializer(files):
           logical_device_configuration
         )
     
-    if files.tfhub_enabled:
+    if yamscan.tfhub_enabled:
       import tensorflow_hub as tfhub
     else:
       # this sucks but I can't do anything about it
@@ -165,13 +165,13 @@ def initializer(files):
       import params as yamnet_params
       import yamnet as yamnet_model
     
-    number = files.number
-    sender = files.sender
+    number = yamscan.number
+    sender = yamscan.sender
     
     yamnet = None
     
     with number.get_lock():
-      if files.tfhub_enabled:
+      if yamscan.tfhub_enabled:
         if not number.value:
           # the first time YAMNet is downloaded it may have to download and extract
           # so print a message then so the user knows what's going on
@@ -197,9 +197,9 @@ def initializer(files):
           'Enabled' if gpus else 'Disabled')
       })
     
-    if files.tfhub_enabled:
+    if yamscan.tfhub_enabled:
       # confirm that the model has the same classes we expect
-      if class_names(yamnet.class_map_path().numpy()) != files.model_yamnet_class_names:
+      if class_names(yamnet.class_map_path().numpy()) != yamscan.model_yamnet_class_names:
         raise ValueError('model_yamnet_class_names mismatch')
     else:
       params = yamnet_params.Params()
@@ -226,7 +226,7 @@ def initializer(files):
       
       yamnet.load_weights(weights)
     
-    _files = files
+    _yamscan = yamscan
     _yamnet = yamnet
   except:
     _initializer_ex = sys.exc_info()
@@ -239,15 +239,15 @@ def worker(file_name):
     exc, val, tb = _initializer_ex
     raise val
   
-  files = _files
+  yamscan = _yamscan
   
-  shutdown = files.shutdown
+  shutdown = yamscan.shutdown
   if shutdown.is_set(): return None
   
-  options = files.options
+  options = yamscan.options
   
   with (
-    files.progress as progress,
+    yamscan.progress as progress,
     options.identification as identification,
     sf.SoundFile(file_name) as f
   ):
