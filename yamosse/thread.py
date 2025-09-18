@@ -105,7 +105,7 @@ class _Done:
         'log': log
       })
     
-    files.receiver_show(subsystem, exit_, log)
+    files.show_receiver(subsystem, exit_, log)
   
   # if we are in the loading state
   # set the progress bar to normal if the worker has started
@@ -134,13 +134,11 @@ class _Done:
       self._clear_normal()
       return
     
-    files.receiver_show(subsystem, exit_)
+    files.show_receiver(subsystem, exit_)
 
 
 class _Files:
-  def __init__(self, input_,
-  model_yamnet_class_names, tfhub_enabled,
-  options):
+  def __init__(self, input_, model_yamnet_class_names, tfhub_enabled, options):
     names = list(self._input_names(input_, recursive=options.input_recursive))
     
     self.names = names
@@ -248,11 +246,11 @@ class _Files:
         process_pool_executor.shutdown(wait=False, cancel_futures=True)
         shutdown.set()
         sender.close()
-        self.receiver_flush()
-    
-    return results_errors
+        self.flush_receiver()
+      
+      return results_errors
   
-  def receiver_show(self, subsystem, exit_, force=True):
+  def show_receiver(self, subsystem, exit_, force=True):
     receiver = self.receiver
     
     shown = receiver.poll()
@@ -265,7 +263,7 @@ class _Files:
       subsystem.show(exit_, values=receiver.recv())
       shown = receiver.poll()
   
-  def receiver_flush(self):
+  def flush_receiver(self):
     # prevents BrokenPipeError exceptions in workers
     # (they expect that sent messages WILL be delivered, else cause an exception)
     receiver = self.receiver
