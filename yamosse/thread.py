@@ -6,7 +6,6 @@ from threading import Lock
 from sys import exc_info
 from traceback import format_exception
 from contextlib import suppress, nullcontext
-from functools import cache
 
 import soundfile as sf
 
@@ -157,19 +156,23 @@ class _Files:
     self.sender = None
     self.shutdown = Event()
     self.options = options
+    
+    self._results_errors = None
   
-  @cache
   def process(self, subsystem, exit_):
+    if self._results_errors:
+      return self._results_errors
+    
     # the ideal way to sort the files is from largest to smallest
     # this way, we start processing the largest file right at the start
     # and it hopefully finishes early, leaving only small files to process
     # and allowing us to exit sooner
-    # that is, they only take a couple seconds each so we don't spend a lot of time
-    # just waiting on one large file to finish in one worker
+    # that is, they only take a couple seconds each so we don't spend
+    # a lot of time just waiting on one large file to finish in one worker
     # however, if many files were queued, finding the file size for all of them
-    # may itself take a while, so we do it in batches and simultaneously submit the work
-    results = {}
-    errors = {}
+    # may itself take a while, so we do it in batches
+    # and simultaneously submit the work
+    self._results_errors = results_errors = ({}, {})
     
     shutdown = self.shutdown
     receiver, sender = Pipe(duplex=False)
@@ -196,7 +199,7 @@ class _Files:
           'log': 'Created Process Pool Executor'
         })
         
-        done = _Done(self, results, errors, subsystem, exit_)
+        done = _Done(self, *results_errors, subsystem, exit_)
         
         names_sorted, names_batched = self._sort_names_batched(
           yamosse_utils.batched(self.names, done.BATCH_SIZE)
@@ -247,7 +250,7 @@ class _Files:
         sender.close()
         self.receiver_flush()
     
-    return results, errors
+    return results_errors
   
   def receiver_show(self, subsystem, exit_, force=True):
     receiver = self.receiver
