@@ -188,9 +188,7 @@ class _Files:
     shutdown = self.shutdown
     receiver, sender = Pipe(duplex=False)
     
-    # TODO: why doesn't this work with syntax like
-    # with Pipe(duplex=False) as (receiver, sender)
-    # ???
+    # this is done immediately after opening the pipe to ensure it closes
     with (receiver, sender):
       self.progress = yamosse_progress.Progress(Value('i', 0), self.names_len, sender)
       self.receiver = receiver
