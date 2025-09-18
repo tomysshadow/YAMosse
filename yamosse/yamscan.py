@@ -137,11 +137,11 @@ class _YAMScan:
         process_pool_executor.shutdown(wait=False, cancel_futures=True)
         shutdown.set()
         sender.close()
-        self.flush_receiver()
+        self.flush_received()
       
       return results_errors
   
-  def show_receiver(self, subsystem, exit_, force=True):
+  def show_received(self, subsystem, exit_, force=True):
     receiver = self.receiver
     
     shown = receiver.poll()
@@ -154,7 +154,7 @@ class _YAMScan:
       subsystem.show(exit_, values=receiver.recv())
       shown = receiver.poll()
   
-  def flush_receiver(self):
+  def flush_received(self):
     # prevents BrokenPipeError exceptions in workers
     # (they expect that sent messages WILL be delivered, else cause an exception)
     receiver = self.receiver
@@ -315,7 +315,7 @@ class _Done:
         'log': log
       })
     
-    yamscan.show_receiver(subsystem, exit_, log)
+    yamscan.show_received(subsystem, exit_, log)
   
   # if we are in the loading state
   # set the progress bar to normal if the worker has started
@@ -344,7 +344,7 @@ class _Done:
       clear()
       return
     
-    yamscan.show_receiver(subsystem, exit_)
+    yamscan.show_received(subsystem, exit_)
   
   @staticmethod
   def _key_getsize(file_name):
