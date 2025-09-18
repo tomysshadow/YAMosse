@@ -91,7 +91,6 @@ class _YAMScan:
         })
         
         done = _Done(self, *results_errors, subsystem, exit_)
-        
         next_batch = done.next_batch()
         
         while next_batch:
@@ -269,6 +268,35 @@ class _Done:
     with self._lock:
       self._d[future] = file_name
   
+  # if we are in the loading state
+  # set the progress bar to normal if the worker has started
+  # or if there is a future that is done
+  # then change into the normal state so we don't have to continually check this
+  def _clear_loading(self):
+    yamscan = self.yamscan
+    subsystem = self.subsystem
+    exit_ = self.exit_
+    
+    # we're just reading an int here, not writing it so we don't need to lock this (I think?)
+    normal = yamscan.number.value
+    
+    if not normal:
+      with self._lock:
+        normal = self._d
+    
+    if normal:
+      subsystem.show(exit_, values={
+        'progressbar': {
+          'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
+        }
+      })
+      
+      self.clear = clear = self._clear_normal
+      clear()
+      return
+    
+    yamscan.show_received(subsystem, exit_)
+  
   # show any value received by the receiver
   # then show progress and logs for the futures that are done
   def _clear_normal(self):
@@ -316,35 +344,6 @@ class _Done:
       })
     
     yamscan.show_received(subsystem, exit_, log)
-  
-  # if we are in the loading state
-  # set the progress bar to normal if the worker has started
-  # or if there is a future that is done
-  # then change into the normal state so we don't have to continually check this
-  def _clear_loading(self):
-    yamscan = self.yamscan
-    subsystem = self.subsystem
-    exit_ = self.exit_
-    
-    # we're just reading an int here, not writing it so we don't need to lock this (I think?)
-    normal = yamscan.number.value
-    
-    if not normal:
-      with self._lock:
-        normal = self._d
-    
-    if normal:
-      subsystem.show(exit_, values={
-        'progressbar': {
-          'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
-        }
-      })
-      
-      self.clear = clear = self._clear_normal
-      clear()
-      return
-    
-    yamscan.show_received(subsystem, exit_)
   
   @staticmethod
   def _key_getsize(file_name):
