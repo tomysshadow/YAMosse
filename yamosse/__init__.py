@@ -12,7 +12,7 @@ import soundfile as sf
 import yamosse.progress as yamosse_progress
 import yamosse.subsystem as yamosse_subsystem
 import yamosse.options as yamosse_options
-import yamosse.thread as yamosse_thread
+import yamosse.yamscan as yamosse_yamscan
 import yamosse.worker as yamosse_worker
 
 try:
@@ -292,7 +292,7 @@ class _YAMosse:
         return
     
     subsystem.start(
-      yamosse_thread.thread,
+      yamosse_yamscan.thread,
       
       args=(
         output_file_name,

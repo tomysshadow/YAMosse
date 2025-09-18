@@ -19,144 +19,6 @@ import yamosse.identification as yamosse_identification
 import yamosse.subsystem as yamosse_subsystem
 
 
-class _Done:
-  __slots__ = (
-    '_d', '_lock',
-    'yamscan', 'results', 'errors',
-    'subsystem', 'exit_',
-    'next_', 'batch',
-    'clear',
-    '_file_names_batched'
-  )
-  
-  NEXT_SUBMITTING = -1
-  NEXT_SUBMITTED = -2
-  
-  BATCH_SIZE = 2 ** 10 # must be a power of two
-  BATCH_MASK = BATCH_SIZE - 1
-  
-  def __init__(self, yamscan, results, errors, subsystem, exit_):
-    self._d = {}
-    self._lock = Lock()
-    
-    self.yamscan = yamscan
-    self.results = results
-    self.errors = errors
-    
-    self.subsystem = subsystem
-    self.exit_ = exit_
-    
-    self.next_ = self.NEXT_SUBMITTING
-    self.batch = 0
-    
-    self.clear = self._clear_loading
-    
-    self._file_names_batched = yamosse_utils.batched(
-      yamscan.file_names,
-      self.BATCH_SIZE
-    )
-  
-  def next_batch(self):
-    try:
-      return sorted(next(self._file_names_batched),
-        key=self._key_getsize, reverse=True)
-    except StopIteration:
-      return None
-  
-  # the done dictionary is keyed by future, not file name
-  # it doesn't really matter which is the key since we loop through everything
-  # but this way, we guarantee there are no duplicate or dropped futures
-  # we don't get the future's results here because
-  # if an exception occurs, we want it to occur in the YAMScan thread
-  def insert(self, future, file_name):
-    with self._lock:
-      self._d[future] = file_name
-  
-  # show any value received by the receiver
-  # then show progress and logs for the futures that are done
-  def _clear_normal(self):
-    log = ''
-    
-    if self.next_ == self.NEXT_SUBMITTING:
-      self.next_ = self.NEXT_SUBMITTED
-      self.batch += 1
-      
-      log = '\nBatch #%d\n' % self.batch
-    
-    yamscan = self.yamscan
-    
-    # just copy it out first so we aren't holding the lock
-    # during all the nonsense we have to do below
-    with self._lock:
-      d = self._d
-      d_copy = d.copy()
-      d.clear()
-    
-    for future, file_name in d_copy.items():
-      try:
-        self.results[file_name] = future.result()
-        status = 'Done'
-      except sf.LibsndfileError as exc:
-        self.errors[file_name] = exc
-        status = 'Done (with errors)'
-      
-      yamscan.file_names_pos += 1
-      
-      file_names_pos = yamscan.file_names_pos
-      file_names_len = yamscan.file_names_len
-      
-      self.next_ = file_names_pos & self.BATCH_MASK
-      
-      # quote function is used here to match file name format used in output files
-      log = f'{log}{status} {file_names_pos}/{file_names_len}: {quote(file_name)}\n'
-    
-    subsystem = self.subsystem
-    exit_ = self.exit_
-    
-    if log := log.removesuffix('\n'):
-      subsystem.show(exit_, values={
-        'log': log
-      })
-    
-    yamscan.show_receiver(subsystem, exit_, log)
-  
-  # if we are in the loading state
-  # set the progress bar to normal if the worker has started
-  # or if there is a future that is done
-  # then change into the normal state so we don't have to continually check this
-  def _clear_loading(self):
-    yamscan = self.yamscan
-    subsystem = self.subsystem
-    exit_ = self.exit_
-    
-    # we're just reading an int here, not writing it so we don't need to lock this (I think?)
-    normal = yamscan.number.value
-    
-    if not normal:
-      with self._lock:
-        normal = self._d
-    
-    if normal:
-      subsystem.show(exit_, values={
-        'progressbar': {
-          'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
-        }
-      })
-      
-      self.clear = clear = self._clear_normal
-      clear()
-      return
-    
-    yamscan.show_receiver(subsystem, exit_)
-  
-  @staticmethod
-  def _key_getsize(file_name):
-    try:
-      return os.path.getsize(file_name)
-    except OSError:
-      return 0
-
-
 class _YAMScan:
   __slots__ = (
     'file_names', 'file_names_pos', 'file_names_len',
@@ -352,6 +214,144 @@ class _YAMScan:
       file_names.add(path)
     
     return file_names
+
+
+class _Done:
+  __slots__ = (
+    '_d', '_lock',
+    'yamscan', 'results', 'errors',
+    'subsystem', 'exit_',
+    'next_', 'batch',
+    'clear',
+    '_file_names_batched'
+  )
+  
+  NEXT_SUBMITTING = -1
+  NEXT_SUBMITTED = -2
+  
+  BATCH_SIZE = 2 ** 10 # must be a power of two
+  BATCH_MASK = BATCH_SIZE - 1
+  
+  def __init__(self, yamscan, results, errors, subsystem, exit_):
+    self._d = {}
+    self._lock = Lock()
+    
+    self.yamscan = yamscan
+    self.results = results
+    self.errors = errors
+    
+    self.subsystem = subsystem
+    self.exit_ = exit_
+    
+    self.next_ = self.NEXT_SUBMITTING
+    self.batch = 0
+    
+    self.clear = self._clear_loading
+    
+    self._file_names_batched = yamosse_utils.batched(
+      yamscan.file_names,
+      self.BATCH_SIZE
+    )
+  
+  def next_batch(self):
+    try:
+      return sorted(next(self._file_names_batched),
+        key=self._key_getsize, reverse=True)
+    except StopIteration:
+      return None
+  
+  # the done dictionary is keyed by future, not file name
+  # it doesn't really matter which is the key since we loop through everything
+  # but this way, we guarantee there are no duplicate or dropped futures
+  # we don't get the future's results here because
+  # if an exception occurs, we want it to occur in the YAMScan thread
+  def insert(self, future, file_name):
+    with self._lock:
+      self._d[future] = file_name
+  
+  # show any value received by the receiver
+  # then show progress and logs for the futures that are done
+  def _clear_normal(self):
+    log = ''
+    
+    if self.next_ == self.NEXT_SUBMITTING:
+      self.next_ = self.NEXT_SUBMITTED
+      self.batch += 1
+      
+      log = '\nBatch #%d\n' % self.batch
+    
+    yamscan = self.yamscan
+    
+    # just copy it out first so we aren't holding the lock
+    # during all the nonsense we have to do below
+    with self._lock:
+      d = self._d
+      d_copy = d.copy()
+      d.clear()
+    
+    for future, file_name in d_copy.items():
+      try:
+        self.results[file_name] = future.result()
+        status = 'Done'
+      except sf.LibsndfileError as exc:
+        self.errors[file_name] = exc
+        status = 'Done (with errors)'
+      
+      yamscan.file_names_pos += 1
+      
+      file_names_pos = yamscan.file_names_pos
+      file_names_len = yamscan.file_names_len
+      
+      self.next_ = file_names_pos & self.BATCH_MASK
+      
+      # quote function is used here to match file name format used in output files
+      log = f'{log}{status} {file_names_pos}/{file_names_len}: {quote(file_name)}\n'
+    
+    subsystem = self.subsystem
+    exit_ = self.exit_
+    
+    if log := log.removesuffix('\n'):
+      subsystem.show(exit_, values={
+        'log': log
+      })
+    
+    yamscan.show_receiver(subsystem, exit_, log)
+  
+  # if we are in the loading state
+  # set the progress bar to normal if the worker has started
+  # or if there is a future that is done
+  # then change into the normal state so we don't have to continually check this
+  def _clear_loading(self):
+    yamscan = self.yamscan
+    subsystem = self.subsystem
+    exit_ = self.exit_
+    
+    # we're just reading an int here, not writing it so we don't need to lock this (I think?)
+    normal = yamscan.number.value
+    
+    if not normal:
+      with self._lock:
+        normal = self._d
+    
+    if normal:
+      subsystem.show(exit_, values={
+        'progressbar': {
+          'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
+        }
+      })
+      
+      self.clear = clear = self._clear_normal
+      clear()
+      return
+    
+    yamscan.show_receiver(subsystem, exit_)
+  
+  @staticmethod
+  def _key_getsize(file_name):
+    try:
+      return os.path.getsize(file_name)
+    except OSError:
+      return 0
 
 
 def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None):
