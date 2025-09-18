@@ -247,7 +247,7 @@ class _Files:
     
     return results, errors
   
-  def show_received(self, subsystem, exit_, force=False):
+  def show_received(self, subsystem, exit_, force=True):
     receiver = self.receiver
     
     shown = receiver.poll()
