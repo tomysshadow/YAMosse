@@ -109,7 +109,7 @@ def initializer(files):
     atexit.register(files.sender.close)
     files.receiver.close()
     
-    _shutdown = files.shutdown
+    shutdown = files.shutdown
     if shutdown.is_set(): return
     
     if _tfhub_enabled != files.tfhub_enabled:
@@ -240,7 +240,9 @@ def initializer(files):
     _progress = progress
     _sender = sender
     
+    _shutdown = shutdown
     _options = options
+    
     _yamnet = yamnet
   except:
     _initializer_ex = sys.exc_info()

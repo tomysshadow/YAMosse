@@ -21,7 +21,13 @@ import yamosse.subsystem as yamosse_subsystem
 
 
 class _Done:
-  __slots__ = ('_d', '_lock', 'files', 'exit_', 'clear', 'next_', 'batch')
+  __slots__ = (
+    '_d', '_lock',
+    'files', 'results', 'errors',
+    'subsystem', 'exit_',
+    'next_', 'batch',
+    'clear'
+  )
   
   NEXT_SUBMITTING = -1
   NEXT_SUBMITTED = -2
@@ -29,16 +35,21 @@ class _Done:
   BATCH_SIZE = 2 ** 10 # must be a power of two
   BATCH_MASK = BATCH_SIZE - 1
   
-  def __init__(self, files, exit_):
+  def __init__(self, files, results, errors, subsystem, exit_):
     self._d = {}
     self._lock = Lock()
     
     self.files = files
+    self.results = results
+    self.errors = errors
+    
+    self.subsystem = subsystem
     self.exit_ = exit_
-    self.clear = self._clear_loading
     
     self.next_ = self.NEXT_SUBMITTING
     self.batch = 0
+    
+    self.clear = self._clear_loading
   
   # the done dictionary is keyed by future, not file name
   # it doesn't really matter which is the key since we loop through everything
@@ -60,6 +71,8 @@ class _Done:
       
       log = '\nBatch #%d\n' % self.batch
     
+    files = self.files
+    
     # just copy it out first so we aren't holding the lock
     # during all the nonsense we have to do below
     with self._lock:
@@ -69,13 +82,12 @@ class _Done:
     
     for future, name in d_copy.items():
       try:
-        results[name] = future.result()
+        self.results[name] = future.result()
         status = 'Done'
       except sf.LibsndfileError as exc:
-        errors[name] = exc
+        self.errors[name] = exc
         status = 'Done (with errors)'
       
-      files = self.files
       files.names_pos += 1
       
       names_pos = files.names_pos
@@ -86,22 +98,27 @@ class _Done:
       # quote function is used here to match file name format used in output files
       log = f'{log}{status} {names_pos}/{names_len}: {quote(name)}\n'
     
+    subsystem = self.subsystem
     exit_ = self.exit_
     
     if log := log.removesuffix('\n'):
-      files.subsystem.show(exit_, values={
+      subsystem.show(exit_, values={
         'log': log
       })
     
     # ensure we call show every second
-    if not files.show_received(exit_) and not log:
-      files.subsystem.show(exit_)
+    if not files.show_received(subsystem, exit_) and not log:
+      subsystem.show(exit_)
   
   # if we are in the loading state
   # set the progress bar to normal if the worker has started
   # or if there is a future that is done
   # then change into the normal state so we don't have to continually check this
   def _clear_loading(self):
+    files = self.files
+    subsystem = self.subsystem
+    exit_ = self.exit_
+    
     # we're just reading an int here, not writing it so we don't need to lock this (I think?)
     normal = files.number.value
     
@@ -109,28 +126,25 @@ class _Done:
       with self._lock:
         normal = self._d
     
-    files = self.files
-    exit_ = self.exit_
-    
     if normal:
-      files.subsystem.show(exit_, values={
+      subsystem.show(exit_, values={
         'progressbar': {
           'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
         }
       })
       
-      self.clear = self.clear_normal
-      self.clear_normal()
+      self.clear = self._clear_normal
+      self._clear_normal()
       return
     
-    if not files.show_received(exit_):
-      files.subsystem.show(exit_)
+    if not files.show_received(subsystem, exit_):
+      subsystem.show(exit_)
 
 
 class _Files:
   def __init__(self, input_,
   model_yamnet_class_names, tfhub_enabled,
-  subsystem, options):
+  options):
     names = list(self._input_names(input_, recursive=options.input_recursive))
     
     self.names = names
@@ -144,13 +158,11 @@ class _Files:
     self.progress = None
     self.receiver = None
     self.sender = None
-    self.subsystem = subsystem
     self.shutdown = Event()
     self.options = options
   
-  def show_received(self, exit_):
+  def show_received(self, subsystem, exit_):
     receiver = self.receiver
-    subsystem = self.subsystem
     
     shown = receiver.poll()
     
@@ -161,7 +173,7 @@ class _Files:
     return shown
   
   @cache
-  def results_and_errors(self, exit_):
+  def results_and_errors(self, subsystem, exit_):
     # the ideal way to sort the files is from largest to smallest
     # this way, we start processing the largest file right at the start
     # and it hopefully finishes early, leaving only small files to process
@@ -191,11 +203,11 @@ class _Files:
       )
       
       try:
-        self.subsystem.show(exit_, values={
+        subsystem.show(exit_, values={
           'log': 'Created Process Pool Executor'
         })
         
-        done = _Done(self, exit_)
+        done = _Done(self, results, errors, subsystem, exit_)
         
         names_sorted, names_batched = self._sort_names_batched(
           yamosse_utils.batched(self.names, done.BATCH_SIZE)
@@ -364,7 +376,7 @@ def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None
   return file
 
 
-def _report_thread_exception(exit_, subsystem, exc, val, tb):
+def _report_thread_exception(subsystem, exit_, exc, val, tb):
   try:
     subsystem.show(exit_, values={
       'progressbar': {
@@ -414,9 +426,8 @@ def thread(output_file_name, input_, exit_,
         input_,
         model_yamnet_class_names,
         tfhub_enabled,
-        subsystem,
         options
-      ).results_and_errors(exit_)
+      ).results_and_errors(subsystem, exit_)
       
       subsystem.show(exit_, values={
         'progressbar': {
@@ -430,7 +441,7 @@ def thread(output_file_name, input_, exit_,
       output.results(results)
       output.errors(errors)
   except yamosse_subsystem.SubsystemExit: pass
-  except: _report_thread_exception(exit_, subsystem, *exc_info())
+  except: _report_thread_exception(subsystem, exit_, *exc_info())
   finally:
     try:
       subsystem.show(exit_, values={
