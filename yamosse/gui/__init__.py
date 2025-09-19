@@ -1487,6 +1487,7 @@ def leave_stack(stack):
   return True
 
 
+@cache
 def threaded():
   if not tk.Tcl().eval('set tcl_platform(threaded)'):
     raise NotImplementedError('Non-threaded builds are not supported.')
