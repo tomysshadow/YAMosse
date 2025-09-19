@@ -1,8 +1,8 @@
 import os
 from shlex import quote
 from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Value, Pipe, Event
-from threading import Lock
+import multiprocessing
+import threading
 from sys import exc_info
 from traceback import format_exception
 from contextlib import suppress, nullcontext
@@ -37,7 +37,7 @@ class _Done:
   
   def __init__(self, yamscan, results, errors, subsystem, exit_):
     self._d = {}
-    self._lock = Lock()
+    self._lock = threading.Lock()
     
     self.yamscan = yamscan
     self.results = results
@@ -164,9 +164,9 @@ class YAMScan:
     'number', 'progress', 'receiver', 'sender', 'shutdown', 'options'
   )
   
-  def __init__(self, output_file_name, input_, exit_,
+  def __init__(self, output_file_name, input_,
     model_yamnet_class_names, tfhub_enabled,
-    subsystem, options):
+    subsystem, options, exit_=None):
     self.file_names = file_names = list(
       self._input_file_names(
         input_,
@@ -180,17 +180,21 @@ class YAMScan:
     self.model_yamnet_class_names = model_yamnet_class_names
     self.tfhub_enabled = tfhub_enabled
     
-    self.number = Value('i', 0)
+    self.number = multiprocessing.Value('i', 0)
     self.progress = None
     self.receiver = None
     self.sender = None
-    self.shutdown = Event()
+    self.shutdown = multiprocessing.Event()
     self.options = options
     
     subsystem.start(
       self._thread,
       
-      args=(output_file_name, subsystem, exit_)
+      args=(
+        output_file_name,
+        subsystem,
+        threading.Event() if exit_ is None else exit_
+      )
     )
   
   def show_received(self, subsystem, exit_, force=True):
@@ -281,12 +285,12 @@ class YAMScan:
     errors = {}
     
     shutdown = self.shutdown
-    receiver, sender = Pipe(duplex=False)
+    receiver, sender = multiprocessing.Pipe(duplex=False)
     
     # this is done immediately after opening the pipe to ensure it closes
     with (receiver, sender):
       self.progress = yamosse_progress.Progress(
-        Value('i', 0),
+        multiprocessing.Value('i', 0),
         self.file_names_len,
         sender
       )

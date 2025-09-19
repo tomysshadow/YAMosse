@@ -296,11 +296,11 @@ class _YAMosse:
     return yamosse_yamscan.YAMScan(
       output_file_name,
       input_,
-      exit_,
       model_yamnet_class_names,
       tfhub_enabled,
       subsystem,
-      options
+      options,
+      exit_=exit_,
     )
   
   def restore_defaults(self):
