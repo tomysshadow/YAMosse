@@ -207,7 +207,7 @@ class _YAMosse:
     self._subsystem.attrs_to_variables(options)
     options.export_preset(file_name)
   
-  def yamscan(self, output_file_name=''):
+  def yamscan(self, output_file_name='', exit_=None):
     FILETYPES = (
       ('Text Document', '*.txt'),
       ('JSON', '*.json'),
@@ -225,18 +225,20 @@ class _YAMosse:
     
     if not input_:
       subsystem.error(self.MESSAGE_INPUT_NONE)
-      return
+      return None
     
     if not options.classes:
       subsystem.error(self.MESSAGE_CLASSES_NONE)
-      return
+      return None
     
     # this event prevents the thread from trying to interact with windows
     # other than the one it was created for
     # because it's possible for a window to get "Indiana Jonesed"
     # and have a new window with the same name as an old one
     # so the thread doesn't see it exit
-    exit_ = Event()
+    if exit_ is None:
+      exit_ = Event()
+    
     child = None
     
     if not output_file_name:
@@ -252,7 +254,7 @@ class _YAMosse:
         defaultextension=DEFAULTEXTENSION
       )
       
-      if not output_file_name: return
+      if not output_file_name: return None
       
       child, widgets = gui.gui(
         gui_yamscan.make_yamscan,
@@ -289,20 +291,16 @@ class _YAMosse:
           'log': 'The YAMScan was cancelled because there is no weights file.',
           'done': 'OK'
         })
-        return
+        return None
     
-    subsystem.start(
-      yamosse_yamscan.thread,
-      
-      args=(
-        output_file_name,
-        input_,
-        exit_,
-        model_yamnet_class_names,
-        tfhub_enabled,
-        subsystem,
-        options
-      )
+    return yamosse_yamscan.YAMScan(
+      output_file_name,
+      input_,
+      exit_,
+      model_yamnet_class_names,
+      tfhub_enabled,
+      subsystem,
+      options
     )
   
   def restore_defaults(self):
