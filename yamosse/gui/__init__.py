@@ -1359,9 +1359,9 @@ def make_window(window, make_frame, args=None, kwargs=None):
 @cache
 def get_root_images():
   def scandir(path, callback):
-    result = {}
-    
     with os.scandir(path) as scandir:
+      result = {}
+      
       for scandir_entry in scandir:
         item = callback(scandir_entry)
         
@@ -1370,8 +1370,8 @@ def get_root_images():
         
         key, value = item
         result[key] = value
-    
-    return result
+      
+      return result
   
   def callback_image(entry, make_image, ext):
     name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
