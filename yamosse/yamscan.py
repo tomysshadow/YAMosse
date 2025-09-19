@@ -161,8 +161,7 @@ class YAMScan:
   __slots__ = (
     'file_names', 'file_names_pos', 'file_names_len',
     'model_yamnet_class_names', 'tfhub_enabled',
-    'number', 'progress', 'receiver', 'sender', 'shutdown', 'options',
-    '_results_errors'
+    'number', 'progress', 'receiver', 'sender', 'shutdown', 'options'
   )
   
   def __init__(self, output_file_name, input_, exit_,
@@ -188,18 +187,87 @@ class YAMScan:
     self.shutdown = Event()
     self.options = options
     
-    self._results_errors = None
-    
     subsystem.start(
       self._thread,
       
       args=(output_file_name, subsystem, exit_)
     )
   
-  def files(self, subsystem, exit_):
-    if self._results_errors:
-      return self._results_errors
+  def show_received(self, subsystem, exit_, force=True):
+    receiver = self.receiver
     
+    shown = receiver.poll()
+    
+    if not shown and force:
+      subsystem.show(exit_)
+      return
+    
+    while shown:
+      subsystem.show(exit_, values=receiver.recv())
+      shown = receiver.poll()
+  
+  def flush_received(self):
+    # prevents BrokenPipeError exceptions in workers
+    # (they expect that sent messages WILL be delivered, else cause an exception)
+    receiver = self.receiver
+    
+    with suppress(EOFError):
+      while True:
+        receiver.recv()
+  
+  def _thread(self, output_file_name, subsystem, exit_):
+    try:
+      options = self.options
+      
+      # we open the output file well in advance of actually using it
+      # this is because it would suck to do all the work and
+      # then fail because the output file is locked or whatever
+      # we also hold open the weights file
+      # so it can't be deleted in the time between now and the workers using it
+      with (
+        self._download_weights_file_unique(
+          yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
+          yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
+          exit_,
+          subsystem=subsystem,
+          options=options
+        ) if not self.tfhub_enabled else nullcontext(),
+        
+        yamosse_output.output(
+          output_file_name,
+          exit_,
+          self.model_yamnet_class_names,
+          
+          yamosse_identification.identification(
+            option=options.identification
+          ),
+          
+          subsystem=subsystem
+        ) as output
+      ):
+        results, errors = self._files(subsystem, exit_)
+        
+        subsystem.show(exit_, values={
+          'progressbar': {
+            'done': {}
+          },
+          
+          'log': 'Finishing, please wait...\n'
+        })
+        
+        output.options(options)
+        output.results(results)
+        output.errors(errors)
+    except yamosse_subsystem.SubsystemExit: pass
+    except: self._report_thread_exception(subsystem, exit_, *exc_info())
+    finally:
+      try:
+        subsystem.show(exit_, values={
+          'done': 'OK'
+        })
+      except yamosse_subsystem.SubsystemExit: pass
+  
+  def _files(self, subsystem, exit_):
     # the ideal way to sort the files is from largest to smallest
     # this way, we start processing the largest file right at the start
     # and it hopefully finishes early, leaving only small files to process
@@ -209,7 +277,8 @@ class YAMScan:
     # however, if many files were queued, finding the file size for all of them
     # may itself take a while, so we do it in batches
     # and simultaneously submit the work
-    self._results_errors = results_errors = ({}, {})
+    results = {}
+    errors = {}
     
     shutdown = self.shutdown
     receiver, sender = Pipe(duplex=False)
@@ -236,7 +305,7 @@ class YAMScan:
           'log': 'Created Process Pool Executor'
         })
         
-        done = _Done(self, *results_errors, subsystem, exit_)
+        done = _Done(self, results, errors, subsystem, exit_)
         next_batch = done.next_batch()
         
         while next_batch:
@@ -284,29 +353,7 @@ class YAMScan:
         sender.close()
         self.flush_received()
       
-      return results_errors
-  
-  def show_received(self, subsystem, exit_, force=True):
-    receiver = self.receiver
-    
-    shown = receiver.poll()
-    
-    if not shown and force:
-      subsystem.show(exit_)
-      return
-    
-    while shown:
-      subsystem.show(exit_, values=receiver.recv())
-      shown = receiver.poll()
-  
-  def flush_received(self):
-    # prevents BrokenPipeError exceptions in workers
-    # (they expect that sent messages WILL be delivered, else cause an exception)
-    receiver = self.receiver
-    
-    with suppress(EOFError):
-      while True:
-        receiver.recv()
+      return results, errors
   
   @staticmethod
   def _real_relpath(path, start=os.curdir):
@@ -419,55 +466,3 @@ class YAMScan:
         ))
       })
     except yamosse_subsystem.SubsystemExit: pass
-  
-  def _thread(self, output_file_name, subsystem, exit_):
-    try:
-      options = self.options
-      
-      # we open the output file well in advance of actually using it
-      # this is because it would suck to do all the work and
-      # then fail because the output file is locked or whatever
-      # we also hold open the weights file
-      # so it can't be deleted in the time between now and the workers using it
-      with (
-        self._download_weights_file_unique(
-          yamosse_worker.MODEL_YAMNET_WEIGHTS_URL,
-          yamosse_worker.MODEL_YAMNET_WEIGHTS_PATH,
-          exit_,
-          subsystem=subsystem,
-          options=options
-        ) if not self.tfhub_enabled else nullcontext(),
-        
-        yamosse_output.output(
-          output_file_name,
-          exit_,
-          self.model_yamnet_class_names,
-          
-          yamosse_identification.identification(
-            option=options.identification
-          ),
-          
-          subsystem=subsystem
-        ) as output
-      ):
-        results, errors = self.files(subsystem, exit_)
-        
-        subsystem.show(exit_, values={
-          'progressbar': {
-            'done': {}
-          },
-          
-          'log': 'Finishing, please wait...\n'
-        })
-        
-        output.options(options)
-        output.results(results)
-        output.errors(errors)
-    except yamosse_subsystem.SubsystemExit: pass
-    except: self._report_thread_exception(subsystem, exit_, *exc_info())
-    finally:
-      try:
-        subsystem.show(exit_, values={
-          'done': 'OK'
-        })
-      except yamosse_subsystem.SubsystemExit: pass
