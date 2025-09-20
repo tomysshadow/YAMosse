@@ -278,7 +278,7 @@ def insert_embed(text, widget, line=0):
     
     # use the insertion cursor so that it moves from the linestart to the lineend
     text.mark_set(tk.INSERT,
-      '%d.0' % line if line > 0 else '%s - %d lines' % (tk.END, -line))
+      ('%d.0' % line) if line > 0 else ('%s - %d lines' % (tk.END, -line)))
     
     # if there is anything before us on the line, insert a newline
     if text.compare(tk.INSERT, '>', '%s linestart' % tk.INSERT):
