@@ -265,7 +265,8 @@ class _ConfidenceScoreIdentification(_Identification):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    return super().key_number_of_sounds((item[0], item[1].values()))
+    file_name, sounds = item
+    return super().key_number_of_sounds((file_name, sounds.values()))
   
   @staticmethod
   def _min(calibrated_score, confidence_score):
@@ -518,7 +519,8 @@ class _TopRankedIdentification(_Identification):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    return super().key_number_of_sounds((item[0], (item[1].keys(),)))
+    file_name, sounds = item
+    return super().key_number_of_sounds((file_name, (sounds.keys(),)))
   
   @classmethod
   def key_result(cls, item):
