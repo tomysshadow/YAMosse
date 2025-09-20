@@ -83,8 +83,8 @@ import yamosse.subsystem
 
 try:
   yamosse.yamosse(output_file_name='Output.txt')
-except yamosse.subsystem.SubsystemError as ex:
-  print(ex)
+except yamosse.subsystem.SubsystemError as exc:
+  print(exc)
 ```
 
 All of the keyword arguments are optional. If no keyword arguments are specified, calling the `yamosse` function will open the GUI. If any keyword arguments are specified, they will behave the same as the command line interface.
