@@ -152,9 +152,11 @@ class _Done:
   @staticmethod
   def _key_getsize(file_name):
     try:
-      return (os.path.getsize(file_name), file_name)
+      size = os.path.getsize(file_name)
     except OSError:
-      return (0, file_name)
+      size = 0
+    
+    return size, file_name
 
 
 class YAMScan:
