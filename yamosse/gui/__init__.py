@@ -311,7 +311,7 @@ def make_widgets(frame, make_widget, items=None,
   # float divide is used for padding in case it is not even
   x, y, pad = ORIENTS[orient]
   last = len(items) - 1
-  padding = padding / 2 if last != 0 else 0
+  padding = (padding / 2) if last != 0 else 0
   
   # first widget
   widget = make_widget(frame, **items[0])
