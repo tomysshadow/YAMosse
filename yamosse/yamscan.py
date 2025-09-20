@@ -147,14 +147,14 @@ class _Done:
         'log': log
       })
     
-    yamscan.show_received(subsystem, exit_, force=log)
+    yamscan.show_received(subsystem, exit_, force=not log)
   
   @staticmethod
   def _key_getsize(file_name):
     try:
-      return os.path.getsize(file_name)
+      return (os.path.getsize(file_name), file_name)
     except OSError:
-      return 0
+      return (0, file_name)
 
 
 class YAMScan:
