@@ -62,7 +62,9 @@ class _Identification(ABC):
     return yamosse_utils.hours_minutes(timestamp)
   
   @classmethod
-  def key_number_of_sounds(cls, sounds, file_name):
+  def key_number_of_sounds(cls, item):
+    file_name, sounds = item
+    
     # the number of sounds, with timespans at the end
     # with the file name as a tiebreaker
     return (sum(
@@ -263,7 +265,7 @@ class _ConfidenceScoreIdentification(_Identification):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    return super().key_number_of_sounds(item[1].values(), item[0])
+    return super().key_number_of_sounds((item[0], item[1].values()))
   
   @staticmethod
   def _min(calibrated_score, confidence_score):
@@ -516,7 +518,7 @@ class _TopRankedIdentification(_Identification):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    return super().key_number_of_sounds((item[1].keys(),), item[0])
+    return super().key_number_of_sounds((item[0], (item[1].keys(),)))
   
   @classmethod
   def key_result(cls, item):
