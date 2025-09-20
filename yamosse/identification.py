@@ -63,7 +63,7 @@ class _Identification(ABC):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    file_name, sounds = item
+    file_name, result = item
     
     # the number of sounds, with timespans at the end
     # with the file name as a tiebreaker
@@ -72,7 +72,7 @@ class _Identification(ABC):
         (len(timestamps) ** 2)
         - sum(isinstance(ts, int) for ts in timestamps)
         + 1
-      ) for timestamps in sounds
+      ) for timestamps in result
     ), file_name)
   
   @classmethod
@@ -265,8 +265,8 @@ class _ConfidenceScoreIdentification(_Identification):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    file_name, sounds = item
-    return super().key_number_of_sounds((file_name, sounds.values()))
+    file_name, result = item
+    return super().key_number_of_sounds((file_name, result.values()))
   
   @staticmethod
   def _min(calibrated_score, confidence_score):
@@ -519,8 +519,8 @@ class _TopRankedIdentification(_Identification):
   
   @classmethod
   def key_number_of_sounds(cls, item):
-    file_name, sounds = item
-    return super().key_number_of_sounds((file_name, (sounds.keys(),)))
+    file_name, result = item
+    return super().key_number_of_sounds((file_name, (result.keys(),)))
   
   @classmethod
   def key_result(cls, item):
