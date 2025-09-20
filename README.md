@@ -64,7 +64,7 @@ If the results are not satisfactory, you can tweak some more advanced options on
 
 YAMosse also has a command line interface. If any of the command line arguments are specified, the command line interface will be used instead of the GUI.
 
- - `-rd` or `--restore_defaults`: restores the defaults.
+ - `-rd` or `--restore-defaults`: restores the defaults.
  - `-r` or `--record`: records a new sound.
  - `-ip import_preset_file_name` or `--import-preset import_preset_file_name`: imports a preset file (in JSON format.)
  - `-ep export_preset_file_name` or `--export-preset export_preset_file_name`: exports a preset file (in JSON format.)

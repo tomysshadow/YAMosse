@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(
   description=yamosse.__doc__
 )
 
-parser.add_argument('-rd', '--restore_defaults',
+parser.add_argument('-rd', '--restore-defaults',
   action='store_true', default=argparse.SUPPRESS)
 
 parser.add_argument('-r', '--record',
