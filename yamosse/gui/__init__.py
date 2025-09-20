@@ -1386,7 +1386,7 @@ def get_root_images():
       return None
     
     try:
-      return (name, make_image(file=fsdec(entry.path)))
+      return name, make_image(file=fsdec(entry.path))
     except tk.TclError:
       return None
   
@@ -1401,8 +1401,8 @@ def get_root_images():
     except ValueError:
       return None
     
-    return (type_, scandir(entry.path, lambda image_entry: callback_image(
-      image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext)))
+    return type_, scandir(entry.path, lambda image_entry: callback_image(
+      image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext))
   
   # getting root window needs to be done first
   # to avoid popping an empty window in some circumstances

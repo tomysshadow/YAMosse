@@ -67,13 +67,13 @@ class _Identification(ABC):
     
     # the number of sounds, with timespans at the end
     # with the file name as a tiebreaker
-    return (sum(
+    return sum(
       (
         (len(timestamps) ** 2)
         - sum(isinstance(ts, int) for ts in timestamps)
         + 1
       ) for timestamps in result
-    ), file_name)
+    ), file_name
   
   @classmethod
   def key_file_name(cls, item):

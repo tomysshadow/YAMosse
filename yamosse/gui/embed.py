@@ -244,7 +244,7 @@ def _get_root_embed():
   
   tk_.call('interp', 'hide', '', 'bind')
   tk_.call('interp', 'alias', '', 'bind', '', root_window.register(bind_alias))
-  return (bind, bind_window)
+  return bind, bind_window
 
 
 def _peek_embed(M):
