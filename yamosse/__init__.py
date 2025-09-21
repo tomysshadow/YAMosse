@@ -306,7 +306,7 @@ class _YAMosse:
       tfhub_enabled,
       subsystem,
       options,
-      exit_=exit_,
+      exit_=exit_
     )
   
   def restore_defaults(self):
