@@ -140,7 +140,7 @@ def _init_report_callback_exception():
     messagebox.showerror(title='Exception in Tkinter callback',
       message=''.join(traceback.format_exception(exc, val, tb)))
     
-    raise val
+    raise SystemExit from val
   
   return report_callback_exception
 
