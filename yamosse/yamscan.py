@@ -466,7 +466,7 @@ class YAMScan:
           'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
         },
         
-        'log': ':\n'.join((
+        'log': '\n'.join((
           'Exception in YAMScan thread',
           ''.join(format_exception(exc, val, tb))
         ))
