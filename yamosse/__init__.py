@@ -45,7 +45,16 @@ class _YAMosse:
   
   PRESET_INITIALDIR = 'My Presets'
   PRESET_INITIALFILE = 'Preset'
-  PRESET_DEFAULTEXTENSION = '.json'
+  PRESET_DEFAULTEXTENSION = '.json' # must start with period on Linux
+  
+  YAMSCAN_FILETYPES = (
+    ('Text Document', '*.txt'),
+    ('JSON', '*.json'),
+    ('All Files', '*.*')
+  )
+  
+  YAMSCAN_INITIALDIR = 'My YAMScans'
+  YAMSCAN_DEFAULTEXTENSION = '.txt' # must start with period on Linux
   
   MESSAGE_IMPORT_PRESET_VERSION = ('The imported preset is not compatible with this YAMosse '
     'version.')
@@ -214,15 +223,6 @@ class _YAMosse:
     options.export_preset(file_name)
   
   def yamscan(self, output_file_name='', exit_=None):
-    FILETYPES = (
-      ('Text Document', '*.txt'),
-      ('JSON', '*.json'),
-      ('All Files', '*.*')
-    )
-    
-    INITIALDIR = 'My YAMScans'
-    DEFAULTEXTENSION = '.txt' # must start with period on Linux
-    
     subsystem = self._subsystem
     options = self._options
     subsystem.attrs_to_variables(options)
@@ -254,10 +254,10 @@ class _YAMosse:
       
       output_file_name = gui.filedialog.asksaveasfilename(
         parent=window,
-        filetypes=FILETYPES,
-        initialdir=INITIALDIR,
+        filetypes=self.YAMSCAN_FILETYPES,
+        initialdir=self.YAMSCAN_INITIALDIR,
         initialfile=os.path.splitext(os.path.basename(input_[0]))[0],
-        defaultextension=DEFAULTEXTENSION
+        defaultextension=self.YAMSCAN_DEFAULTEXTENSION
       )
       
       if not output_file_name: return None
