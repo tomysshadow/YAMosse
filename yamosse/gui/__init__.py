@@ -123,22 +123,25 @@ def _init_report_callback_exception():
   def report_callback_exception(tk_, exc, val, tb):
     nonlocal reported
     
-    tk_report_callback_exception(tk_, exc, val, tb)
-    
-    if reported:
-      return
-    
-    reported = True
-    
     try:
+      tk_report_callback_exception(tk_, exc, val, tb)
+      
       with (
         suppress(OSError),
-        open('traceback.txt', 'w', encoding='utf8') as file
+        
+        open(
+          'traceback.txt',
+          'a' if reported else 'w',
+          encoding='utf8'
+        ) as file
       ):
         traceback.print_exception(exc, val, tb, file=file)
       
-      messagebox.showerror(title='Exception in Tkinter callback',
-        message=''.join(traceback.format_exception(exc, val, tb)))
+      if not reported:
+        reported = True
+        
+        messagebox.showerror(title='Exception in Tkinter callback',
+          message=''.join(traceback.format_exception(exc, val, tb)))
     finally:
       # this is just in case someone tries
       # to suppress this with a bare except
