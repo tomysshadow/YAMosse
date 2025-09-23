@@ -135,6 +135,10 @@ def _init_report_callback_exception():
           encoding='utf8'
         ) as file
       ):
+        # print a separating newline if multiple exceptions are reported
+        if reported:
+          print('', file=file)
+        
         traceback.print_exception(exc, val, tb, file=file)
       
       if not reported:
