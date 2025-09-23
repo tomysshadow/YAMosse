@@ -314,7 +314,8 @@ def text_embed(text):
     # we don't use enable_widget here as we don't actually want that
     # (it would disable any child widgets within the text)
     # it should not take focus until an event is fired (it hoards the focus otherwise)
-    # it shouldn't have a border, there's a bug where the embedded widgets appear over top of it
+    # it shouldn't have a border, there's a bug where the embedded widgets
+    # appear over top of it
     # (put a border around the surrounding frame instead)
     text.configure(takefocus=False, cursor='',
       bg=gui.lookup_style_widget(frame, 'background'), borderwidth=0)
