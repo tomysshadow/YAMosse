@@ -472,3 +472,6 @@ class YAMScan:
         ))
       })
     except yamosse_subsystem.SubsystemExit: pass
+    finally:
+      # re-raise in case it's a SystemExit or something
+      raise val

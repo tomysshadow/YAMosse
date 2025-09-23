@@ -329,7 +329,7 @@ def text_embed(text):
     # programming that feature would be significantly more complicated
     # and for this application, I simply don't need that functionality
     # so basically, embed text will always get Text class events no matter what
-    text.bindtags([BINDTAG] + gui.default_bindtags_widget(text, class_=False))
+    text.bindtags([BINDTAG] + list(gui.default_bindtags_widget(text, class_=False)))
     
     # delete anything that might've been typed in before the text was passed to us
     # then create the placeholder frame

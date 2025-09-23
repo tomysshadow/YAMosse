@@ -5,7 +5,6 @@ from enum import Enum
 from weakref import WeakKeyDictionary
 import traceback
 import threading
-from threading import Lock, Event
 from contextlib import suppress
 from functools import cache
 import shlex
@@ -118,7 +117,6 @@ class ImageType(type(_root_images_dir), Enum):
 
 def _init_report_callback_exception():
   reported = False
-  reported_lock = Lock()
   
   tk_report_callback_exception = tk.Tk.report_callback_exception
   
@@ -127,20 +125,27 @@ def _init_report_callback_exception():
     
     tk_report_callback_exception(tk_, exc, val, tb)
     
-    with reported_lock:
-      if reported: return
-      reported = True
+    if reported:
+      return
     
-    with (
-      suppress(OSError),
-      open('traceback.txt', 'w', encoding='utf8') as file
-    ):
-      traceback.print_exception(exc, val, tb, file=file)
+    reported = True
     
-    messagebox.showerror(title='Exception in Tkinter callback',
-      message=''.join(traceback.format_exception(exc, val, tb)))
-    
-    raise SystemExit from val
+    try:
+      with (
+        suppress(OSError),
+        open('traceback.txt', 'w', encoding='utf8') as file
+      ):
+        traceback.print_exception(exc, val, tb, file=file)
+      
+      messagebox.showerror(title='Exception in Tkinter callback',
+        message=''.join(traceback.format_exception(exc, val, tb)))
+      
+      raise SystemExit from val
+    finally:
+      # this is just in case someone tries
+      # to suppress this with a bare except
+      # shouldn't have an impact most of the time
+      reported = False
   
   return report_callback_exception
 
@@ -168,12 +173,13 @@ def after_invalidcommand_widget(widget, validate):
 
 def default_bindtags_widget(widget,
   pathname=True, class_=True, toplevel=True, all_=True):
-  default_bindtags = []
+  # this is a set in case pathname and toplevel are the same
+  default_bindtags = set()
   
-  if pathname: default_bindtags.append(str(widget))
-  if class_: default_bindtags.append(widget.winfo_class())
-  if toplevel: default_bindtags.append(widget.winfo_toplevel())
-  if all_: default_bindtags.append(tk.ALL)
+  if pathname: default_bindtags.add(str(widget))
+  if class_: default_bindtags.add(widget.winfo_class())
+  if toplevel: default_bindtags.add(widget.winfo_toplevel())
+  if all_: default_bindtags.add(tk.ALL)
   
   return default_bindtags
 
@@ -1190,7 +1196,7 @@ def after_wait_window(window, callback):
   
   # the same as after_window, except
   # we block until the callback has finished running
-  event = Event()
+  event = threading.Event()
   
   def set_():
     try:
