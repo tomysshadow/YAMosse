@@ -4,9 +4,9 @@ from collections import namedtuple
 from enum import Enum
 from weakref import WeakKeyDictionary
 import traceback
-import threading
 from contextlib import suppress
 from functools import cache
+import threading
 import shlex
 import os
 from os import fsencode as fsenc
