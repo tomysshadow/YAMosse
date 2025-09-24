@@ -165,11 +165,15 @@ def strsplitlist_widget(widget, l):
 
 
 def configure_children_widget(widget, **kwargs):
+  options = {}
+  
   with suppress(tk.TclError):
-    widget.configure(**kwargs)
+    options[widget] = widget.configure(**kwargs)
   
   for child in widget.winfo_children():
-    configure_children_widget(child, **kwargs)
+    options.update(configure_children_widget(child, **kwargs))
+  
+  return options
 
 
 def after_invalidcommand_widget(widget, validate):
