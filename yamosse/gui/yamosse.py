@@ -375,9 +375,9 @@ def make_timespan(frame, variables):
   def show_spinbox_frame():
     normal = not bool(timespan_span_all_variable.get())
     
-    gui.state_children_widget(
+    gui.configure_children_widget(
       spinbox_frame,
-      tk.NORMAL if normal else tk.DISABLED
+      state=tk.NORMAL if normal else tk.DISABLED
     )
   
   show_spinbox_frame()
@@ -633,7 +633,7 @@ def make_advanced(frame, yamosse, variables):
     parent=frame.winfo_toplevel(), filetypes=yamosse.WEIGHTS_FILETYPES).middle
   
   if yamosse.tfhub_enabled:
-    gui.state_children_widget(weights_labelframe, state=tk.DISABLED)
+    gui.configure_children_widget(weights_labelframe, state=tk.DISABLED)
     weights_entry['cursor'] = ''
   
   tips_labelframe = ttk.Labelframe(frame, text='Tips', padding=gui.PADDING_HNSEW)

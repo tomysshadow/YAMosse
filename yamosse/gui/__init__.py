@@ -164,12 +164,12 @@ def strsplitlist_widget(widget, l):
   return [str(s) for s in widget.tk.splitlist(l)]
 
 
-def state_children_widget(widget, state):
+def configure_children_widget(widget, **kwargs):
   with suppress(tk.TclError):
-    widget['state'] = state
+    widget.configure(**kwargs)
   
   for child in widget.winfo_children():
-    state_children_widget(child, state)
+    configure_children_widget(child, **kwargs)
 
 
 def after_invalidcommand_widget(widget, validate):
@@ -389,7 +389,7 @@ def link_radiobuttons(radiobuttons, variable):
       if not widget: continue
       
       normal = w == int(variable.get())
-      state_children_widget(widget, tk.NORMAL if normal else tk.DISABLED)
+      configure_children_widget(widget, state=tk.NORMAL if normal else tk.DISABLED)
   
   for r, radiobutton in enumerate(radiobuttons.keys()):
     radiobutton.configure(value=r, variable=variable, command=show)
