@@ -644,7 +644,7 @@ def make_treeview(frame, name='', columns=None, items=None, show=None,
   scrollbar_frame.columnconfigure(0, weight=1) # make treeview horizontally resizable
   
   treeview = ttk.Treeview(scrollbar_frame,
-    columns=tuple(columns.keys()), selectmode=selectmode, show=show, **kwargs)
+    columns=tuple(columns), selectmode=selectmode, show=show, **kwargs)
   
   treeview.grid(row=0, column=0, sticky=tk.NSEW)
   
