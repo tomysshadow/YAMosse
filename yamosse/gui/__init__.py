@@ -186,7 +186,7 @@ def default_bindtags_widget(widget,
   
   if pathname: default_bindtags.add(str(widget))
   if class_: default_bindtags.add(widget.winfo_class())
-  if toplevel: default_bindtags.add(widget.winfo_toplevel())
+  if toplevel: default_bindtags.add(str(widget.winfo_toplevel()))
   if all_: default_bindtags.add(tk.ALL)
   
   return default_bindtags
