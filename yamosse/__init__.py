@@ -329,7 +329,7 @@ class _YAMosse:
     return (
       [(
         'Supported Files',
-        '.'.join(('*', ' *.'.join(available_formats.keys())))
+        '.'.join(('*', ' *.'.join(available_formats)))
       )]
       
       + [(n, '.'.join(('*', f))) for f, n in available_formats.items()]

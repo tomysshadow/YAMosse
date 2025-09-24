@@ -99,14 +99,16 @@ class _Output(ABC):
     
     for file_name, result in items:
       # if not outputting scores, take them out
-      # we take the dictionary (whose values are the scores) and turn its keys into a flat list
+      # we take the dictionary (whose values are the scores) and
+      # turn its keys into a flat list
       # this is needed for the JSON to be structured correct
       # and when printing these to text, it is also the ideal format
       # because all the timestamps can be simply joined n' printed
       if not output_scores:
-        result = {key: list(value.keys()) for key, value in result.items()}
+        result = {key: list(value) for key, value in result.items()}
       
-      # this sorts the next column - sorting by class/timestamp so that the output is consistent
+      # this sorts the next column - sorting by class/timestamp
+      # so that the output is consistent
       results.append({
         'file_name': file_name,
         'result': yamosse_utils.dict_sorted(result,

@@ -410,7 +410,7 @@ class _TopRankedIdentification(_Identification):
     score_begin = 0
     score_end = 0
     
-    predictions = list(top_scores.keys())
+    predictions = list(top_scores)
     predictions_len = len(predictions)
     
     scores = []
