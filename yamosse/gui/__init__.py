@@ -116,6 +116,8 @@ class ImageType(type(_root_images_dir), Enum):
 
 
 def _init_report_callback_exception():
+  TITLE = 'Exception in Tkinter callback'
+  
   reported = False
   
   tk_report_callback_exception = tk.Tk.report_callback_exception
@@ -124,6 +126,8 @@ def _init_report_callback_exception():
     nonlocal reported
     
     try:
+      raise val
+    except:
       tk_report_callback_exception(tk_, exc, val, tb)
       
       with (
@@ -135,23 +139,21 @@ def _init_report_callback_exception():
           encoding='utf8'
         ) as file
       ):
-        # print a separating newline if multiple exceptions are reported
-        if reported:
-          print('', file=file)
-        
+        print(TITLE, file=file)
         traceback.print_exception(exc, val, tb, file=file)
       
       if not reported:
         reported = True
         
         try:
-          messagebox.showerror(title='Exception in Tkinter callback',
+          messagebox.showerror(title=TITLE,
             message=''.join(traceback.format_exception(exc, val, tb)))
         finally:
           reported = False
+      
+      raise
     finally:
-      if not reported:
-        raise SystemExit from val
+      raise SystemExit
   
   return report_callback_exception
 
