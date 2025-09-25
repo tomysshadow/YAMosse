@@ -71,7 +71,7 @@ def tfhub_enabled():
   return _tfhub_enabled
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def tfhub_cache(dir_='tfhub_modules'):
   if not _tfhub_enabled: return None
   
