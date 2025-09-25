@@ -22,11 +22,11 @@ import yamosse.subsystem as yamosse_subsystem
 class _Done:
   __slots__ = (
     '_d', '_lock',
+    '_file_names_batched',
     'yamscan', 'results', 'errors',
     'subsystem', 'exit_',
     'next_', 'batch',
-    'clear',
-    '_file_names_batched'
+    'clear'
   )
   
   NEXT_SUBMITTING = -1
@@ -39,6 +39,11 @@ class _Done:
     self._d = {}
     self._lock = threading.Lock()
     
+    self._file_names_batched = yamosse_utils.batched(
+      yamscan.file_names,
+      self.BATCH_SIZE
+    )
+    
     self.yamscan = yamscan
     self.results = results
     self.errors = errors
@@ -50,11 +55,6 @@ class _Done:
     self.batch = 0
     
     self.clear = self._clear_loading
-    
-    self._file_names_batched = yamosse_utils.batched(
-      yamscan.file_names,
-      self.BATCH_SIZE
-    )
   
   def next_batch(self):
     try:
@@ -264,14 +264,17 @@ class YAMScan:
         output.options(options)
         output.results(results)
         output.errors(errors)
-    except yamosse_subsystem.SubsystemExit: pass
-    except: self._report_thread_exception(subsystem, exit_, *exc_info())
+    except yamosse_subsystem.SubsystemExit:
+      pass
+    except:
+      self._report_thread_exception(subsystem, exit_, *exc_info())
     finally:
       try:
         subsystem.show(exit_, values={
           'done': 'OK'
         })
-      except yamosse_subsystem.SubsystemExit: pass
+      except yamosse_subsystem.SubsystemExit:
+        pass
   
   def _files(self, subsystem, exit_):
     # the ideal way to sort the files is from largest to smallest
@@ -460,6 +463,11 @@ class YAMScan:
   @staticmethod
   def _report_thread_exception(subsystem, exit_, exc, val, tb):
     try:
+      # re-raise this first so that if an error occurs during logging
+      # this exception will be the context for that one
+      # and also so that any SystemExit etc. will take effect
+      raise val
+    except:
       subsystem.show(exit_, values={
         'progressbar': {
           'state': {'args': ((yamosse_progress.State.ERROR.on(),),)},
@@ -471,7 +479,8 @@ class YAMScan:
           ''.join(format_exception(exc, val, tb))
         ))
       })
-    except yamosse_subsystem.SubsystemExit: pass
-    finally:
-      # re-raise in case it's a SystemExit or something
+      
+      raise
+    except yamosse_subsystem.SubsystemExit:
+      # ignore SubsystemExit errors, but re-raise original exception
       raise val
