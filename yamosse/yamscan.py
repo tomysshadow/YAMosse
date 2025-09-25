@@ -463,7 +463,8 @@ class YAMScan:
   @staticmethod
   def _report_thread_exception(subsystem, exit_, exc, val, tb):
     try:
-      # re-raise this first so that if an error occurs during logging
+      # we're going to use subsystem.show to report this exception
+      # re-raise it first so that if an error occurs during reporting
       # this exception will be the context for that one
       # and also so that any SystemExit etc. will take effect
       raise val
