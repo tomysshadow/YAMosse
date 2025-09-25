@@ -87,10 +87,10 @@ class _YAMosse:
   
   def mainloop(self, **kwargs):
     if self._window is not None:
-      raise RuntimeError('window must be None')
+      raise ValueError('window must be None')
     
     if self._subsystem is not None:
-      raise RuntimeError('subsystem must be None')
+      raise ValueError('subsystem must be None')
     
     variables = None
     
