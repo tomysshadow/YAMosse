@@ -266,7 +266,7 @@ class YAMScan:
         output.errors(errors)
     except yamosse_subsystem.SubsystemExit:
       pass
-    except:
+    except Exception:
       self._report_thread_exception(subsystem, exit_, *exc_info())
     finally:
       try:
