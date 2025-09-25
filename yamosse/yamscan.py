@@ -463,25 +463,26 @@ class YAMScan:
   @staticmethod
   def _report_thread_exception(subsystem, exit_, exc, val, tb):
     try:
-      # we're going to use subsystem.show to report this exception
-      # re-raise it first so that if an error occurs during reporting
-      # this exception will be the context for that one
-      # and also so that any SystemExit etc. will take effect
-      raise val
-    except:
-      subsystem.show(exit_, values={
-        'progressbar': {
-          'state': {'args': ((yamosse_progress.State.ERROR.on(),),)},
-          'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
-        },
+      try:
+        # we're going to use subsystem.show to report this exception
+        # re-raise it first so that if an error occurs during reporting
+        # this exception will be the context for that one
+        # and also so that any SystemExit etc. will take effect
+        raise val
+      except:
+        subsystem.show(exit_, values={
+          'progressbar': {
+            'state': {'args': ((yamosse_progress.State.ERROR.on(),),)},
+            'configure': {'kwargs': {'mode': yamosse_progress.Mode.DETERMINATE.value}}
+          },
+          
+          'log': '\n'.join((
+            'Exception in YAMScan thread',
+            ''.join(format_exception(exc, val, tb))
+          ))
+        })
         
-        'log': '\n'.join((
-          'Exception in YAMScan thread',
-          ''.join(format_exception(exc, val, tb))
-        ))
-      })
-      
-      raise
+        raise
     except yamosse_subsystem.SubsystemExit:
       # ignore SubsystemExit errors, which we don't care about here
       # (subsystem.show may raise a SubsystemExit error)
