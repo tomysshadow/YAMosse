@@ -23,7 +23,7 @@ class Trace:
     # without creating another reference to self
     # maybe that would have zero impact, but either way
     # it's just easier to keep track of in my head
-    self._destroy = destroy = weakref.finalize(self, self.__finalize, tk,
+    self.__destroy = destroy = weakref.finalize(self, self.__finalize, tk,
       variable, operation, cbname)
     
     # the <Destroy> event fires UNDER the call to destroy() on widgets
@@ -56,7 +56,7 @@ class Trace:
   
   @property
   def destroy(self):
-    return self._destroy
+    return self.__destroy
   
   def __enter__(self):
     return self
