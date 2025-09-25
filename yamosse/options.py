@@ -6,14 +6,14 @@ from datetime import datetime
 import yamosse.utils as yamosse_utils
 import yamosse.identification as yamosse_identification
 
-_pickle_file_name = '.'.join((
-  os.path.splitext(__file__)[0],
-  pickle.__name__
-))
-
 
 class Options:
   VERSION = 2
+  
+  _pickle_file_name = '.'.join((
+    os.path.splitext(__file__)[0],
+    pickle.__name__
+  ))
   
   class VersionError(ValueError):
     def __init__(self):
@@ -135,7 +135,7 @@ class Options:
   
   @classmethod
   def load(cls):
-    with open(_pickle_file_name, 'rb') as f:
+    with open(cls._pickle_file_name, 'rb') as f:
       options = pickle.load(f)
       
       if options.version != cls.VERSION:
@@ -144,7 +144,7 @@ class Options:
       return options
   
   def dump(self):
-    with open(_pickle_file_name, 'wb') as f:
+    with open(self._pickle_file_name, 'wb') as f:
       pickle.dump(self, f)
   
   def set(self, attrs, strict=True):
