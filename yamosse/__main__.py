@@ -2,7 +2,6 @@ import argparse
 
 import yamosse
 import yamosse.options as yamosse_options
-import yamosse.worker as yamosse_worker
 import yamosse.subsystem as yamosse_subsystem
 
 
@@ -44,8 +43,6 @@ if options_attrs:
   args.options_attrs = options_attrs
 else:
   del args.options_attrs
-
-yamosse_worker.tfhub_cache()
 
 try:
   yamosse.yamosse(**vars(args))

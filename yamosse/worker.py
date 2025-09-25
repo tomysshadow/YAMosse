@@ -57,7 +57,10 @@ def class_names(class_map_csv=''):
     else:
       class_map_csv = os.path.join(_root_model_yamnet_dir, MODEL_YAMNET_CLASS_MAP_CSV)
   
-  # alternate method that does not depend on TensorFlow
+  # the YAMNet module itself contains a similar function to this
+  # but that module then requires TensorFlow, which we
+  # only want to import in the workers to reduce loading times
+  # so this is an alternate method that does not depend on TensorFlow
   with open(class_map_csv, 'r', encoding='utf8') as csv_file:
     reader = csv.reader(csv_file)
     next(reader) # skip header
@@ -68,6 +71,7 @@ def tfhub_enabled():
   return _tfhub_enabled
 
 
+@lru_cache
 def tfhub_cache(dir_='tfhub_modules'):
   if not _tfhub_enabled: return None
   
