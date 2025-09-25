@@ -178,18 +178,17 @@ class _ConsoleSubsystem(_Subsystem):
       else:
         no = no.upper()
     
+    prompt = ''
     result = ''
     
     while not result:
-      prompt = ''
-      
       if message:
-        prompt = '%s [%c/%c]\n' % (message, yes, no)
+        prompt = '%s [%c/%c]' % (message, yes, no)
         message = ''
       else:
-        prompt = 'Please enter %c or %c.\n' % (yes, no)
+        prompt = 'Please enter %c or %c.' % (yes, no)
       
-      result = input(prompt).lstrip()
+      result = input(''.join((prompt, '\n'))).lstrip()
       
       if result:
         result = result[0].casefold()
