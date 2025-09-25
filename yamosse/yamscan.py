@@ -483,4 +483,4 @@ class YAMScan:
       raise
     except yamosse_subsystem.SubsystemExit:
       # ignore SubsystemExit errors, but re-raise original exception
-      raise val
+      raise val from None
