@@ -219,6 +219,11 @@ Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoj
 
 # Changes
 
+## Version 1.1.1
+
+ - Made some improvements to the error reporting.
+ - Fixed a bug where the TensorFlow Hub modules folder would be different if using the module interface instead of the GUI or command line interfaces.
+
 ## Version 1.1.0
 
  - The preset files are now on version 2 and include an input device for recording. If the input device in the preset is not recognized, the default input device is used.
