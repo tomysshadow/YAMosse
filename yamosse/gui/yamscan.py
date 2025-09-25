@@ -149,7 +149,7 @@ def make_yamscan(frame, open_output_file, exit_, progressbar_maximum=100):
   window = frame.master
   parent = window.master
   
-  gui.customize_window(window, TITLE, resizable=RESIZABLE, size=SIZE,
+  gui.customize_window(window, title=TITLE, resizable=RESIZABLE, size=SIZE,
     location=gui.location_center_window(parent, SIZE))
   
   gui.minsize_window(window)

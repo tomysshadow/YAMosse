@@ -715,7 +715,7 @@ def make_footer(frame, yamosse):
 
 def make_yamosse(frame, yamosse, options_variables, title):
   window = frame.master
-  gui.customize_window(window, title, resizable=RESIZABLE, size=SIZE,
+  gui.customize_window(window, title=title, resizable=RESIZABLE, size=SIZE,
     iconphotos=gui.get_root_images()[gui.ImageType.PHOTO][fsenc('emoji_u1f3a4')].values())
   
   gui.minsize_window(window)

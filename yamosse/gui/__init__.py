@@ -312,7 +312,7 @@ def make_widgets(frame, make_widget, items=None,
   if not items:
     return widgets
   
-  ORIENTS = {
+  x, y, pad = ({
     tk.HORIZONTAL: (
       'row',
       'column',
@@ -324,10 +324,9 @@ def make_widgets(frame, make_widget, items=None,
       'row',
       'pady'
     )
-  }
+  })[orient]
   
   # float divide is used for padding in case it is not even
-  x, y, pad = ORIENTS[orient]
   last = len(items) - 1
   padding = (padding / 2) if last != 0 else 0
   
@@ -393,7 +392,11 @@ def link_radiobuttons(radiobuttons, variable):
       if not widget: continue
       
       normal = w == int(variable.get())
-      configure_children_widget(widget, state=tk.NORMAL if normal else tk.DISABLED)
+      
+      configure_children_widget(
+        widget,
+        state=tk.NORMAL if normal else tk.DISABLED
+      )
   
   for r, radiobutton in enumerate(radiobuttons.keys()):
     radiobutton.configure(value=r, variable=variable, command=show)
@@ -534,7 +537,7 @@ def make_spinbox(frame, name='', wrap=False, unit='', **kwargs):
   validation = not yamosse_utils.intersects(kwargs, VALIDATIONOPTIONS)
   
   if validation:
-    kwargs |= {o: v(frame) for o, v in validationoptions_spinbox.items()}
+    kwargs.update({o: v(frame) for o, v in validationoptions_spinbox.items()})
   
   spinbox = ttk.Spinbox(frame, wrap=wrap, **kwargs)
   spinbox.grid(row=0, column=1, sticky=tk.EW)
@@ -576,7 +579,7 @@ def make_scale(frame, name='', from_=0, to=100, **kwargs):
     
     try:
       value = int(float(value))
-      scale.set(value) # this is so we increment in steps instead of a smooth scroll
+      scale.set(value) # increment in steps instead of a smooth scroll
       percent_label['text'] = '%d%%' % value
     finally:
       showing = False
@@ -771,16 +774,9 @@ def values_treeview_items(i):
 
 def make_filedialog(frame, name='',
   asks=None, parent=None, filetypes=None, defaultextension='', **kwargs):
-  ASKS_ALL = {
-    'openfilename': 'Browse...',
-    'openfilenames': 'Browse Files...',
-    'saveasfilename': 'Browse...',
-    'directory': 'Browse Folder...'
-  }
+  if asks is None: asks = ('openfilename',)
   
   ASKS_FILES = ('openfilename', 'openfilenames', 'saveasfilename')
-  
-  if asks is None: asks = ('openfilename',)
   
   asks_file = yamosse_utils.intersects(asks, ASKS_FILES)
   asks_dir = 'directory' in asks
@@ -837,6 +833,13 @@ def make_filedialog(frame, name='',
       return
     
     accept(data)
+  
+  ASKS_ALL = {
+    'openfilename': 'Browse...',
+    'openfilenames': 'Browse Files...',
+    'saveasfilename': 'Browse...',
+    'directory': 'Browse Folder...'
+  }
   
   buttons = [ttk.Button(
     buttons_frame,
@@ -1320,8 +1323,11 @@ def location_center_window(parent, size):
   )
 
 
-def customize_window(window, title, resizable=True, size=None, location=None, iconphotos=None):
-  window.title(title)
+def customize_window(window,
+  title=None, resizable=True, size=None, location=None, iconphotos=None):
+  # only set the title
+  if title is not None:
+    window.title(title)
   
   try:
     xresizable, yresizable = resizable
@@ -1341,7 +1347,8 @@ def customize_window(window, title, resizable=True, size=None, location=None, ic
     if window is get_root_window():
       # in this case make this the default icon
       # note that it is still necessary to call iconphoto before this
-      # because Windows has a bug where you need to call iconphoto with default off first
+      # because Windows has a bug where
+      # you need to call iconphoto with default off first
       # otherwise it will use the wrong icon size
       if WINDOWS_ICONPHOTO_BUGFIX:
         window.iconphoto(False, *iconphotos)
@@ -1371,7 +1378,6 @@ def make_window(window, make_frame, args=None, kwargs=None):
   frame.grid(row=1, column=1, sticky=tk.NSEW)
   
   assert window.children, 'window must have children'
-  
   return window, make_frame(frame, *(args or ()), **(kwargs or {}))
 
 
@@ -1513,7 +1519,8 @@ def threaded():
 
 
 def bindtag(obj):
-  # this is prefixed to ensure the string doesn't start with a period (.) character
+  # this is prefixed to ensure the string
+  # doesn't start with a period (.) character
   # which would indicate this is a widget, not a bindtag
   return ''.join(('bindtag', repr(id(obj))))
 

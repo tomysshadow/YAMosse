@@ -485,7 +485,7 @@ def make_calibrate(frame, variables, class_names, attached):
   window = frame.master
   parent = window.master
   
-  gui.customize_window(window, TITLE, resizable=RESIZABLE, size=SIZE,
+  gui.customize_window(window, title=TITLE, resizable=RESIZABLE, size=SIZE,
     location=gui.location_center_window(parent, SIZE))
   
   gui.minsize_window(window)

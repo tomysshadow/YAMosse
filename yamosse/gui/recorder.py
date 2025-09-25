@@ -24,7 +24,7 @@ class Recorder:
   def __init__(self, frame, variables, record):
     window = frame.master
     window.withdraw()
-    gui.customize_window(window, TITLE, resizable=RESIZABLE)
+    gui.customize_window(window, title=TITLE, resizable=RESIZABLE)
     gui.minsize_window(window)
     
     if not yamosse_recording: return
