@@ -538,4 +538,7 @@ def identification(option=None):
   if option is None:
     return _Identification
   
-  return ([_ConfidenceScoreIdentification, _TopRankedIdentification])[option]
+  return ([
+    _ConfidenceScoreIdentification,
+    _TopRankedIdentification
+  ])[option]
