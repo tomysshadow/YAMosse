@@ -10,7 +10,8 @@ def tests(file, wait=False):
   # a short script to allow performing the tests
   # just by double clicking on this script file to run them
   # it will not interfere with normal discovery, so
-  # you can still just use `python -m unittest` on the command line if you prefer
+  # you can still just use `python -m unittest` on the command line
+  # if you prefer
   start_dir = path.dirname(path.realpath(file))
   top_level_dir = path.dirname(start_dir)
   
@@ -24,21 +25,26 @@ def tests(file, wait=False):
   # do the equivalent of the command line
   # `python -m unittest discover -s YAMosse/tests -t YAMosse`
   result = unittest.TextTestRunner().run(
-    unittest.defaultTestLoader.discover(start_dir, top_level_dir=top_level_dir)
+    unittest.defaultTestLoader.discover(
+      start_dir,
+      top_level_dir=top_level_dir
+    )
   )
   
   # shows "press any key to continue," in order to
   # hold Command Prompt open when running this script from Explorer
   # the exitcode is intentionally not checked, because
-  # it'll be an error code if you clicked the X at the top right of the window to close it
+  # it'll be an error code if you clicked the X at
+  # the top right of the window to close it
   # instead of pressing a key (which is fine)
   if wait:
-    subprocess.call(
+    subprocess.run(
       'pause' if platform.system() == 'Windows' else 'read',
       shell=True
     )
   
-  # no matter where we're called from, make sure we exit with an error code
+  # no matter where we're called from
+  # make sure we exit with an error code
   sys.exit(not result.wasSuccessful())
 
 
