@@ -222,7 +222,7 @@ Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoj
 ## Version 1.1.2
 
  - Minor improvements to the GUI code.
- - Update the Tensorflow version.
+ - Updated the Tensorflow version.
 
 ## Version 1.1.1
 
