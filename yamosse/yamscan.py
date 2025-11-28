@@ -391,30 +391,31 @@ class YAMScan:
         return set(input_)
     
     path = cls._real_relpath(input_)
-    file_names = set()
     
-    # assume path is a directory path, and if it turns out it isn't, then assume it is a file path
+    # assume path is a directory path
+    # and if it turns out it isn't, then assume it is a file path
     try:
       if recursive:
+        file_names = set()
+        
         # get a flat listing of every file in the directory and its subdirectories
         for walk_root_dir_name, walk_dir_names, walk_file_names in os.walk(path):
-          for walk_file_name in walk_file_names:
-            file_names.add(os.path.join(walk_root_dir_name, walk_file_name))
+          file_names |= {os.path.join(walk_root_dir_name, w) for w in walk_file_names}
         
         # walk does not error if path is not a directory
         if not file_names and not os.path.isdir(path):
           raise NotADirectoryError
+        
+        return file_names
       else:
         # get a flat listing of every file in the directory but not its subdirectories
         with os.scandir(path) as scandir:
-          for scandir_entry in scandir:
-            if scandir_entry.is_file():
-              file_names.add(scandir_entry.path)
+          return {s.path for s in scandir if s.is_file()}
     except NotADirectoryError:
       # not a directory, just a regular file
-      file_names.add(path)
+      pass
     
-    return file_names
+    return {path}
   
   @staticmethod
   def _download_weights_file_unique(url, path, exit_, subsystem=None, options=None):
