@@ -181,8 +181,10 @@ def normal_widget(widget):
   state = widget['state']
   widget['state'] = tk.NORMAL
   
-  yield
-  widget['state'] = state
+  try:
+    yield
+  finally:
+    widget['state'] = state
 
 
 def after_invalidcommand_widget(widget, validate):

@@ -93,8 +93,10 @@ class _Identification(ABC):
   @staticmethod
   @contextmanager
   def _print_newline_end(file):
-    yield
-    print('', file=file)
+    try:
+      yield
+    finally:
+      print('', file=file)
 
 
 class _ConfidenceScoreIdentification(_Identification):
