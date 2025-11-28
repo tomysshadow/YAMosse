@@ -38,7 +38,7 @@ After using Git to clone the YAMosse repository, run a submodule update. The sub
 
 ## Optional: Recording
 
-YAMosse has an optional feature that allows you to record sounds from an input device such as your microphone, directly within the application. To enable this feature, run the command `pip install sounddevice --user` in a command prompt. If you are on Linux, you will also need to manually install PortAudio.
+YAMosse has an optional feature that allows you to record sounds from an input device such as your microphone, directly within the application. To enable this feature, run the command `pip install sounddevice --user` in a command prompt. If you are on Linux, you will also need to manually install [PortAudio](https://www.portaudio.com).
 
 If you omit the `--user` argument, the [`sounddevice`](https://python-sounddevice.readthedocs.io/) package will be installed for all users, but this will require sufficient privileges. 
 
