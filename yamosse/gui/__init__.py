@@ -4,7 +4,7 @@ from collections import namedtuple
 from enum import Enum
 from weakref import WeakKeyDictionary
 import traceback
-from contextlib import suppress
+from contextlib import suppress, contextmanager
 from functools import cache
 import threading
 import shlex
@@ -174,6 +174,15 @@ def configure_children_widget(widget, **kwargs):
     options.update(configure_children_widget(child, **kwargs))
   
   return options
+
+
+@contextmanager
+def normal_widget(widget):
+  state = widget['state']
+  widget['state'] = tk.NORMAL
+  
+  yield
+  widget['state'] = state
 
 
 def after_invalidcommand_widget(widget, validate):

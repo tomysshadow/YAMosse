@@ -269,9 +269,7 @@ def insert_embed(text, widget, line=0):
   widget.pack_propagate(False)
   widget.grid_propagate(False)
   
-  text['state'] = tk.NORMAL
-  
-  try:
+  with gui.normal_widget(text):
     # if the placeholder exists, then delete it
     with suppress(tk.TclError):
       text.delete(_texts[text])
@@ -290,8 +288,6 @@ def insert_embed(text, widget, line=0):
     # if there is anything after us on the line, insert a newline
     if text.compare(tk.INSERT, '<', '%s lineend' % tk.INSERT):
       text.insert(tk.INSERT, '\n')
-  finally:
-    text['state'] = tk.DISABLED
 
 
 def text_embed(text):
@@ -308,12 +304,10 @@ def text_embed(text):
   frame = ttk.Frame(text)
   _texts[text] = frame
   
-  text['state'] = tk.NORMAL
+  text['state'] = tk.DISABLED
   
-  try:
-    # we don't use enable_widget here as we don't actually want that
-    # (it would disable any child widgets within the text)
-    # it should not take focus until an event is fired (it hoards the focus otherwise)
+  with gui.normal_widget(text):
+    # this should not take focus until an event is fired (it hoards the focus otherwise)
     # it shouldn't have a border, there's a bug where the embedded widgets
     # appear over top of it
     # (put a border around the surrounding frame instead)
@@ -336,8 +330,6 @@ def text_embed(text):
     # then create the placeholder frame
     text.delete('1.0', tk.END)
     text.window_create(tk.END, window=frame, stretch=True)
-  finally:
-    text['state'] = tk.DISABLED
   
   window = text.winfo_toplevel()
   

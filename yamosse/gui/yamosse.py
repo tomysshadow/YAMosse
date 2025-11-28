@@ -558,14 +558,10 @@ def _link_tips(text, tips):
     if not gui.enter_stack(stack, widget):
       return
     
-    text['state'] = tk.NORMAL
-    
-    try:
+    with gui.normal_widget(text):
       text.delete('1.0', tk.END)
       text.insert(tk.END, tips[widget])
       text.edit_separator()
-    finally:
-      text['state'] = tk.DISABLED
   
   text.bind_class(text_bindtag, '<Enter>', enter)
   
@@ -573,14 +569,10 @@ def _link_tips(text, tips):
     if not gui.leave_stack(stack):
       return
     
-    text['state'] = tk.NORMAL
-    
-    try:
+    with gui.normal_widget(text):
       # revert tip when moving from a child widget to its parent frame
       text.edit_undo()
       text.edit_separator()
-    finally:
-      text['state'] = tk.DISABLED
   
   text.bind_class(text_bindtag, '<Leave>', leave)
   
