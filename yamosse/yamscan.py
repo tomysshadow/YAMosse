@@ -400,7 +400,8 @@ class YAMScan:
         
         # get a flat listing of every file in the directory and its subdirectories
         for walk_root_dir_name, walk_dir_names, walk_file_names in os.walk(path):
-          file_names |= {os.path.join(walk_root_dir_name, w) for w in walk_file_names}
+          file_names.update({os.path.join(walk_root_dir_name, w
+            ) for w in walk_file_names})
         
         # walk does not error if path is not a directory
         if not file_names and not os.path.isdir(path):
