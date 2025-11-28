@@ -75,7 +75,7 @@ Just like in the GUI, any options that you specify will be remembered for next t
 
 ## Module Interface
 
-You can import YAMosse to use it in your own module. It will throw `SubsystemError` (from the subsystem module) if there is a reason the operation can't be performed.
+You can import YAMosse to use it in your own module. It will throw `SubsystemError` (from the `subsystem` module) if there is a reason the operation can't be performed.
 
 ```
 import yamosse
