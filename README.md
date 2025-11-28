@@ -2,7 +2,7 @@
 
 Get timestamps for sound files by harnessing the power of pristine quality yams.
 
-**IMPORTANT:** this application requires Python 3.10 64-bit or newer. Please note that (as of September 2025) TensorFlow does not officially support Python 3.13.
+**IMPORTANT:** this application requires Python 3.10 64-bit or newer.
 
 YAMosse is an easy to use interface for TensorFlow's [YAMNet](https://github.com/tensorflow/models/tree/master/research/audioset/yamnet) model, written in Python. It can be used to identify the timestamps of specific sounds, or create a transcript of the sounds in a sound file. For example, you could use it to tell which parts of a sound file contain music, or which parts contain speech. It could be used to annotate a collection of sounds, or as part of an automatically generated caption system. You can use it as a GUI or use it on the command line.
 
