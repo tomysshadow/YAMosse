@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from contextlib import suppress
+from contextlib import suppress, contextmanager
 
 import yamosse.utils as yamosse_utils
 import yamosse.output as yamosse_output
@@ -89,6 +89,12 @@ class _Identification(ABC):
   @staticmethod
   def _range_timestamp(begin, end, timespan):
     return (begin, end) if timespan and begin + timespan < end else begin
+  
+  @staticmethod
+  @contextmanager
+  def _print_newline_end(file):
+    yield
+    print('', file=file)
 
 
 class _ConfidenceScoreIdentification(_Identification):
@@ -206,8 +212,8 @@ class _ConfidenceScoreIdentification(_Identification):
       
       class_timestamps = file_name_result['result']
       
-      # this try-finally is just to ensure the newline is always printed even when continuing
-      try:
+      # this is just to ensure the newline is always printed even when continuing
+      with cls._print_newline_end(file):
         # if no timestamps were found for this file, then print None for this file
         if not class_timestamps:
           print(indent, None, sep='', file=file)
@@ -260,8 +266,6 @@ class _ConfidenceScoreIdentification(_Identification):
             ) for c, t in all_timestamps]
           
           print(indent, item_delimiter.join(all_timestamps), sep='', file=file)
-      finally:
-        print('', file=file)
   
   @classmethod
   def key_number_of_sounds(cls, item):
@@ -488,7 +492,7 @@ class _TopRankedIdentification(_Identification):
       
       top_scores = file_name_result['result']
       
-      try:
+      with cls._print_newline_end(file):
         if not top_scores:
           print(indent, None, sep='', file=file)
           continue
@@ -514,8 +518,6 @@ class _TopRankedIdentification(_Identification):
             print(cls.timestamp_name(top_score['timestamp']), end=': ', sep='', file=file)
           
           print(classes, file=file)
-      finally:
-        print('', file=file)
   
   @classmethod
   def key_number_of_sounds(cls, item):
