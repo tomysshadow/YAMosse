@@ -102,6 +102,48 @@ Widgets = namedtuple('Widgets', ['first', 'middle', 'last'])
 Undoable = namedtuple('Undoable', ['undooptions', 'buttons'])
 
 
+class Tk(tkdnd.Tk if tkdnd else tk.Tk):
+  TITLE = 'Exception in Tkinter callback'
+  
+  def __init__(self):
+    super().__init__()
+    
+    self._reported_callback_exception = False
+  
+  def report_callback_exception(self, exc, val, tb):
+    try:
+      raise val
+    except:
+      super().report_callback_exception(exc, val, tb)
+      
+      reported = self._reported_callback_exception
+      
+      with (
+        suppress(OSError),
+        
+        open(
+          'traceback.txt',
+          'a' if reported else 'w',
+          encoding='utf8'
+        ) as file
+      ):
+        print(self.TITLE, file=file)
+        traceback.print_exception(exc, val, tb, file=file)
+      
+      if not reported:
+        self._reported_callback_exception = True
+        
+        try:
+          messagebox.showerror(title=self.TITLE,
+            message=''.join(traceback.format_exception(exc, val, tb)))
+        finally:
+          self._reported_callback_exception = False
+      
+      raise
+    finally:
+      raise SystemExit
+
+
 class ImageType(type(_root_images_dir), Enum):
   BITMAP = ('Bitmap', '.xbm')
   PHOTO = ('Photo', '.gif')
@@ -113,51 +155,6 @@ class ImageType(type(_root_images_dir), Enum):
     obj._value_ = value
     obj.ext = ext
     return obj
-
-
-def _init_report_callback_exception():
-  TITLE = 'Exception in Tkinter callback'
-  
-  reported = False
-  
-  tk_report_callback_exception = tk.Tk.report_callback_exception
-  
-  def report_callback_exception(tk_, exc, val, tb):
-    nonlocal reported
-    
-    try:
-      raise val
-    except:
-      tk_report_callback_exception(tk_, exc, val, tb)
-      
-      with (
-        suppress(OSError),
-        
-        open(
-          'traceback.txt',
-          'a' if reported else 'w',
-          encoding='utf8'
-        ) as file
-      ):
-        print(TITLE, file=file)
-        traceback.print_exception(exc, val, tb, file=file)
-      
-      if not reported:
-        reported = True
-        
-        try:
-          messagebox.showerror(title=TITLE,
-            message=''.join(traceback.format_exception(exc, val, tb)))
-        finally:
-          reported = False
-      
-      raise
-    finally:
-      raise SystemExit
-  
-  return report_callback_exception
-
-tk.Tk.report_callback_exception = _init_report_callback_exception()
 
 
 def strsplitlist_widget(widget, l):
@@ -1102,7 +1099,7 @@ def _init_root_window():
     if root_window:
       return root_window
     
-    root_window = tkdnd.Tk() if tkdnd else tk.Tk()
+    root_window = Tk()
     
     local.owner = True
     styles()

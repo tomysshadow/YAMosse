@@ -23,7 +23,7 @@ except ImportError:
   gui = None
 
 NAME = 'YAMosse'
-VERSION = '1.1.2'
+VERSION = '1.1.3'
 TITLE = ' '.join((NAME, VERSION))
 
 

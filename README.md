@@ -1,4 +1,4 @@
-# YAMosse 1.1.2
+# YAMosse 1.1.3
 
 Get timestamps for sound files by harnessing the power of pristine quality yams.
 
@@ -218,6 +218,10 @@ Application Icons by [www.aha-soft.com.](https://www.aha-soft.com)
 Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) by Google.
 
 # Changes
+
+## Version 1.1.3
+
+ - Use inheritance for special exception handling behaviour instead of monkey patching the Tk object.
 
 ## Version 1.1.2
 
