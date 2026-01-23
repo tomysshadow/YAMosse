@@ -127,7 +127,7 @@ class Progressbar(ttk.Progressbar):
       self._function_task(function)
   
   def state(self, statespec=None):
-    # we intentionally don't check that the states are in STATES
+    # we intentionally don't check that the states are in yamosse_progress.State
     # because other Tkinter states are still allowed here
     result = super().state(statespec=statespec)
     
