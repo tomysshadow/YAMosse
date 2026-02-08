@@ -23,7 +23,7 @@ except ImportError:
   gui = None
 
 NAME = 'YAMosse'
-VERSION = '1.1.3'
+VERSION = '1.1.4'
 TITLE = ' '.join((NAME, VERSION))
 
 
@@ -84,11 +84,6 @@ class _YAMosse:
     
     self._model_yamnet_class_names = yamosse_worker.class_names()
     self._tfhub_enabled = yamosse_worker.tfhub_enabled()
-    
-    # this used to be done in the __main__ module
-    # but is now done here so that behaviour is consistent
-    # when importing this into a different module
-    yamosse_worker.tfhub_cache()
   
   def mainloop(self, **kwargs):
     if self._window is not None:

@@ -110,6 +110,11 @@ def initializer(yamscan):
     if _tfhub_enabled != yamscan.tfhub_enabled:
       raise ValueError('tfhub_enabled mismatch')
     
+    # this used to be done in the main process
+    # but is now done here so that we don't pollute environment variables
+    # if YAMosse is being used as a module
+    tfhub_cache()
+    
     # seperated out because loading the worker dependencies (mainly TensorFlow) in
     # the main process consumes a non-trivial amount of memory for no benefit
     # and causes startup to take significantly longer

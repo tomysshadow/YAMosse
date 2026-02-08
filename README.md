@@ -1,4 +1,4 @@
-# YAMosse 1.1.3
+# YAMosse 1.1.4
 
 Get timestamps for sound files by harnessing the power of pristine quality yams.
 
@@ -218,6 +218,10 @@ Application Icons by [www.aha-soft.com.](https://www.aha-soft.com)
 Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoji) by Google.
 
 # Changes
+
+## Version 1.1.4
+
+ - Fix so environment variables are only changed in child processes in case other modules in the main process are also using them.
 
 ## Version 1.1.3
 
