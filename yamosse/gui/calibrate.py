@@ -300,7 +300,7 @@ class _CalibrationUndoable(_ScaleUndoable):
     # the scrollbar appearance to change
     # so here we add our own scrollcommands
     for scrollcommand in (tk.X, tk.Y):
-      scrollcommand = ''.join((scrollcommand, 'scrollcommand'))
+      scrollcommand += 'scrollcommand'
       
       command = text[scrollcommand]
       if not command: continue

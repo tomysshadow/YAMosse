@@ -188,7 +188,7 @@ class _ConsoleSubsystem(_Subsystem):
       else:
         prompt = 'Please enter %c or %c.' % (yes, no)
       
-      result = input(''.join((prompt, '\n'))).lstrip()
+      result = input(prompt + '\n').lstrip()
       
       if result:
         result = result[0].casefold()

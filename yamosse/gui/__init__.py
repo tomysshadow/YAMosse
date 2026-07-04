@@ -254,7 +254,7 @@ def grid_configure_size_widget(widget, configure, **kwargs):
     'row': 1
   }
   
-  getattr(widget, ''.join((configure, 'configure')))(
+  getattr(widget, configure + 'configure')(
     tuple(range(widget.grid_size()[CONFIGURE[configure]])), **kwargs)
 
 
@@ -834,7 +834,7 @@ def make_filedialog(frame, name='',
     if defaultextension and ask == 'saveasfilename':
       kwargs['defaultextension'] = defaultextension
     
-    data = getattr(filedialog, ''.join(('ask', ask)))(
+    data = getattr(filedialog, 'ask' + ask)(
       parent=parent, **kwargs)
     
     if not data:
@@ -1434,7 +1434,7 @@ def get_root_images():
       return None
     
     return type_, scandir(entry.path, lambda image_entry: callback_image(
-      image_entry, getattr(tk, ''.join((fsdec(image), 'Image'))), type_.ext))
+      image_entry, getattr(tk, fsdec(image) + 'Image'), type_.ext))
   
   # getting root window needs to be done first
   # to avoid popping an empty window in some circumstances
@@ -1530,7 +1530,7 @@ def bindtag(obj):
   # this is prefixed to ensure the string
   # doesn't start with a period (.) character
   # which would indicate this is a widget, not a bindtag
-  return ''.join(('bindtag', repr(id(obj))))
+  return 'bindtag' + repr(id(obj))
 
 
 def gui(make_frame, window=None, child=False, args=None, kwargs=None):

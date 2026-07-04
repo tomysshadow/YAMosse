@@ -88,7 +88,7 @@ def _get_root_embed():
   def view(widget, name):
     view, args = VIEWS[name]
     
-    getattr(root_window.nametowidget(widget), ''.join((view, 'view')))(*args)
+    getattr(root_window.nametowidget(widget), view + 'view')(*args)
   
   view_cbname = root_window.register(view)
   
@@ -130,7 +130,7 @@ def _get_root_embed():
       script = bind(window, name)
       assert not script.startswith(ADD), 'script must not be prefixed with %r' % ADD
       
-      scripts.append(''.join((ADD, script)))
+      scripts.append(ADD + script)
     
     # we want to make the arrow keys scroll instantly
     # default behaviour is to move the text marker, which
@@ -234,7 +234,7 @@ def _get_root_embed():
     
     # if we're not adding this script then clear all previous ones
     if not script.startswith(ADD):
-      script = ''.join((ADD, script))
+      script = ADD + script
       scripts.clear()
     
     scripts.append(script)

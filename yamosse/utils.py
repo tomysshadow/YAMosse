@@ -34,11 +34,11 @@ def intersects(a, b):
 
 
 def str_ensureprefix(s, prefix):
-  return ''.join((prefix, s.removeprefix(prefix)))
+  return prefix + s.removeprefix(prefix)
 
 
 def str_ensuresuffix(s, suffix):
-  return ''.join((s.removesuffix(suffix), suffix))
+  return s.removesuffix(suffix) + suffix
 
 
 def dict_peekitem(d, *args, **kwargs):
