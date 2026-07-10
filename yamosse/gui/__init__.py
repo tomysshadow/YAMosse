@@ -870,14 +870,8 @@ def make_filedialog(frame, name='',
       
       not_asks_dir = multiple or not asks_dir
       
-      for d in data:
-        if not asks_file and os.path.isfile(d):
-          return True
-        
-        if not_asks_dir and os.path.isdir(d):
-          return True
-      
-      return False
+      return any((not asks_file and os.path.isfile(d)) or (
+        not_asks_dir and os.path.isdir(d)) for d in data)
     
     frame.drop_target_register(tkinterdnd2.DND_FILES)
     
