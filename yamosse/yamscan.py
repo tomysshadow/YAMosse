@@ -6,6 +6,7 @@ import threading
 from sys import exc_info
 from traceback import format_exception
 from contextlib import suppress, nullcontext
+import itertools
 
 import soundfile as sf
 
@@ -52,7 +53,7 @@ class _Done:
     self.exit_ = exit_
     
     self.next_ = self.NEXT_SUBMITTING
-    self.batch = 0
+    self.batch = itertools.count()
     
     self.clear = self._clear_loading
   
@@ -108,9 +109,9 @@ class _Done:
     
     if self.next_ == self.NEXT_SUBMITTING:
       self.next_ = self.NEXT_SUBMITTED
-      self.batch += 1
+      batch = next(self.batch)
       
-      log = '\nBatch #%d\n' % self.batch
+      log = '\nBatch #%d\n' % batch
     
     yamscan = self.yamscan
     
