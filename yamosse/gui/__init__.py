@@ -505,10 +505,8 @@ def _init_validationoptions_spinbox():
       except ValueError:
         return False
       
-      valid = str(number) == str(P) and number in range(
-        int(widget['from']),
-        int(widget['to'])
-      )
+      valid = (str(number) == str(P) and
+        int(widget['from']) <= number < int(widget['to']))
       
       if valid:
         if widget not in _spinbox_numbers:
