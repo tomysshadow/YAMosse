@@ -485,12 +485,15 @@ def _init_validationoptions_spinbox():
       except ValueError:
         number = _spinbox_numbers.get(widget, 0)
       
+      increment = widget['increment']
+      
       widget.set(yamosse_utils.clamp(
-        number,
+        int(round(number / increment) * increment),
         int(widget['from']),
         int(widget['to'])
       ))
       
+      _spinbox_numbers[widget] = number
       after_invalidcommand_widget(widget, v)
     
     return frame.register(command), '%W', '%P', '%v'
@@ -505,8 +508,11 @@ def _init_validationoptions_spinbox():
       except ValueError:
         return False
       
-      valid = (str(number) == str(P) and
-        int(widget['from']) <= number < int(widget['to']))
+      valid = str(number) == str(P) and number in range(
+        int(widget['from']),
+        int(widget['to']),
+        int(widget['increment'])
+      )
       
       if valid:
         if widget not in _spinbox_numbers:
