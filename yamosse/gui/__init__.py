@@ -5,7 +5,7 @@ from enum import Enum
 from weakref import WeakKeyDictionary
 import traceback
 from contextlib import suppress, contextmanager
-from functools import cache
+from functools import cache, partial
 import threading
 import shlex
 import os
@@ -1408,8 +1408,8 @@ def get_root_images():
     name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
     
     if entry.is_dir():
-      return (name, scandir(entry.path, lambda image_entry: callback_image(
-        image_entry, make_image, ext)))
+      return (name, scandir(entry.path, partial(callback_image,
+        make_image, ext))
     
     # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
     if os.path.splitext(name)[1] != ext:
@@ -1431,8 +1431,8 @@ def get_root_images():
     except ValueError:
       return None
     
-    return type_, scandir(entry.path, lambda image_entry: callback_image(
-      image_entry, getattr(tk, fsdec(image) + 'Image'), type_.ext))
+    return type_, scandir(entry.path, partial(callback_image,
+        getattr(tk, fsdec(image) + 'Image'), type_.ext))
   
   # getting root window needs to be done first
   # to avoid popping an empty window in some circumstances

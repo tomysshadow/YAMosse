@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from abc import ABC, abstractmethod
+from functools import partial
 
 from .. import gui
 from . import embed as gui_embed
@@ -48,7 +49,7 @@ class _ScaleUndoable(_WidgetUndoable):
       widget.bind_class(
         class_,
         sequence,
-        lambda e: data(e, recenter=True),
+        partial(data, recenter=True),
         add=True
       )
     

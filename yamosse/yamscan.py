@@ -6,7 +6,8 @@ import threading
 from sys import exc_info
 from traceback import format_exception
 from contextlib import suppress, nullcontext
-import itertools
+from functools import partial
+from itertools import count
 
 import soundfile as sf
 
@@ -53,7 +54,7 @@ class _Done:
     self.exit_ = exit_
     
     self.next_ = self.NEXT_SUBMITTING
-    self.batch = itertools.count()
+    self.batch = count()
     
     self.clear = self._clear_loading
   
@@ -323,9 +324,7 @@ class YAMScan:
             process_pool_executor.submit(
               yamosse_worker.worker,
               file_name
-            ).add_done_callback(
-              lambda future, file_name=file_name: done.insert(future, file_name)
-            )
+            ).add_done_callback(partial(done.insert, file_name=file_name))
           
           # while the workers are booting up, sort the next batch
           # this allows both tasks to be done at once
