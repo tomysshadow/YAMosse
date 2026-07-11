@@ -1409,7 +1409,7 @@ def get_root_images():
     
     if entry.is_dir():
       return (name, scandir(entry.path, partial(callback_image,
-        make_image, ext))
+        make_image=make_image, ext=ext)))
     
     # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
     if os.path.splitext(name)[1] != ext:
@@ -1432,7 +1432,7 @@ def get_root_images():
       return None
     
     return type_, scandir(entry.path, partial(callback_image,
-        getattr(tk, fsdec(image) + 'Image'), type_.ext))
+        make_image=getattr(tk, fsdec(image) + 'Image'), ext=type_.ext))
   
   # getting root window needs to be done first
   # to avoid popping an empty window in some circumstances
