@@ -1404,12 +1404,12 @@ def get_root_images():
       
       return result
   
-  def callback_image(entry, make_image, ext):
+  def callback_image(make_image, ext, entry):
     name = entry.name.lower() # intentionally NOT casefold - could merge two files to one
     
     if entry.is_dir():
-      return (name, scandir(entry.path, partial(callback_image,
-        make_image=make_image, ext=ext)))
+      return name, scandir(entry.path, partial(callback_image,
+        make_image, ext))
     
     # ensure it has the expected file extension so we don't trip on a Thumbs.db or something
     if os.path.splitext(name)[1] != ext:
@@ -1432,7 +1432,7 @@ def get_root_images():
       return None
     
     return type_, scandir(entry.path, partial(callback_image,
-        make_image=getattr(tk, fsdec(image) + 'Image'), ext=type_.ext))
+        getattr(tk, fsdec(image) + 'Image'), type_.ext))
   
   # getting root window needs to be done first
   # to avoid popping an empty window in some circumstances
