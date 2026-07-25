@@ -219,6 +219,11 @@ Microphone icon from [Noto Color Emoji](https://github.com/googlefonts/noto-emoj
 
 # Changes
 
+## Version 1.1.5
+
+ - Fix behaviour of spinboxes when an invalid number is entered so they correctly remember the previous valid input.
+ - Various small code improvements.
+
 ## Version 1.1.4
 
  - Fix so environment variables are only changed in child processes in case other modules in the main process are also using them.
