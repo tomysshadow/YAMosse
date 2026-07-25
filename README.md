@@ -1,4 +1,4 @@
-# YAMosse 1.1.4
+# YAMosse 1.1.5
 
 Get timestamps for sound files by harnessing the power of pristine quality yams.
 
